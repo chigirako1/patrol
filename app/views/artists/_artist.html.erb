@@ -1,0 +1,43 @@
+<div id="<%= dom_id artist %>">
+
+<hr />
+サイトを開く
+    <% url = %!https://www.pixiv.net/users/#{artist.pxvid}! %>
+    <td><%= link_to artist["pxvid"], url %></td>
+<hr />
+  <p>
+    <strong>Pxvname:</strong>
+    <%= artist.pxvname %>
+  </p>
+
+  <p>
+    <strong>Pxvid:</strong>
+    <%= artist.pxvid %>
+  </p>
+
+  <p>
+    <strong>Filenum:</strong>
+    <%= artist.filenum %>
+  </p>
+
+  <p>
+    <strong>Last dl datetime:</strong>
+    <%= artist.last_dl_datetime %>
+  </p>
+
+  <p>
+    <strong>Last ul datetime:</strong>
+    <%= artist.last_ul_datetime %>
+  </p>
+
+  <p>
+    <strong>Last access datetime:</strong>
+    <%= artist.last_access_datetime %>
+  </p>
+
+  <p>
+    <strong>Priority:</strong>
+    <%= artist.priority %>
+  </p>
+
+</div>

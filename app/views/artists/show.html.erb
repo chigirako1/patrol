@@ -1,0 +1,12 @@
+<p style="color: green"><%= notice %></p>
+
+  <%= link_to "戻る", artists_path %>
+
+<%= render @artist %>
+
+<hr />
+<div>
+  <%= link_to "Edit this artist", edit_artist_path(@artist) %> |
+
+  <%= button_to "Destroy this artist", @artist, method: :delete %>
+</div>
