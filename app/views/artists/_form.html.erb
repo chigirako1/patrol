@@ -12,6 +12,11 @@
   <% end %>
 
   <div>
+    <%= form.label :comment, style: "display: block" %>
+    <%= form.select :comment, [["AI", "AI"], ["体がでかい（太い）", "体がでかい（太い）"]], include_blank: "選択して下さい" %>
+  </div>
+
+  <div>
     <%= form.label :pxvname, style: "display: block" %>
     <%= form.text_field :pxvname %>
   </div>
@@ -42,10 +47,26 @@
   </div>
 
   <div>
+    <%= form.label :twtid, style: "display: block" %>
+    @<%= form.text_field :twtid %>
+  </div>
+
+  <div>
     <%= form.label :priority, style: "display: block" %>
     <%= form.number_field :priority %>
   </div>
 
+  <div>
+    <%= form.label :status, style: "display: block" %>
+    <%= form.select :status, [["退会", "退会"], ["停止", "停止"], ["長期更新なし", "長期更新なし"], ["作品ゼロ", "作品ゼロ"], ["取得途中", "取得途中"], ["最新から取得し直し中", "最新から取得し直し中"], ["彼岸", "彼岸"]], include_blank: "選択して下さい" %>
+    <%
+=begin %>
+    <%= f.collection_select :保存先のカラム名, テーブル（モデル）名.all, :実際にDBに保存させるカラム名, :選択肢に用いるカラム名, include_blank: "選択して下さい" %>
+    <%
+=end %>
+  </div>
+
+  <hr />
   <div>
     <%= form.submit %>
   </div>

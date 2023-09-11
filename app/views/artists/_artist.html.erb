@@ -1,19 +1,17 @@
 <div id="<%= dom_id artist %>">
 
-<hr />
-サイトを開く
-    <% url = %!https://www.pixiv.net/users/#{artist.pxvid}! %>
-    <td><%= link_to artist["pxvid"], url %></td>
-<hr />
   <p>
-    <strong>Pxvname:</strong>
+    <h2>
     <%= artist.pxvname %>
+    (<%= artist.pxvid %>)
+    </h2>
   </p>
 
-  <p>
-    <strong>Pxvid:</strong>
-    <%= artist.pxvid %>
-  </p>
+  <hr />
+  Pixivを開く
+    <% url = %!https://www.pixiv.net/users/#{artist.pxvid}! %>
+    <%= link_to artist["pxvid"], url, target: :_blank, rel: "noopener noreferrer" %>
+  <hr />
 
   <p>
     <strong>Filenum:</strong>
@@ -22,12 +20,12 @@
 
   <p>
     <strong>Last dl datetime:</strong>
-    <%= artist.last_dl_datetime %>
+    <%= artist.last_dl_datetime.in_time_zone('Tokyo').strftime("%Y-%m-%D") %>
   </p>
 
   <p>
-    <strong>Last ul datetime:</strong>
-    <%= artist.last_ul_datetime %>
+    <strong>最新投稿日:</strong>
+    <%= artist.last_ul_datetime.in_time_zone('Tokyo').strftime("%Y-%m-%D") %>
   </p>
 
   <p>
@@ -39,5 +37,29 @@
     <strong>Priority:</strong>
     <%= artist.priority %>
   </p>
+
+  <p>
+    <strong>Status:</strong>
+    <%= artist.status %>
+  </p>
+
+  <p>
+    <strong>comment:</strong>
+    <%= artist.comment %>
+  </p>
+  
+  <p>
+    <strong>pxvid:</strong>
+    <%= artist.pxvid %>
+  </p>
+
+  <% if artist["twtid"] != "" %>
+    <hr />
+    twitter(X)を開く
+    <% url = %!https://twitter.com/#{artist["twtid"]}! %>
+    <%= link_to "@#{artist["twtid"]}", url, target: :_blank, rel: "noopener noreferrer" %>
+  <% else %>
+    twt未設定
+  <% end %>
 
 </div>

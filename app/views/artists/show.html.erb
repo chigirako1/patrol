@@ -1,12 +1,31 @@
+<% provide(:title, @artist.pxvname) %>
 <p style="color: green"><%= notice %></p>
-
+    <%
+=begin %>
   <%= link_to "戻る", artists_path %>
+    <%
+=end %>
+
+  <a href="javascript:void(0);" onclick="hoge();">close</a>
+<script>
+  function hoge() {
+    open(location, '_self').close();
+  }
+</script>
 
 <%= render @artist %>
 
 <hr />
 <div>
   <%= link_to "Edit this artist", edit_artist_path(@artist) %> |
-
+  <hr />
+  <!-- <%= image_tag 'favicon.png' %> -->
+  
+  <%= @path_list[0] %><br />
+  <% @path_list.each do |path| %>
+    <% #= @path_list %>
+    <%= image_tag path, width: '20%', height: '20%' %>
+  <% end %>
+  
   <%= button_to "Destroy this artist", @artist, method: :delete %>
 </div>
