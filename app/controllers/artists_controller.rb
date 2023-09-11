@@ -6,7 +6,9 @@ class ArtistsController < ApplicationController
 
   # GET /artists or /artists.json
   def index
+    @unknown_id_list = []
     @size_per_table = 25
+    csv = params[:csv]
     twt = params[:twt]
     ai = params[:ai]
     amount = params[:amount]
@@ -21,6 +23,26 @@ class ArtistsController < ApplicationController
 
     @artists_group = {}
     artists = Artist.all
+
+    if csv == "csv"
+      id_list = []
+      txtpath = Rails.root.join("public/pxvids.txt").to_s
+      File.open(txtpath) { |file|
+        while line  = file.gets
+          if line =~ /(\d+)/
+            id_list << $1.to_i
+          end
+        end
+      }
+      artists = artists.select {|elem| id_list.include?(elem[:pxvid])}
+
+      id_list.each {|pxvid|
+        result = Artist.find_by(pxvid: pxvid)
+        if result == nil
+          @unknown_id_list << pxvid
+        end
+      }
+    end
 
     if twt == "twt"
       artists = artists.select {|elem| elem[:twtid] != ""}

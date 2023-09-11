@@ -20,17 +20,19 @@
 
   <p>
     <strong>Last dl datetime:</strong>
-    <%= artist.last_dl_datetime.in_time_zone('Tokyo').strftime("%Y-%m-%D") %>
+    <%= artist.last_dl_datetime.in_time_zone('Tokyo').strftime("%Y-%m-%d") %>
+    (<%= artist.get_date_info(artist.last_dl_datetime) %>)
   </p>
 
   <p>
     <strong>最新投稿日:</strong>
-    <%= artist.last_ul_datetime.in_time_zone('Tokyo').strftime("%Y-%m-%D") %>
+    <%= artist.last_ul_datetime.in_time_zone('Tokyo').strftime("%Y-%m-%d") %>
+    (<%= artist.get_date_info(artist.last_ul_datetime) %>)
   </p>
 
   <p>
     <strong>Last access datetime:</strong>
-    <%= artist.last_access_datetime %>
+    <%= artist.last_access_datetime.in_time_zone('Tokyo').strftime("%Y-%m-%d") %>
   </p>
 
   <p>
@@ -48,11 +50,6 @@
     <%= artist.comment %>
   </p>
   
-  <p>
-    <strong>pxvid:</strong>
-    <%= artist.pxvid %>
-  </p>
-
   <% if artist["twtid"] != "" %>
     <hr />
     twitter(X)を開く

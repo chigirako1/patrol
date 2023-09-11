@@ -2,9 +2,19 @@
 
 <%= link_to "Return", root_path %>
 
+<div class="search_form">
+  <%= form_with url: search_path, local: true, method: :get do |f| %>
+    検索：<%= f.text_field :search_word %>
+    <%= f.select :target_col, options_for_select([['pxvid'], ['pxvname']]) %>
+    <%= f.select :search, options_for_select([["完全一致","perfect_match"], ["前方一致","forward_match"],  ["後方一致","backward_match"], ["部分一致","partial_match"]]) %>
+    <%= f.submit "検索", class: "btn btn-primary", target: :_blank, rel: "noopener noreferrer" %>
+  <% end %>
+</div>
+
 <h1>Artists</h1>
 
 <%= link_to "default", "../artists" %>
+<%= link_to "csv", "../artists?csv=csv&display_number=100&group_by=last_ul_datetime&sort_by=access_date_X_last_ul_datetime" %>
 <%= link_to "twt", "../artists?twt=twt&display_number=50&group_by=last_ul_datetime&sort_by=access_date_X_last_ul_datetime" %>
 <%= link_to "ai", "../artists?ai=ai&display_number=25&group_by=last_ul_datetime&sort_by=access_date_X_last_ul_datetime" %>
 <%= link_to "2023", "../artists?year=2023&display_number=100" %>
@@ -29,37 +39,51 @@
     <th>状態</th>
     <th>コメント</th>
   </tr>
-<% artists.first(@size_per_table).each do |artist| %>
-  <tr>
-    <td><%= artist["id"] %></td>
-    <td><%= artist["pxvname"] %></td>
-    <% url = %!https://www.pixiv.net/users/#{artist["pxvid"]}! %>
-    <td><%= link_to artist["pxvid"], url, target: :_blank, rel: "noopener noreferrer" %></td>
-    <td><%= link_to "■■■■", artist, target: :_blank, rel: "noopener noreferrer" %></td>
-    <td><%= artist["filenum"] %></td>
-    <td><%= artist["recent_filenum"] %></td>
-    <td><%= artist["priority"] %></td>
-    <% if artist["twtid"] == "" %>
-      <td></td>
-    <% else %>
-      <% url = %!https://twitter.com/#{artist["twtid"]}! %>
-      <td><%= link_to "@#{artist["twtid"]}", url, target: :_blank, rel: "noopener noreferrer" %></td>
-    <% end %>
-    <td><%= artist["last_dl_datetime"].in_time_zone('Tokyo').strftime("%Y-%m") %></td>
-    <td><%= artist["last_ul_datetime"].in_time_zone('Tokyo').strftime("%Y-%m") %></td>
-    <% if artist["last_access_datetime"] == nil %>
-      <% last_access_datetime = "" %>
-    <% else %>
-      <% last_access_datetime = artist["last_access_datetime"].in_time_zone('Tokyo').strftime("%Y-%m-%d") %>
-    <% end %>
-    <td><%= last_access_datetime %></td>
-    <td><%= artist["status"] %></td>
-    <td><%= artist["comment"] %></td>
-  </tr>
-<% end %>
+  <% artists.first(@size_per_table).each do |artist| %>
+    <tr>
+      <td><%= artist["id"] %></td>
+      <td><%= artist["pxvname"] %></td>
+      <% url = %!https://www.pixiv.net/users/#{artist["pxvid"]}! %>
+      <td><%= link_to artist["pxvid"], url, target: :_blank, rel: "noopener noreferrer" %></td>
+      <td><%= link_to "■■■■", artist, target: :_blank, rel: "noopener noreferrer" %></td>
+      <td><%= artist["filenum"] %></td>
+      <td><%= artist["recent_filenum"] %></td>
+      <td><%= artist["priority"] %></td>
+      <% if artist["twtid"] == "" %>
+        <td></td>
+      <% else %>
+        <% url = %!https://twitter.com/#{artist["twtid"]}! %>
+        <td><%= link_to "@#{artist["twtid"]}", url, target: :_blank, rel: "noopener noreferrer" %></td>
+      <% end %>
+      <td><%= artist["last_dl_datetime"].in_time_zone('Tokyo').strftime("%Y-%m") %></td>
+      <% last_ul_datetime = artist["last_ul_datetime"].in_time_zone('Tokyo').strftime("%Y-%m") %>
+      <% if artist.get_date_delta(artist["last_ul_datetime"]) < 30 %>
+        <td bgcolor="gray"><%= last_ul_datetime %></td>
+      <% else %>
+        <td><%= last_ul_datetime %></td>
+      <% end %>
+      <% if artist["last_access_datetime"] == nil %>
+        <% last_access_datetime = "" %>
+      <% else %>
+        <% last_access_datetime = artist["last_access_datetime"].in_time_zone('Tokyo').strftime("%Y-%m-%d") %>
+      <% end %>
+      <% if artist.get_date_delta(artist["last_access_datetime"]) < 7 %>
+        <td bgcolor="gray"><%= last_access_datetime %></td>
+      <% else %>
+        <td><%= last_access_datetime %></td>
+      <% end %>
+      <td><%= artist["status"] %></td>
+      <td><%= artist["comment"] %></td>
+    </tr>
+  <% end %>
 </table>
 <% end %>
-</table>
+
+<hr />
+<% @unknown_id_list.each do |pxvid| %>
+  <% url = %!https://www.pixiv.net/users/#{pxvid}! %>
+  <td><%= link_to pxvid, url, target: :_blank, rel: "noopener noreferrer" %></td><br />
+<% end %>
 
 <hr />
 <%= link_to "New artist", new_artist_path %>

@@ -1,0 +1,43 @@
+<% provide(:title, "search result") %>
+<h2>Results index</h2>
+
+ヒット件数：<%= @artists.size %>
+<!-- <table class="table table-hover table-inverse"> -->
+<table border="1" rules="all">
+  <tr>
+    <th>id</th>
+    <th>pxvid</th>
+    <th>pxvname</th>
+    <th>show</th>
+    <th>twt</th>
+    <th>最終DL日</th>
+    <th>最新投稿日</th>
+    <th>最新アクセス日</th>
+    <th>状態</th>
+    <th>コメント</th>
+  </tr>
+<% @artists.each do |artist| %>
+  <tr>
+    <td><%= artist.id %></td>
+    <td><%= artist.pxvid %></td>
+    <td><%= artist.pxvname %></td>
+    <td><%= link_to "■■■■", artist, target: :_blank, rel: "noopener noreferrer" %></td>
+    <% if artist["twtid"] == "" %>
+      <td></td>
+    <% else %>
+      <% url = %!https://twitter.com/#{artist["twtid"]}! %>
+      <td><%= link_to "@#{artist["twtid"]}", url, target: :_blank, rel: "noopener noreferrer" %></td>
+    <% end %>
+    <td><%= artist["last_dl_datetime"].in_time_zone('Tokyo').strftime("%Y-%m") %></td>
+    <td><%= artist["last_ul_datetime"].in_time_zone('Tokyo').strftime("%Y-%m") %></td>
+    <% if artist["last_access_datetime"] == nil %>
+      <% last_access_datetime = "" %>
+    <% else %>
+      <% last_access_datetime = artist["last_access_datetime"].in_time_zone('Tokyo').strftime("%Y-%m-%d") %>
+    <% end %>
+    <td><%= last_access_datetime %></td>
+    <td><%= artist["status"] %></td>
+    <td><%= artist["comment"] %></td>
+  </tr>
+<% end %>
+</table>
