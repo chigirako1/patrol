@@ -1,15 +1,62 @@
 <% provide(:title, @artist.pxvname) %>
 <p style="color: green"><%= notice %></p>
-    <%
+
+<%
 =begin %>
   <%= link_to "戻る", artists_path %>
-    <%
+<%
 =end %>
-
-  <a href="javascript:void(0);" onclick="hoge();">close</a>
+  <a href="javascript:void(0);" onclick="page_close();">close</a>
 <script>
-  function hoge() {
+  function page_close() {
     open(location, '_self').close();
+  }
+
+  let idx = 0;
+  const path_ary = [
+      <% @path_list.each do |path| %>
+        <%== %!"#{path}",! %>
+      <% end %>
+    ];
+  function next_pic() {
+    idx++;
+    if (idx >= path_ary.length) {
+      idx = 0;
+    }
+    let img_elem = document.getElementById("imagexx")
+    img_elem.src = path_ary[idx];
+  }
+
+  function prev_pic() {
+    idx--;
+    if (idx < 0) {
+      idx = path_ary.length - 1;
+    }
+    let img_elem = document.getElementById("imagexx")
+    img_elem.src = path_ary[idx];
+  }
+
+  window.onload = (event) => {
+    idx = path_ary.length;
+    next_pic();
+  };
+
+  window.addEventListener('keypress', keypress_ivent);
+  window.addEventListener('keyup', keyup_ivent);
+
+  function keypress_ivent(e) {
+    //こっちこない？
+    return false; 
+  }
+
+  function keyup_ivent(e) {
+    if (e.key == 'ArrowLeft') {
+      prev_pic();
+    } else if (e.key == 'ArrowRight') {
+      next_pic();
+    }
+    Console.log("test");
+    return false; 
   }
 </script>
 
@@ -18,14 +65,27 @@
 <hr />
 <div>
   <%= link_to "Edit this artist", edit_artist_path(@artist) %> |
+  <%= link_to "「長期更新なし」に変更", update_no_update_artist_path %> |
+  
   <hr />
   <!-- <%= image_tag 'favicon.png' %> -->
   
   <%= @path_list[0] %><br />
-  <% @path_list.each do |path| %>
+  <% if @path_list[0] =~ /(\d\d-\d\d-\d\d)/ %>
+    <font color="red"><%= $1 %></font><br />
+  <% end %>
+  <%= "F:/dPxv" + @path_list[0] %><br />
+  <% @path_list.first(4).each do |path| %>
     <% #= @path_list %>
     <%= image_tag path, width: '20%', height: '20%' %>
   <% end %>
+
+  <hr />
+  <a href="javascript:void(0);" onclick="prev_pic();">前の画像</a>
+  <a href="javascript:void(0);" onclick="next_pic();">次の画像</a>
+  <br />
+  <img id="imagexx" width="20%" height="20%" src="" />
+  <hr />
   
   <%= button_to "Destroy this artist", @artist, method: :delete %>
 </div>

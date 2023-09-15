@@ -2,7 +2,7 @@ require 'nkf'
 require 'find'
 
 class ArtistsController < ApplicationController
-  before_action :set_artist, only: %i[ show edit update destroy ]
+  before_action :set_artist, only: %i[ show edit update destroy edit_no_update]
 
   # GET /artists or /artists.json
   def index
@@ -16,6 +16,18 @@ class ArtistsController < ApplicationController
     display_number = params[:display_number]
     group_by = params[:group_by]
     sort_by = params[:sort_by]
+    amount_gt = params[:amount_gt]
+    amount_lt = params[:amount_lt]
+    if amount_gt == nil
+      amount_gt = 0
+    else
+      amount_gt = amount_gt.to_i
+    end
+    if amount_lt == nil
+      amount_lt = 1000
+    else
+      amount_lt = amount_lt.to_i
+    end
 
     if display_number != nil
       @size_per_table = display_number.to_i
@@ -23,8 +35,12 @@ class ArtistsController < ApplicationController
 
     @artists_group = {}
     artists = Artist.all
+    #artists = Artist.all.joins(
+    #  "LEFT OUTER JOIN artists ON twitters.pxvid = artists.pxvid"
+    #).select("artists.*, twitters.*")
 
     if csv == "csv"
+      @twt = true
       id_list = []
       txtpath = Rails.root.join("public/pxvids.txt").to_s
       File.open(txtpath) { |file|
@@ -46,6 +62,7 @@ class ArtistsController < ApplicationController
 
     if twt == "twt"
       artists = artists.select {|elem| elem[:twtid] != ""}
+      @twt = true
     end
 
     if ai == "ai"
@@ -55,11 +72,11 @@ class ArtistsController < ApplicationController
     if amount != nil
       case amount 
       when "many"
-        artists = artists.select {|elem| elem[:filenum] > 200}
+        artists = artists.select {|elem| elem[:filenum] > amount_gt}
       when "mid"
-        artists = artists.select {|elem| elem[:filenum] > 100 and elem[:filenum] <= 200}
+        artists = artists.select {|elem| elem[:filenum] > amount_gt and elem[:filenum] <= amount_lt}
       when "few"
-        artists = artists.select {|elem| elem[:filenum] <= 100}
+        artists = artists.select {|elem| elem[:filenum] <= amount_lt}
       else
       end
     end
@@ -73,6 +90,8 @@ class ArtistsController < ApplicationController
       artists = artists.sort_by {|x| [x[:last_access_datetime], x[:last_ul_datetime]]}
     when "access_date_X_recent_filenum"
       artists = artists.sort_by {|x| [x[:last_access_datetime], -x[:recent_filenum]]}
+    when "access_date_X_recent_filenum_X_ul"
+      artists = artists.sort_by {|x| [x[:last_access_datetime], -x[:recent_filenum], x[:last_ul_datetime]]}
     when "access_date_X_pxvname_X_recent_filenum"
       artists = artists.sort_by {|x| [x[:last_access_datetime], x[:pxvname].downcase, -x[:recent_filenum]]}
     else
@@ -131,7 +150,7 @@ class ArtistsController < ApplicationController
           tmp_list << path.gsub(base_path, "")
         end
       end
-      @path_list = tmp_list.last(5).reverse
+      @path_list = tmp_list.reverse
     end
 
     #外部にリダイレクトしようとするとエラー
@@ -147,6 +166,19 @@ class ArtistsController < ApplicationController
 
   # GET /artists/1/edit
   def edit
+  end
+
+  # GET /artists/1/edit_xxx
+  def edit_no_update
+    respond_to do |format|
+      if @artist.update(status: "長期更新なし")
+        format.html { redirect_to artist_url(@artist), notice: "Artist was successfully updated." }
+        format.json { render :show, status: :ok, location: @artist }
+      else
+        format.html { render :edit, status: :unprocessable_entity }
+        format.json { render json: @artist.errors, status: :unprocessable_entity }
+      end
+    end
   end
 
   # POST /artists or /artists.json
@@ -195,7 +227,7 @@ class ArtistsController < ApplicationController
 
     # Only allow a list of trusted parameters through.
     def artist_params
-      params.require(:artist).permit(:pxvname, :pxvid, :filenum, :last_dl_datetime, :last_ul_datetime, :last_access_datetime, :priority, :status, :comment, :twtid)
+      params.require(:artist).permit(:pxvname, :pxvid, :filenum, :last_dl_datetime, :last_ul_datetime, :last_access_datetime, :priority, :status, :comment, :twtid, :r18, :remarks)
     end
 
     def select_group(pxvname)

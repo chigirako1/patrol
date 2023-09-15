@@ -1,0 +1,72 @@
+<%= form_with(model: twitter) do |form| %>
+  <% if twitter.errors.any? %>
+    <div style="color: red">
+      <h2><%= pluralize(twitter.errors.count, "error") %> prohibited this twitter from being saved:</h2>
+
+      <ul>
+        <% twitter.errors.each do |error| %>
+          <li><%= error.full_message %></li>
+        <% end %>
+      </ul>
+    </div>
+  <% end %>
+
+  <div>
+    <%= form.label :twtid, style: "display: block" %>
+    @<%= form.text_field :twtid %>
+  </div>
+
+  <div>
+    <%= form.label :twtname, style: "display: block" %>
+    <%= form.text_field :twtname %>
+  </div>
+
+  <div>
+    <%= form.label :filenum, style: "display: block" %>
+    <%= form.number_field :filenum %>
+  </div>
+
+  <div>
+    <%= form.label :recent_filenum, style: "display: block" %>
+    <%= form.number_field :recent_filenum %>
+  </div>
+
+  <div>
+    <%= form.label :last_dl_datetime, style: "display: block" %>
+    <%= form.datetime_field :last_dl_datetime %>
+  </div>
+
+  <div>
+    <%= form.label :earliest_dl_datetime, style: "display: block" %>
+    <%= form.datetime_field :earliest_dl_datetime %>
+  </div>
+
+  <div>
+    <%= form.label :last_access_datetime, style: "display: block" %>
+    <%= form.datetime_field :last_access_datetime %>
+  </div>
+
+  <div>
+    <%= form.label :comment, style: "display: block" %>
+    <%= form.text_field :comment %>
+  </div>
+
+  <div>
+    <%= form.label :remarks, style: "display: block" %>
+    <%= form.text_field :remarks %>
+  </div>
+
+  <div>
+    <%= form.label :status, style: "display: block" %>
+    <%= form.text_field :status %>
+  </div>
+
+  <div>
+    <%= form.label :pxvid, style: "display: block" %>
+    <%= form.number_field :pxvid %>
+  </div>
+
+  <div>
+    <%= form.submit %>
+  </div>
+<% end %>

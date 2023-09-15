@@ -13,7 +13,7 @@
 
   <div>
     <%= form.label :comment, style: "display: block" %>
-    <%= form.select :comment, [["AI", "AI"], ["体がでかい（太い）", "体がでかい（太い）"]], include_blank: "選択して下さい" %>
+    <%= form.select :comment, [["AI", "AI"], ["体がでかい（太い）", "体がでかい（太い）"], ["宣伝が多すぎる", "宣伝が多すぎる"]], include_blank: "選択して下さい" %>
   </div>
 
   <div>
@@ -49,11 +49,39 @@
   <div>
     <%= form.label :twtid, style: "display: block" %>
     @<%= form.text_field :twtid %>
+
+    <input type="button" value="twtidの抽出" onclick="get_twtid();" />
+    <script>
+      function get_twtid() {
+        let elem = document.getElementById("artist_twtid");
+        let twtid = elem.value;
+        let result = twtid.match(/https%3A%2F%2Ftwitter\.com%2F(.*)$/);
+        if (result != null) {
+          twtid = result[1];
+          elem.value = twtid;
+        }
+      }
+    </script>
   </div>
 
   <div>
     <%= form.label :priority, style: "display: block" %>
     <%= form.number_field :priority %>
+
+    <input type="button" value="+10" onclick="plus10();" />
+    <script>
+      function plus10() {
+        let elem = document.getElementById("artist_priority");
+        //let prio_val = elem.value;
+        let prio_val = parseInt(elem.value);
+        elem.value = prio_val + 10;
+      }
+    </script>
+  </div>
+
+  <div>
+    <%= form.label :r18, style: "display: block" %>
+    <%= form.select :r18, [["R18", "R18"], ["R15", "R15"], ["R12", "R12"], ["健全", "健全"]], include_blank: "選択して下さい" %>
   </div>
 
   <div>
@@ -64,6 +92,11 @@
     <%= f.collection_select :保存先のカラム名, テーブル（モデル）名.all, :実際にDBに保存させるカラム名, :選択肢に用いるカラム名, include_blank: "選択して下さい" %>
     <%
 =end %>
+  </div>
+
+  <div>
+    <%= form.label :remarks, style: "display: block" %>
+    <%= form.text_field :remarks %>
   </div>
 
   <hr />

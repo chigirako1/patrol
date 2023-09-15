@@ -19,23 +19,6 @@
   </p>
 
   <p>
-    <strong>Last dl datetime:</strong>
-    <%= artist.last_dl_datetime.in_time_zone('Tokyo').strftime("%Y-%m-%d") %>
-    (<%= artist.get_date_info(artist.last_dl_datetime) %>)
-  </p>
-
-  <p>
-    <strong>最新投稿日:</strong>
-    <%= artist.last_ul_datetime.in_time_zone('Tokyo').strftime("%Y-%m-%d") %>
-    (<%= artist.get_date_info(artist.last_ul_datetime) %>)
-  </p>
-
-  <p>
-    <strong>Last access datetime:</strong>
-    <%= artist.last_access_datetime.in_time_zone('Tokyo').strftime("%Y-%m-%d") %>
-  </p>
-
-  <p>
     <strong>Priority:</strong>
     <%= artist.priority %>
   </p>
@@ -55,8 +38,40 @@
     twitter(X)を開く
     <% url = %!https://twitter.com/#{artist["twtid"]}! %>
     <%= link_to "@#{artist["twtid"]}", url, target: :_blank, rel: "noopener noreferrer" %>
+    <hr />
   <% else %>
-    twt未設定
+    <hr />
+    <font color="red">twt未設定</font>
+    <hr />
   <% end %>
+
+  <p>
+    <strong>備考:</strong>
+    <%= artist.remarks %>
+  </p>
+
+  <p>
+    <strong>R18:</strong>
+    <%= artist.r18 %>
+  </p>
+
+  <p>
+    <strong>Last dl datetime:</strong>
+    <%= artist.last_dl_datetime.in_time_zone('Tokyo').strftime("%Y-%m-%d") %>
+    (<%= artist.get_date_info(artist.last_dl_datetime) %>)
+  </p>
+
+  <p>
+    <strong>最新投稿日:</strong>
+    <font color="red">
+    <%= artist.last_ul_datetime.in_time_zone('Tokyo').strftime("%Y-%m-%d") %>
+    </font>
+    (<%= artist.get_date_info(artist.last_ul_datetime) %>)
+  </p>
+
+  <p>
+    <strong>Last access datetime:</strong>
+    <%= artist.last_access_datetime.in_time_zone('Tokyo').strftime("%Y-%m-%d") %>
+  </p>
 
 </div>

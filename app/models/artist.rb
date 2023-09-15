@@ -1,19 +1,21 @@
 class Artist < ApplicationRecord
-    def self.looks(target_col, search_word)
-        @artist = Artist.where("#{target_col} LIKE?", "#{search_word}")
-=begin
-        if search == "perfect_match"
-            @user = User.where("name LIKE?", "#{word}")
-        elsif search == "forward_match"
-            @user = User.where("name LIKE?","#{word}%")
-        elsif search == "backward_match"
-            @user = User.where("name LIKE?","%#{word}")
-        elsif search == "partial_match"
-            @user = User.where("name LIKE?","%#{word}%")
+    has_one :twitters, :class_name => 'Twitter'
+
+    def self.looks(target_col, search_word, match_method)
+        search_word_p = ""
+        case match_method
+        when "perfect_match"
+            search_word_p = search_word
+        when "begin_match"
+            search_word_p = "#{search_word}%"
+        when "end_match"
+            search_word_p = "%#{search_word}"
+        when "partial_match"
+            search_word_p = "%#{search_word}%"
         else
-            @user = User.all
+            search_word_p = search_word
         end
-=end
+        @artist = Artist.where("#{target_col} LIKE?", search_word_p)
     end
 
     def get_date_delta(date)
@@ -34,5 +36,15 @@ class Artist < ApplicationRecord
         else
             "#{days}日以内"
         end
+    end
+
+    def get_datetime_string(last_ul_datetime)
+        now = Time.zone.now
+        if last_ul_datetime.year == now.year
+          ym_format = "%m月%d日"
+        else
+          ym_format = "%Y年%m月"
+        end
+        last_ul_datetime_str = last_ul_datetime.in_time_zone('Tokyo').strftime(ym_format)
     end
 end

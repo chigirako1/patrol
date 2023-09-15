@@ -1,4 +1,5 @@
 Rails.application.routes.draw do
+  resources :twitters
   resources :artists
   resources :users
   root 'home#index'
@@ -7,6 +8,7 @@ Rails.application.routes.draw do
   get '/help', to: 'home#help'
   get '/test', to: 'home#test'
   get "search" => "searches#search"
+  get '/artists/:id/edit_no_update', to: 'artists#edit_no_update', as: :update_no_update_artist
 =begin
   get '/books', to: 'books#index'
   get '/books/new', to: 'books#new', as: :new_book

@@ -18,15 +18,17 @@
   </tr>
 <% @artists.each do |artist| %>
   <tr>
+    <% pxv_url = %!https://www.pixiv.net/users/#{artist["pxvid"]}! %>
+    <% twt_url = %!https://twitter.com/#{artist["twtid"]}! %>
+
     <td><%= artist.id %></td>
-    <td><%= artist.pxvid %></td>
+    <td><%= link_to artist["pxvid"], pxv_url, target: :_blank, rel: "noopener noreferrer" %></td>
     <td><%= artist.pxvname %></td>
     <td><%= link_to "■■■■", artist, target: :_blank, rel: "noopener noreferrer" %></td>
     <% if artist["twtid"] == "" %>
       <td></td>
     <% else %>
-      <% url = %!https://twitter.com/#{artist["twtid"]}! %>
-      <td><%= link_to "@#{artist["twtid"]}", url, target: :_blank, rel: "noopener noreferrer" %></td>
+      <td><%= link_to "@#{artist["twtid"]}", twt_url, target: :_blank, rel: "noopener noreferrer" %></td>
     <% end %>
     <td><%= artist["last_dl_datetime"].in_time_zone('Tokyo').strftime("%Y-%m") %></td>
     <td><%= artist["last_ul_datetime"].in_time_zone('Tokyo').strftime("%Y-%m") %></td>

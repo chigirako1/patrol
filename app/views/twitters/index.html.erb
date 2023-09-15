@@ -1,0 +1,54 @@
+<% provide(:title, "TWT一覧") %>
+<p style="color: green"><%= notice %></p>
+
+<%= link_to "Return", root_path %>
+
+<h1>Twitters</h1>
+
+<div id="twitters">
+  <% @twitters_group.each do |key, twitters| %>
+  <h2><%= key %>(<%= twitters.size %>)</h2>
+  <table border="1" rules="all">
+    <tr>
+      <th>id</th>
+      <th>twtid</th>
+      <th>twtname</th>
+      <th>show</th>
+      <th>ファイル数</th>
+      <th>最近のファイル数</th>
+      <th>最終DL日</th>
+      <th>最新アクセス日</th>
+      <th>pxvid</th>
+      <th>PXV最終UL日</th>
+      <th>コメント</th>
+      <th>備考</th>
+      <th>状態</th>
+    </tr>
+    <% twitters.first(50).each do |twitter| %>
+      
+      <% twt_url = %!https://twitter.com/#{twitter["twtid"]}! %>
+      <%# twt_url = %!https://twitter.com/}! %>
+      <% pxv_url = %!https://www.pixiv.net/users/#{twitter["pxvid"]}! %>
+
+      <tr>
+        <td><%= twitter["id"] %></td>
+        <td><%= link_to "@#{twitter["twtid"]}", twt_url, target: :_blank, rel: "noopener noreferrer" %></td>
+        <td><%= twitter["twtname"] %></td>
+        <td><%= link_to "Show", twitter %></td>
+        <td><%= twitter["filenum"] %></td>
+        <td><%= twitter["recent_filenum"] %></td>
+        <td><%= twitter["last_dl_datetime"].in_time_zone('Tokyo').strftime("%Y-%m-%d") %></td>
+        <td><%= twitter["last_access_datetime"].in_time_zone('Tokyo').strftime("%Y-%m-%d") if twitter["last_access_datetime"] != nil %></td>
+        <td><%= link_to twitter["pxvid"], pxv_url, target: :_blank, rel: "noopener noreferrer" if twitter["pxvid"] != nil %></td>
+        <td><%= twitter["last_ul_datetime"] if twitter["last_ul_datetime"] != nil %></td>
+        <td><%= twitter["comment"] %></td>
+        <td><%= twitter["remarks"] %></td>
+        <td><%= twitter["status"] %></td>
+      </tr>
+    <% end %>
+  </table>
+  <% end %>
+</div>
+
+<hr />
+<%= link_to "New twitter", new_twitter_path %>
