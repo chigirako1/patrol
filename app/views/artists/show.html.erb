@@ -5,87 +5,104 @@
 =begin %>
   <%= link_to "戻る", artists_path %>
 <%
-=end %>
+
   <a href="javascript:void(0);" onclick="page_close();">close</a>
+
+=end %>
+
 <script>
+  let pic_idx = 0;
+  window.onload = (event) => {
+    pic_idx = path_ary.length;
+    next_pic();
+  };
+
+  window.addEventListener('keypress', keypress_event);
+  window.addEventListener('keyup', keyup_event);
+  
   function page_close() {
     open(location, '_self').close();
   }
 
-  let idx = 0;
   const path_ary = [
       <% @path_list.each do |path| %>
         <%== %!"#{path}",! %>
       <% end %>
-    ];
+  ];
+
   function next_pic() {
-    idx++;
-    if (idx >= path_ary.length) {
-      idx = 0;
+    pic_idx++;
+    if (pic_idx >= path_ary.length) {
+      pic_idx = 0;
     }
-    let img_elem = document.getElementById("imagexx")
-    img_elem.src = path_ary[idx];
+    set_pic(path_ary[pic_idx]);
   }
 
   function prev_pic() {
-    idx--;
-    if (idx < 0) {
-      idx = path_ary.length - 1;
+    pic_idx--;
+    if (pic_idx < 0) {
+      pic_idx = path_ary.length - 1;
     }
-    let img_elem = document.getElementById("imagexx")
-    img_elem.src = path_ary[idx];
+    set_pic(path_ary[pic_idx]);
   }
 
-  window.onload = (event) => {
-    idx = path_ary.length;
-    next_pic();
-  };
+  function set_pic(path) {
+    let img_elem = document.getElementById("imagexx")
+    img_elem.src = path;
 
-  window.addEventListener('keypress', keypress_ivent);
-  window.addEventListener('keyup', keyup_ivent);
+    /*img_elem.src.onload = function () {
+      var width = img_elem.naturalWidth ;
+      var height = img_elem.naturalHeight ;
+    }*/
 
-  function keypress_ivent(e) {
+    let txt_elem = document.getElementById("pic_path")
+    txt_elem.innerHTML = path;
+    
+    //txt_elem.innerHTML +=  ":" + width + "x" + height;
+  }
+
+  function keypress_event(e) {
     //こっちこない？
+    Console.log("test");
     return false; 
   }
 
-  function keyup_ivent(e) {
+  function keyup_event(e) {
     if (e.key == 'ArrowLeft') {
       prev_pic();
     } else if (e.key == 'ArrowRight') {
       next_pic();
+    } else if (e.key == 'Escape') {
+      page_close();
     }
-    Console.log("test");
+    //Console.log("test");
     return false; 
+  }
+
+  // full screen
+  function set_fullscreen() {
+    document.body.requestFullscreen();
+  }
+
+// full screen
+  function unset_fullscreen() {
+    document.body.exitFullscreen();
   }
 </script>
 
-<%= render @artist %>
+<% if @show_mode == "viewer" %>
+  <%= render "viewer", artist: @artist %>
+<% else %>
+  <%= render @artist %>
 
-<hr />
-<div>
-  <%= link_to "Edit this artist", edit_artist_path(@artist) %> |
+  <hr />
+  <%= link_to "編集", edit_artist_path(@artist) %> |
   <%= link_to "「長期更新なし」に変更", update_no_update_artist_path %> |
-  
   <hr />
-  <!-- <%= image_tag 'favicon.png' %> -->
-  
-  <%= @path_list[0] %><br />
-  <% if @path_list[0] =~ /(\d\d-\d\d-\d\d)/ %>
-    <font color="red"><%= $1 %></font><br />
-  <% end %>
-  <%= "F:/dPxv" + @path_list[0] %><br />
-  <% @path_list.first(4).each do |path| %>
-    <% #= @path_list %>
-    <%= image_tag path, width: '20%', height: '20%' %>
-  <% end %>
+
+  <%= link_to "viewer", "../artists/#{@artist.id}?mode=viewer" %>
+  <%= render "pics", artist: @artist %>
 
   <hr />
-  <a href="javascript:void(0);" onclick="prev_pic();">前の画像</a>
-  <a href="javascript:void(0);" onclick="next_pic();">次の画像</a>
-  <br />
-  <img id="imagexx" width="20%" height="20%" src="" />
-  <hr />
-  
   <%= button_to "Destroy this artist", @artist, method: :delete %>
-</div>
+<% end %>

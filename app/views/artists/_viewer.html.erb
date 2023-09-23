@@ -1,0 +1,115 @@
+<style type="text/css">
+#background {
+    position: fixed;
+    left: auto; 
+    top: auto;
+    width: auto; 
+    min-width: auto; 
+    height: 100%;
+    xheight: auto;
+    min-height: auto;
+    z-index: -1;
+    
+}
+#background img {
+    position: center;
+    width: 100%;
+    xwidth: auto;
+    height: auto;
+}
+
+a:link {
+ color: beige;
+ text-decoration: underline;
+}
+</style>
+
+<script type="text/javascript">
+    document.body.style.backgroundColor = 'black';
+    document.body.style.color = 'white';
+
+    //set_fullscreen();
+    next_pic();
+
+  function mouse_over(evnt) {
+    
+  }
+</script>
+
+<div id="<%= dom_id artist %>">
+ 
+  <a href="javascript:void(0);" onclick="prev_pic();" align="left">前の画像</a>
+  |<a href="javascript:void(0);" onclick="next_pic();" align="right">次の画像</a>
+  |<a href="javascript:void(0);" onclick="set_fullscreen();">フルスクリーン</a>
+  |<a href="javascript:void(0);" onclick="unset_fullscreen();">フルスクリーン解除</a>
+  |<a href="javascript:void(0);" onclick="page_close();">■close■</a>
+  <div id="background">
+    <div id="pic_path">_</div>
+    <img id="imagexx" src="<% @path_list[0] %>" />
+  </div>
+</div>
+
+<script type="text/javascript">
+  let elm = document.getElementById("imagexx");
+  elm.onmouseover = function() {
+      //next_pic();
+      //alert("m over");
+  }
+
+  elm.onmouseout = function() {
+      //prev_pic();
+      //alert("m out");
+  }
+
+  elm.onclick = function(evt) {
+    //alert(' ' + evt.type + ':' + elm.naturalWidth + elm.naturalHeight);
+    
+    if (evt.offsetX < elm.naturalWidth / 2) {
+      prev_pic();
+    } else {
+      next_pic();
+    }
+  }
+
+
+		var startX = null;
+		var endX = null;
+
+		window.addEventListener('load', function(){
+
+			// スワイプ／フリック
+			document.getElementById("imagexx").addEventListener('touchmove', logSwipe);
+
+			// タッチ開始
+			document.getElementById("imagexx").addEventListener('touchstart', logSwipeStart);
+
+			// タッチ終了
+			document.getElementById("imagexx").addEventListener('touchend', logSwipeEnd);
+		});
+
+		function logSwipeStart(event) {
+			event.preventDefault();
+
+			startX = event.touches[0].pageX;
+		}
+
+		function logSwipe(event) {
+			event.preventDefault();
+
+			endX = event.touches[0].pageX;
+		}
+
+		function logSwipeEnd(event) {
+			event.preventDefault();
+
+			if( 0 < (endX - startX) ) {
+				//console.log("右向き");
+        next_pic();
+        alert("r");
+			} else {
+				//console.log("左向き");
+        prev_pic();
+        alert("l");
+			}
+		}
+</script>

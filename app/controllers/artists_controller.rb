@@ -6,9 +6,11 @@ class ArtistsController < ApplicationController
 
   # GET /artists or /artists.json
   def index
+    @twt_urls = {}
     @unknown_id_list = []
+    @misc_urls = []
     @size_per_table = 25
-    csv = params[:csv]
+    param_file = params[:file]
     twt = params[:twt]
     ai = params[:ai]
     amount = params[:amount]
@@ -28,6 +30,12 @@ class ArtistsController < ApplicationController
     else
       amount_lt = amount_lt.to_i
     end
+    last_access_datetime = params[:last_access_datetime]
+    if last_access_datetime == nil
+      last_access_datetime = 0
+    else
+      last_access_datetime = last_access_datetime.to_i
+    end
 
     if display_number != nil
       @size_per_table = display_number.to_i
@@ -39,25 +47,19 @@ class ArtistsController < ApplicationController
     #  "LEFT OUTER JOIN artists ON twitters.pxvid = artists.pxvid"
     #).select("artists.*, twitters.*")
 
-    if csv == "csv"
+    if param_file == "pxvids"
       @twt = true
-      id_list = []
-      txtpath = Rails.root.join("public/pxvids.txt").to_s
-      File.open(txtpath) { |file|
-        while line  = file.gets
-          if line =~ /(\d+)/
-            id_list << $1.to_i
-          end
-        end
-      }
+      id_list = Artist.get_id_list()
       artists = artists.select {|elem| id_list.include?(elem[:pxvid])}
 
-      id_list.each {|pxvid|
-        result = Artist.find_by(pxvid: pxvid)
-        if result == nil
-          @unknown_id_list << pxvid
-        end
-      }
+      @unknown_id_list = Artist.get_unknown_id_list(id_list)
+    elsif param_file == "urllist"
+      @twt = true
+
+      id_list, @twt_urls, @misc_urls = Artist.get_url_list()
+      artists = artists.select {|elem| id_list.include?(elem[:pxvid])}
+
+      @unknown_id_list = Artist.get_unknown_id_list(id_list)
     end
 
     if twt == "twt"
@@ -85,21 +87,33 @@ class ArtistsController < ApplicationController
       artists = artists.select {|elem| elem[:last_ul_datetime].strftime("%Y") == year}
     end
 
+    if last_access_datetime != 0
+      artists = artists.select {|x| !x.last_access_datetime_p(last_access_datetime)}
+    end
+
     case sort_by
     when "access_date_X_last_ul_datetime"
       artists = artists.sort_by {|x| [x[:last_access_datetime], x[:last_ul_datetime]]}
     when "access_date_X_recent_filenum"
-      artists = artists.sort_by {|x| [x[:last_access_datetime], -x[:recent_filenum]]}
+      artists = artists.sort_by {|x| [x[:last_access_datetime], -x[:recent_filenum], -x[:filenum]]}
     when "access_date_X_recent_filenum_X_ul"
-      artists = artists.sort_by {|x| [x[:last_access_datetime], -x[:recent_filenum], x[:last_ul_datetime]]}
+      artists = artists.sort_by {|x| [-x.get_date_delta(x[:last_access_datetime]), -x.priority, -x.prediction_up_cnt, -x[:recent_filenum], -x[:filenum], x[:last_ul_datetime]]}
+    when "priority_X_recent_filenum_X_ul"
+      artists = artists.sort_by {|x| [-x.priority, -x.get_date_delta(x[:last_access_datetime]), -x.prediction_up_cnt, -x[:recent_filenum], -x[:filenum], x[:last_ul_datetime]]}
     when "access_date_X_pxvname_X_recent_filenum"
-      artists = artists.sort_by {|x| [x[:last_access_datetime], x[:pxvname].downcase, -x[:recent_filenum]]}
+      artists = artists.sort_by {|x| [x[:last_access_datetime], x[:pxvname].downcase, -x[:recent_filenum], -x[:filenum]]}
     else
     end
 
     case group_by
     when "last_ul_datetime"
       @artists_group = artists.group_by {|elem| elem[:last_ul_datetime].strftime("%Y")}.sort.reverse.to_h
+      return
+    when "last_ul_datetime_ym"
+      @artists_group = artists.group_by {|elem| elem[:last_ul_datetime].strftime("%Y-%m")}.sort.reverse.to_h
+      return
+    when "filenum"
+      @artists_group = artists.group_by {|x| (x[:recent_filenum] / 10 * 10)}.sort.reverse.to_h
       return
     when "pxvname"
       @artists_group = artists.group_by {|elem| select_group(elem[:pxvname])}.sort.to_h
@@ -112,51 +126,40 @@ class ArtistsController < ApplicationController
 
   # GET /artists/1 or /artists/1.json
   def show
-    @artist.update(last_access_datetime: Time.now)
-
-    @path_list = []
-    rpath = ""
-    search_str = %!(#{@artist[:pxvid]})!
-    base_path = Rails.root.join("public").to_s
-
-=begin
-遅すぎる
-    Find.find(base_path + "/dpxv/pxv") {|f|
-      Find.prune if f.split(/\//).size > 11
-      @path_list << f
-      if f.include?(search_str)
-        rpath = f
-        break
-      end
-    }
-
-    findやglobはシンボリックリンクは辿ってくれない模様
-=end
-    #DBにパスを格納したいが面倒なので。。。　
-    txtpath = Rails.root.join("public/pxv/dirlist.txt").to_s
-    File.open(txtpath) { |file|
-      while line  = file.gets
-        if line.include?(search_str)
-          rpath = line.chomp
-          break
-        end
-      end
-    }
-
-    if rpath != ""
-      tmp_list = []
-      Find.find(rpath) do |path|
-        if File.extname(path) == ".jpg"
-          tmp_list << path.gsub(base_path, "")
-        end
-      end
-      @path_list = tmp_list.reverse
+    if true #params[:access_dt_update] != nil and params[:access_dt_update] == "yes"
+      @artist.update(last_access_datetime: Time.now)
     end
 
-    #外部にリダイレクトしようとするとエラー
-    #url = %!https://www.pixiv.net/users/#{@artist["pxvid"]}!
-    #redirect_to url
-    #render url
+    @path_list = []
+    if params[:mode] != nil and params[:mode] == "viewer"
+      @show_mode = "viewer"
+    end
+    #elsif true #params[:mode] != nil and params[:mode] == "thumbnail"
+      rpath = ""
+      search_str = %!(#{@artist[:pxvid]})!
+      base_path = Rails.root.join("public").to_s
+
+      # DBにパスを格納したいが面倒なので。。。　
+      txtpath = Rails.root.join("public/pxv/dirlist.txt").to_s
+      File.open(txtpath) { |file|
+        while line  = file.gets
+          if line.include?(search_str)
+            rpath = line.chomp
+            break
+          end
+        end
+      }
+
+      if rpath != ""
+        tmp_list = []
+        Find.find(rpath) do |path|
+          if File.extname(path) == ".jpg"
+            tmp_list << path.gsub(base_path, "")
+          end
+        end
+        @path_list = tmp_list.reverse
+      end
+    #end
   end
 
   # GET /artists/new
@@ -227,7 +230,9 @@ class ArtistsController < ApplicationController
 
     # Only allow a list of trusted parameters through.
     def artist_params
-      params.require(:artist).permit(:pxvname, :pxvid, :filenum, :last_dl_datetime, :last_ul_datetime, :last_access_datetime, :priority, :status, :comment, :twtid, :r18, :remarks)
+      params.require(:artist).permit(:pxvname, :pxvid, :filenum, :last_dl_datetime, :last_ul_datetime, :last_access_datetime, :priority, :status, :comment, :twtid, :njeid, :r18, :remarks,
+        :rating, :furigana, :altname, :oldname, :chara, :work, :warnings
+      )
     end
 
     def select_group(pxvname)
