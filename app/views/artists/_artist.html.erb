@@ -61,11 +61,6 @@
   <hr />
 
   
-  <h3>Pixivを開く =>
-  <% url = %!https://www.pixiv.net/users/#{artist.pxvid}! %>
-  <%= link_to artist["pxvid"], url, target: :_blank, rel: "noopener noreferrer" %>
-  </h3>
-
   <p>
     <strong>Last dl datetime:</strong>
     <%= artist.last_dl_datetime.in_time_zone('Tokyo').strftime("%Y-%m-%d") %>
@@ -105,5 +100,10 @@
     <font color="red"><%= artist.warnings %></font>
   </p>
   <% end %>
+
+  <h3>Pixivを開く =>
+  <% url = %!https://www.pixiv.net/users/#{artist.pxvid}! %>
+  <%= link_to artist["pxvid"], url, target: :_blank, rel: "noopener noreferrer" %>
+  </h3>
 
 </div>

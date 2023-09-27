@@ -97,12 +97,10 @@
 
   <hr />
   <%= link_to "編集", edit_artist_path(@artist) %> |
-  <%= link_to "「長期更新なし」に変更", update_no_update_artist_path %> |
+  <%= link_to "「長期更新なし」に変更", update_no_update_artist_path(method: "no_update"), method: :patch %> |
+  <%= link_to("「優先度」を-1", update_no_update_artist_path(method: "priority_minus_one"), method: :patch) %> |
   <hr />
 
   <%= link_to "viewer", "../artists/#{@artist.id}?mode=viewer" %>
   <%= render "pics", artist: @artist %>
-
-  <hr />
-  <%= button_to "Destroy this artist", @artist, method: :delete %>
 <% end %>

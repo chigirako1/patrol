@@ -1,165 +1,155 @@
-require 'nkf'
-require 'find'
+
+class Params
+  attr_accessor :param_file, :twt, :ai, :year_since, :year_until, :display_number, :group_by, :sort_by, 
+              :amount_gt, :amount_lt, :filename, :last_access_datetime, :r18,
+              :thumbnail, :begin_no
+
+  def initialize(params)
+    @param_file = params[:file]
+    display_number = params[:display_number]
+    @group_by = params[:group_by]
+    @sort_by = params[:sort_by]
+    begin_no = params[:begin_no]
+    if begin_no == nil
+      @begin_no = 0
+    else
+      @begin_no = begin_no.to_i
+    end
+    puts "begin_no=#{@begin_no}"
+
+    @r18 = params[:r18]
+    if @r18 == nil
+      @r18 = ""
+    end
+    puts "r18=#{@r18}"
+
+    year = params[:year]
+    if year =~ /^(\d{4}):(\d{4})$/
+      @year_since = $1.to_i
+      @year_until = $2.to_i
+    elsif year =~ /^(\d{4})$/
+      @year_since = $1.to_i
+      @year_until = $1.to_i
+    elsif year =~ /^(\d{4}):$/
+      @year_since = $1.to_i
+      @year_until = 0
+    elsif year =~ /^:(\d{4})$/
+      @year_since = 0
+      @year_until = $1.to_i
+    else
+      @year_since = 2023
+      @year_until = 2023
+    end
+    puts "year=#{@year_since}:#{@year_until}"
+
+    amount_gt = params[:amount_gt]
+    amount_lt = params[:amount_lt]
+    if amount_gt == nil
+      @amount_gt = 0
+    else
+      @amount_gt = amount_gt.to_i
+    end
+    if amount_lt == nil
+      @amount_lt = 0
+    else
+      @amount_lt = amount_lt.to_i
+    end
+    puts "amount=#{@amount_gt}-#{@amount_lt}"
+
+    last_access_datetime = params[:last_access_datetime]
+    if last_access_datetime == nil
+      @last_access_datetime = 25 #0
+    else
+      @last_access_datetime = last_access_datetime.to_i
+    end
+    puts "last_access_datetime=#{@last_access_datetime}"
+
+    if display_number != nil
+      @display_number = display_number.to_i
+    else
+      @display_number = 10
+    end
+    puts %!@display_number=#{@display_number}!
+
+    twt = params[:twt]
+    if twt == "true"
+      @twt = true
+    end
+
+    ai = params[:ai]
+    if ai != nil and ai == "true"
+      @ai = true
+    end
+
+    thumbnail = params[:thumbnail]
+    if thumbnail != nil and thumbnail == "true"
+      @thumbnail = true
+    end
+    puts %![twt:#{@twt}],[ai:#{@ai}],[thumbnail:#{@thumbnail}]!
+
+    filename = params[:filename]
+    if filename == nil
+      @filename = "0907"
+    else
+      @filename = filename
+    end
+  end
+end
 
 class ArtistsController < ApplicationController
-  before_action :set_artist, only: %i[ show edit update destroy edit_no_update]
+  extend UrlTxtReader
+  
+  before_action :set_artist, only: %i[show edit update destroy edit_no_update]
 
   # GET /artists or /artists.json
   def index
     @twt_urls = {}
     @unknown_id_list = []
     @misc_urls = []
-    @size_per_table = 25
-    param_file = params[:file]
-    twt = params[:twt]
-    ai = params[:ai]
-    amount = params[:amount]
-    year = params[:year]
-    display_number = params[:display_number]
-    group_by = params[:group_by]
-    sort_by = params[:sort_by]
-    amount_gt = params[:amount_gt]
-    amount_lt = params[:amount_lt]
-    if amount_gt == nil
-      amount_gt = 0
-    else
-      amount_gt = amount_gt.to_i
-    end
-    if amount_lt == nil
-      amount_lt = 1000
-    else
-      amount_lt = amount_lt.to_i
-    end
-    last_access_datetime = params[:last_access_datetime]
-    if last_access_datetime == nil
-      last_access_datetime = 0
-    else
-      last_access_datetime = last_access_datetime.to_i
-    end
+    @twt = false
 
-    if display_number != nil
-      @size_per_table = display_number.to_i
-    end
+    prms = Params.new(params)
+    @size_per_table = prms.display_number
+    @begin_no = prms.begin_no
+    @thumbnail = prms.thumbnail
 
     @artists_group = {}
     artists = Artist.all
-    #artists = Artist.all.joins(
-    #  "LEFT OUTER JOIN artists ON twitters.pxvid = artists.pxvid"
-    #).select("artists.*, twitters.*")
 
-    if param_file == "pxvids"
+    if prms.param_file == "pxvids"
       @twt = true
       id_list = Artist.get_id_list()
-      artists = artists.select {|elem| id_list.include?(elem[:pxvid])}
+      artists = artists.select {|x| id_list.include?(x[:pxvid])}
 
       @unknown_id_list = Artist.get_unknown_id_list(id_list)
-    elsif param_file == "urllist"
+    elsif prms.param_file == "urllist"
       @twt = true
 
-      id_list, @twt_urls, @misc_urls = Artist.get_url_list()
-      artists = artists.select {|elem| id_list.include?(elem[:pxvid])}
+      datestr = prms.filename
+      id_list, @twt_urls, @misc_urls = Artist.get_url_list("public/get illust url_#{datestr}.txt")
+      artists = artists.select {|x| id_list.include?(x[:pxvid])}
 
       @unknown_id_list = Artist.get_unknown_id_list(id_list)
     end
 
-    if twt == "twt"
-      artists = artists.select {|elem| elem[:twtid] != ""}
-      @twt = true
-    end
-
-    if ai == "ai"
-      artists = artists.select {|elem| elem[:comment] == "AI"}
-    end
-
-    if amount != nil
-      case amount 
-      when "many"
-        artists = artists.select {|elem| elem[:filenum] > amount_gt}
-      when "mid"
-        artists = artists.select {|elem| elem[:filenum] > amount_gt and elem[:filenum] <= amount_lt}
-      when "few"
-        artists = artists.select {|elem| elem[:filenum] <= amount_lt}
-      else
-      end
-    end
-
-    if year != nil
-      artists = artists.select {|elem| elem[:last_ul_datetime].strftime("%Y") == year}
-    end
-
-    if last_access_datetime != 0
-      artists = artists.select {|x| !x.last_access_datetime_p(last_access_datetime)}
-    end
-
-    case sort_by
-    when "access_date_X_last_ul_datetime"
-      artists = artists.sort_by {|x| [x[:last_access_datetime], x[:last_ul_datetime]]}
-    when "access_date_X_recent_filenum"
-      artists = artists.sort_by {|x| [x[:last_access_datetime], -x[:recent_filenum], -x[:filenum]]}
-    when "access_date_X_recent_filenum_X_ul"
-      artists = artists.sort_by {|x| [-x.get_date_delta(x[:last_access_datetime]), -x.priority, -x.prediction_up_cnt, -x[:recent_filenum], -x[:filenum], x[:last_ul_datetime]]}
-    when "priority_X_recent_filenum_X_ul"
-      artists = artists.sort_by {|x| [-x.priority, -x.get_date_delta(x[:last_access_datetime]), -x.prediction_up_cnt, -x[:recent_filenum], -x[:filenum], x[:last_ul_datetime]]}
-    when "access_date_X_pxvname_X_recent_filenum"
-      artists = artists.sort_by {|x| [x[:last_access_datetime], x[:pxvname].downcase, -x[:recent_filenum], -x[:filenum]]}
-    else
-    end
-
-    case group_by
-    when "last_ul_datetime"
-      @artists_group = artists.group_by {|elem| elem[:last_ul_datetime].strftime("%Y")}.sort.reverse.to_h
-      return
-    when "last_ul_datetime_ym"
-      @artists_group = artists.group_by {|elem| elem[:last_ul_datetime].strftime("%Y-%m")}.sort.reverse.to_h
-      return
-    when "filenum"
-      @artists_group = artists.group_by {|x| (x[:recent_filenum] / 10 * 10)}.sort.reverse.to_h
-      return
-    when "pxvname"
-      @artists_group = artists.group_by {|elem| select_group(elem[:pxvname])}.sort.to_h
-      return
-    else
-    end
-
-    set_artist_group_pxv(artists)
+    artists = index_select(artists, prms)
+    artists = index_sort(artists, prms)
+    @artists_group = index_group_by(artists, prms)
   end
 
   # GET /artists/1 or /artists/1.json
   def show
-    if true #params[:access_dt_update] != nil and params[:access_dt_update] == "yes"
+    if params[:access_dt_update].presence and params[:access_dt_update] == "no"
+    else
       @artist.update(last_access_datetime: Time.now)
     end
 
-    @path_list = []
+    
     if params[:mode] != nil and params[:mode] == "viewer"
       @show_mode = "viewer"
     end
-    #elsif true #params[:mode] != nil and params[:mode] == "thumbnail"
-      rpath = ""
-      search_str = %!(#{@artist[:pxvid]})!
-      base_path = Rails.root.join("public").to_s
 
-      # DBにパスを格納したいが面倒なので。。。　
-      txtpath = Rails.root.join("public/pxv/dirlist.txt").to_s
-      File.open(txtpath) { |file|
-        while line  = file.gets
-          if line.include?(search_str)
-            rpath = line.chomp
-            break
-          end
-        end
-      }
-
-      if rpath != ""
-        tmp_list = []
-        Find.find(rpath) do |path|
-          if File.extname(path) == ".jpg"
-            tmp_list << path.gsub(base_path, "")
-          end
-        end
-        @path_list = tmp_list.reverse
-      end
-    #end
+    @path_list = Artist.get_pathlist(%!(#{@artist[:pxvid]})!)
   end
 
   # GET /artists/new
@@ -171,11 +161,28 @@ class ArtistsController < ApplicationController
   def edit
   end
 
-  # GET /artists/1/edit_xxx
+  # GET ???PATCH /artists/1/edit_xxx
   def edit_no_update
+    method = params["method"]
+    if method == "no_update"
+      update_params = {status: "長期更新なし"}
+    elsif method == "priority_minus_one"
+      priority = @artist.priority - 1
+      update_params = {priority: priority}
+    elsif method == "priority_minus_ten"
+      priority = @artist.priority - 10
+      update_params = {priority: priority}
+    elsif method == "priority_plus_ten:R18"
+      priority = @artist.priority + 10
+      r18 = "R18"
+      update_params = {priority: priority, r18: r18}
+    else
+      puts "unknown method"
+      update_params = nil
+    end
     respond_to do |format|
-      if @artist.update(status: "長期更新なし")
-        format.html { redirect_to artist_url(@artist), notice: "Artist was successfully updated." }
+      if @artist.update(update_params)
+        format.html { redirect_to artist_url(@artist, access_dt_update: "no"), notice: "Artist was successfully updated." }
         format.json { render :show, status: :ok, location: @artist }
       else
         format.html { render :edit, status: :unprocessable_entity }
@@ -235,62 +242,107 @@ class ArtistsController < ApplicationController
       )
     end
 
-    def select_group(pxvname)
-      group = ""
-      fl = pxvname[0]
-      case fl
-      when /[A-Za-z]/
-        group = fl.downcase
-      when /\p{katakana}/
-        fl = NKF.nkf('-w -X', fl) #半角を全角に変換
-        fl = fl.tr('ァ-ン','ぁ-ん')
-        group = "あ"
-      when /\p{hiragana}/
-        group = "あ"
-      when /[:digit:]/
-        group = "0"
-      when /[0-9]/
-        group = "0"
-      when /[가-힣]/
-        group = "ハングル"
-      else
-        group = "他"
+    def index_select(artists, prms)
+      if prms.twt
+        artists = artists.select {|x| x[:twtid] != ""}
+        @twt = true
       end
-      group
+  
+      if prms.ai
+        artists = artists.select {|x| x[:comment] == "AI"}
+      end
+  
+      if prms.amount_gt != 0 and prms.amount_lt != 0
+        artists = artists.select {|x| prms.amount_gt < x[:filenum] and x[:filenum] <= prms.amount_lt}
+      elsif prms.amount_gt != 0
+        artists = artists.select {|x| prms.amount_gt < x[:filenum]}
+      elsif prms.amount_lt != 0
+        artists = artists.select {|x| x[:filenum] <= prms.amount_lt}
+      else
+      end
+  
+      if prms.year_since != 0 and  prms.year_until != 0
+        artists = artists.select {|x| y = x[:last_ul_datetime].strftime("%Y").to_i; y >= prms.year_since and y <= prms.year_until}
+      end
+  
+      if prms.last_access_datetime > 0
+        artists = artists.select {|x| !x.last_access_datetime_p(prms.last_access_datetime)}
+      elsif prms.last_access_datetime < 0
+        # 負の値の場合は最近アクセスしたものを選択
+        artists = artists.select {|x| x.last_access_datetime_p(prms.last_access_datetime)}
+      end
+      artists
     end
 
-    def judge_number(filenum)
-      if filenum >= 100
-        "3多"
-      elsif filenum >= 30
-        "2中"
-      elsif filenum >= 10
-        "1小"
+    def index_sort(artists, prms)
+      case prms.sort_by
+      when "access_date_X_last_ul_datetime"
+        artists = artists.sort_by {|x| [x[:last_access_datetime], x[:last_ul_datetime]]}
+      when "access_date_X_recent_filenum"
+        artists = artists.sort_by {|x| [x[:last_access_datetime], -x[:recent_filenum], -x[:filenum]]}
+      when "access_date_X_recent_filenum_X_ul"
+        artists = artists.sort_by {|x| [-x.get_date_delta(x[:last_access_datetime]), -x.priority, -x.prediction_up_cnt, -x[:recent_filenum], -x[:filenum], x[:last_ul_datetime]]}
+      when "priority_X_recent_filenum_X_ul"
+        #artists = artists.sort_by {|x| [-x.priority, -x.get_date_delta(x[:last_access_datetime]), -x.prediction_up_cnt, -x[:recent_filenum], -x[:filenum], x[:last_ul_datetime]]}
+        artists = artists.sort_by {|x| [-x.priority, -x.prediction_up_cnt, -x[:recent_filenum], -x[:filenum], x[:last_ul_datetime]]}
+      when "access_date_X_pxvname_X_recent_filenum"
+        artists = artists.sort_by {|x| [x[:last_access_datetime], x[:pxvname].downcase, -x[:recent_filenum], -x[:filenum]]}
       else
-        "0"
+        # デフォルト？
+        artists = artists.sort_by {|x| [-x.priority, -x.prediction_up_cnt, -x[:recent_filenum], -x[:filenum], x[:last_ul_datetime]]}
       end
+      artists
+    end
+
+    def index_group_by(artists, prms)
+      artists_group = {}
+      case prms.group_by
+      when "last_ul_datetime"
+        artists_group = artists.group_by {|x| x[:last_ul_datetime].strftime("%Y")}.sort.reverse.to_h
+      when "last_ul_datetime_X_filenum"
+        artists_group = artists.group_by {|x| x.judge_number(x[:filenum]) + ":" + x[:last_ul_datetime].strftime("%Y")}.sort.reverse.to_h
+      when "last_ul_datetime_ym"
+        artists_group = artists.group_by {|x| x[:last_ul_datetime].strftime("%Y-%m")}.sort.reverse.to_h
+      when "filenum"
+        artists_group = artists.group_by {|x| (x[:filenum] / 100 * 100)}.sort.reverse.to_h
+      when "recent_filenum"
+        artists_group = artists.group_by {|x| (x[:recent_filenum] / 10 * 10)}.sort.reverse.to_h
+      when "pxvname"
+        artists_group = artists.group_by {|x| x.select_group(x[:pxvname])}.sort.to_h
+      when "none"
+        artists_group["none"] = artists
+      else
+        #artists_group = set_artist_group_pxv(artists)
+        artists_group["all"] = artists
+      end
+      artists_group
     end
 
     def set_artist_group_pxv(artists_select)
-      artists_group_by_year = artists_select.group_by {|elem| elem[:last_ul_datetime].strftime("%Y")}.sort.reverse.to_h
+      artists_group = {}
+      
+      artists_group_by_year = artists_select.group_by {|x| x[:last_ul_datetime].strftime("%Y")}.sort.reverse.to_h
 
       artists_group_by_year.each do |key, artists|
         if artists.count > 300
-          artists_group_by_yymm = artists.group_by {|elem| elem[:last_ul_datetime].strftime("%Y-%m")}.sort.reverse.to_h
+          artists_group_by_yymm = artists.group_by {|x| x[:last_ul_datetime].strftime("%Y-%m")}.sort.reverse.to_h
           artists_group_by_yymm.each do |tmp_key, tmp_artists|
             if tmp_artists.count > 100
-              tmp2 = tmp_artists.group_by {|elem| judge_number(elem[:filenum])}.sort.reverse.to_h
+              tmp2 = tmp_artists.group_by {|x| x.judge_number(x[:filenum])}.sort.reverse.to_h
               tmp2.each do |tmp2_key, tmp2_artists|
-                @artists_group[tmp_key + ":" + tmp2_key.to_s] = tmp2_artists.sort_by {|x| [x[:last_access_datetime], -x[:recent_filenum]]}
+                artists_group[tmp_key + ":" + tmp2_key.to_s] = tmp2_artists#.sort_by {|x| [x[:last_access_datetime], -x[:recent_filenum]]}
               end
             else
-              @artists_group[tmp_key] = tmp_artists.sort_by {|x| [x[:last_access_datetime], -x[:filenum]]}
+              artists_group[tmp_key] = tmp_artists.sort_by {|x| [x[:last_access_datetime], -x[:filenum]]}
             end
           end
         else
-          @artists_group[key] = artists.sort_by {|x| [x[:last_access_datetime], -x[:filenum]]}
+          artists_group[key] = artists.sort_by {|x| [x[:last_access_datetime], -x[:filenum]]}
         end
       end
-      @artists_group["all"] = Artist.all.sort_by {|x| [x[:last_access_datetime], -(x[:recent_filenum] / 10 * 10), x[:last_ul_datetime] ,-x[:filenum]]}
+      #artists_group["all"] = artists_select.sort_by {|x| [-x.priority, x[:last_access_datetime]]}
+
+      artists_group
     end
+
 end

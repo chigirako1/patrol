@@ -65,11 +65,6 @@
     </script>
   </div>
 
-  <div>
-    <%= form.label :r18, style: "display: block" %>
-    <%= form.select :r18, [["R18", "R18"], ["R15(裸とか)", "R15"], ["R12(水着とか)", "R12"], ["健全？", "健全"]], include_blank: "選択して下さい" %>
-  </div>
-
   <hr />
 
   <div>
@@ -78,16 +73,21 @@
   </div>
 
   <div>
+    <%= form.label "コメント/AI/etc...", style: "display: block" %>
+    <%= form.select :comment, [["AI", "AI"], ["3D", "3D"], ["体がでかい（太い）", "体がでかい（太い）"], ["宣伝が多すぎる(ぼかし/モザイク)", "宣伝が多すぎる"], ["パクリ", "パクリ"], ["BL専", "BL専"]], include_blank: "選択して下さい" %>
+  </div>
+ 
+  <div>
     <%= form.label "注意点", style: "display: block" %>
     <%= form.text_field :warnings %>
   </div>
 
-  <div>
-    <%= form.label "コメント/AI/etc...", style: "display: block" %>
-    <%= form.select :comment, [["AI", "AI"], ["体がでかい（太い）", "体がでかい（太い）"], ["宣伝が多すぎる", "宣伝が多すぎる"], ["パクリ", "パクリ"], ["BL専", "BL専"]], include_blank: "選択して下さい" %>
-  </div>
- 
   <hr />
+
+  <div>
+    <%= form.label :r18, style: "display: block" %>
+    <%= form.select :r18, [["R18", "R18"], ["R15(裸とか)", "R15"], ["R12(水着とか)", "R12"], ["健全？", "健全"]], include_blank: "選択して下さい" %>
+  </div>
   
   <h3>更新</h3>
   <div>
@@ -96,15 +96,15 @@
 
   <h2>その他</h2>
   <div>
-    <%= form.label :chara, style: "display: block" %>
-    <%= form.text_field :chara %>
-  </div>
-  
-  <div>
     <%= form.label :work, style: "display: block" %>
     <%= form.text_field :work %>
   </div>
 
+  <div>
+    <%= form.label :chara, style: "display: block" %>
+    <%= form.text_field :chara %>
+  </div>
+  
   <h2>ユーザー情報</h2>
   <div>
     <%= form.label :pxvname, style: "display: block" %>

@@ -11,82 +11,170 @@
     <%= f.submit "検索", class: "btn btn-primary", formtarget: :_blank %>
   <% end %>
 </div>
+<hr />
+<div class="view_form">
+  <%= form_with url: artists_path, local: true, method: :get do |f| %>
+    <%= f.label :sort_by, style: "display: block" %>
+    <%= f.select :sort_by, 
+      options_for_select([
+        ['access_date_X_last_ul_datetime'], 
+        ['access_date_X_recent_filenum'], 
+        ['access_date_X_recent_filenum_X_ul'], 
+        ['priority_X_recent_filenum_X_ul'], 
+        ['access_date_X_pxvname_X_recent_filenum'],
+        [''],
+        ],
+        selected: params[:sort_by] 
+      ) %>
+    <br />
+    <%= f.label :group_by, style: "display: block" %>
+    <%= f.select :group_by, 
+      options_for_select(
+        [
+          ['last_ul_datetime'], 
+          ['last_ul_datetime_X_filenum'], 
+          ['last_ul_datetime_ym'], 
+          ['filenum'], 
+          ['recent_filenum'],
+          ['pxvname'],
+          ['none'],
+        ],
+        selected: params[:group_by] 
+      ) %>
+    <br />
+    <%= f.label :r18, style: "display: block" %>
+    <%= f.select :r18, 
+      options_for_select(
+        [
+          ['R18'], 
+          ['R15'], 
+          ['R12'],
+          [''],
+        ],
+        selected: params[:r18] 
+      ) %>
+    <br />
+    <%= f.label "amount_gt" %>
+    <%= f.number_field :amount_gt, :value => params[:amount_gt] %>
+    <br />
+    <%= f.label "amount_lt" %>
+    <%= f.number_field :amount_lt, :value => params[:amount_lt] %>
+    <br />
+    <%= f.label "last_access_datetime" %>
+    <%= f.number_field :last_access_datetime, :value => params[:last_access_datetime] %>
+    <br />
+    <%= f.label "display_number" %>
+    <%= f.number_field :display_number, :value => params[:display_number] %>
+    <br />
+    <%= f.label "year" %>
+    <%= f.number_field :year, :value => params[:year] %>
+    <br />
+    <%= f.check_box 'thumbnail', {checked: params[:thumbnail] == "true"}, true, false %>
+    <%= f.label "thumbnail" %>
+    <br />
+    <%= f.check_box 'ai', {checked: params[:ai] == "true"}, true, false %>
+    <%= f.label "ai" %>
+    <br />
+    <%= f.check_box 'twt', {checked: params[:twt] == "true"}, true, false %>
+    <%= f.label "twt" %>
+    <br />
+    <%= f.submit "表示更新", name: nil %>
+  <% end %>
+</div>
 
 <h1>Artists</h1>
 
 <%= link_to "default", "../artists" %>
 <%= link_to "recent", "../artists?group_by=last_ul_datetime&sort_by=access_date_X_recent_filenum_X_ul" %>
-<%= link_to "pxvids", "../artists?file=pxvids&display_number=100&group_by=last_ul_datetime&sort_by=access_date_X_recent_filenum_X_ul" %>
-<%= link_to "urllist", "../artists?file=urllist&display_number=100&group_by=last_ul_datetime&sort_by=access_date_X_recent_filenum_X_ul" %>
-<%= link_to "twt", "../artists?twt=twt&display_number=100&group_by=last_ul_datetime&sort_by=access_date_X_last_ul_datetime" %>
-<%= link_to "ai", "../artists?ai=ai&display_number=100&group_by=last_ul_datetime&sort_by=access_date_X_last_ul_datetime" %>
+<%= link_to "pxvids", "../artists?file=pxvids&year=2023&last_access_datetime=23&thumbnail=true&display_number=30&group_by=last_ul_datetime&sort_by=access_date_X_recent_filenum_X_ul" %>
+<%= link_to "urllist", "../artists?file=urllist&filename=0907&year=2023&last_access_datetime=23&thumbnail=true&display_number=10&group_by=last_ul_datetime&sort_by=access_date_X_recent_filenum_X_ul" %>
+<%= link_to "twt", "../artists?twt=true&display_number=50&group_by=last_ul_datetime&sort_by=access_date_X_last_ul_datetime" %>
+<%= link_to "ai", "../artists?ai=true&last_access_datetime=7&display_number=50&group_by=last_ul_datetime&sort_by=priority_X_recent_filenum_X_ul" %>
 <%= link_to "2023", "../artists?year=2023&last_access_datetime=17&display_number=50&group_by=filenum&sort_by=access_date_X_recent_filenum_X_ul" %>
-<%= link_to "many+group:name", "../artists?amount=many&display_number=100&group_by=pxvname&sort_by=access_date_X_pxvname_X_recent_filenum" %>
-<%= link_to "many+group:ul+sort:", "../artists?amount=many&display_number=100&group_by=last_ul_datetime&sort_by=access_date_X_last_ul_datetime&amount_gt=500" %>
-<%= link_to "mid+group:ul+sort:", "../artists?amount=mid&amount_gt=100&amount_lt=500&display_number=100&group_by=last_ul_datetime&sort_by=access_date_X_last_ul_datetime" %>
-<%= link_to "few+group:ul+sort:", "../artists?amount=few&amount_lt=100&display_number=100&group_by=last_ul_datetime&sort_by=access_date_X_last_ul_datetime" %>
-<%= link_to "few", "../artists?amount=few&display_number=100&group_by=last_ul_datetime&sort_by=access_date_X_recent_filenum" %>
-<%= link_to "priority", "../artists?last_access_datetime=7&display_number=50&group_by=last_ul_datetime&sort_by=priority_X_recent_filenum_X_ul" %>
-
+<%= link_to "few+group:ul+sort:", "../artists?amount_lt=100&display_number=50&group_by=last_ul_datetime&sort_by=access_date_X_last_ul_datetime" %>
+<%= link_to "few", "../artists?amount=few&display_number=50&group_by=last_ul_datetime&sort_by=access_date_X_recent_filenum" %>
+<%= link_to "mid+group:ul+sort:", "../artists?amount_gt=100&amount_lt=500&display_number=100&last_access_datetime=23&group_by=last_ul_datetime&sort_by=priority_X_recent_filenum_X_ul" %>
+<%= link_to "many+group:name", "../artists?amount_gt=500&display_number=50&group_by=pxvname&sort_by=access_date_X_pxvname_X_recent_filenum" %>
+<%= link_to "many+group:ul+sort:", "../artists?amount_gt=500&display_number=50&group_by=last_ul_datetime&sort_by=access_date_X_last_ul_datetime" %>
+<%= link_to "priority", "../artists?last_access_datetime=20&display_number=50&group_by=last_ul_datetime_X_filenum&sort_by=priority_X_recent_filenum_X_ul" %>
+<%= link_to "thumbnail", "../artists?thumbnail=true&last_access_datetime=20&display_number=10&group_by=last_ul_datetime&sort_by=priority_X_recent_filenum_X_ul" %>
 
 <a href="#twt_url_list">twt_url_list</a>
 
 <% @artists_group.each do |key, artists| %>
-<h2><%= key %>(<%= artists.size %>)</h2>
-<table border="1" rules="all">
-  <tr>
-    <th>id</th>
-    <th>pxvname</th>
-    <th>pxvid</th>
-    <th>show</th>
-    <th>ファイル数</th>
-    <th>最近</th>
-    <th>予想</th>
-    <th>優先度</th>
-    <th>最終DL日</th>
-    <th>最新投稿日</th>
-    <th>最新アクセス日</th>
-    <th>状態</th>
-    <th>twt</th>
-    <th>twt DL日</th>
-    <th>コメント</th>
-  </tr>
-  <% artists.first(@size_per_table).each do |artist| %>
-    <% pxv_url = %!https://www.pixiv.net/users/#{artist["pxvid"]}! %>
-    <% twt_url = %!https://twitter.com/#{artist["twtid"]}! %>
-    <% if @twt %>
-      <% twt = Twitter.find_by(twtid: artist["twtid"]) %>
-    <% else %>
-      <% twt = nil %>
-    <% end %>
+  <h2><%= "#{key}(#{artists.size})[#{params[:begin_no]}-#{params[:begin_no].to_i + @size_per_table}]" %></h2>
+  <table border="1" rules="all">
     <tr>
-      <td><%= artist["id"] %></td>
-      <td><%= artist["pxvname"] %></td>
-      <td><%= link_to artist["pxvid"], pxv_url, target: :_blank, rel: "noopener noreferrer" %></td>
-      <td><%= link_to "■■■", artist, target: :_blank, rel: "noopener noreferrer" %></td>
-      <td align="right"><%= artist["filenum"] %></td>
-      <td align="right"><%= artist["recent_filenum"] %></td>
-      <td align="right" bgcolor="orange"><%= artist.prediction_up_cnt %></td>
-      <td align="right"><%= artist["priority"] %></td>
-      <td><%= artist.last_dl_datetime_disp %></td>
-      <% if artist.get_date_delta(artist["last_ul_datetime"]) < 30 %>
-        <td bgcolor="gray"><%= artist.get_date_info(artist["last_ul_datetime"]) %></td>
-      <% else %>
-        <td><%= artist.get_date_info(artist["last_ul_datetime"]) %></td>
+      <th>id</th>
+      <th>pxvname</th>
+      <th>pxvid</th>
+      <th>show</th>
+      <th>ファイル数</th>
+      <th>最近</th>
+      <th>予想</th>
+      <th>優先度</th>
+      <th>最終DL日</th>
+      <th>最新投稿日</th>
+      <th>最新アクセス日</th>
+      <th>状態</th>
+      <th>twt</th>
+      <th>twt DL日</th>
+      <th>コメント</th>
+      <% if @thumbnail %>
+        <th>pic</th>
+        <th>edit</th>
       <% end %>
-      <% if artist.last_access_datetime_p %>
-        <td bgcolor="gray"><%= artist.last_access_datetime_disp %></td>
-      <% else %>
-        <td><%= artist.last_access_datetime_disp %></td>
-      <% end %>
-      <td><%= artist["status"] %></td>
-      <td><%= link_to "@#{artist["twtid"]}", twt_url, target: :_blank, rel: "noopener noreferrer" if artist["twtid"] != "" %></td>
-      <td><%= artist.get_date_info(twt.last_dl_datetime) if twt %></td>
-      <td><%= artist["comment"] %></td>
     </tr>
-  <% end %>
-</table>
+    <% artists[@begin_no..(@begin_no+@size_per_table)].each do |artist| %>
+      <% pxv_url = %!https://www.pixiv.net/users/#{artist["pxvid"]}! %>
+      <% twt_url = %!https://twitter.com/#{artist["twtid"]}! %>
+      <% if @twt %>
+        <% twt = Twitter.find_by(twtid: artist["twtid"]) %>
+      <% else %>
+        <% twt = nil %>
+      <% end %>
+      <tr>
+        <td><%= artist["id"] %></td>
+        <td><%= artist["pxvname"] %></td>
+        <td><%= link_to artist["pxvid"], pxv_url, target: :_blank, rel: "noopener noreferrer" %></td>
+        <td><%= link_to "■■■", artist, target: :_blank, rel: "noopener noreferrer" %></td>
+        <td align="right"><%= artist["filenum"] %></td>
+        <td align="right"><%= artist["recent_filenum"] %></td>
+        <td align="right" bgcolor="orange"><%= artist.prediction_up_cnt %></td>
+        <% if artist["priority"] > 0 %>
+          <td align="right" bgcolor="yellow"><%= artist["priority"] %></td>
+        <% elsif artist["priority"] < 0 %>
+          <td align="right" bgcolor="gray"><%= artist["priority"] %></td>
+        <% else %>
+          <td align="right"><%= artist["priority"] %></td>
+        <% end %>
+        <td><%= artist.last_dl_datetime_disp %></td>
+        <% if artist.get_date_delta(artist["last_ul_datetime"]) < 30 %>
+          <td bgcolor="gray"><%= artist.get_date_info(artist["last_ul_datetime"]) %></td>
+        <% else %>
+          <td><%= artist.get_date_info(artist["last_ul_datetime"]) %></td>
+        <% end %>
+        <% if artist.last_access_datetime_p %>
+          <td bgcolor="gray"><%= artist.last_access_datetime_disp %></td>
+        <% else %>
+          <td><%= artist.last_access_datetime_disp %></td>
+        <% end %>
+        <td><%= artist["status"] %></td>
+        <td><%= link_to "@#{artist["twtid"]}", twt_url, target: :_blank, rel: "noopener noreferrer" if artist["twtid"] != "" %></td>
+        <td><%= artist.get_date_info(twt.last_dl_datetime) if twt %></td>
+        <td><%= artist["comment"] %></td>
+        <% if @thumbnail %>
+          <td><%= pic_path_tag(artist.pxvid, 5) %></td>
+          <td>
+            ・<%= link_to("「優先度」を+10 & R18", update_no_update_artist_path(id: artist.id, method: "priority_plus_ten:R18"), method: :patch) %><br />
+            ・<%= link_to("「優先度」を-10", update_no_update_artist_path(id: artist.id, method: "priority_minus_ten"), method: :patch) %><br />
+          </td>
+        <% end %>
+      </tr>
+    <% end %>
+  </table>
 <% end %>
+<%= link_to "next", "../artists?#{get_url_params}&begin_no=#{params[:begin_no].to_i + @size_per_table}" %>
 
 <% if @unknown_id_list.size != 0 %>
   <h2>unknown pixiv id list(<%= @unknown_id_list.size %>)</h2>
@@ -110,13 +198,20 @@
    
     <h3>
       <%= link_to "@" + key, "https://twitter.com/#{key}", target: :_blank, rel: "noopener noreferrer" %>
-      <% if twt != nil %>
-        <%= link_to twt.twtname, twt %>
-      <% end %>
     </h3>
+    <% if twt != nil %>
+      twt:[<%= link_to twt.twt_screen_name, twt %>]
+      <% pxv_artist = Artist.find_by(pxvid: twt.pxvid) %>
+      <br />
+      <% if pxv_artist != nil %>
+        pxv:[<%= link_to pxv_artist.pxvname, pxv_artist %>]
+      <% end %>
+      <br />
+    <% end %>
     <% url_list.each do |url| %>
-      ・<%= link_to "■■■■■", Artist.get_twt_url(url), target: :_blank, rel: "noopener noreferrer" %>
-      |<%= link_to "photo1", Artist.get_twt_url(url) + "/photo/1", target: :_blank, rel: "noopener noreferrer" %>
+      <% twturl = Artist.get_twt_url(url) %>
+      ・<%= link_to "■■■■■", twturl, target: :_blank, rel: "noopener noreferrer" %>
+      |<%= link_to "photo1", twturl + "/photo/1", target: :_blank, rel: "noopener noreferrer" %>
       |<%= link_to "?■■■■■", url, target: :_blank, rel: "noopener noreferrer" %>
       <br />
     <% end %>
