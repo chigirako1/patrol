@@ -2,7 +2,8 @@ require 'nkf'
 require 'find'
 
 class Artist < ApplicationRecord
-    extend UrlTxtReader
+    include UrlTxtReader
+    #extend UrlTxtReader
 
     has_one :twitters, :class_name => 'Twitter'
 
@@ -24,15 +25,58 @@ class Artist < ApplicationRecord
         @artist = Artist.where("#{target_col} LIKE?", search_word_p)
     end
 
-    def prediction_up_cnt()
+    def point
         if status == "長期更新なし" or status == "作品ゼロ"
             return 0
         end
-        filenum
-        recent_filenum
-        delta_d = get_date_delta(last_ul_datetime)
 
-        pred = recent_filenum * 100 / 60 * delta_d / 100
+        pred_cnt = prediction_up_cnt(true)
+
+        case r18
+        when "R18"
+            comp = 180
+        when "R15"
+            comp = 150
+        when "R12"
+            comp = 120
+        when "cute"
+            comp = 101
+        when "健全"
+            comp = 100
+        else
+            comp = 110
+        end
+        pt = (pred_cnt * comp) / 100
+
+        if priority < 0
+            pri_pt = priority
+        else
+            pri_pt = priority / 10
+        end
+        pt += pri_pt
+
+        filenum_pt = filenum / 100
+        pt += filenum_pt
+
+        years = get_year_delta(last_ul_datetime)
+        if years > 3
+            # むかしすぎる場合はポイントを下げまくる
+            -pt
+        else
+            pt
+        end
+    end
+
+    def prediction_up_cnt(use_ac_date = false)
+        if use_ac_date and last_ul_datetime < last_access_datetime and get_date_delta(last_access_datetime) <= 26
+            datetime = last_access_datetime
+        else
+            datetime = last_ul_datetime
+        end
+
+        delta_d = get_date_delta(datetime)
+
+        pred = (recent_filenum * 100 / 60) * delta_d / 100
         pred
     end
 
@@ -59,86 +103,12 @@ class Artist < ApplicationRecord
         end
     end
 
-    def last_access_datetime_p(day = 13)
-        if day < 0
-            get_date_delta(last_access_datetime) < -day
-        else
-            get_date_delta(last_access_datetime) < day
-        end
-    end
-
-    def get_date_delta(date)
-        now = Time.zone.now  
-        days = (now - date).to_i / 60 / 60 / 24
-    end
-
-    def get_date_info(date)
-        days = get_date_delta(date)
-        if days >= 365
-            years = days / 365
-            "#{years}年以上前"
-        elsif days >= 30
-            months = days / 30
-            "#{months}ヵ月以上前"
-        elsif days == 0
-            "24時間以内"
-        else
-            "#{days}日以内"
-        end
-    end
-
-    def get_datetime_string(last_ul_datetime)
-        now = Time.zone.now
-        if last_ul_datetime.year == now.year
-          ym_format = "%m月%d日"
-        else
-          ym_format = "%Y年%m月"
-        end
-        last_ul_datetime_str = last_ul_datetime.in_time_zone('Tokyo').strftime(ym_format)
-    end
-
-    def select_group(pxvname)
-        group = ""
-        fl = pxvname[0]
-        case fl
-        when /[A-Za-z]/
-          group = fl.downcase
-        when /\p{katakana}/
-          fl = NKF.nkf('-w -X', fl) #半角を全角に変換
-          fl = fl.tr('ァ-ン','ぁ-ん')
-          group = "あ"
-        when /\p{hiragana}/
-          group = "あ"
-        when /[:digit:]/
-          group = "0"
-        when /[0-9]/
-          group = "0"
-        when /[가-힣]/
-          group = "ハングル"
-        else
-          group = "他"
-        end
-        group
-    end
-  
-    def judge_number(filenum)
-        if filenum >= 100
-            "3多"
-        elsif filenum >= 30
-            "2中"
-        elsif filenum >= 10
-            "1小"
-        else
-            "0"
-        end
-    end
-
     def self.get_ulrs(txts)
         id_list = []
         twt_urls = {}
         misc_urls = []
 
-        txts.each do |line|
+        txts.each_line do |line|
             line.chomp!
             next if line =~ /^$/
     
@@ -193,6 +163,7 @@ class Artist < ApplicationRecord
         }
 
         if rpath != ""
+            puts %!path="#{rpath}"!
             tmp_list = []
             Find.find(rpath) do |path|
                 if File.extname(path) == ".jpg"
@@ -206,11 +177,24 @@ class Artist < ApplicationRecord
     end
 
     def self.get_url_list(filepath)
-        txtpath = Rails.root.join(filepath).to_s
-        txts = File.open(txtpath)
-        id_list, twt_urls, misc_urls = get_ulrs(txts)
 
-        [id_list, twt_urls.sort.uniq, misc_urls.sort.uniq, ]
+        if filepath == ""
+            path_list = UrlTxtReader::path_list
+        else
+            path_list = []
+            path_list << Rails.root.join(filepath).to_s
+            puts %!path="#{filepath}"!
+        end
+
+        txt_sum = ""
+        path_list.each do |txtpath|
+            File.open(txtpath) {|txts|
+                txt_sum << txts.read
+            }
+        end
+
+        id_list, twt_urls, misc_urls = get_ulrs(txt_sum)
+        [id_list, twt_urls.sort.uniq, misc_urls.sort.uniq]
     end
 
     def self.get_id_list()
@@ -224,6 +208,33 @@ class Artist < ApplicationRecord
           end
         }
         id_list
+    end
+
+    def self.get_url_list_from_all_txt
+        misc_urls = []
+
+=begin
+        path_list = []
+        base_path = Rails.root.join("public").to_s
+        puts %!basepath="#{base_path}"!
+        Dir.glob(base_path + "/*") do |path|
+            puts %!path="#{path}"!
+            if path =~ /get illust url_\d+\.txt/
+                path_list << path
+            end
+        end
+=end
+        path_list = UrlTxtReader::path_list
+
+        path_list.each do |filepath|
+            File.open(filepath) {|txts|
+                txts.each do |line|
+                    misc_urls << line.chomp!
+                end
+            }
+        end
+
+        misc_urls.sort.uniq
     end
 
     def self.get_unknown_id_list(id_list)

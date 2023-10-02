@@ -11,17 +11,9 @@
     </div>
   <% end %>
 
-  <div>
-    <%= form.label :status, style: "display: block" %>
-    <%= form.select :status, [["退会", "退会"], ["停止", "停止"], ["長期更新なし", "長期更新なし"], ["作品ゼロ", "作品ゼロ"], ["一部消えた", "一部消えた"], ["取得途中", "取得途中"], ["最新から取得し直し中", "最新から取得し直し中"], ["彼岸", "彼岸"]], include_blank: "選択して下さい" %>
-    <%
-=begin %>
-    <%= f.collection_select :保存先のカラム名, テーブル（モデル）名.all, :実際にDBに保存させるカラム名, :選択肢に用いるカラム名, include_blank: "選択して下さい" %>
-    <%
-=end %>
-  </div>
+  <h1>編集</h1>
 
-  <h2>twt/nje</h2>
+  <h2>twt</h2>
   <div>
     <%= form.label :twtid, style: "display: block" %>
     @<%= form.text_field :twtid %>
@@ -40,11 +32,36 @@
     </script>
   </div>
 
+  <hr />
+
   <div>
-    <%= form.label :njeid, style: "display: block" %>
-    <%= form.text_field :njeid %>
+    <%= form.label :r18, style: "display: block" %>
+    <%= form.select :r18, [["R18", "R18"], ["R15(裸とか)", "R15"], ["R12(水着とか)", "R12"], ["健全？", "健全"], ["かわいい系", " "]], include_blank: "選択して下さい" %>
+
+    <input type="button" value="R18に設定" onclick="toggle_r18();" />
+    <script>
+      function toggle_r18() {
+        //TODO: トグルするようにする
+        let r18_sel_box = document.getElementById("artist_r18");
+        let options = r18_sel_box.options;
+        options[1].selected = true;
+      }
+    </script>
   </div>
 
+  <hr />
+
+  <div>
+    <%= form.label :status, style: "display: block" %>
+    <%= form.select :status, [["退会", "退会"], ["停止", "停止"], ["長期更新なし", "長期更新なし"], ["作品ゼロ", "作品ゼロ"], ["一部消えた", "一部消えた"], ["取得途中", "取得途中"], ["最新から取得し直し中", "最新から取得し直し中"], ["彼岸", "彼岸"]], include_blank: "選択して下さい" %>
+  </div>
+
+  <h3>更新</h3>
+  <div>
+    <%= form.submit %>
+  </div>
+
+  <h2>その他</h2>
   <div>
     <%= form.label :rating, style: "display: block" %>
     <%= form.number_field :rating %>
@@ -82,19 +99,6 @@
     <%= form.text_field :warnings %>
   </div>
 
-  <hr />
-
-  <div>
-    <%= form.label :r18, style: "display: block" %>
-    <%= form.select :r18, [["R18", "R18"], ["R15(裸とか)", "R15"], ["R12(水着とか)", "R12"], ["健全？", "健全"]], include_blank: "選択して下さい" %>
-  </div>
-  
-  <h3>更新</h3>
-  <div>
-    <%= form.submit %>
-  </div>
-
-  <h2>その他</h2>
   <div>
     <%= form.label :work, style: "display: block" %>
     <%= form.text_field :work %>
@@ -114,6 +118,11 @@
   <div>
     <%= form.label :pxvid, style: "display: block" %>
     <%= form.number_field :pxvid %>
+  </div>
+
+  <div>
+    <%= form.label :njeid, style: "display: block" %>
+    <%= form.text_field :njeid %>
   </div>
 
   <hr />

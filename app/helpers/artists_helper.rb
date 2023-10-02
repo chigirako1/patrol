@@ -4,7 +4,8 @@ module ArtistsHelper
         tag = ""
         pathlist = Artist.get_pathlist("(#{pxvid})")
         pathlist.first(no_of_disp).each do |path|
-            tag += image_tag path, width: '15%', height: '15%'
+            #tag += image_tag path, width: '15%', height: '15%'
+            tag += link_to image_tag(path, width: '15%', height: '15%'), path, target: :_blank, rel: "noopener noreferrer"
         end
         tag.html_safe
     end

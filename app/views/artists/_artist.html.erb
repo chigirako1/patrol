@@ -22,19 +22,25 @@
     <table border="1">
       <tr>
         <th>ファイル数</th>
+        <th>最近</th>
         <th>優先度</th>
         <th>Rating</th>
         <th>コメント</th>
         <th>備考</th>
         <th>R18</th>
+        <th>ポイント</th>
+        <th>予測</th>
       </tr>
       <tr>
         <td><%= artist.filenum %></td>
+        <td><%= artist.recent_filenum %></td>
         <td><%= artist.priority %></td>
         <td><%= artist.rating %></td>
         <td><%= artist.comment %></td>
         <td><%= artist.remarks %></td>
         <td><%= artist.r18 %></td>
+        <td><%= artist.point %></td>
+        <td><%= artist.prediction_up_cnt(false) %></td>
       </tr>
     </table>
   </p>
@@ -49,8 +55,6 @@
     <font color="red">twt未設定</font>
   <% end %>
 
-  <hr />
-
   <% if artist["njeid"] != "" %>
     nijieを開く
     <% url = %!https://nijie.info/members.php?id=#{artist["njeid"]}! %>
@@ -60,24 +64,30 @@
   <% end %>
   <hr />
 
-  
-  <p>
-    <strong>Last dl datetime:</strong>
-    <%= artist.last_dl_datetime.in_time_zone('Tokyo').strftime("%Y-%m-%d") %>
-    (<%= artist.get_date_info(artist.last_dl_datetime) %>)
-  </p>
 
   <p>
-    <strong>最新投稿日:</strong>
-    <font color="red">
-    <%= artist.last_ul_datetime.in_time_zone('Tokyo').strftime("%Y-%m-%d") %>
-    </font>
-    (<%= artist.get_date_info(artist.last_ul_datetime) %>)
-  </p>
-
-  <p>
-    <strong>Last access datetime:</strong>
-    <%= artist.last_access_datetime.in_time_zone('Tokyo').strftime("%Y-%m-%d") %>
+    <table border="1">
+      <tr>
+        <th>最新DL日</th>
+        <th>最新投稿日</th>
+        <th>最終アクセス日</th>
+      </tr>
+      <tr>
+        <td>
+          <%= artist.last_dl_datetime.in_time_zone('Tokyo').strftime("%Y-%m-%d") %>
+          (<%= artist.get_date_info(artist.last_dl_datetime) %>)
+        </td>
+        <td>
+          <font color="red">
+          <%= artist.last_ul_datetime.in_time_zone('Tokyo').strftime("%Y-%m-%d") %>
+          </font>
+          (<%= artist.get_date_info(artist.last_ul_datetime) %>)
+        </td>
+        <td>
+          <%= artist.last_access_datetime.in_time_zone('Tokyo').strftime("%Y-%m-%d") %>
+        </td>
+      </tr>
+    </table>
   </p>
 
   <% if artist.chara != "" %>

@@ -4,7 +4,7 @@
     <font color="red"><%= $1 %></font><br />
   <% end %>
   
-  <% @path_list.first(4).each do |path| %>
+  <% @path_list.first(@number_of_display).each do |path| %>
     <% #= @path_list %>
     <%= image_tag path, width: '20%', height: '20%' %>
   <% end %> 
@@ -20,6 +20,7 @@
   <a href="javascript:void(0);" onclick="next_pic();">次の画像</a>
   <br />
   <img id="imagexx" width="20%" height="20%" src="" />
+  <div id="pic_path">_</div>
   <hr />
 
   <textarea id="dirpath" name="dirpath" rows="1" cols="255"><%= File.dirname ("F:/dPxv" + @path_list[0]) %></textarea>

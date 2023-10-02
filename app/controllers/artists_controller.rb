@@ -1,12 +1,13 @@
 
+#------------------------------------------------------------------------------
+# class:
+#------------------------------------------------------------------------------
 class Params
   attr_accessor :param_file, :twt, :ai, :year_since, :year_until, :display_number, :group_by, :sort_by, 
               :amount_gt, :amount_lt, :filename, :last_access_datetime, :r18,
-              :thumbnail, :begin_no
+              :thumbnail, :begin_no, :url_list_only
 
   def initialize(params)
-    @param_file = params[:file]
-    display_number = params[:display_number]
     @group_by = params[:group_by]
     @sort_by = params[:sort_by]
     begin_no = params[:begin_no]
@@ -57,13 +58,14 @@ class Params
     puts "amount=#{@amount_gt}-#{@amount_lt}"
 
     last_access_datetime = params[:last_access_datetime]
-    if last_access_datetime == nil
+    if last_access_datetime == nil or last_access_datetime == 0
       @last_access_datetime = 25 #0
     else
       @last_access_datetime = last_access_datetime.to_i
     end
     puts "last_access_datetime=#{@last_access_datetime}"
 
+    display_number = params[:display_number]
     if display_number != nil
       @display_number = display_number.to_i
     else
@@ -87,15 +89,25 @@ class Params
     end
     puts %![twt:#{@twt}],[ai:#{@ai}],[thumbnail:#{@thumbnail}]!
 
+    @param_file = params[:file]
     filename = params[:filename]
     if filename == nil
-      @filename = "0907"
+      @filename = ""
     else
       @filename = filename
+    end
+
+    @url_list_only = false
+    url_list_only = params[:url_list_only]
+    if url_list_only == "true"
+      @url_list_only = true
     end
   end
 end
 
+#------------------------------------------------------------------------------
+# class:
+#------------------------------------------------------------------------------
 class ArtistsController < ApplicationController
   extend UrlTxtReader
   
@@ -106,6 +118,7 @@ class ArtistsController < ApplicationController
     @twt_urls = {}
     @unknown_id_list = []
     @misc_urls = []
+    @authors_list = []
     @twt = false
 
     prms = Params.new(params)
@@ -116,20 +129,33 @@ class ArtistsController < ApplicationController
     @artists_group = {}
     artists = Artist.all
 
-    if prms.param_file == "pxvids"
+    if prms.param_file == "urllist"
+      if prms.url_list_only
+        @misc_urls = Artist.get_url_list_from_all_txt
+        return
+      else
+        @twt = true
+
+        datestr = prms.filename
+        if datestr == ""
+          path = ""
+        else
+          path = "public/get illust url_#{datestr}.txt"
+        end
+        id_list, @twt_urls, @misc_urls = Artist.get_url_list(path)
+        artists = artists.select {|x| id_list.include?(x[:pxvid])}
+
+        @unknown_id_list = Artist.get_unknown_id_list(id_list)
+      end
+    elsif prms.param_file == "pxvids"
       @twt = true
       id_list = Artist.get_id_list()
       artists = artists.select {|x| id_list.include?(x[:pxvid])}
 
       @unknown_id_list = Artist.get_unknown_id_list(id_list)
-    elsif prms.param_file == "urllist"
-      @twt = true
-
-      datestr = prms.filename
-      id_list, @twt_urls, @misc_urls = Artist.get_url_list("public/get illust url_#{datestr}.txt")
-      artists = artists.select {|x| id_list.include?(x[:pxvid])}
-
-      @unknown_id_list = Artist.get_unknown_id_list(id_list)
+    elsif prms.param_file == "namelist"
+      @authors_list = UrlTxtReader::authors_list
+      return
     end
 
     artists = index_select(artists, prms)
@@ -147,6 +173,12 @@ class ArtistsController < ApplicationController
     
     if params[:mode] != nil and params[:mode] == "viewer"
       @show_mode = "viewer"
+    end
+
+    if params[:number_of_display].presence
+      @number_of_display = params[:number_of_display].to_i
+    else
+      @number_of_display = 4
     end
 
     @path_list = Artist.get_pathlist(%!(#{@artist[:pxvid]})!)
@@ -242,6 +274,7 @@ class ArtistsController < ApplicationController
       )
     end
 
+    # select
     def index_select(artists, prms)
       if prms.twt
         artists = artists.select {|x| x[:twtid] != ""}
@@ -251,7 +284,12 @@ class ArtistsController < ApplicationController
       if prms.ai
         artists = artists.select {|x| x[:comment] == "AI"}
       end
-  
+
+      if prms.r18 and prms.r18 != ""
+        artists = artists.select {|x| x[:r18] == prms.r18}
+        puts %!r18="#{prms.r18}"!
+      end
+
       if prms.amount_gt != 0 and prms.amount_lt != 0
         artists = artists.select {|x| prms.amount_gt < x[:filenum] and x[:filenum] <= prms.amount_lt}
       elsif prms.amount_gt != 0
@@ -274,6 +312,7 @@ class ArtistsController < ApplicationController
       artists
     end
 
+    # sort
     def index_sort(artists, prms)
       case prms.sort_by
       when "access_date_X_last_ul_datetime"
@@ -281,19 +320,20 @@ class ArtistsController < ApplicationController
       when "access_date_X_recent_filenum"
         artists = artists.sort_by {|x| [x[:last_access_datetime], -x[:recent_filenum], -x[:filenum]]}
       when "access_date_X_recent_filenum_X_ul"
-        artists = artists.sort_by {|x| [-x.get_date_delta(x[:last_access_datetime]), -x.priority, -x.prediction_up_cnt, -x[:recent_filenum], -x[:filenum], x[:last_ul_datetime]]}
-      when "priority_X_recent_filenum_X_ul"
-        #artists = artists.sort_by {|x| [-x.priority, -x.get_date_delta(x[:last_access_datetime]), -x.prediction_up_cnt, -x[:recent_filenum], -x[:filenum], x[:last_ul_datetime]]}
-        artists = artists.sort_by {|x| [-x.priority, -x.prediction_up_cnt, -x[:recent_filenum], -x[:filenum], x[:last_ul_datetime]]}
+        artists = artists.sort_by {|x| [-x.get_date_delta(x[:last_access_datetime]), -x.priority, -x.point, -x[:recent_filenum], -x[:filenum], x[:last_ul_datetime]]}
       when "access_date_X_pxvname_X_recent_filenum"
         artists = artists.sort_by {|x| [x[:last_access_datetime], x[:pxvname].downcase, -x[:recent_filenum], -x[:filenum]]}
+      when "priority_X_recent_filenum_X_ul"
+        #artists = artists.sort_by {|x| [-x.priority, -x.get_date_delta(x[:last_access_datetime]), -x.point, -x[:recent_filenum], -x[:filenum], x[:last_ul_datetime]]}
+        artists = artists.sort_by {|x| [-x.point, -x.priority, -x[:recent_filenum], -x[:filenum], x[:last_ul_datetime]]}
       else
         # デフォルト？
-        artists = artists.sort_by {|x| [-x.priority, -x.prediction_up_cnt, -x[:recent_filenum], -x[:filenum], x[:last_ul_datetime]]}
+        artists = artists.sort_by {|x| [-x.point, -x.priority, -x[:recent_filenum], -x[:filenum], x[:last_ul_datetime]]}
       end
       artists
     end
 
+    # group_by
     def index_group_by(artists, prms)
       artists_group = {}
       case prms.group_by
@@ -309,6 +349,8 @@ class ArtistsController < ApplicationController
         artists_group = artists.group_by {|x| (x[:recent_filenum] / 10 * 10)}.sort.reverse.to_h
       when "pxvname"
         artists_group = artists.group_by {|x| x.select_group(x[:pxvname])}.sort.to_h
+      when "status"
+        artists_group = artists.group_by {|x| x.status}.sort.to_h
       when "none"
         artists_group["none"] = artists
       else
