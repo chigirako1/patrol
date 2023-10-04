@@ -71,6 +71,9 @@ class Params
     else
       @display_number = 10
     end
+    if @display_number == 0
+      @display_number = 10
+    end
     puts %!@display_number=#{@display_number}!
 
     twt = params[:twt]
@@ -154,7 +157,10 @@ class ArtistsController < ApplicationController
 
       @unknown_id_list = Artist.get_unknown_id_list(id_list)
     elsif prms.param_file == "namelist"
-      @authors_list = UrlTxtReader::authors_list
+      @authors_list = UrlTxtReader::authors_list("r18book_author_20230813.tsv")
+      return
+    elsif prms.param_file == "namelist_djn"
+      @authors_list = UrlTxtReader::authors_list("stat-djn-20230819.tsv", true)
       return
     end
 
@@ -170,9 +176,8 @@ class ArtistsController < ApplicationController
       @artist.update(last_access_datetime: Time.now)
     end
 
-    
-    if params[:mode] != nil and params[:mode] == "viewer"
-      @show_mode = "viewer"
+    if params[:mode] != nil
+      @show_mode = params[:mode]
     end
 
     if params[:number_of_display].presence

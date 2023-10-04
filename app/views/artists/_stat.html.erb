@@ -1,0 +1,60 @@
+<div id="<%= dom_id artist %>">
+    <h1>stat</h1>
+    <%= link_to "stat", "../artists/#{@artist.id}?mode=stat" %>
+
+    <table border="1">
+        <tr>
+            <th>-</th>
+            <% 12.times {|m| %>
+                <th><%= m + 1%></th>
+            <% } %>
+            <th>sum</th>
+        </tr>
+        <% stats = artist.stats(@path_list) %>
+        <% stats.each do |key, val| %>
+            <tr>
+                <th><%= key %></th>
+                <% val.each do |v| %>
+                    <% if v == 0 %>
+                        <td align="right" bgcolor="gray"><%= v %></td>
+                    <% else %>
+                        <td align="right"><%= v %></td>
+                    <% end %>        
+                <% end %>
+                <td align="right"><%= stats[key].sum %></td>
+            </tr>
+        <% end %>
+    </table>
+
+    <% if @show_mode == "stat" %>
+        <% year = 0 %>
+        <% urllist = [] %>
+        <% list = artist.artwork_list(@path_list) %>
+        <% list.each do |artwork_id, data| %>
+            <% path = data[0] %>
+            <% title = data[1] %>
+            <% date = data[2] %>
+            <% fcnt = data[3] %>
+            <% if date.year != year %>
+                <br />
+                <% urllist.each do |u| %>
+                    <%= link_to u[3], u[2], target: :_blank, rel: "noopener noreferrer" %><br />
+                <% end %>
+                <% urllist = [] %>
+                <% year = date.year %>
+                <h2><%= year %>(<%= stats[year].sum %>)</h2>
+            <% end %>
+            <% txt = %!#{title}(#{artwork_id})! %>
+            <%#= date %>
+            <% url = artist.pxv_artwork_url(artwork_id) %>
+            <% urllist << [date, txt, url, %!#{date} #{txt}:(#{fcnt})!]  %>
+            <%#= link_to txt, url, target: :_blank, rel: "noopener noreferrer" %>
+            <%#= image_tag path, width: '10%', height: '10%', :alt => txt %>
+            <%= link_to image_tag(path, width: '10%', height: '10%', :alt => txt), url, target: :_blank, rel: "noopener noreferrer" %>
+        <% end %>
+        <br />
+        <% urllist.each do |u| %>
+            <%= link_to u[3], u[2], target: :_blank, rel: "noopener noreferrer" %><br />
+        <% end %>
+    <% end %>
+</div>

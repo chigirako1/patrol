@@ -100,8 +100,9 @@
   <%#= link_to "「長期更新なし」に変更", update_no_update_artist_path(method: "no_update"), method: :patch %>
   <%#= link_to("「優先度」を-1", update_no_update_artist_path(method: "priority_minus_one"), method: :patch) %>
 
-  <%= link_to "viewer", "../artists/#{@artist.id}?mode=viewer" %>
   <%= render "pics", artist: @artist %>
 
+  <%= link_to "viewer", "../artists/#{@artist.id}?mode=viewer" %>
   <%= render "form", artist: @artist %>
+  <%= render "stat", artist: @artist %>
 <% end %>

@@ -54,6 +54,7 @@
   <% else %>
     <font color="red">twt未設定</font>
   <% end %>
+  <br />
 
   <% if artist["njeid"] != "" %>
     nijieを開く
@@ -74,17 +75,17 @@
       </tr>
       <tr>
         <td>
-          <%= artist.last_dl_datetime.in_time_zone('Tokyo').strftime("%Y-%m-%d") %>
+          <%= artist.get_datetime_string(artist.last_dl_datetime) %>
           (<%= artist.get_date_info(artist.last_dl_datetime) %>)
         </td>
         <td>
           <font color="red">
-          <%= artist.last_ul_datetime.in_time_zone('Tokyo').strftime("%Y-%m-%d") %>
+          <%= artist.get_datetime_string(artist.last_ul_datetime) %>
           </font>
           (<%= artist.get_date_info(artist.last_ul_datetime) %>)
         </td>
         <td>
-          <%= artist.last_access_datetime.in_time_zone('Tokyo').strftime("%Y-%m-%d") %>
+          <%= artist.get_datetime_string(artist.last_access_datetime) %>
         </td>
       </tr>
     </table>
@@ -112,7 +113,7 @@
   <% end %>
 
   <h3>Pixivを開く =>
-  <% url = %!https://www.pixiv.net/users/#{artist.pxvid}! %>
+  <% url = artist.pxv_user_url %>
   <%= link_to artist["pxvid"], url, target: :_blank, rel: "noopener noreferrer" %>
   </h3>
 

@@ -37,14 +37,16 @@ module UrlTxtReader
         end
     end
 
-    def get_datetime_string(last_ul_datetime)
+    def get_datetime_string(datetime, day_disp = false)
         now = Time.zone.now
-        if last_ul_datetime.year == now.year
+        if datetime.year == now.year
           ym_format = "%m月%d日"
+        elsif day_disp
+            ym_format = "%Y年%m月%d日"
         else
-          ym_format = "%Y年%m月"
+            ym_format = "%Y年%m月"
         end
-        last_ul_datetime_str = last_ul_datetime.in_time_zone('Tokyo').strftime(ym_format)
+        datetime_str = datetime.in_time_zone('Tokyo').strftime(ym_format)
     end
 
     def select_group(pxvname)
@@ -83,9 +85,13 @@ module UrlTxtReader
         end
     end
 
+    def self.public_path
+        Rails.root.join("public").to_s
+    end
+
     def self.path_list
         path_list = []
-        base_path = Rails.root.join("public").to_s
+        base_path = public_path
         puts %!basepath="#{base_path}"!
         Dir.glob(base_path + "/*") do |path|
             puts %!path="#{path}"!
@@ -96,19 +102,45 @@ module UrlTxtReader
         path_list
     end
 
-    def self.authors_list
+    #no.	cnt	name	old	new	get	yobi	work
+    def self.authors_list(filename, djn=false)
         list = []
 
-        base_path = Rails.root.join("public").to_s
-        tsv_file_path = base_path + "/r18book_author_20230813.tsv"
+        base_path = public_path
+        tsv_file_path = base_path + "/" + filename
         tsv = CSV.read(tsv_file_path, headers: true, col_sep: "\t")
         tsv.each do |row|
-            name = row["著者名"]
-            cnt = row["数"]
+            if djn
+                name = row["work"]#name
+                cnt = row["cnt"]
+            else
+                name = row["著者名"]
+                cnt = row["数"]
+            end
+
             artists = Artist.looks("pxvname", name, "partial_match")
+            if artists.size == 0
+                artists = Artist.looks("altname", name, "partial_match")
+                puts "alt:#{name}"
+            end
             list << [name, cnt.to_i, artists]
         end
         
         list.sort_by {|x| -x[1]}
+    end
+
+    def self.get_path_from_dirlist(search_str)
+        rpath = ""
+        # DBにパスを格納したいが面倒なので。。。　
+        txtpath = Rails.root.join("public/pxv/dirlist.txt").to_s
+        File.open(txtpath) { |file|
+            while line  = file.gets
+                if line.include?(search_str)
+                    rpath = line.chomp
+                    break
+                end
+            end
+        }
+        rpath
     end
 end

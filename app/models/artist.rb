@@ -1,5 +1,6 @@
 require 'nkf'
 require 'find'
+require 'date'
 
 class Artist < ApplicationRecord
     include UrlTxtReader
@@ -7,6 +8,9 @@ class Artist < ApplicationRecord
 
     has_one :twitters, :class_name => 'Twitter'
 
+    #--------------------------------------------------------------------------
+    # クラスメソッド
+    #--------------------------------------------------------------------------
     def self.looks(target_col, search_word, match_method)
         search_word.strip!
         search_word_p = ""
@@ -23,84 +27,6 @@ class Artist < ApplicationRecord
             search_word_p = search_word
         end
         @artist = Artist.where("#{target_col} LIKE?", search_word_p)
-    end
-
-    def point
-        if status == "長期更新なし" or status == "作品ゼロ"
-            return 0
-        end
-
-        pred_cnt = prediction_up_cnt(true)
-
-        case r18
-        when "R18"
-            comp = 180
-        when "R15"
-            comp = 150
-        when "R12"
-            comp = 120
-        when "cute"
-            comp = 101
-        when "健全"
-            comp = 100
-        else
-            comp = 110
-        end
-        pt = (pred_cnt * comp) / 100
-
-        if priority < 0
-            pri_pt = priority
-        else
-            pri_pt = priority / 10
-        end
-        pt += pri_pt
-
-        filenum_pt = filenum / 100
-        pt += filenum_pt
-
-        years = get_year_delta(last_ul_datetime)
-        if years > 3
-            # むかしすぎる場合はポイントを下げまくる
-            -pt
-        else
-            pt
-        end
-    end
-
-    def prediction_up_cnt(use_ac_date = false)
-        if use_ac_date and last_ul_datetime < last_access_datetime and get_date_delta(last_access_datetime) <= 26
-            datetime = last_access_datetime
-        else
-            datetime = last_ul_datetime
-        end
-
-        delta_d = get_date_delta(datetime)
-
-        pred = (recent_filenum * 100 / 60) * delta_d / 100
-        pred
-    end
-
-    def pic_path
-        pathlist = Artist.get_pathlist("(#{pxvid})")
-        pathlist[0]
-        #"<b>test</b>".html_safe
-    end
-
-    def last_dl_datetime_disp
-        get_date_info(last_dl_datetime)
-    end
-
-    def last_access_datetime_disp
-        if last_access_datetime == nil
-            return ""
-        end
-
-        if last_access_datetime.year == Time.zone.now.year
-            #last_access_datetime.in_time_zone('Tokyo').strftime("%m月%d日")
-            get_date_info(last_access_datetime)
-        else
-            last_access_datetime.in_time_zone('Tokyo').strftime("%Y-%m-%d")
-        end
     end
 
     def self.get_ulrs(txts)
@@ -147,20 +73,8 @@ class Artist < ApplicationRecord
 
     def self.get_pathlist(search_str)
         path_list = []
-        rpath = ""
-    
-        base_path = Rails.root.join("public").to_s
-
-        # DBにパスを格納したいが面倒なので。。。　
-        txtpath = Rails.root.join("public/pxv/dirlist.txt").to_s
-        File.open(txtpath) { |file|
-            while line  = file.gets
-                if line.include?(search_str)
-                    rpath = line.chomp
-                    break
-                end
-            end
-        }
+        base_path = UrlTxtReader::public_path#Rails.root.join("public").to_s
+        rpath = UrlTxtReader::get_path_from_dirlist(search_str)
 
         if rpath != ""
             puts %!path="#{rpath}"!
@@ -177,7 +91,6 @@ class Artist < ApplicationRecord
     end
 
     def self.get_url_list(filepath)
-
         if filepath == ""
             path_list = UrlTxtReader::path_list
         else
@@ -257,4 +170,148 @@ class Artist < ApplicationRecord
             return url
         end
     end
+
+    #--------------------------------------------------------------------------
+    # インスタンスメソッド
+    #--------------------------------------------------------------------------
+    def point
+        if status == "長期更新なし" or status == "作品ゼロ"
+            return 0
+        end
+
+        pred_cnt = prediction_up_cnt(true)
+
+        case r18
+        when "R18"
+            comp = 180
+        when "R15"
+            comp = 150
+        when "R12"
+            comp = 120
+        when "cute"
+            comp = 101
+        when "健全"
+            comp = 100
+        else
+            comp = 110
+        end
+        pt = (pred_cnt * comp) / 100
+
+        if priority < 0
+            pri_pt = priority
+        else
+            pri_pt = priority / 10
+        end
+        pt += pri_pt
+
+        filenum_pt = filenum / 100
+        pt += filenum_pt
+
+        years = get_year_delta(last_ul_datetime)
+        if years > 3
+            # むかしすぎる場合はポイントを下げまくる
+            -pt
+        else
+            pt
+        end
+    end
+
+    def prediction_up_cnt(use_ac_date = false)
+        if use_ac_date and last_ul_datetime < last_access_datetime and get_date_delta(last_access_datetime) <= 26
+            datetime = last_access_datetime
+        else
+            datetime = last_ul_datetime
+        end
+
+        delta_d = get_date_delta(datetime)
+
+        pred = (recent_filenum * 100 / 60) * delta_d / 100
+        pred
+    end
+
+    def pic_path
+        pathlist = Artist.get_pathlist("(#{pxvid})")
+        pathlist[0]
+        #"<b>test</b>".html_safe
+    end
+
+    def last_dl_datetime_disp
+        get_date_info(last_dl_datetime)
+    end
+
+    def last_access_datetime_disp
+        if last_access_datetime == nil
+            return ""
+        end
+
+        if last_access_datetime.year == Time.zone.now.year
+            #last_access_datetime.in_time_zone('Tokyo').strftime("%m月%d日")
+            get_date_info(last_access_datetime)
+        else
+            last_access_datetime.in_time_zone('Tokyo').strftime("%Y-%m-%d")
+        end
+    end
+
+    def twt_user_url
+        %!https://twitter.com/#{twtid}!
+    end
+
+    def pxv_user_url
+        %!https://www.pixiv.net/users/#{pxvid}!
+    end
+
+    def pxv_artwork_url(artwork_id)
+        %!https://www.pixiv.net/artworks/#{artwork_id}!
+    end
+
+    def stats(path_list)
+        stats = {}
+
+        path_list.each do |path|
+            if path =~ /(\d\d-\d\d-\d\d)/
+                date = Date.parse($1)
+                year = date.year
+                month = date.month - 1
+                day = date.day
+
+                if stats.has_key?(year)
+                    stats[year][month] += 1
+                else
+                    stats[year] = Array.new(12, 0)
+                    stats[year][month] = 1
+                end
+            end
+        end
+
+        stats
+    end
+
+    def artwork_list(path_list)
+        artworks = {}
+
+        #puts path_list.size
+        path_list.reverse.each do |path|
+            if path =~ /(\d\d-\d\d-\d\d)\s*(.*)\((\d+)\)/
+                #year = $1.to_i
+                #month = $2.to_i - 1
+                #day = $3.to_i
+                date = Date.parse($1)
+                artwork_title = $2
+                artwork_id = $3.to_i
+                
+                if artworks.has_key?(artwork_id)
+                    artworks[artwork_id][3] += 1
+                else
+                    #puts artwork_id
+                    #puts artwork_title
+                    artworks[artwork_id] = [path, %!#{artwork_title}!, date, 1]
+                end
+            else
+                puts %!regex no hit:"{path}"!
+            end
+        end
+
+        artworks.to_a.reverse.to_h
+    end
+
 end
