@@ -1,4 +1,4 @@
-<% provide(:title, "一覧") %>
+<% provide(:title, "#{params[:page_title]} - 一覧") %>
 <p style="color: green"><%= notice %></p>
 
 <%= link_to "Return", root_path %>
@@ -11,9 +11,14 @@
     <%= f.submit "検索", class: "btn btn-primary", formtarget: :_blank %> <!-- 別ウィンドウでの開き方がわからない -->
   <% end %>
 </div>
+
 <hr />
+
 <div class="view_form">
   <%= form_with url: artists_path, local: true, method: :get do |f| %>
+    <%= f.label :page_title %>
+    <%= f.text_field :page_title, :value => params[:page_title] %>
+    <br />
     <%= f.label :sort_by, style: "display: block" %>
     <%= f.select :sort_by, 
       options_for_select([
@@ -22,6 +27,7 @@
         ['access_date_X_recent_filenum'], 
         ['access_date_X_recent_filenum_X_ul'], 
         ['access_date_X_pxvname_X_recent_filenum'],
+        ['pxvname'],
         [''],
         ],
         selected: params[:sort_by] 
@@ -31,16 +37,35 @@
     <%= f.select :group_by, 
       options_for_select(
         [
+          ['none'],
           ['filenum'], 
           ['last_ul_datetime'], 
           ['last_ul_datetime_X_filenum'], 
           ['last_ul_datetime_ym'], 
           ['recent_filenum'],
+          ['pxvname_fl'],
           ['pxvname'],
           ['status'],
-          ['none'],
+          ['r18'],
         ],
         selected: params[:group_by] 
+      ) %>
+    <br />
+    <%= f.label :status, style: "display: block" %>
+    <%= f.select :status, 
+      options_for_select(
+        [
+          [''], 
+          ['退会'],
+          ['停止'], 
+          ['長期更新なし'], 
+          ['作品ゼロ'], 
+          ['一部消えた'], 
+          ['取得途中'], 
+          ['最新から取得し直し中'], 
+          ['彼岸'], 
+        ],
+        selected: params[:status] 
       ) %>
     <br />
     <%= f.label :r18, style: "display: block" %>
@@ -61,23 +86,42 @@
     <%= f.label "amount_lt" %>
     <%= f.number_field :amount_lt, :value => params[:amount_lt] %>
     <br />
-    <%= f.label "last_access_datetime" %>
+    <%= f.label :最終アクセス日 %>
     <%= f.number_field :last_access_datetime, :value => params[:last_access_datetime] %>
     <br />
-    <%= f.label "display_number" %>
+    <%= f.label :表示数 %>
     <%= f.number_field :display_number, :value => params[:display_number] %>
     <br />
-    <%= f.label "year" %>
+    <%= f.label :対象年 %>
     <%= f.number_field :year, :value => params[:year] %>
     <br />
     <%= f.check_box 'thumbnail', {checked: params[:thumbnail] == "true"}, true, false %>
-    <%= f.label "thumbnail" %>
+    <%= f.label :サムネイル表示 %>
     <br />
     <%= f.check_box 'ai', {checked: params[:ai] == "true"}, true, false %>
-    <%= f.label "ai" %>
+    <%= f.label :AI %>
     <br />
     <%= f.check_box 'twt', {checked: params[:twt] == "true"}, true, false %>
-    <%= f.label "twt" %>
+    <%= f.label :TWT %>
+    <br />
+    <%= f.check_box :nje, {checked: params[:nje] == "true"}, true, false %>
+    <%= f.label :nje %>
+    <br />
+    <%= f.label :file, style: "display: block" %>
+    <%= f.select :file, 
+      options_for_select(
+        [
+          [''],
+          ['urllist'], 
+          ['urllist-pxv-only'], 
+          ['urllist-unknown-only'], 
+          ['pxvids'], 
+          ['namelist'],
+          ['namelist_djn'],
+          ['same_name'],
+        ],
+        selected: params[:file] 
+      ) %>
     <br />
     <%= f.submit "表示更新", name: nil %>
   <% end %>
@@ -85,22 +129,17 @@
 
 <h1>Artists</h1>
 
-<%= link_to "default", "../artists" %>
-<%= link_to "urllist", "../artists?file=urllist&filename=&year=2023&last_access_datetime=23&thumbnail=true&display_number=10&group_by=last_ul_datetime&sort_by=access_date_X_recent_filenum_X_ul" %>
-<%= link_to "ai", "../artists?ai=true&last_access_datetime=7&display_number=20&group_by=last_ul_datetime&sort_by=priority_X_recent_filenum_X_ul" %>
-<%= link_to "2023", "../artists?year=2023&last_access_datetime=17&display_number=20&group_by=filenum&sort_by=access_date_X_recent_filenum_X_ul" %>
-
 <a href="#twt_url_list">twt_url_list</a>
 
 <% @artists_group.each do |key, artists| %>
-  <h2><%= "#{key}(#{artists.size})[#{params[:begin_no]}-#{params[:begin_no].to_i + @size_per_table}]" %></h2>
+  <h2><%= "#{key}(#{artists.size})[#{@begin_no + 1}..#{@begin_no.to_i + @size_per_table}]" %></h2>
   <table border="1" rules="all">
     <tr>
       <th>id</th>
       <th>pxvname</th>
       <th>pxvid</th>
       <th>show</th>
-      <th>ファイル数/最近</th>
+      <th>ファイル総数/最近</th>
       <th>ポイント</th>
       <th>優先度</th>
       <th>最終DL日</th>
@@ -115,7 +154,7 @@
         <th>edit</th>
       <% end %>
     </tr>
-    <% artists[(@begin_no+1)..(@begin_no+@size_per_table)].each do |artist| %>
+    <% artists[(@begin_no)..(@begin_no + @size_per_table - 1)].each do |artist| %>
       <% pxv_url = %!https://www.pixiv.net/users/#{artist["pxvid"]}! %>
       <% twt_url = %!https://twitter.com/#{artist["twtid"]}! %>
       <% if @twt %>
@@ -163,15 +202,15 @@
     <% end %>
   </table>
 <% end %>
-<%= link_to "next", "../artists?#{get_url_params}&begin_no=#{params[:begin_no].to_i + @size_per_table}" %>
-
+<%= link_to "< prev", "../artists?#{get_url_params}&begin_no=#{@begin_no.to_i - @size_per_table}" %>
+<%= link_to "next >", "../artists?#{get_url_params}&begin_no=#{@begin_no.to_i + @size_per_table}" %>
 
 <% if @authors_list.size != 0 %>
-  <h2>list</h2>
+  <h2>author name list</h2>
   <% @authors_list.each do |elem| %>
     <% name = elem[0] %>
     <% url = %!https://www.google.com/search?q=#{name}! %>
-    <%= link_to name, url, target: :_blank, rel: "noopener noreferrer" %><%= ":#{elem[1]}" %><br />
+    「<%= link_to name, url, target: :_blank, rel: "noopener noreferrer" %>」<%= ":#{elem[1]}" %><br />
     <ul>
     <% elem[2].each do |x| %>
       <li><%= "#{x.pxvname}(#{x.pxvid})" %><%= link_to "[show]", x, target: :_blank, rel: "noopener noreferrer" %></ li>
@@ -180,6 +219,7 @@
   <% end %>
 <% end %>
 
+<!-- 未知のPXV ID -->
 <% if @unknown_id_list.size != 0 %>
   <h2>unknown pixiv id list(<%= @unknown_id_list.size %>)</h2>
   <% @unknown_id_list.each do |pxvid| %>
@@ -188,6 +228,7 @@
   <% end %>
 <% end %>
 
+<!-- その他のURL -->
 <% if @misc_urls.size != 0 %>
   <h2>misc url list(<%= @misc_urls.size %>)</h2>
   <% @misc_urls.each do |url| %>

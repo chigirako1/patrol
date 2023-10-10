@@ -1,20 +1,24 @@
 <div id="<%= dom_id artist %>">
-  <%= @path_list[0] %><br />
+  
   <% if @path_list[0] =~ /(\d\d-\d\d-\d\d)/ %>
     <font color="red"><%= $1 %></font><br />
   <% end %>
+  <% @path_list.first(@number_of_display).each do |path| %>
+    <% if path =~ /\d\d-\d\d-\d\d.*\((\d+)\)/ %>
+      <% artwork_id = $1 %>
+      <% url = artist.pxv_artwork_url(artwork_id) %>
+      <%= path %>
+      (<%= link_to url, url, target: :_blank, rel: "noopener noreferrer" %>)<br />
+    <% end %>
+    
+  <% end %> 
   
   <% @path_list.first(@number_of_display).each do |path| %>
-    <% #= @path_list %>
-    <%= image_tag path, width: '20%', height: '20%' %>
+    <%#= image_tag path, width: '20%', height: '20%' %>
+    <%= link_to(image_tag(path, width: '15%', height: '15%'), path, target: :_blank, rel: "noopener noreferrer") %>
   <% end %> 
   <br />
-  <% if @path_list[0] =~ /\d\d-\d\d-\d\d.*\((\d+)\)/ %>
-    <% artwork_id = $1 %>
-    <% url = artist.pxv_artwork_url(artwork_id) %>
-    <%= link_to url, url, target: :_blank, rel: "noopener noreferrer" %>
-  <% end %>
-
+  
   <% if @show_mode == nil %>
     <br />
   <% else %>

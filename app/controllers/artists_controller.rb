@@ -3,13 +3,32 @@
 # class:
 #------------------------------------------------------------------------------
 class Params
-  attr_accessor :param_file, :twt, :ai, :year_since, :year_until, :display_number, :group_by, :sort_by, 
-              :amount_gt, :amount_lt, :filename, :last_access_datetime, :r18,
-              :thumbnail, :begin_no, :url_list_only
+  attr_accessor :param_file,
+    :twt,
+    :ai,
+    :nje,
+    :year_since,
+    :year_until,
+    :display_number,
+    :group_by,
+    :sort_by,
+    :status,
+    :amount_gt,
+    :amount_lt,
+    :filename,
+    :last_access_datetime,
+    :r18,
+    :thumbnail,
+    :begin_no,
+    :url_list_only
 
   def initialize(params)
     @group_by = params[:group_by]
     @sort_by = params[:sort_by]
+    @status = params[:status]
+    if @status == nil
+      @status = ""
+    end
     begin_no = params[:begin_no]
     if begin_no == nil
       @begin_no = 0
@@ -38,19 +57,19 @@ class Params
       @year_since = 0
       @year_until = $1.to_i
     else
-      @year_since = 2023
-      @year_until = 2023
+      @year_since = 0
+      @year_until = 0
     end
     puts "year=#{@year_since}:#{@year_until}"
 
     amount_gt = params[:amount_gt]
     amount_lt = params[:amount_lt]
-    if amount_gt == nil
+    if amount_gt == nil or amount_gt == ""
       @amount_gt = 0
     else
       @amount_gt = amount_gt.to_i
     end
-    if amount_lt == nil
+    if amount_lt == nil or amount_lt == ""
       @amount_lt = 0
     else
       @amount_lt = amount_lt.to_i
@@ -86,6 +105,11 @@ class Params
       @ai = true
     end
 
+    nje = params[:nje]
+    if nje != nil and nje == "true"
+      @nje = true
+    end
+
     thumbnail = params[:thumbnail]
     if thumbnail != nil and thumbnail == "true"
       @thumbnail = true
@@ -99,11 +123,13 @@ class Params
     else
       @filename = filename
     end
+    puts %!param_file=#{@param_file}/filename=#{@filename}!
 
     @url_list_only = false
     url_list_only = params[:url_list_only]
     if url_list_only == "true"
       @url_list_only = true
+      puts %!url_list_only=#{@url_list_only}!
     end
   end
 end
@@ -132,13 +158,11 @@ class ArtistsController < ApplicationController
     @artists_group = {}
     artists = Artist.all
 
-    if prms.param_file == "urllist"
+    if prms.param_file == "urllist" or prms.param_file == "urllist-pxv-only" or prms.param_file == "urllist-unknown-only"
       if prms.url_list_only
         @misc_urls = Artist.get_url_list_from_all_txt
         return
       else
-        @twt = true
-
         datestr = prms.filename
         if datestr == ""
           path = ""
@@ -146,7 +170,20 @@ class ArtistsController < ApplicationController
           path = "public/get illust url_#{datestr}.txt"
         end
         id_list, @twt_urls, @misc_urls = Artist.get_url_list(path)
-        artists = artists.select {|x| id_list.include?(x[:pxvid])}
+
+        if prms.param_file == "urllist-unknown-only"
+          artists = artists.first(1)
+          @twt_urls = []
+          @twt = false
+        elsif prms.param_file == "urllist-pxv-only"
+          artists = artists.select {|x| id_list.include?(x[:pxvid])}
+          @twt_urls = []
+          @twt = false
+        else
+          artists = artists.select {|x| id_list.include?(x[:pxvid])}
+          puts %!artists.size=#{artists.size}!
+          @twt = true
+        end
 
         @unknown_id_list = Artist.get_unknown_id_list(id_list)
       end
@@ -162,9 +199,14 @@ class ArtistsController < ApplicationController
     elsif prms.param_file == "namelist_djn"
       @authors_list = UrlTxtReader::authors_list("stat-djn-20230819.tsv", true)
       return
+    elsif prms.param_file == "same_name"
+      dup_pxvnames = UrlTxtReader::same_name(artists)
+      puts "dup name=#{dup_pxvnames}"
+      artists = artists.select {|x| dup_pxvnames.include?(x[:pxvname])}
     end
 
     artists = index_select(artists, prms)
+    puts %!artists.size=#{artists.size}!
     artists = index_sort(artists, prms)
     @artists_group = index_group_by(artists, prms)
   end
@@ -290,6 +332,16 @@ class ArtistsController < ApplicationController
         artists = artists.select {|x| x[:comment] == "AI"}
       end
 
+      if prms.nje
+        artists = artists.select {|x| x.nje_p}
+        puts %!nje="#{prms.nje}"!
+      end
+
+      if prms.status != ""
+        artists = artists.select {|x| x.status == prms.status}
+        puts %!status="#{prms.status}"!
+      end
+
       if prms.r18 and prms.r18 != ""
         artists = artists.select {|x| x[:r18] == prms.r18}
         puts %!r18="#{prms.r18}"!
@@ -331,6 +383,8 @@ class ArtistsController < ApplicationController
       when "priority_X_recent_filenum_X_ul"
         #artists = artists.sort_by {|x| [-x.priority, -x.get_date_delta(x[:last_access_datetime]), -x.point, -x[:recent_filenum], -x[:filenum], x[:last_ul_datetime]]}
         artists = artists.sort_by {|x| [-x.point, -x.priority, -x[:recent_filenum], -x[:filenum], x[:last_ul_datetime]]}
+      when "pxvname"
+        artists = artists.sort_by {|x| [x.pxvname]}
       else
         # デフォルト？
         artists = artists.sort_by {|x| [-x.point, -x.priority, -x[:recent_filenum], -x[:filenum], x[:last_ul_datetime]]}
@@ -352,10 +406,14 @@ class ArtistsController < ApplicationController
         artists_group = artists.group_by {|x| (x[:filenum] / 100 * 100)}.sort.reverse.to_h
       when "recent_filenum"
         artists_group = artists.group_by {|x| (x[:recent_filenum] / 10 * 10)}.sort.reverse.to_h
-      when "pxvname"
+      when "pxvname_fl"
         artists_group = artists.group_by {|x| x.select_group(x[:pxvname])}.sort.to_h
+      when "pxvname"
+        artists_group = artists.group_by {|x| x.pxvname}.sort.to_h
       when "status"
         artists_group = artists.group_by {|x| x.status}.sort.to_h
+      when "r18"
+        artists_group = artists.group_by {|x| x.r18}.sort.to_h
       when "none"
         artists_group["none"] = artists
       else

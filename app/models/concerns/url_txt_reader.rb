@@ -97,7 +97,7 @@ module UrlTxtReader
             puts %!path="#{path}"!
             if path =~ /get illust url_\d+\.txt/
                 path_list << path
-            end
+           end
         end
         path_list
     end
@@ -105,6 +105,7 @@ module UrlTxtReader
     #no.	cnt	name	old	new	get	yobi	work
     def self.authors_list(filename, djn=false)
         list = []
+        done_list = {}
 
         base_path = public_path
         tsv_file_path = base_path + "/" + filename
@@ -118,6 +119,11 @@ module UrlTxtReader
                 cnt = row["数"]
             end
 
+            if done_list.has_key? name
+                next
+            end
+            done_list[name] = ""
+
             artists = Artist.looks("pxvname", name, "partial_match")
             if artists.size == 0
                 artists = Artist.looks("altname", name, "partial_match")
@@ -126,7 +132,7 @@ module UrlTxtReader
             list << [name, cnt.to_i, artists]
         end
         
-        list.sort_by {|x| -x[1]}
+        list.sort_by {|x| [x[2].size, -x[1]]}
     end
 
     def self.get_path_from_dirlist(search_str)
@@ -142,5 +148,15 @@ module UrlTxtReader
             end
         }
         rpath
+    end
+
+    def self.same_name(artists)
+        names = artists.map {|x| x.pxvname}
+        #puts "names=#{names}"
+        chunks = names.chunk(&:itself)
+        #puts "chunks=#{chunks}"
+        dup_pxvnames = chunks.select{|_, v| v.size > 1}.map(&:first)
+        #puts "dup name=#{dup_pxvnames}"
+        dup_pxvnames
     end
 end

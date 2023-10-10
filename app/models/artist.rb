@@ -198,7 +198,7 @@ class Artist < ApplicationRecord
         pt = (pred_cnt * comp) / 100
 
         if priority < 0
-            pri_pt = priority
+            pri_pt = priority * 10
         else
             pri_pt = priority / 10
         end
@@ -235,6 +235,10 @@ class Artist < ApplicationRecord
         #"<b>test</b>".html_safe
     end
 
+    def nje_p
+        njeid != nil and njeid != ""
+    end
+
     def last_dl_datetime_disp
         get_date_info(last_dl_datetime)
     end
@@ -248,7 +252,8 @@ class Artist < ApplicationRecord
             #last_access_datetime.in_time_zone('Tokyo').strftime("%m月%d日")
             get_date_info(last_access_datetime)
         else
-            last_access_datetime.in_time_zone('Tokyo').strftime("%Y-%m-%d")
+            #last_access_datetime.in_time_zone('Tokyo').strftime("%Y-%m-%d")
+            get_date_info(last_access_datetime)
         end
     end
 

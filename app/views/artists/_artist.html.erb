@@ -7,10 +7,29 @@
 
     <% furigana = %![#{artist.furigana}]! if artist.furigana != ""%>
     <%= furigana %>
-    <%= artist.altname %>,
-    <%= artist.oldname %>
+    <%= %!/別名"#{artist.altname}"! if artist.altname != "" %>
+    <%= %!/旧名"#{artist.oldname}"! if artist.oldname != "" %>
     </h2>
   </p>
+
+<%
+=begin %>
+    t.datetime "earliest_ul_date"
+    t.string "pxv_path"
+    t.integer "tech_point"
+    t.integer "sense_point"
+    t.string "good_point"
+    t.string "bad_point"
+    t.integer "pxv_fav_artwork_id"
+    t.string "fetish"
+    t.string "obtain_direction"
+    t.integer "next_obtain_artwork_id"
+    t.string "twt_check"
+    t.string "web_url"
+    t.datetime "djn_check_date"
+    t.integer "zip"
+<%
+=end %>
 
   <p>
     <% if artist["status"] != "" %>
@@ -30,6 +49,14 @@
         <th>R18</th>
         <th>ポイント</th>
         <th>予測</th>
+        <th>技術点</th>
+        <th>感性点</th>
+        <th>長所</th>
+        <th>短所</th>
+        <th>癖（へき）</th>
+        <th>取得方向</th>
+        <th>djnチェック日</th>
+        <th>zip/pdf化</th>
       </tr>
       <tr>
         <td><%= artist.filenum %></td>
@@ -41,6 +68,14 @@
         <td><%= artist.r18 %></td>
         <td><%= artist.point %></td>
         <td><%= artist.prediction_up_cnt(false) %></td>
+        <td><%= artist.tech_point %></td>
+        <td><%= artist.sense_point %></td>
+        <td><%= artist.good_point %></td>
+        <td><%= artist.bad_point %></td>
+        <td><%= artist.fetish %></td>
+        <td><%= artist.obtain_direction %></td>
+        <td><%= artist.djn_check_date %></td>
+        <td><%= artist.zip %></td>
       </tr>
     </table>
   </p>
@@ -56,12 +91,10 @@
   <% end %>
   <br />
 
-  <% if artist["njeid"] != "" %>
+  <% if artist.nje_p %>
     nijieを開く
     <% url = %!https://nijie.info/members.php?id=#{artist["njeid"]}! %>
     <%= link_to "#{artist["njeid"]}", url, target: :_blank, rel: "noopener noreferrer" %>
-  <% else %>
-    <font color="red">nje未設定</font>
   <% end %>
   <hr />
 
@@ -71,21 +104,25 @@
       <tr>
         <th>最新DL日</th>
         <th>最新投稿日</th>
+        <th>最初期投稿日</th>
         <th>最終アクセス日</th>
       </tr>
       <tr>
         <td>
-          <%= artist.get_datetime_string(artist.last_dl_datetime) %>
+          <%= artist.get_datetime_string(artist.last_dl_datetime, true) %>
           (<%= artist.get_date_info(artist.last_dl_datetime) %>)
         </td>
         <td>
           <font color="red">
-          <%= artist.get_datetime_string(artist.last_ul_datetime) %>
+          <%= artist.get_datetime_string(artist.last_ul_datetime, true) %>
           </font>
           (<%= artist.get_date_info(artist.last_ul_datetime) %>)
         </td>
         <td>
-          <%= artist.get_datetime_string(artist.last_access_datetime) %>
+          <%= artist.get_datetime_string(artist.earliest_ul_date, true) if artist.earliest_ul_date.presence %>
+        </td>
+        <td>
+          <%= artist.get_datetime_string(artist.last_access_datetime, true) %>
         </td>
       </tr>
     </table>

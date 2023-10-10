@@ -18,8 +18,8 @@
   </tr>
 <% @artists.each do |artist| %>
   <tr>
-    <% pxv_url = %!https://www.pixiv.net/users/#{artist["pxvid"]}! %>
-    <% twt_url = %!https://twitter.com/#{artist["twtid"]}! %>
+    <% pxv_url = artist.pxv_user_url %>
+    <% twt_url = artist.twt_user_url %>
 
     <td><%= artist.id %></td>
     <td><%= link_to artist["pxvid"], pxv_url, target: :_blank, rel: "noopener noreferrer" %></td>

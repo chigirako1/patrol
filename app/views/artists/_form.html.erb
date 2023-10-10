@@ -36,7 +36,7 @@
 
   <div>
     <%= form.label :r18, style: "display: block" %>
-    <%= form.select :r18, [["R18", "R18"], ["R15(裸とか)", "R15"], ["R12(水着とか)", "R12"], ["健全？", "健全"], ["かわいい系", " "]], include_blank: "選択して下さい" %>
+    <%= form.select :r18, [["R18", "R18"], ["R15", "R15"], ["R12", "R12"], ["健全？", "健全"], ["かわいい系", " "]], include_blank: "選択して下さい" %>
 
     <input type="button" value="R18に設定" onclick="toggle_r18();" />
     <script>
@@ -100,12 +100,12 @@
   </div>
 
   <div>
-    <%= form.label :work, style: "display: block" %>
+    <%= form.label :作品, style: "display: block" %>
     <%= form.text_field :work %>
   </div>
 
   <div>
-    <%= form.label :chara, style: "display: block" %>
+    <%= form.label :キャラ, style: "display: block" %>
     <%= form.text_field :chara %>
   </div>
   
@@ -128,17 +128,17 @@
   <hr />
 
   <div>
-    <%= form.label :furigana, style: "display: block" %>
+    <%= form.label :よみ, style: "display: block" %>
     <%= form.text_field :furigana %>
   </div>
 
   <div>
-    <%= form.label :altname, style: "display: block" %>
+    <%= form.label :別名, style: "display: block" %>
     <%= form.text_field :altname %>
   </div>
 
   <div>
-    <%= form.label :oldname, style: "display: block" %>
+    <%= form.label :旧名, style: "display: block" %>
     <%= form.text_field :oldname %>
   </div>
 
