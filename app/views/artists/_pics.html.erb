@@ -2,6 +2,9 @@
   
   <% if @path_list[0] =~ /(\d\d-\d\d-\d\d)/ %>
     <font color="red"><%= $1 %></font><br />
+    <% if date_diff?(artist, $1) %>
+      <h3>日付が異なります</h3>
+    <% end %>
   <% end %>
   <% @path_list.first(@number_of_display).each do |path| %>
     <% if path =~ /\d\d-\d\d-\d\d.*\((\d+)\)/ %>

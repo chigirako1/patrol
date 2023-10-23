@@ -25,11 +25,16 @@ module UrlTxtReader
     def get_date_info(date)
         days = get_date_delta(date)
         if days >= 365
-            years = days / 365
-            "#{years}年以上前"
+            years, remain = days.divmod(365)
+            months = remain / 30
+            if months == 0
+                "#{years}年以上前"
+            else
+                "#{years}年#{months}ヶ月以上前"
+            end
         elsif days >= 30
             months = days / 30
-            "#{months}ヵ月以上前"
+            "#{months}ヶ月以上前"
         elsif days == 0
             "24時間以内"
         else
@@ -102,8 +107,7 @@ module UrlTxtReader
         path_list
     end
 
-    #no.	cnt	name	old	new	get	yobi	work
-    def self.authors_list(filename, djn=false)
+    def self.authors_list(filename, type)
         list = []
         done_list = {}
 
@@ -111,9 +115,14 @@ module UrlTxtReader
         tsv_file_path = base_path + "/" + filename
         tsv = CSV.read(tsv_file_path, headers: true, col_sep: "\t")
         tsv.each do |row|
-            if djn
+            #no.	cnt	name	old	new	get	yobi	work
+            case type
+            when "djn"
                 name = row["work"]#name
                 cnt = row["cnt"]
+            when "mag"
+                name = row[0]
+                cnt = row[1]
             else
                 name = row["著者名"]
                 cnt = row["数"]
@@ -133,6 +142,18 @@ module UrlTxtReader
         end
         
         list.sort_by {|x| [x[2].size, -x[1]]}
+    end
+
+    def self.id_from_tsv(tsv_file_path, column_no)
+        id_list = []
+        tsv = CSV.read(tsv_file_path, headers: true, col_sep: "\t")
+        tsv.each do |row|
+            id = row[column_no]
+            if id =~ /^\d+$/
+                id_list << id.to_i
+            end
+        end
+        id_list
     end
 
     def self.get_path_from_dirlist(search_str)
@@ -158,5 +179,16 @@ module UrlTxtReader
         dup_pxvnames = chunks.select{|_, v| v.size > 1}.map(&:first)
         #puts "dup name=#{dup_pxvnames}"
         dup_pxvnames
+    end
+
+    
+    def self.same_twtid(artists)
+        ids = artists.map {|x| x.twtid}
+        #puts "names=#{names}"
+        chunks = ids.chunk(&:itself)
+        #puts "chunks=#{chunks}"
+        dup_twtids = chunks.select{|_, v| v.size > 1}.map(&:first)
+        #puts "dup name=#{dup_pxvnames}"
+        dup_twtids
     end
 end

@@ -18,6 +18,7 @@ class Params
     :filename,
     :last_access_datetime,
     :r18,
+    :point,
     :thumbnail,
     :begin_no,
     :url_list_only
@@ -26,6 +27,14 @@ class Params
     @group_by = params[:group_by]
     @sort_by = params[:sort_by]
     @status = params[:status]
+    @point = params[:point]
+
+    if @point == nil
+      @point = 0
+    else
+      @point = @point.to_i
+    end
+
     if @status == nil
       @status = ""
     end
@@ -189,20 +198,28 @@ class ArtistsController < ApplicationController
       end
     elsif prms.param_file == "pxvids"
       @twt = true
-      id_list = Artist.get_id_list()
+      id_list = Artist.get_id_list_tsv#get_id_list()
       artists = artists.select {|x| id_list.include?(x[:pxvid])}
 
       @unknown_id_list = Artist.get_unknown_id_list(id_list)
     elsif prms.param_file == "namelist"
-      @authors_list = UrlTxtReader::authors_list("r18book_author_20230813.tsv")
+      @authors_list = UrlTxtReader::authors_list("r18book_author_20230813.tsv", "book")
       return
     elsif prms.param_file == "namelist_djn"
-      @authors_list = UrlTxtReader::authors_list("stat-djn-20230819.tsv", true)
+      @authors_list = UrlTxtReader::authors_list("stat-djn-20230819.tsv", "djn")
+      return
+    elsif prms.param_file == "namelist_mag"
+      @authors_list = UrlTxtReader::authors_list("mag_stat_20230727.tsv", "mag")
       return
     elsif prms.param_file == "same_name"
       dup_pxvnames = UrlTxtReader::same_name(artists)
       puts "dup name=#{dup_pxvnames}"
       artists = artists.select {|x| dup_pxvnames.include?(x[:pxvname])}
+    elsif prms.param_file == "same_twtid"
+      artists = artists.select {|x| x.twtid != ""}
+      dup_twtids = UrlTxtReader::same_twtid(artists)
+      puts "dup id=#{dup_twtids}"
+      artists = artists.select {|x| dup_twtids.include?(x[:twtid])}
     end
 
     artists = index_select(artists, prms)
@@ -287,6 +304,10 @@ class ArtistsController < ApplicationController
 
   # PATCH/PUT /artists/1 or /artists/1.json
   def update
+    if params[:artist][:twtid] =~ /twitter\.com%2F(.*)$/
+      params[:artist][:twtid] = $1
+      puts params["artist"]["twtid"]
+    end
     respond_to do |format|
       if @artist.update(artist_params)
         format.html { redirect_to artist_url(@artist), notice: "Artist was successfully updated." }
@@ -316,20 +337,27 @@ class ArtistsController < ApplicationController
 
     # Only allow a list of trusted parameters through.
     def artist_params
-      params.require(:artist).permit(:pxvname, :pxvid, :filenum, :last_dl_datetime, :last_ul_datetime, :last_access_datetime, :priority, :status, :comment, :twtid, :njeid, :r18, :remarks,
-        :rating, :furigana, :altname, :oldname, :chara, :work, :warnings
+      params.require(:artist).permit(:pxvname, :pxvid, :filenum, :last_dl_datetime, :last_ul_datetime,
+        :last_access_datetime, :priority, :status, :comment, :twtid, :njeid, :r18, :remarks,
+        :rating, :furigana, :altname, :oldname, :chara, :work, :warnings, :feature,
+        :twt_check, :earliest_ul_date
       )
     end
 
     # select
     def index_select(artists, prms)
+
+      if prms.point != 0
+        artists = artists.select {|x| x.point >= prms.point}
+      end
+
       if prms.twt
         artists = artists.select {|x| x[:twtid] != ""}
         @twt = true
       end
   
       if prms.ai
-        artists = artists.select {|x| x[:comment] == "AI"}
+        artists = artists.select {|x| x[:feature] == "AI"}
       end
 
       if prms.nje
@@ -337,7 +365,7 @@ class ArtistsController < ApplicationController
         puts %!nje="#{prms.nje}"!
       end
 
-      if prms.status != ""
+        if prms.status != "(全て)"
         artists = artists.select {|x| x.status == prms.status}
         puts %!status="#{prms.status}"!
       end
@@ -380,11 +408,16 @@ class ArtistsController < ApplicationController
         artists = artists.sort_by {|x| [-x.get_date_delta(x[:last_access_datetime]), -x.priority, -x.point, -x[:recent_filenum], -x[:filenum], x[:last_ul_datetime]]}
       when "access_date_X_pxvname_X_recent_filenum"
         artists = artists.sort_by {|x| [x[:last_access_datetime], x[:pxvname].downcase, -x[:recent_filenum], -x[:filenum]]}
-      when "priority_X_recent_filenum_X_ul"
-        #artists = artists.sort_by {|x| [-x.priority, -x.get_date_delta(x[:last_access_datetime]), -x.point, -x[:recent_filenum], -x[:filenum], x[:last_ul_datetime]]}
-        artists = artists.sort_by {|x| [-x.point, -x.priority, -x[:recent_filenum], -x[:filenum], x[:last_ul_datetime]]}
       when "pxvname"
         artists = artists.sort_by {|x| [x.pxvname]}
+      when "priority"
+        artists = artists.sort_by {|x| [-x.point, -x.priority, -x[:recent_filenum], -x[:filenum], x[:last_ul_datetime]]}
+      when "-point"
+        artists = artists.sort_by {|x| [x.point, -x.priority, -x[:recent_filenum], -x[:filenum], x[:last_ul_datetime]]}
+      when "last_ul_date"
+        artists = artists.sort_by {|x| [x.last_ul_datetime]}
+      when "twtid"
+        artists = artists.sort_by {|x| [x.twtid]}
       else
         # デフォルト？
         artists = artists.sort_by {|x| [-x.point, -x.priority, -x[:recent_filenum], -x[:filenum], x[:last_ul_datetime]]}
@@ -414,6 +447,8 @@ class ArtistsController < ApplicationController
         artists_group = artists.group_by {|x| x.status}.sort.to_h
       when "r18"
         artists_group = artists.group_by {|x| x.r18}.sort.to_h
+      when "priority"
+        artists_group = artists.group_by {|x| -x.priority}.sort.to_h
       when "none"
         artists_group["none"] = artists
       else

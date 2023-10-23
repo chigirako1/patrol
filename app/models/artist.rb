@@ -123,6 +123,12 @@ class Artist < ApplicationRecord
         id_list
     end
 
+    def self.get_id_list_tsv()
+        tsvpath = Rails.root.join("public/pxv/mkPDF_call [pxiv, utf8, l3, spec-id] - orig.tsv").to_s
+        id_list = UrlTxtReader::id_from_tsv(tsvpath, 3)
+        id_list
+    end
+
     def self.get_url_list_from_all_txt
         misc_urls = []
 
@@ -175,44 +181,59 @@ class Artist < ApplicationRecord
     # インスタンスメソッド
     #--------------------------------------------------------------------------
     def point
-        if status == "長期更新なし" or status == "作品ゼロ"
-            return 0
-        end
 
         pred_cnt = prediction_up_cnt(true)
+        pt = pred_cnt
 
+        # 評価
+        if rating == nil or rating < 6
+            comp = 100
+        elsif rating < 8
+            comp = 150
+        else
+            comp = 200
+        end
+        pt = (pt * comp) / 100
+
+        # R18
         case r18
         when "R18"
-            comp = 180
+            comp = 200
         when "R15"
             comp = 150
         when "R12"
-            comp = 120
+            comp = 110
         when "cute"
-            comp = 101
+            comp = 100
         when "健全"
             comp = 100
         else
             comp = 110
         end
-        pt = (pred_cnt * comp) / 100
+        pt = (pt * comp) / 100
 
+        # 優先度補正
         if priority < 0
-            pri_pt = priority * 10
+            pri = priority * 10
         else
-            pri_pt = priority / 10
+            pri = priority
         end
-        pt += pri_pt
+        pt += (pt * pri) / 100
 
+        # 総ファイル数による補正
         filenum_pt = filenum / 100
-        pt += filenum_pt
+        pt += (pt * filenum_pt) / 100
 
-        years = get_year_delta(last_ul_datetime)
-        if years > 3
-            # むかしすぎる場合はポイントを下げまくる
+        # 状態による補正
+        if status == "長期更新なし" or status == "作品ゼロ" or status == "退会"
             -pt
         else
-            pt
+            years = get_year_delta(last_ul_datetime)
+            if years > 3
+                -pt
+            else
+                pt
+            end
         end
     end
 

@@ -1,3 +1,23 @@
+<style>
+.btn {
+  padding-left: 1em;
+  padding-right: 1em;
+  height: 2em;
+  width: 50px;
+}
+.subtmi-btn {
+  width: 300px;
+  height: 50px;
+  border: solid 1px;
+  background: yellow;
+}
+
+.subtmi-btn:hover {
+    opacity: 1.0;
+    background: orange;
+}
+</style>
+
 <%= form_with(model: artist) do |form| %>
   <% if artist.errors.any? %>
     <div style="color: red">
@@ -13,11 +33,17 @@
 
   <h1>編集</h1>
 
-  <h2>twt</h2>
+  <h2>項目</h2>
+  <div>
+    <%= form.label :rating, style: "display: block" %>
+    <%#= form.number_field :rating %>
+    <%= form.select :rating, [["優(10)", 10], ["良+(9)", 9], ["良(8)", 8], ["良-(7)", 7], ["可(6)", 6], ["可？(5)", 5], ["不可？(4)", 4], ["不可(2)", 2], ["不可(1)", 1], ["不可(-1)", -1]], include_blank: "選択して下さい" %>
+  </div>
+
   <div>
     <%= form.label :twtid, style: "display: block" %>
     @<%= form.text_field :twtid %>
-
+    <!-- 
     <input type="button" value="twtidの抽出" onclick="get_twtid();" />
     <script>
       function get_twtid() {
@@ -30,14 +56,18 @@
         }
       }
     </script>
+    -->
+  </div>
+  <div>
+    <%= form.label :twt_check, style: "display: block" %>
+    <%= form.check_box :twt_check, {}, checked_value='t', unchecked_value='' %>
   </div>
 
   <hr />
 
   <div>
     <%= form.label :r18, style: "display: block" %>
-    <%= form.select :r18, [["R18", "R18"], ["R15", "R15"], ["R12", "R12"], ["健全？", "健全"], ["かわいい系", " "]], include_blank: "選択して下さい" %>
-
+    <%= form.select :r18, [["R18", "R18"], ["R15", "R15"], ["R12", "R12"], ["健全？", "健全"], ["かわいい系", "かわいい系"], ["アート系", "アート系"],["R36(危険)", "R36"]], include_blank: "選択して下さい" %>
     <input type="button" value="R18に設定" onclick="toggle_r18();" />
     <script>
       function toggle_r18() {
@@ -49,35 +79,39 @@
     </script>
   </div>
 
-  <hr />
-
+  <br />
   <div>
-    <%= form.label :status, style: "display: block" %>
-    <%= form.select :status, [["退会", "退会"], ["停止", "停止"], ["長期更新なし", "長期更新なし"], ["作品ゼロ", "作品ゼロ"], ["一部消えた", "一部消えた"], ["取得途中", "取得途中"], ["最新から取得し直し中", "最新から取得し直し中"], ["彼岸", "彼岸"]], include_blank: "選択して下さい" %>
-  </div>
-
-  <h3>更新</h3>
-  <div>
-    <%= form.submit %>
+    <%= form.submit("更新", class: 'subtmi-btn') %>
   </div>
 
   <h2>その他</h2>
+
   <div>
-    <%= form.label :rating, style: "display: block" %>
-    <%= form.number_field :rating %>
+    <%= form.label :status, style: "display: block" %>
+    <%= form.select :status, [["退会", "退会"], ["停止", "停止"], ["長期更新なし★", "長期更新なし"], ["作品ゼロ", "作品ゼロ"], ["一部消えた", "一部消えた"], ["取得途中", "取得途中"], ["最新から取得し直し中", "最新から取得し直し中"], ["彼岸", "彼岸"]], include_blank: "選択して下さい" %>
+    <input type="button" value="長期更新なしに変更" onclick="set_longtimenosee();" />
+    <script>
+      function set_longtimenosee() {
+        let status_sel_box = document.getElementById("artist_status");
+        let options = status_sel_box.options;
+        options[3].selected = true;
+      }
+    </script>
   </div>
 
   <div>
     <%= form.label :priority, style: "display: block" %>
     <%= form.number_field :priority %>
 
-    <input type="button" value="+10" onclick="plus10();" />
+    <input type="button" value="-5" onclick="plus(-5);" class="btn" />
+    <input type="button" value="+10" onclick="plus(10);" class="btn" />
+    <input type="button" value="+25" onclick="plus(25);" class="btn" />
     <script>
-      function plus10() {
+      function plus(point) {
         let elem = document.getElementById("artist_priority");
         //let prio_val = elem.value;
         let prio_val = parseInt(elem.value);
-        elem.value = prio_val + 10;
+        elem.value = prio_val + point;
       }
     </script>
   </div>
@@ -90,14 +124,23 @@
   </div>
 
   <div>
-    <%= form.label "コメント/AI/etc...", style: "display: block" %>
-    <%= form.select :comment, [["AI", "AI"], ["3D", "3D"], ["体がでかい（太い）", "体がでかい（太い）"], ["宣伝が多すぎる(ぼかし/モザイク)", "宣伝が多すぎる"], ["パクリ", "パクリ"], ["BL専", "BL専"]], include_blank: "選択して下さい" %>
+    <%= form.label "コメント/etc...", style: "display: block" %>
+    <%= form.select :comment, [["体がでかい（太い）", "体がでかい（太い）"], ["宣伝が多すぎる(ぼかし/モザイク)", "宣伝が多すぎる"], ["頭身が低すぎる", "頭身が低すぎる"], ["パクリ", "パクリ"], ["BL専", "BL専"]], include_blank: "選択して下さい" %>
   </div>
  
   <div>
-    <%= form.label "注意点", style: "display: block" %>
+    <%= form.label :特徴, style: "display: block" %>
+    <%= form.select :feature, [["AI", "AI"], ["3D", "3D"]], include_blank: "選択して下さい" %>
+  </div>
+ 
+  <hr />
+
+  <div>
+    <%= form.label :注意点, style: "display: block" %>
     <%= form.text_field :warnings %>
   </div>
+
+  <hr />
 
   <div>
     <%= form.label :作品, style: "display: block" %>
@@ -163,4 +206,10 @@
     <%= form.label :last_access_datetime, style: "display: block" %>
     <%= form.datetime_field :last_access_datetime %>
   </div>
+
+  <div>
+    <%= form.label :earliest_ul_date, style: "display: block" %>
+    <%= form.datetime_field :earliest_ul_date %>
+  </div>
+  
 <% end %>
