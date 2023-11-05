@@ -245,7 +245,7 @@ class ArtistsController < ApplicationController
       @number_of_display = 4
     end
 
-    @path_list = Artist.get_pathlist(%!(#{@artist[:pxvid]})!)
+    @path_list = Artist.get_pathlist(@artist[:pxvid])
   end
 
   # GET /artists/new
@@ -306,7 +306,7 @@ class ArtistsController < ApplicationController
   def update
     if params[:artist][:twtid] =~ /twitter\.com%2F(.*)$/
       params[:artist][:twtid] = $1
-      puts params["artist"]["twtid"]
+      puts %![LOG] twtid=#{params["artist"]["twtid"]}!
     end
     respond_to do |format|
       if @artist.update(artist_params)
@@ -337,10 +337,12 @@ class ArtistsController < ApplicationController
 
     # Only allow a list of trusted parameters through.
     def artist_params
-      params.require(:artist).permit(:pxvname, :pxvid, :filenum, :last_dl_datetime, :last_ul_datetime,
+      params.require(:artist).permit(
+        :pxvname, :pxvid, :filenum, :last_dl_datetime, :last_ul_datetime,
         :last_access_datetime, :priority, :status, :comment, :twtid, :njeid, :r18, :remarks,
         :rating, :furigana, :altname, :oldname, :chara, :work, :warnings, :feature,
-        :twt_check, :earliest_ul_date
+        :twt_check, :earliest_ul_date, :circle_name, :fetish, :pxv_fav_artwork_id, :web_url,
+        :append_info, :twt_checked_date, :nje_checked_date, :show_count
       )
     end
 
@@ -352,7 +354,7 @@ class ArtistsController < ApplicationController
       end
 
       if prms.twt
-        artists = artists.select {|x| x[:twtid] != ""}
+        artists = artists.select {|x| x[:twtid] != "" and x[:twtid] != "-"}
         @twt = true
       end
   
@@ -411,13 +413,23 @@ class ArtistsController < ApplicationController
       when "pxvname"
         artists = artists.sort_by {|x| [x.pxvname]}
       when "priority"
-        artists = artists.sort_by {|x| [-x.point, -x.priority, -x[:recent_filenum], -x[:filenum], x[:last_ul_datetime]]}
+=begin
+        artists.each do |x|
+          if x.point == "@" or x.priority == nil or x[:recent_filenum] == "@" or x[:filenum] == "@" or x[:last_ul_datetime] == "@"
+            puts x.pxvname
+          end
+        end
+=end
+        #artists = artists.sort_by {|x| [-x.point, -x.priority, -x[:recent_filenum], -x[:filenum], x[:last_ul_datetime]]}
+        artists = artists.sort_by {|x| [-x.point, x.priority, -x[:recent_filenum], -x[:filenum], x[:last_ul_datetime]]}
       when "-point"
         artists = artists.sort_by {|x| [x.point, -x.priority, -x[:recent_filenum], -x[:filenum], x[:last_ul_datetime]]}
       when "last_ul_date"
         artists = artists.sort_by {|x| [x.last_ul_datetime]}
       when "twtid"
         artists = artists.sort_by {|x| [x.twtid]}
+      when "filenum"
+        artists = artists.sort_by {|x| [-x.filenum]}
       else
         # デフォルト？
         artists = artists.sort_by {|x| [-x.point, -x.priority, -x[:recent_filenum], -x[:filenum], x[:last_ul_datetime]]}
@@ -449,6 +461,8 @@ class ArtistsController < ApplicationController
         artists_group = artists.group_by {|x| x.r18}.sort.to_h
       when "priority"
         artists_group = artists.group_by {|x| -x.priority}.sort.to_h
+      when "rating"
+        artists_group = artists.group_by {|x| -x.rating}.sort.to_h
       when "none"
         artists_group["none"] = artists
       else

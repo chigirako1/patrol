@@ -1,39 +1,6 @@
 <div id="<%= dom_id artist %>">
   
-  <% if @path_list[0] =~ /(\d\d-\d\d-\d\d)/ %>
-    <font color="red"><%= $1 %></font><br />
-    <% if date_diff?(artist, $1) %>
-      <h3>日付が異なります</h3>
-    <% end %>
-  <% end %>
-  <% @path_list.first(@number_of_display).each do |path| %>
-    <% if path =~ /\d\d-\d\d-\d\d.*\((\d+)\)/ %>
-      <% artwork_id = $1 %>
-      <% url = artist.pxv_artwork_url(artwork_id) %>
-      <%= path %>
-      (<%= link_to url, url, target: :_blank, rel: "noopener noreferrer" %>)<br />
-    <% end %>
-    
-  <% end %> 
-  
-  <% @path_list.first(@number_of_display).each do |path| %>
-    <%#= image_tag path, width: '20%', height: '20%' %>
-    <%= link_to(image_tag(path, width: '15%', height: '15%'), path, target: :_blank, rel: "noopener noreferrer") %>
-  <% end %> 
-  <br />
-  
-  <% if @show_mode == nil %>
-    <br />
-  <% else %>
-    <hr />
-    <a href="javascript:void(0);" onclick="prev_pic();">前の画像</a>
-    <a href="javascript:void(0);" onclick="next_pic();">次の画像</a>
-    <br />
-    <img id="imagexx" width="20%" height="20%" src="" />
-    <div id="pic_path">_</div>
-    <hr />
-  <% end %>
-
+  <input type="button" value="copy" onclick="copy_to_clipboard();" />
   <textarea id="dirpath" name="dirpath" rows="1" cols="255"><%= File.dirname ("F:/dPxv" + @path_list[0]) %></textarea>
   <script>
     function copy_to_clipboard() {
@@ -42,7 +9,32 @@
       document.execCommand("copy");
     }
   </script>
-  <input type="button" value="copy" onclick="copy_to_clipboard();" />
   <br />
 
+  <% if @path_list[0] =~ /(\d\d-\d\d-\d\d)/ %>
+    <font color="red"><%= $1 %></font><br />
+    <% if date_diff?(artist, $1) %>
+      <h3>日付が異なります</h3>
+    <% end %>
+  <% end %>
+
+  <% @path_list.first(@number_of_display).each do |path| %>
+    <% if path =~ /\d\d-\d\d-\d\d.*\((\d+)\)/ %>
+      <% artwork_id = $1 %>
+      <% url = artist.pxv_artwork_url(artwork_id) %>
+      (<%= link_to artwork_id, url, target: :_blank, rel: "noopener noreferrer" %>)
+      <%= path %><br />
+    <% end %>
+  <% end %> 
+  
+  <% list = artist.artwork_list(@path_list) %>
+  <% list.first(@number_of_display).each do |artwork_id, data| %>
+    <% path = data[0] %>
+    <% title = data[1] %>
+    <% date = data[2] %>
+    <% fcnt = data[3] %>
+    <%#= image_tag path, width: '20%', height: '20%' %>
+    <%= link_to(image_tag(path, width: '15%', height: '15%'), path, target: :_blank, rel: "noopener noreferrer") %>
+  <% end %> 
+  <br />
 </div>

@@ -28,22 +28,36 @@
       
       <% twt_url = %!https://twitter.com/#{twitter["twtid"]}! %>
       <%# twt_url = %!https://twitter.com/}! %>
-      <% pxv_url = %!https://www.pixiv.net/users/#{twitter["pxvid"]}! %>
+      <% pxv_url = %!https://www.pixiv.net/users/#{twitter["artist_pxvid"]}! %>
 
       <tr>
-        <td><%= twitter["id"] %></td>
+        <td><%= link_to twitter["id"], twitter %></td>
         <td><%= link_to "@#{twitter["twtid"]}", twt_url, target: :_blank, rel: "noopener noreferrer" %></td>
-        <td><%= twitter["twtname"] %></td>
-        <td><%= link_to "Show", twitter %></td>
+        <td>
+          <%= twitter["twtname"] %><br />
+          <%= twitter["pxvname"] if twitter["twtname"] != twitter["pxvname"] %>
+        </td>
+        <td>
+          <%= link_to "Show", twitter %><br />
+          <%#= twitter["artist_id"] %>
+          <%#= link_to "pxv:Show", {controller: "artists", action: "show", id: twitter["artist_id"]} %>
+          <%#= link_to "pxv:Show", artist_path(twitter["artist_id"]), id: twitter["artist_id"] %>
+          <%= link_to "pxv:#{twitter["artist_id"]}", "artists/" + twitter["artist_id"].to_s, target: :_blank, rel: "noopener noreferrer" if twitter["artist_pxvid"] != nil and twitter["artist_pxvid"] != "" %>
+          <br />
+          
+        </td>
         <td><%= twitter["filenum"] %></td>
         <td><%= twitter["recent_filenum"] %></td>
         <td><%= twitter["last_dl_datetime"].in_time_zone('Tokyo').strftime("%Y-%m-%d") %></td>
         <td><%= twitter["last_access_datetime"].in_time_zone('Tokyo').strftime("%Y-%m-%d") if twitter["last_access_datetime"] != nil %></td>
-        <td><%= link_to twitter["pxvid"], pxv_url, target: :_blank, rel: "noopener noreferrer" if twitter["pxvid"] != nil %></td>
+        <td>
+          <%= link_to twitter["artist_pxvid"], pxv_url, target: :_blank, rel: "noopener noreferrer" if twitter["artist_pxvid"] != nil and twitter["artist_pxvid"] != "" %>
+          <%#= twitter["artist_pxvid"] %>
+        </td>
         <td><%= twitter["last_ul_datetime"] if twitter["last_ul_datetime"] != nil %></td>
         <td><%= twitter["comment"] %></td>
         <td><%= twitter["remarks"] %></td>
-        <td><%= twitter["status"] %></td>
+        <td><%= twitter["status"] %><br /><%= twitter["r18"] %></td>
       </tr>
     <% end %>
   </table>

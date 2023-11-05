@@ -104,5 +104,18 @@
 
   <%= link_to "viewer", "../artists/#{@artist.id}?mode=viewer" %>
   <%= render "form", artist: @artist %>
+
+  <% if @show_mode == nil %>
+    <br />
+  <% else %>
+    <hr />
+    <a href="javascript:void(0);" onclick="prev_pic();">前の画像</a>
+    <a href="javascript:void(0);" onclick="next_pic();">次の画像</a>
+    <br />
+    <img id="imagexx" width="20%" height="20%" src="" />
+    <div id="pic_path">_</div>
+    <hr />
+  <% end %>
+
   <%= render "stat", artist: @artist %>
 <% end %>

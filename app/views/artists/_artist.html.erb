@@ -9,6 +9,7 @@
     <%= furigana %>
     <%= %!/別名"#{artist.altname}"! if artist.altname != "" %>
     <%= %!/旧名"#{artist.oldname}"! if artist.oldname != "" %>
+    <%= %!/サークル名："#{artist.circle_name}"! if artist.circle_name != "" %>
     </h2>
   </p>
 
@@ -40,15 +41,13 @@
   <p>
     <table border="1">
       <tr>
-        <th>ファイル数</th>
-        <th>最近</th>
+        <th>評価</th>
+        <th>R18</th>
+        <th>予測</th>
+        <th>ポイント</th>
         <th>優先度</th>
-        <th>Rating</th>
         <th>コメント</th>
         <th>備考</th>
-        <th>R18</th>
-        <th>ポイント</th>
-        <th>予測</th>
         <th>技術点</th>
         <th>感性点</th>
         <th>長所</th>
@@ -57,17 +56,17 @@
         <th>取得方向</th>
         <th>djnチェック日</th>
         <th>zip/pdf化</th>
+        <th>ファイル数</th>
+        <th>最近</th>
       </tr>
       <tr>
-        <td><%= artist.filenum %></td>
-        <td><%= artist.recent_filenum %></td>
-        <td><%= artist.priority %></td>
         <td><%= artist.rating %></td>
+        <td><%= artist.r18 %></td>
+        <td><%= artist.prediction_up_cnt(false) %></td>
+        <td><%= artist.point %></td>
+        <td><%= artist.priority %></td>
         <td><%= artist.comment %></td>
         <td><%= artist.remarks %></td>
-        <td><%= artist.r18 %></td>
-        <td><%= artist.point %></td>
-        <td><%= artist.prediction_up_cnt(false) %></td>
         <td><%= artist.tech_point %></td>
         <td><%= artist.sense_point %></td>
         <td><%= artist.good_point %></td>
@@ -76,6 +75,8 @@
         <td><%= artist.obtain_direction %></td>
         <td><%= artist.djn_check_date %></td>
         <td><%= artist.zip %></td>
+        <td><%= artist.filenum %></td>
+        <td><%= artist.recent_filenum %></td>
       </tr>
     </table>
   </p>
@@ -83,6 +84,9 @@
   <hr />
 
   <% if artist["twtid"] != "" %>
+    <% if artist["twt_check"] == "t" %>
+      <h3>TWTチェック↓↓↓</h3>
+    <% end %>
     twitter(X)を開く
     <% url = %!https://twitter.com/#{artist["twtid"]}! %>
     <%= link_to "@#{artist["twtid"]}", url, target: :_blank, rel: "noopener noreferrer" %>

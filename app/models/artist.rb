@@ -66,28 +66,30 @@ class Artist < ApplicationRecord
             elsif line =~ %r!(https?://.*)!
                 url = $1
                 misc_urls.push url
+            else
+                misc_urls.push line
             end
         end
         [id_list, twt_urls, misc_urls]
     end
 
-    def self.get_pathlist(search_str)
+    def self.get_pathlist(pxvid)
         path_list = []
-        base_path = UrlTxtReader::public_path#Rails.root.join("public").to_s
-        rpath = UrlTxtReader::get_path_from_dirlist(search_str)
+        base_path = UrlTxtReader::public_path
+        rpath_list = UrlTxtReader::get_path_from_dirlist(pxvid)
 
-        if rpath != ""
+        rpath_list.each do |rpath|
             puts %!path="#{rpath}"!
             tmp_list = []
             Find.find(rpath) do |path|
-                if File.extname(path) == ".jpg"
+                if [".jpg", ".png", ".jpeg"].include?(File.extname(path))
                     #ファイル名に"#"が含まれるとだめ。マシな方法ないの？
                     tmp_list << path.gsub(base_path, "").gsub("#", "%23")
                 end
             end
-            path_list = tmp_list.reverse
+            path_list << tmp_list
         end
-        path_list
+        path_list.flatten.sort.reverse
     end
 
     def self.get_url_list(filepath)
@@ -189,18 +191,18 @@ class Artist < ApplicationRecord
         if rating == nil or rating < 6
             comp = 100
         elsif rating < 8
-            comp = 150
+            comp = 125
         else
-            comp = 200
+            comp = 150
         end
         pt = (pt * comp) / 100
 
         # R18
         case r18
         when "R18"
-            comp = 200
+            comp = 160
         when "R15"
-            comp = 150
+            comp = 130
         when "R12"
             comp = 110
         when "cute"
@@ -213,7 +215,9 @@ class Artist < ApplicationRecord
         pt = (pt * comp) / 100
 
         # 優先度補正
-        if priority < 0
+        if priority == nil
+            pri = 100
+        elsif priority < 0
             pri = priority * 10
         else
             pri = priority
@@ -251,7 +255,7 @@ class Artist < ApplicationRecord
     end
 
     def pic_path
-        pathlist = Artist.get_pathlist("(#{pxvid})")
+        pathlist = Artist.get_pathlist(pxvid)
         pathlist[0]
         #"<b>test</b>".html_safe
     end
@@ -290,12 +294,21 @@ class Artist < ApplicationRecord
         %!https://www.pixiv.net/artworks/#{artwork_id}!
     end
 
+    def nje_member_url
+        %!https://nijie.info/members.php?id=#{njeid}!
+    end
+
     def stats(path_list)
         stats = {}
 
         path_list.each do |path|
             if path =~ /(\d\d-\d\d-\d\d)/
-                date = Date.parse($1)
+                begin
+                    date = Date.parse($1)
+                rescue Date::Error => ex
+                    puts %!#{ex}:#{path}!
+                    next
+                end
                 year = date.year
                 month = date.month - 1
                 day = date.day
@@ -317,14 +330,20 @@ class Artist < ApplicationRecord
 
         #puts path_list.size
         path_list.reverse.each do |path|
+            artwork_id = 0
             if path =~ /(\d\d-\d\d-\d\d)\s*(.*)\((\d+)\)/
-                #year = $1.to_i
-                #month = $2.to_i - 1
-                #day = $3.to_i
                 date = Date.parse($1)
                 artwork_title = $2
                 artwork_id = $3.to_i
-                
+            elsif path =~ /(\d\d-\d\d-\d\d)\s*\((\d+)\)\s*(.*)/
+                date = Date.parse($1)
+                artwork_id = $2.to_i
+                artwork_title = $3
+            else
+                puts %!regex no hit:"#{path}"!
+            end
+
+            if artwork_id != 0
                 if artworks.has_key?(artwork_id)
                     artworks[artwork_id][3] += 1
                 else
@@ -333,7 +352,7 @@ class Artist < ApplicationRecord
                     artworks[artwork_id] = [path, %!#{artwork_title}!, date, 1]
                 end
             else
-                puts %!regex no hit:"{path}"!
+                puts %!regex no hit:"#{path}"!
             end
         end
 

@@ -7,11 +7,20 @@ class TwittersController < ApplicationController
 
     twitters = Twitter.joins(
       "LEFT OUTER JOIN artists ON twitters.twtid = artists.twtid"
-    ).select("artists.*, twitters.*").sort_by {|x| [x[:last_access_datetime], x[:last_dl_datetime]]}
+    ).select("artists.id AS artist_id, artists.pxvid AS artist_pxvid, artists.*, twitters.*").sort_by {|x| [x[:last_access_datetime], x[:last_dl_datetime]]}
     #).select("artists.*, twitters.*")#.sort_by {|x| [x[:last_access_datetime]]}
     #twitters.first(10).each {|x|
     #  p x
     #}
+
+    #twitters = twitters.select {|x| x.pxvid == ""}
+    twitters = twitters.sort_by {|x|
+      if x[:last_ul_datetime] == nil
+        ["2001-01-01"]
+      else
+        [x[:last_ul_datetime]]
+      end
+    }.reverse
 
     #twitters = twitters.sort_by {|x| [x[:last_access_datetime], x[:last_dl_datetime]]}
     #twitters = twitters.sort_by {|x| [x[:last_dl_datetime]]}

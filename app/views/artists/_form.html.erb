@@ -35,12 +35,6 @@
 
   <h2>項目</h2>
   <div>
-    <%= form.label :rating, style: "display: block" %>
-    <%#= form.number_field :rating %>
-    <%= form.select :rating, [["優(10)", 10], ["良+(9)", 9], ["良(8)", 8], ["良-(7)", 7], ["可(6)", 6], ["可？(5)", 5], ["不可？(4)", 4], ["不可(2)", 2], ["不可(1)", 1], ["不可(-1)", -1]], include_blank: "選択して下さい" %>
-  </div>
-
-  <div>
     <%= form.label :twtid, style: "display: block" %>
     @<%= form.text_field :twtid %>
     <!-- 
@@ -63,18 +57,26 @@
     <%= form.check_box :twt_check, {}, checked_value='t', unchecked_value='' %>
   </div>
 
+  <div>
+    <%= form.label :rating, style: "display: block" %>
+    <%#= form.number_field :rating %>
+    <%= form.select :rating, [["優(10)", 10], ["良+(9)", 9], ["良(8)", 8], ["良-(7)", 7], ["可(6)", 6], ["可？(5)", 5], ["不可？(4)", 4], ["不可(2)", 2], ["不可(1)", 1], ["不可(-1)", -1]], include_blank: "選択して下さい" %>
+  </div>
+
   <hr />
 
   <div>
     <%= form.label :r18, style: "display: block" %>
     <%= form.select :r18, [["R18", "R18"], ["R15", "R15"], ["R12", "R12"], ["健全？", "健全"], ["かわいい系", "かわいい系"], ["アート系", "アート系"],["R36(危険)", "R36"]], include_blank: "選択して下さい" %>
-    <input type="button" value="R18に設定" onclick="toggle_r18();" />
+    <input type="button" value="R18" onclick="toggle_r(1);"  class="btn" />
+    <input type="button" value="R15" onclick="toggle_r(2);"  class="btn" />
+    <input type="button" value="R12" onclick="toggle_r(3);"  class="btn" />
     <script>
-      function toggle_r18() {
+      function toggle_r(idx) {
         //TODO: トグルするようにする
         let r18_sel_box = document.getElementById("artist_r18");
         let options = r18_sel_box.options;
-        options[1].selected = true;
+        options[idx].selected = true;
       }
     </script>
   </div>
@@ -119,8 +121,13 @@
   <hr />
 
   <div>
-    <%= form.label "備考", style: "display: block" %>
+    <%= form.label :備考（なんでもメモ）, style: "display: block" %>
     <%= form.text_field :remarks %>
+  </div>
+ 
+  <div>
+    <%= form.label :注意点, style: "display: block" %>
+    <%= form.text_field :warnings %>
   </div>
 
   <div>
@@ -132,14 +139,7 @@
     <%= form.label :特徴, style: "display: block" %>
     <%= form.select :feature, [["AI", "AI"], ["3D", "3D"]], include_blank: "選択して下さい" %>
   </div>
- 
-  <hr />
-
-  <div>
-    <%= form.label :注意点, style: "display: block" %>
-    <%= form.text_field :warnings %>
-  </div>
-
+  
   <hr />
 
   <div>
@@ -153,6 +153,16 @@
   </div>
   
   <h2>ユーザー情報</h2>
+  <div>
+    <%= form.label :fetish, style: "display: block" %>
+    <%= form.text_field :fetish %>
+  </div>
+  
+  <div>
+    <%= form.label :pxv_fav_artwork_id, style: "display: block" %>
+    <%= form.number_field :pxv_fav_artwork_id %>
+  </div>
+
   <div>
     <%= form.label :pxvname, style: "display: block" %>
     <%= form.text_field :pxvname %>
@@ -186,11 +196,26 @@
   </div>
 
   <div>
-    <%= form.label :filenum, style: "display: block" %>
-    <%= form.number_field :filenum %>
+    <%= form.label :サークル名, style: "display: block" %>
+    <%= form.text_field :circle_name %>
+  </div>
+  
+  <div>
+    <%= form.label :ウェブURL, style: "display: block" %>
+    <%= form.text_field :web_url %>
+  </div>
+
+  <div>
+    <%= form.label :付加情報, style: "display: block" %>
+    <%= form.text_field :append_info %>
   </div>
 
   <hr />
+
+  <div>
+    <%= form.label :filenum, style: "display: block" %>
+    <%= form.number_field :filenum %>
+  </div>
 
   <div>
     <%= form.label :last_dl_datetime, style: "display: block" %>

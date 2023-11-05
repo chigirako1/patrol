@@ -156,15 +156,15 @@ module UrlTxtReader
         id_list
     end
 
-    def self.get_path_from_dirlist(search_str)
-        rpath = ""
+    def self.get_path_from_dirlist(pxvid)
+        rpath = []
         # DBにパスを格納したいが面倒なので。。。　
         txtpath = Rails.root.join("public/pxv/dirlist.txt").to_s
         File.open(txtpath) { |file|
             while line  = file.gets
-                if line.include?(search_str)
-                    rpath = line.chomp
-                    break
+                #if line.include?(search_str)
+                if line =~ /\(#{pxvid}\)|\(\##{pxvid}\)/
+                    rpath << line.chomp
                 end
             end
         }

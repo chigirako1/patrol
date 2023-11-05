@@ -25,6 +25,7 @@
         [
           ['priority'], 
           ['-point'], 
+          ['filenum'], 
           ['access_date_X_last_ul_datetime'], 
           ['access_date_X_recent_filenum'], 
           ['access_date_X_recent_filenum_X_ul'], 
@@ -52,6 +53,7 @@
           ['status'],
           ['r18'],
           ['priority'],
+          ['rating'],
         ],
         selected: params[:group_by] 
       ) %>
@@ -91,7 +93,7 @@
     <%= f.number_field :point, :value => params[:point] %>
     <br />
     <%= f.label :rating %>
-    <%= f.text_field :point, :value => params[:rating] %>
+    <%= f.text_field :rating, :value => params[:rating] %>
     <br />
     <%= f.label :amount_gt %>
     <%= f.number_field :amount_gt, :value => params[:amount_gt] %>
@@ -156,12 +158,12 @@
       <th>show</th>
       <th>ファイル総数<br />(最近)</th>
       <th>ポイント<br />(予測)</th>
-      <th>優先度</th>
+      <th>優先度<br />評価</th>
       <th>最終DL日</th>
       <th>最新投稿日</th>
       <th>最新アクセス日</th>
       <th>状態</th>
-      <th>twt</th>
+      <th>twt/nje</th>
       <th>twt DL日</th>
       <th>コメント<br />特徴</th>
       <% if @thumbnail %>
@@ -170,8 +172,6 @@
       <% end %>
     </tr>
     <% artists[(@begin_no)..(@begin_no + @size_per_table - 1)].each do |artist| %>
-      <% pxv_url = %!https://www.pixiv.net/users/#{artist["pxvid"]}! %>
-      <% twt_url = %!https://twitter.com/#{artist["twtid"]}! %>
       <% if @twt %>
         <% twt = Twitter.find_by(twtid: artist["twtid"]) %>
       <% else %>
@@ -180,7 +180,7 @@
       <tr>
         <td><%= artist["id"] %></td>
         <td><%= pxvname_tag(artist) %></td>
-        <td><%= link_to artist["pxvid"], pxv_url, target: :_blank, rel: "noopener noreferrer" %></td>
+        <td><%= link_to artist["pxvid"], artist.pxv_user_url, target: :_blank, rel: "noopener noreferrer" %></td>
         <td><%= link_to "■■■", artist, target: :_blank, rel: "noopener noreferrer" %></td>
         <td align="right"><%= artist["filenum"] %><br />(<%= artist["recent_filenum"] %>)</td>
         <td align="right" bgcolor="cyan"><%= artist.point %><br />(<%= artist.prediction_up_cnt(true) %>)</td>
@@ -213,14 +213,19 @@
 
         <!-- -->
         <td>[<%= artist.r18 %>]<br /><%= artist["status"] %></td>
-        <td><%= link_to "@#{artist["twtid"]}", twt_url, target: :_blank, rel: "noopener noreferrer" if artist["twtid"] != "" %></td>
+        <td>
+          <%= link_to "@#{artist["twtid"]}", artist.twt_user_url, target: :_blank, rel: "noopener noreferrer" if artist["twtid"] != "" %>
+          <%= "★" if @twt and artist.twt_check == "t" %>
+          <br />
+          <%= link_to "nje:#{artist["njeid"]}", artist.nje_member_url, target: :_blank, rel: "noopener noreferrer" if artist["njeid"] != nil and artist["njeid"] != "" %>
+        </td>
         <td><%= artist.get_date_info(twt.last_dl_datetime) if twt %></td>
         <td><%= artist["comment"] %><br /><%= artist["feature"] %></td>
         <% if @thumbnail %>
           <td><%= pic_path_tag(artist.pxvid, 5) %></td>
           <td>
-            ・<%= link_to("「優先度」を+10 & R18", update_no_update_artist_path(id: artist.id, method: "priority_plus_ten:R18"), method: :patch) %><br />
-            ・<%= link_to("「優先度」を-10", update_no_update_artist_path(id: artist.id, method: "priority_minus_ten"), method: :patch) %><br />
+            ・<%#= link_to("「優先度」を+10 & R18", update_no_update_artist_path(id: artist.id, method: "priority_plus_ten:R18"), method: :patch) %><br />
+            ・<%#= link_to("「優先度」を-10", update_no_update_artist_path(id: artist.id, method: "priority_minus_ten"), method: :patch) %><br />
           </td>
         <% end %>
       </tr>
