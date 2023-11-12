@@ -60,7 +60,11 @@
         <th>最近</th>
       </tr>
       <tr>
-        <td><%= artist.rating %></td>
+        <% if artist.rating == 0 %>
+          <td bgcolor="yellow"><%= artist.rating %></td>
+        <% else %>
+          <td><%= artist.rating %></td>
+        <% end %>
         <td><%= artist.r18 %></td>
         <td><%= artist.prediction_up_cnt(false) %></td>
         <td><%= artist.point %></td>

@@ -12,7 +12,17 @@ class Artist < ApplicationRecord
     # クラスメソッド
     #--------------------------------------------------------------------------
     def self.looks(target_col, search_word, match_method)
+
         search_word.strip!
+
+        if target_col == "(自動判断)"
+            if search_word =~ /^\d+$/
+                target_col = "pxvid"
+            else
+                target_col = "pxvname"
+            end
+        end
+
         search_word_p = ""
         case match_method
         when "perfect_match"
@@ -34,7 +44,8 @@ class Artist < ApplicationRecord
         twt_urls = {}
         misc_urls = []
 
-        txts.each_line do |line|
+        #txts.each_line do |line|
+        txts.each do |line|
             line.chomp!
             next if line =~ /^$/
     
@@ -46,7 +57,6 @@ class Artist < ApplicationRecord
                 #twt_user_url = $2
                 twt_id = $3
 
-                #https://twitter.com/258shin/status/1643549775860727809?t=3vLfQP1QuY67a_OGa9RPMw&s=19
                 if url =~ %r!(https?://twitter\.com/\w+/status/\d+)\?.*!
                     #twt_urls.push($1)
                     #twt_urls.push($1 + "/photo/1")
@@ -57,18 +67,18 @@ class Artist < ApplicationRecord
                 else
                     twt_urls[twt_id] = []
                     twt_urls[twt_id] << line
-                end
 
-                artist = Artist.find_by(twtid: twt_id)
-                if artist != nil
-                    id_list << artist.pxvid unless id_list.include? (artist.pxvid)
+                    artist = Artist.find_by(twtid: twt_id)
+                    if artist != nil
+                        id_list << artist.pxvid unless id_list.include? (artist.pxvid)
+                    end
                 end
             elsif line =~ %r!(https?://.*)!
                 url = $1
                 misc_urls.push url
             else
                 misc_urls.push line
-            end
+             end
         end
         [id_list, twt_urls, misc_urls]
     end
@@ -108,8 +118,9 @@ class Artist < ApplicationRecord
             }
         end
 
-        id_list, twt_urls, misc_urls = get_ulrs(txt_sum)
-        [id_list, twt_urls.sort.uniq, misc_urls.sort.uniq]
+        id_list, twt_urls, misc_urls = get_ulrs(txt_sum.split(/\R/).sort_by{|s| [s.downcase, s]}.uniq)
+        #[id_list, twt_urls.sort.uniq, misc_urls.sort.uniq]
+        [id_list, twt_urls, misc_urls]
     end
 
     def self.get_id_list()
@@ -172,11 +183,22 @@ class Artist < ApplicationRecord
     end
 
     def self.get_twt_url(url)
-        if url =~ %r!(https?://twitter\.com/\w+/status/\d+)\?!
-            return $1
+        if url =~ %r!(https?://twitter\.com/\w+/status/(\d+))\?!
+            return $1, $2.to_i
         else
-            return url
+            return url, ""
         end
+    end
+
+    TW_EPOCH = 1288834974657  # 単位：ミリ秒
+    def self.get_timestamp(tweet_id)
+        timestamp = Time.at(((tweet_id >> 22) + TW_EPOCH) / 1000.0)
+    end
+
+    def self.timestamp_str(tweet_id)
+        ts = get_timestamp(tweet_id)
+        #ts.strftime("%Y-%m-%d %H:%M:%S.%L %Z")
+        ts.strftime("%Y-%m-%d")
     end
 
     #--------------------------------------------------------------------------
@@ -332,15 +354,25 @@ class Artist < ApplicationRecord
         path_list.reverse.each do |path|
             artwork_id = 0
             if path =~ /(\d\d-\d\d-\d\d)\s*(.*)\((\d+)\)/
-                date = Date.parse($1)
+                date_str = $1
                 artwork_title = $2
                 artwork_id = $3.to_i
             elsif path =~ /(\d\d-\d\d-\d\d)\s*\((\d+)\)\s*(.*)/
-                date = Date.parse($1)
+                date_str = $1
                 artwork_id = $2.to_i
                 artwork_title = $3
+            elsif path =~ /(\d\d-\d\d-\d\d)\s*(.*)/
+                date_str = $1
+                artwork_title = $2
             else
                 puts %!regex no hit:"#{path}"!
+            end
+
+            begin
+                date = Date.parse(date_str)
+            rescue Date::Error => ex
+                puts %!#{ex}:#{path}!
+                next
             end
 
             if artwork_id != 0
@@ -352,7 +384,7 @@ class Artist < ApplicationRecord
                     artworks[artwork_id] = [path, %!#{artwork_title}!, date, 1]
                 end
             else
-                puts %!regex no hit:"#{path}"!
+                #puts %!regex no hit:"#{path}"!
             end
         end
 

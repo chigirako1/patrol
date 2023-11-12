@@ -2,6 +2,9 @@ module ArtistsHelper
 
     def pxvname_tag(artist)
         tag = artist.pxvname
+        if artist.append_info != nil and artist.append_info != ""
+            tag += %!【#{artist.append_info}】!
+        end
         if artist.altname != ""
             tag += "<br />"
             tag += "別名:(#{artist.altname})"

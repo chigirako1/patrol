@@ -165,36 +165,52 @@ class ArtistsController < ApplicationController
     @thumbnail = prms.thumbnail
 
     @artists_group = {}
-    artists = Artist.all
 
-    if prms.param_file == "urllist" or prms.param_file == "urllist-pxv-only" or prms.param_file == "urllist-unknown-only"
+    if params[:file] == "検索"
+      artists = Artist.looks(params[:target_col], params[:search_word], params[:match_method])
+    else
+      artists = Artist.all
+    end
+
+    if prms.param_file == "urllist" or
+      prms.param_file == "urllist-pxv-only" or
+      prms.param_file == "urllist-unknown-only" or
+      prms.param_file == "urllist-twt-only" or
+      prms.param_file == "urllist-twt-only(latest)"
       if prms.url_list_only
         @misc_urls = Artist.get_url_list_from_all_txt
         return
       else
         datestr = prms.filename
-        if datestr == ""
+        if prms.param_file == "urllist-twt-only(latest)"
+          path = "public/get illust url_1029.txt"
+        elsif datestr == ""
           path = ""
         else
           path = "public/get illust url_#{datestr}.txt"
         end
+        puts "path=#{path}"
         id_list, @twt_urls, @misc_urls = Artist.get_url_list(path)
 
         if prms.param_file == "urllist-unknown-only"
           artists = artists.first(1)
           @twt_urls = []
           @twt = false
+          @unknown_id_list = Artist.get_unknown_id_list(id_list)
         elsif prms.param_file == "urllist-pxv-only"
           artists = artists.select {|x| id_list.include?(x[:pxvid])}
           @twt_urls = []
           @twt = false
+          @unknown_id_list = Artist.get_unknown_id_list(id_list)
+        elsif prms.param_file == "urllist-twt-only" or prms.param_file == "urllist-twt-only(latest)"
+          artists = artists.first(1)
+          @twt = true
         else
           artists = artists.select {|x| id_list.include?(x[:pxvid])}
           puts %!artists.size=#{artists.size}!
           @twt = true
+          @unknown_id_list = Artist.get_unknown_id_list(id_list)
         end
-
-        @unknown_id_list = Artist.get_unknown_id_list(id_list)
       end
     elsif prms.param_file == "pxvids"
       @twt = true
