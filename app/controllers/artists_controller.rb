@@ -19,6 +19,9 @@ class Params
     :last_access_datetime,
     :r18,
     :point,
+    :prediction,
+    :rating,
+    :twt_chk,
     :thumbnail,
     :begin_no,
     :url_list_only
@@ -28,12 +31,30 @@ class Params
     @sort_by = params[:sort_by]
     @status = params[:status]
     @point = params[:point]
+    @prediction = params[:prediction]
+    @rating = params[:rating]
+    @twt_chk = params[:twt_chk]
 
     if @point == nil
       @point = 0
     else
       @point = @point.to_i
     end
+    puts "point=#{@point}"
+
+    if @prediction == nil
+      @prediction = 0
+    else
+      @prediction = @prediction.to_i
+    end
+    puts "prediction=#{@prediction}"
+
+    if @rating == nil
+      @rating = 0
+    else
+      @rating = @rating.to_i
+    end
+    puts "rating=#{@rating}"
 
     if @status == nil
       @status = ""
@@ -87,17 +108,17 @@ class Params
 
     last_access_datetime = params[:last_access_datetime]
     if last_access_datetime == nil or last_access_datetime == 0
-      @last_access_datetime = 25 #0
+      @last_access_datetime = 0
     else
       @last_access_datetime = last_access_datetime.to_i
     end
     puts "last_access_datetime=#{@last_access_datetime}"
 
     display_number = params[:display_number]
-    if display_number != nil
-      @display_number = display_number.to_i
-    else
+    if display_number == nil
       @display_number = 10
+    else
+      @display_number = display_number.to_i
     end
     if @display_number == 0
       @display_number = 10
@@ -107,21 +128,25 @@ class Params
     twt = params[:twt]
     if twt == "true"
       @twt = true
+      #puts %!@twt=#{@twt}!
     end
 
     ai = params[:ai]
     if ai != nil and ai == "true"
       @ai = true
+      #puts %!@ai=#{@ai}!
     end
 
     nje = params[:nje]
     if nje != nil and nje == "true"
       @nje = true
+      #puts %!@nje=#{@nje}!
     end
 
     thumbnail = params[:thumbnail]
     if thumbnail != nil and thumbnail == "true"
       @thumbnail = true
+      #puts %!@thumbnail=#{@thumbnail}!
     end
     puts %![twt:#{@twt}],[ai:#{@ai}],[thumbnail:#{@thumbnail}]!
 
@@ -132,13 +157,13 @@ class Params
     else
       @filename = filename
     end
-    puts %!param_file=#{@param_file}/filename=#{@filename}!
+    puts %!param_file="#{@param_file}"/filename="#{@filename}"!
 
     @url_list_only = false
     url_list_only = params[:url_list_only]
     if url_list_only == "true"
       @url_list_only = true
-      puts %!url_list_only=#{@url_list_only}!
+      puts %!url_list_only="#{@url_list_only}"!
     end
   end
 end
@@ -189,19 +214,19 @@ class ArtistsController < ApplicationController
         else
           path = "public/get illust url_#{datestr}.txt"
         end
-        puts "path=#{path}"
+        puts "path='#{path}'"
         id_list, @twt_urls, @misc_urls = Artist.get_url_list(path)
 
         if prms.param_file == "urllist-unknown-only"
           artists = artists.first(1)
-          @twt_urls = []
+          @twt_urls = {}
           @twt = false
           @unknown_id_list = Artist.get_unknown_id_list(id_list)
         elsif prms.param_file == "urllist-pxv-only"
           artists = artists.select {|x| id_list.include?(x[:pxvid])}
-          @twt_urls = []
+          @twt_urls = {}
           @twt = false
-          @unknown_id_list = Artist.get_unknown_id_list(id_list)
+          #@unknown_id_list = Artist.get_unknown_id_list(id_list)
         elsif prms.param_file == "urllist-twt-only" or prms.param_file == "urllist-twt-only(latest)"
           artists = artists.first(1)
           @twt = true
@@ -247,7 +272,9 @@ class ArtistsController < ApplicationController
   # GET /artists/1 or /artists/1.json
   def show
     if params[:access_dt_update].presence and params[:access_dt_update] == "no"
+      @artist
     else
+      @last_access_datetime = @artist.last_access_datetime
       @artist.update(last_access_datetime: Time.now)
     end
 
@@ -262,6 +289,22 @@ class ArtistsController < ApplicationController
     end
 
     @path_list = Artist.get_pathlist(@artist[:pxvid])
+    if @show_mode == "twt_pic_list"
+      @twt_pic_path_list = Artist.get_twt_pathlist(@artist[:twtid])
+    end
+  end
+
+  # GET /artists/twt
+  def twt_index
+    id_list, @twt_urls, @misc_urls = Artist.get_url_list("")
+
+  end
+
+  # GET /artists/twt/x
+  def twt_show
+    @twtid = params[:twtid]
+
+    @twt_pic_path_list = Artist.get_twt_pathlist(@twtid)
   end
 
   # GET /artists/new
@@ -355,10 +398,11 @@ class ArtistsController < ApplicationController
     def artist_params
       params.require(:artist).permit(
         :pxvname, :pxvid, :filenum, :last_dl_datetime, :last_ul_datetime,
-        :last_access_datetime, :priority, :status, :comment, :twtid, :njeid, :r18, :remarks,
-        :rating, :furigana, :altname, :oldname, :chara, :work, :warnings, :feature,
-        :twt_check, :earliest_ul_date, :circle_name, :fetish, :pxv_fav_artwork_id, :web_url,
-        :append_info, :twt_checked_date, :nje_checked_date, :show_count
+        :last_access_datetime, :priority, :status, :comment, :twtid, :njeid,
+        :r18, :remarks, :rating, :furigana, :altname, :oldname, :chara, :work,
+        :warnings, :feature, :twt_check, :earliest_ul_date, :circle_name,
+        :fetish, :pxv_fav_artwork_id, :web_url, :append_info,
+        :twt_checked_date, :nje_checked_date, :show_count
       )
     end
 
@@ -369,9 +413,21 @@ class ArtistsController < ApplicationController
         artists = artists.select {|x| x.point >= prms.point}
       end
 
+      if prms.prediction != 0
+        artists = artists.select {|x| x.prediction_up_cnt(true) >= prms.prediction}
+      end
+      
+      if prms.rating != 0
+        artists = artists.select {|x| x.rating == 0 or x.rating >= prms.rating}
+      end
+
       if prms.twt
         artists = artists.select {|x| x[:twtid] != "" and x[:twtid] != "-"}
         @twt = true
+      end
+
+      if prms.twt_chk
+        artists = artists.select {|x| x[:twt_check] == prms.twt_chk}
       end
   
       if prms.ai
@@ -436,7 +492,8 @@ class ArtistsController < ApplicationController
           end
         end
 =end
-        #artists = artists.sort_by {|x| [-x.point, -x.priority, -x[:recent_filenum], -x[:filenum], x[:last_ul_datetime]]}
+        artists = artists.sort_by {|x| [-x.priority, -x[:recent_filenum], -x[:filenum], x[:last_ul_datetime]]}
+      when "point"
         artists = artists.sort_by {|x| [-x.point, x.priority, -x[:recent_filenum], -x[:filenum], x[:last_ul_datetime]]}
       when "-point"
         artists = artists.sort_by {|x| [x.point, -x.priority, -x[:recent_filenum], -x[:filenum], x[:last_ul_datetime]]}

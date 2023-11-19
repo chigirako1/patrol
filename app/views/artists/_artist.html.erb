@@ -45,7 +45,7 @@
         <th>R18</th>
         <th>予測</th>
         <th>ポイント</th>
-        <th>優先度</th>
+        <th>補正</th>
         <th>コメント</th>
         <th>備考</th>
         <th>技術点</th>
@@ -97,6 +97,7 @@
   <% else %>
     <font color="red">twt未設定</font>
   <% end %>
+  <%= link_to "【twtサムネイル表示】", "../artists/#{@artist.id}?mode=twt_pic_list#twt_pic_list" %>
   <br />
 
   <% if artist.nje_p %>
@@ -113,7 +114,8 @@
         <th>最新DL日</th>
         <th>最新投稿日</th>
         <th>最初期投稿日</th>
-        <th>最終アクセス日</th>
+        <!-- <th>最終アクセス日</th>-->
+        <th>前回アクセス日</th>
       </tr>
       <tr>
         <td>
@@ -130,7 +132,9 @@
           <%= artist.get_datetime_string(artist.earliest_ul_date, true) if artist.earliest_ul_date.presence %>
         </td>
         <td>
-          <%= artist.get_datetime_string(artist.last_access_datetime, true) %>
+          <%#= artist.get_datetime_string(artist.last_access_datetime, true) %>
+          <%= artist.get_datetime_string(@last_access_datetime, true) %>
+          (<%= artist.get_date_info(@last_access_datetime) %>)
         </td>
       </tr>
     </table>

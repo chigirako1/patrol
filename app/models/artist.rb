@@ -14,14 +14,29 @@ class Artist < ApplicationRecord
     def self.looks(target_col, search_word, match_method)
 
         search_word.strip!
+        puts %!#{target_col}, #{search_word}, #{match_method}!
 
         if target_col == "(自動判断)"
             if search_word =~ /^\d+$/
                 target_col = "pxvid"
+            elsif search_word =~ %r!www\.pixiv\.net/users/(\d+)!
+                target_col = "pxvid"
+                search_word = $1
             else
                 target_col = "pxvname"
             end
         end
+
+        if match_method == "auto"
+            case target_col
+            when "pxvid"
+                match_method = "perfect_match"
+            else
+                match_method = "partial_match"
+            end
+        end
+
+        puts %!#{target_col}, #{search_word}, #{match_method}!
 
         search_word_p = ""
         case match_method
@@ -63,15 +78,22 @@ class Artist < ApplicationRecord
                 end
 
                 if twt_urls.has_key? twt_id
-                    twt_urls[twt_id] << line
+                    # 既存に追加
+                    twt_urls[twt_id][1] << line
                 else
+                    # 新規
                     twt_urls[twt_id] = []
-                    twt_urls[twt_id] << line
 
                     artist = Artist.find_by(twtid: twt_id)
                     if artist != nil
-                        id_list << artist.pxvid unless id_list.include? (artist.pxvid)
+                        id_list << artist.pxvid
+                        twt_urls[twt_id][0] = true
+                    else
+                        twt_urls[twt_id][0] = false
                     end
+
+                    twt_urls[twt_id][1] = []
+                    twt_urls[twt_id][1] << line
                 end
             elsif line =~ %r!(https?://.*)!
                 url = $1
@@ -80,26 +102,60 @@ class Artist < ApplicationRecord
                 misc_urls.push line
              end
         end
-        [id_list, twt_urls, misc_urls]
+
+        twt_urls = twt_urls.sort_by {|k, v| [v[0]?1:0, k]}.to_h
+        #twt_urls_pxv_t = twt_urls.select {|x| x[0]}
+        #twt_urls_pxv_f = twt_urls.select {|x| !x[0]}
+        #twt_urls = twt_urls_pxv_t.merge(twt_urls_pxv_f)
+
+        twt_urls = twt_urls.map {|key, val| [key, val[1]]}.to_h
+
+        [id_list.uniq, twt_urls, misc_urls]
     end
 
     def self.get_pathlist(pxvid)
         path_list = []
-        base_path = UrlTxtReader::public_path
-        rpath_list = UrlTxtReader::get_path_from_dirlist(pxvid)
 
+        rpath_list = UrlTxtReader::get_path_from_dirlist(pxvid)
         rpath_list.each do |rpath|
             puts %!path="#{rpath}"!
-            tmp_list = []
-            Find.find(rpath) do |path|
-                if [".jpg", ".png", ".jpeg"].include?(File.extname(path))
-                    #ファイル名に"#"が含まれるとだめ。マシな方法ないの？
-                    tmp_list << path.gsub(base_path, "").gsub("#", "%23")
-                end
-            end
-            path_list << tmp_list
+            path_list << get_path_list(rpath)
         end
         path_list.flatten.sort.reverse
+    end
+
+    def self.get_twt_pathlist(twtid)
+        path_list = []
+
+        tpath = UrlTxtReader::get_twt_path_from_dirlist(twtid)
+
+        path_list << get_path_list(tpath)
+
+        Dir.glob("D:/data/src/ror/myapp/public/d_dl/Twitter/*/").each do |path|
+            if twtid == File.basename(path)
+                path_list << get_path_list(path)
+                break
+            end
+        end
+
+        path_list.flatten.sort.reverse
+    end
+
+    def self.get_path_list(tpath)
+        tmp_list = []
+
+        if tpath == ""
+            return tmp_list
+        end
+
+        base_path = UrlTxtReader::public_path
+        Find.find(tpath) do |path|
+            if [".jpg", ".png", ".jpeg"].include?(File.extname(path))
+                #ファイル名に"#"が含まれるとだめ。マシな方法ないの？
+                tmp_list << path.gsub(base_path, "").gsub("#", "%23")
+            end
+        end
+        tmp_list
     end
 
     def self.get_url_list(filepath)
@@ -297,7 +353,7 @@ class Artist < ApplicationRecord
 
         if last_access_datetime.year == Time.zone.now.year
             #last_access_datetime.in_time_zone('Tokyo').strftime("%m月%d日")
-            get_date_info(last_access_datetime)
+            get_date_info_days(last_access_datetime)
         else
             #last_access_datetime.in_time_zone('Tokyo').strftime("%Y-%m-%d")
             get_date_info(last_access_datetime)
@@ -305,6 +361,7 @@ class Artist < ApplicationRecord
     end
 
     def twt_user_url
+        # controllerとmodelで共通の処理を書きたいのだが、やり方がわからない
         %!https://twitter.com/#{twtid}!
     end
 
@@ -366,6 +423,7 @@ class Artist < ApplicationRecord
                 artwork_title = $2
             else
                 puts %!regex no hit:"#{path}"!
+                date_str = ""
             end
 
             begin

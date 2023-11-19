@@ -1,0 +1,55 @@
+<% provide(:title, @twtid) %>
+
+<h2 id="twt_pic_list">twt pic (<%= link_to "@#{@twtid}", get_twt_user_url(@twtid), target: :_blank, rel: "noopener noreferrer" %>)</h1>
+
+<% twt_pic_list = @twt_pic_path_list.map {|x| [twt_path_str(x), x]}.sort.reverse %>
+
+<% twt_pic_list.each do |elem| %>
+    <% path = elem[1] %>
+    <%= link_to image_tag(path, width: '10%', height: '10%', :alt => path), path, target: :_blank, rel: "noopener noreferrer" %>
+<% end %>
+<br />
+
+<% twt_pic_list.each do |elem| %>
+    <%= elem[0] %><br />
+<% end %>
+<br />
+
+
+<% twt_acnt = Twitter.find_by(twtid: @twtid) %>
+<% if twt_acnt != nil %>
+    twt:<%= twt_acnt.twt_screen_name %>[<%= link_to "show", twt_acnt %>](<%= twt_acnt.last_dl_datetime_disp %>)
+    <br />
+
+    <% pxv_acnt = Artist.find_by(pxvid: twt_acnt.pxvid) %>
+    <% if pxv_acnt != nil %>
+        pxv:<%= pxv_acnt.pxvname %> [<%= link_to "show", pxv_acnt %>]
+        <br />
+    <% end %>
+<% end %>
+
+
+<% pxv_artist = Artist.find_by(twtid: @twtid) %>
+<% if pxv_artist != nil %>
+    pxv:<%= pxv_artist.pxvname %> [<%= link_to "show", pxv_artist %>]
+    <br />
+<% end %>
+
+<hr />
+<%= form_with url: artists_path, local: true, method: :get do |f| %>
+    <%= f.label :file, style: "display: block" %>
+    <%= f.select :file, 
+      options_for_select(
+        [
+          ['検索'],
+        ],
+        selected: params[:file] 
+      ) %>
+    <br />
+
+    検索：<%= f.text_field :search_word %>
+    <%= f.select :match_method, options_for_select([["(自動判断)","auto"], ["を含む","partial_match"], ["完全一致","perfect_match"], ["から始まる","begin_match"],  ["で終わる","end_match"]]) %>
+    <%= f.select :target_col, options_for_select([['(自動判断)'], ['pxvname'], ['pxvid']]) %>
+    <br />
+    <%= f.submit "検索", name: nil %>
+<% end %>

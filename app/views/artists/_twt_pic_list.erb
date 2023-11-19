@@ -1,0 +1,17 @@
+<div id="<%= dom_id artist %>">
+    <h1 id="twt_pic_list">twt pic (<%= link_to "@#{artist["twtid"]}", artist.twt_user_url, target: :_blank, rel: "noopener noreferrer" %>)</h1>
+    
+    <%# twt_pic_list = @twt_pic_path_list.map {|x| [artist.twt_path_str(x), x]} %>
+    <% twt_pic_list = @twt_pic_path_list.map {|x| [twt_path_str(x), x]}.sort.reverse %>
+
+    <% twt_pic_list.each do |elem| %>
+        <% path = elem[1] %>
+        <%= link_to image_tag(path, width: '10%', height: '10%', :alt => path), path, target: :_blank, rel: "noopener noreferrer" %>
+    <% end %>
+    <br />
+
+    <% twt_pic_list.each do |elem| %>
+        <%= elem[0] %><br />
+    <% end %>
+    <br />
+</div>

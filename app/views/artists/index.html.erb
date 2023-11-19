@@ -8,16 +8,16 @@
 <a href="#twt_url_list">twt_url_list</a>
 
 <% @artists_group.each do |key, artists| %>
-  <h2><%= "#{key}(#{artists.size})[#{@begin_no + 1}..#{@begin_no.to_i + @size_per_table}]" %></h2>
+  <h2><%= "#{key}(#{artists.size})[#{@begin_no + 1}..#{[(@begin_no.to_i + @size_per_table), artists.size].min }]" %></h2>
   <table border="1" rules="all">
     <tr>
       <th>id</th>
       <th>pxvname</th>
       <th>pxvid</th>
       <th>show</th>
-      <th>ファイル総数<br />(最近)</th>
+      <th>ファイル総数<br />{最近}</th>
       <th>ポイント<br />(予測)</th>
-      <th>優先度<br />[評価]</th>
+      <th>評価<br />[補正]</th>
       <th>最終DL日</th>
       <th>最新投稿日</th>
       <th>最新アクセス日</th>
@@ -41,7 +41,7 @@
         <td><%= pxvname_tag(artist) %></td>
         <td><%= link_to artist["pxvid"], artist.pxv_user_url, target: :_blank, rel: "noopener noreferrer" %></td>
         <td><%= link_to "■■■", artist, target: :_blank, rel: "noopener noreferrer" %></td>
-        <td align="right"><%= artist["filenum"] %><br />(<%= artist["recent_filenum"] %>)</td>
+        <td align="right"><%= artist["filenum"] %><br />{<%= artist["recent_filenum"] %>}</td>
         <td align="right" bgcolor="cyan"><%= artist.point %><br />(<%= artist.prediction_up_cnt(true) %>)</td>
 
         <%= priority_tag(artist) %>
@@ -134,7 +134,7 @@
 <% end %>
 
 <!-- TWt URL -->
-<% if @twt_urls.size != 0 %>
+<% if @twt_urls.size > 0 %>
   <h2 id="twt_url_list">twt url list(<%= @twt_urls.size %>)</h2>
   <% @twt_urls.each do |key, url_list| %>
     <% twt = Twitter.find_by(twtid: key) %>
@@ -147,9 +147,13 @@
     <% url_list.each do |url| %>
       <% twturl, twtid = Artist.get_twt_url(url) %>
       ・
-      <%= link_to Artist.timestamp_str(twtid), twturl, target: :_blank, rel: "noopener noreferrer" %>
-      | <%= link_to "photo1", twturl + "/photo/1", target: :_blank, rel: "noopener noreferrer" %>
-      | <%= link_to %!???!, url, target: :_blank, rel: "noopener noreferrer" %>
+      <% if twtid == "" %>
+        <%= link_to twturl, twturl, target: :_blank, rel: "noopener noreferrer" %>
+      <% else %>
+        <%= link_to Artist.timestamp_str(twtid), twturl, target: :_blank, rel: "noopener noreferrer" %>
+        | <%= link_to "photo1", twturl + "/photo/1", target: :_blank, rel: "noopener noreferrer" %>
+        | <%= link_to %!???!, url, target: :_blank, rel: "noopener noreferrer" %>
+      <% end %>
       <br />
     <% end %>
     <br />
@@ -186,6 +190,33 @@
 
 <div class="view_form">
   <%= form_with url: artists_path, local: true, method: :get do |f| %>
+    <%= f.label :file, style: "display: block" %>
+    <%= f.select :file, 
+      options_for_select(
+        [
+          [''],
+          ['urllist'], 
+          ['urllist-pxv-only'], 
+          ['urllist-unknown-only'], 
+          ['urllist-twt-only'], 
+          ['urllist-twt-only(latest)'], 
+          ['pxvids'], 
+          ['namelist'],
+          ['namelist_djn'],
+          ['namelist_mag'],
+          ['same_name'],
+          ['same_twtid'],
+          ['検索'],
+        ],
+        selected: params[:file] 
+      ) %>
+    <br />
+    
+    検索：<%= f.text_field :search_word %>
+    <%= f.select :match_method, options_for_select([["(自動判断)","auto"], ["を含む","partial_match"], ["完全一致","perfect_match"], ["から始まる","begin_match"],  ["で終わる","end_match"]]) %>
+    <%= f.select :target_col, options_for_select([['(自動判断)'], ['pxvname'], ['pxvid']]) %>
+    <br />
+
     <%= f.label :page_title %>
     <%= f.text_field :page_title, :value => params[:page_title] %>
     <br />
@@ -193,7 +224,7 @@
     <%= f.select :sort_by, 
       options_for_select(
         [
-          ['priority'], 
+          ['point'], 
           ['-point'], 
           ['filenum'], 
           ['access_date_X_last_ul_datetime'], 
@@ -203,6 +234,7 @@
           ['pxvname'],
           ['last_ul_date'],
           ['twtid'],
+          ['priority'], 
           [''],
         ],
         selected: params[:sort_by] 
@@ -262,8 +294,11 @@
     <%= f.label :point %>
     <%= f.number_field :point, :value => params[:point] %>
     <br />
+    <%= f.label :prediction %>
+    <%= f.number_field :prediction, :value => params[:prediction] %>
+    <br />
     <%= f.label :rating %>
-    <%= f.text_field :rating, :value => params[:rating] %>
+    <%= f.number_field :rating, :value => params[:rating] %>
     <br />
     <%= f.label :amount_gt %>
     <%= f.number_field :amount_gt, :value => params[:amount_gt] %>
@@ -280,6 +315,9 @@
     <%= f.label :対象年 %>
     <%= f.number_field :year, :value => params[:year] %>
     <br />
+    <%= f.label :TWtチェック %>
+    <%= f.text_field :twt_chk, :value => params[:twt_chk] %>
+    <br />
     <%= f.check_box 'thumbnail', {checked: params[:thumbnail] == "true"}, true, false %>
     <%= f.label :サムネイル表示 %>
     <br />
@@ -292,33 +330,7 @@
     <%= f.check_box :nje, {checked: params[:nje] == "true"}, true, false %>
     <%= f.label :nje %>
     <br />
-    <%= f.label :file, style: "display: block" %>
-    <%= f.select :file, 
-      options_for_select(
-        [
-          [''],
-          ['urllist'], 
-          ['urllist-pxv-only'], 
-          ['urllist-unknown-only'], 
-          ['urllist-twt-only'], 
-          ['urllist-twt-only(latest)'], 
-          ['pxvids'], 
-          ['namelist'],
-          ['namelist_djn'],
-          ['namelist_mag'],
-          ['same_name'],
-          ['same_twtid'],
-          ['検索'],
-        ],
-        selected: params[:file] 
-      ) %>
-    <br />
 
-    検索：<%= f.text_field :search_word %>
-    <%= f.select :target_col, options_for_select([['(自動判断)'], ['pxvname'], ['pxvid']]) %>
-    <%= f.select :match_method, options_for_select([["を含む","partial_match"], ["完全一致","perfect_match"], ["から始まる","begin_match"],  ["で終わる","end_match"]]) %>
-    <br />
-
-    <%= f.submit "表示更新", name: nil %>
+    <%= f.submit "表示更新/検索", name: nil %>
   <% end %>
 </div>

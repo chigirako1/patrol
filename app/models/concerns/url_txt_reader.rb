@@ -42,6 +42,11 @@ module UrlTxtReader
         end
     end
 
+    def get_date_info_days(date)
+        days = get_date_delta(date)
+        "#{days}日以内"
+    end
+
     def get_datetime_string(datetime, day_disp = false)
         now = Time.zone.now
         if datetime.year == now.year
@@ -169,6 +174,21 @@ module UrlTxtReader
             end
         }
         rpath
+    end
+
+    def self.get_twt_path_from_dirlist(twtid)
+        path = ""
+        txtpath = Rails.root.join("public/twt/dirlist.txt").to_s
+        File.open(txtpath) { |file|
+            while line  = file.gets
+                #D:/data/src/ror/myapp/public/twt/h/hodumi_k
+                if line =~ %r!public/twt/./#{twtid}!
+                    path << line.chomp
+                    break
+                end
+            end
+        }
+        path
     end
 
     def self.same_name(artists)

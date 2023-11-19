@@ -52,22 +52,24 @@
     </script>
     -->
   </div>
-  <div>
-    <%= form.label :twt_check, style: "display: block" %>
-    <%= form.check_box :twt_check, {}, checked_value='t', unchecked_value='' %>
-  </div>
 
   <div>
     <%= form.label :rating, style: "display: block" %>
     <%#= form.number_field :rating %>
-    <%= form.select :rating, [["優(10)", 10], ["良+(9)", 9], ["良(8)", 8], ["良-(7)", 7], ["可(6)", 6], ["可？(5)", 5], ["不可？(4)", 4], ["不可(2)", 2], ["不可(1)", 1], ["不可(-1)", -1]], include_blank: "選択して下さい" %>
+    <%= form.select :rating,
+      [["優(10)", 10], ["良+(9)", 9], ["良(8)", 8], ["良-(7)", 7], ["可(6)", 6], ["可？5)", 5], 
+      ["可？？(4)", 4], ["不可？(3)", 3], ["不可(2)", 2], ["不可-(1)", 1], ["悪(-1)", -1]],
+      include_blank: "選択して下さい" %>
   </div>
 
   <hr />
 
   <div>
     <%= form.label :r18, style: "display: block" %>
-    <%= form.select :r18, [["R18", "R18"], ["R15", "R15"], ["R12", "R12"], ["健全？", "健全"], ["かわいい系", "かわいい系"], ["アート系", "アート系"],["R36(危険)", "R36"]], include_blank: "選択して下さい" %>
+    <%= form.select :r18,
+      [["R18", "R18"], ["R15", "R15"], ["R12", "R12"], ["健全？", "健全"], 
+      ["かわいい系", "かわいい系"], ["アート系", "アート系"],["R36(危険)", "R36"]],
+    include_blank: "選択して下さい" %>
     <input type="button" value="R18" onclick="toggle_r(1);"  class="btn" />
     <input type="button" value="R15" onclick="toggle_r(2);"  class="btn" />
     <input type="button" value="R12" onclick="toggle_r(3);"  class="btn" />
@@ -90,7 +92,12 @@
 
   <div>
     <%= form.label :status, style: "display: block" %>
-    <%= form.select :status, [["退会", "退会"], ["停止", "停止"], ["長期更新なし★", "長期更新なし"], ["作品ゼロ", "作品ゼロ"], ["一部消えた", "一部消えた"], ["取得途中", "取得途中"], ["最新から取得し直し中", "最新から取得し直し中"], ["彼岸", "彼岸"]], include_blank: "選択して下さい" %>
+    <%= form.select :status, [["退会", "退会"], ["停止", "停止"],
+      ["長期更新なし★", "長期更新なし"], 
+      ["別アカウントに移行", "別アカウントに移行"],
+      ["作品ゼロ", "作品ゼロ"], ["一部消えた", "一部消えた"], ["ほぼ消えた", "ほぼ消えた"], 
+      ["取得途中", "取得途中"], ["最新から取得し直し中", "最新から取得し直し中"], ["彼岸", "彼岸"]],
+      include_blank: "選択して下さい" %>
     <input type="button" value="長期更新なしに変更" onclick="set_longtimenosee();" />
     <script>
       function set_longtimenosee() {
@@ -102,7 +109,7 @@
   </div>
 
   <div>
-    <%= form.label :priority, style: "display: block" %>
+    <%= form.label :補正, style: "display: block" %>
     <%= form.number_field :priority %>
 
     <input type="button" value="-5" onclick="plus(-5);" class="btn" />
@@ -132,7 +139,9 @@
 
   <div>
     <%= form.label "コメント/etc...", style: "display: block" %>
-    <%= form.select :comment, [["体がでかい（太い）", "体がでかい（太い）"], ["宣伝が多すぎる(ぼかし/モザイク)", "宣伝が多すぎる"], ["頭身が低すぎる", "頭身が低すぎる"], ["パクリ", "パクリ"], ["BL専", "BL専"]], include_blank: "選択して下さい" %>
+    <%= form.select :comment, [
+      ["体がでかい（太い）", "体がでかい（太い）"], ["宣伝が多すぎる(ぼかし/モザイク)", "宣伝が多すぎる"], 
+      ["頭身が低すぎる", "頭身が低すぎる"], ["パクリ", "パクリ"], ["BL専", "BL専"]], include_blank: "選択して下さい" %>
   </div>
  
   <div>
@@ -181,6 +190,11 @@
   <hr />
 
   <div>
+    <%= form.label :付加情報, style: "display: block" %>
+    <%= form.text_field :append_info %>
+  </div>
+
+  <div>
     <%= form.label :よみ, style: "display: block" %>
     <%= form.text_field :furigana %>
   </div>
@@ -203,11 +217,6 @@
   <div>
     <%= form.label :ウェブURL, style: "display: block" %>
     <%= form.text_field :web_url %>
-  </div>
-
-  <div>
-    <%= form.label :付加情報, style: "display: block" %>
-    <%= form.text_field :append_info %>
   </div>
 
   <hr />
@@ -235,6 +244,37 @@
   <div>
     <%= form.label :earliest_ul_date, style: "display: block" %>
     <%= form.datetime_field :earliest_ul_date %>
+  </div>
+  
+  <div>
+    <%= form.label :nje_checked_date, style: "display: block" %>
+    <%= form.datetime_field :nje_checked_date %>
+    <input type="button" value="現在時刻に設定" onclick="set_time('artist_nje_checked_date');" />
+  </div>
+
+  <script>
+    function set_time(elem_id) {
+      let elem = document.getElementById(elem_id);
+      const now = new Date();
+      now.setMinutes(now.getMinutes() - now.getTimezoneOffset());
+      elem.value = now.toISOString().slice(0, -8);
+    }
+  </script>
+
+  <div>
+    <%= form.label :show_count, style: "display: block" %>
+    <%= form.number_field :show_count %>
+  </div>
+  
+  <div>
+    <%= form.label :twt_check, style: "display: block" %>
+    <%= form.check_box :twt_check, {}, checked_value='t', unchecked_value='' %>
+  </div>
+
+  <div>
+    <%= form.label :twt_checked_date, style: "display: block" %>
+    <%= form.datetime_field :twt_checked_date %>
+    <input type="button" value="現在時刻に設定" onclick="set_time('artist_twt_checked_date');" />
   </div>
   
 <% end %>

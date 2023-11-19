@@ -96,9 +96,6 @@
   <%= render @artist %>
 
   <hr />
-  <%#= link_to "編集", edit_artist_path(@artist) %>
-  <%#= link_to "「長期更新なし」に変更", update_no_update_artist_path(method: "no_update"), method: :patch %>
-  <%#= link_to("「優先度」を-1", update_no_update_artist_path(method: "priority_minus_one"), method: :patch) %>
 
   <%= render "pics", artist: @artist %>
 
@@ -107,6 +104,8 @@
 
   <% if @show_mode == nil %>
     <br />
+  <% elsif @show_mode == "twt_pic_list" %>
+    <%= render "twt_pic_list", artist: @artist %>
   <% else %>
     <hr />
     <a href="javascript:void(0);" onclick="prev_pic();">前の画像</a>
