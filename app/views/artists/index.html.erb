@@ -185,11 +185,12 @@
   <% end %>
 <% end %>
 
-<%#= link_to "New artist", new_artist_path %>
 <hr />
 
 <div class="view_form">
   <%= form_with url: artists_path, local: true, method: :get do |f| %>
+    <%= f.submit "表示更新/検索", name: nil %>
+    
     <%= f.label :file, style: "display: block" %>
     <%= f.select :file, 
       options_for_select(
@@ -216,6 +217,7 @@
     <%= f.select :match_method, options_for_select([["(自動判断)","auto"], ["を含む","partial_match"], ["完全一致","perfect_match"], ["から始まる","begin_match"],  ["で終わる","end_match"]]) %>
     <%= f.select :target_col, options_for_select([['(自動判断)'], ['pxvname'], ['pxvid']]) %>
     <br />
+    <hr />
 
     <%= f.label :page_title %>
     <%= f.text_field :page_title, :value => params[:page_title] %>
@@ -235,6 +237,7 @@
           ['last_ul_date'],
           ['twtid'],
           ['priority'], 
+          ['id'], 
           [''],
         ],
         selected: params[:sort_by] 
@@ -330,7 +333,5 @@
     <%= f.check_box :nje, {checked: params[:nje] == "true"}, true, false %>
     <%= f.label :nje %>
     <br />
-
-    <%= f.submit "表示更新/検索", name: nil %>
   <% end %>
 </div>

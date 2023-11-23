@@ -1,9 +1,13 @@
 # coding: utf-8
 
 require "csv"
+require 'find'
 
 module UrlTxtReader
     extend ActiveSupport::Concern
+
+    PXV_DIRLIST_PATH = "public/pxv/dirlist.txt"
+    TWT_DIRLIST_PATH = "public/twt/dirlist.txt"
 
     def get_date_delta(date)
         now = Time.zone.now  
@@ -112,6 +116,24 @@ module UrlTxtReader
         path_list
     end
 
+    def self.get_path_list(tpath)
+        tmp_list = []
+
+        if tpath == ""
+            return tmp_list
+        end
+
+        base_path = UrlTxtReader::public_path
+        Find.find(tpath) do |path|
+            #puts path
+            if [".jpg", ".png", ".jpeg"].include?(File.extname(path))
+                #ファイル名に"#"が含まれるとだめ。マシな方法ないの？
+                tmp_list << path.gsub(base_path, "").gsub("#", "%23")
+            end
+        end
+        tmp_list
+    end
+
     def self.authors_list(filename, type)
         list = []
         done_list = {}
@@ -163,8 +185,7 @@ module UrlTxtReader
 
     def self.get_path_from_dirlist(pxvid)
         rpath = []
-        # DBにパスを格納したいが面倒なので。。。　
-        txtpath = Rails.root.join("public/pxv/dirlist.txt").to_s
+        txtpath = Rails.root.join(PXV_DIRLIST_PATH).to_s
         File.open(txtpath) { |file|
             while line  = file.gets
                 #if line.include?(search_str)
@@ -178,10 +199,9 @@ module UrlTxtReader
 
     def self.get_twt_path_from_dirlist(twtid)
         path = ""
-        txtpath = Rails.root.join("public/twt/dirlist.txt").to_s
+        txtpath = Rails.root.join(TWT_DIRLIST_PATH).to_s
         File.open(txtpath) { |file|
             while line  = file.gets
-                #D:/data/src/ror/myapp/public/twt/h/hodumi_k
                 if line =~ %r!public/twt/./#{twtid}!
                     path << line.chomp
                     break

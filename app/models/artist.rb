@@ -4,7 +4,7 @@ require 'date'
 
 class Artist < ApplicationRecord
     include UrlTxtReader
-    #extend UrlTxtReader
+    #extend UrlTxtReader 違いがよくわかってない
 
     has_one :twitters, :class_name => 'Twitter'
 
@@ -103,7 +103,7 @@ class Artist < ApplicationRecord
              end
         end
 
-        twt_urls = twt_urls.sort_by {|k, v| [v[0]?1:0, k]}.to_h
+        twt_urls = twt_urls.sort_by {|k, v| [v[0]?1:0, -v[1].size, k.downcase]}.to_h
         #twt_urls_pxv_t = twt_urls.select {|x| x[0]}
         #twt_urls_pxv_f = twt_urls.select {|x| !x[0]}
         #twt_urls = twt_urls_pxv_t.merge(twt_urls_pxv_f)
@@ -131,7 +131,9 @@ class Artist < ApplicationRecord
 
         path_list << get_path_list(tpath)
 
-        Dir.glob("D:/data/src/ror/myapp/public/d_dl/Twitter/*/").each do |path|
+        twt_root = Rails.root.join("public/d_dl/Twitter/").to_s + "*/"
+        #Dir.glob("D:/data/src/ror/myapp/public/d_dl//*/").each do |path|
+        Dir.glob(twt_root).each do |path|
             if twtid == File.basename(path)
                 path_list << get_path_list(path)
                 break
@@ -141,6 +143,10 @@ class Artist < ApplicationRecord
         path_list.flatten.sort.reverse
     end
 
+    def self.get_path_list(tpath)
+        UrlTxtReader::get_path_list tpath
+    end
+=begin
     def self.get_path_list(tpath)
         tmp_list = []
 
@@ -157,6 +163,7 @@ class Artist < ApplicationRecord
         end
         tmp_list
     end
+=end
 
     def self.get_url_list(filepath)
         if filepath == ""
@@ -320,7 +327,8 @@ class Artist < ApplicationRecord
     end
 
     def prediction_up_cnt(use_ac_date = false)
-        if use_ac_date and last_ul_datetime < last_access_datetime and get_date_delta(last_access_datetime) <= 26
+        #if use_ac_date and last_ul_datetime < last_access_datetime and get_date_delta(last_access_datetime) <= 26
+        if use_ac_date
             datetime = last_access_datetime
         else
             datetime = last_ul_datetime
@@ -361,7 +369,6 @@ class Artist < ApplicationRecord
     end
 
     def twt_user_url
-        # controllerとmodelで共通の処理を書きたいのだが、やり方がわからない
         %!https://twitter.com/#{twtid}!
     end
 
@@ -374,7 +381,7 @@ class Artist < ApplicationRecord
     end
 
     def nje_member_url
-        %!https://nijie.info/members.php?id=#{njeid}!
+        Nje::nje_member_url(njeid)
     end
 
     def stats(path_list)
@@ -448,5 +455,4 @@ class Artist < ApplicationRecord
 
         artworks.to_a.reverse.to_h
     end
-
 end

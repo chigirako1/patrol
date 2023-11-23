@@ -173,6 +173,7 @@ end
 #------------------------------------------------------------------------------
 class ArtistsController < ApplicationController
   extend UrlTxtReader
+  #extend Nje
   
   before_action :set_artist, only: %i[show edit update destroy edit_no_update]
 
@@ -296,15 +297,35 @@ class ArtistsController < ApplicationController
 
   # GET /artists/twt
   def twt_index
-    id_list, @twt_urls, @misc_urls = Artist.get_url_list("")
+    
+    filename = params[:filename]
+    if filename == nil or filename == ""
+      path = ""
+    else
+      path = "public/#{filename}.txt"
+    end
+    puts "path='#{path}'"
+
+    id_list, @twt_urls, @misc_urls = Artist.get_url_list(path)
 
   end
 
-  # GET /artists/twt/x
+  # GET /artists/twt/1
   def twt_show
     @twtid = params[:twtid]
 
     @twt_pic_path_list = Artist.get_twt_pathlist(@twtid)
+  end
+
+  # GET /artists/nje
+  def nje_index
+    @nje_artist_list = Nje::nje_user_list
+  end
+
+  # GET /artists/nje/1
+  def nje_show
+    njeid = params[:njeid]
+    @nje_artist = Nje::nje_user(njeid)
   end
 
   # GET /artists/new
@@ -503,6 +524,8 @@ class ArtistsController < ApplicationController
         artists = artists.sort_by {|x| [x.twtid]}
       when "filenum"
         artists = artists.sort_by {|x| [-x.filenum]}
+      when "id"
+        artists = artists.sort_by {|x| [-x.id]}
       else
         # デフォルト？
         artists = artists.sort_by {|x| [-x.point, -x.priority, -x[:recent_filenum], -x[:filenum], x[:last_ul_datetime]]}

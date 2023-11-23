@@ -1,0 +1,37 @@
+<% provide(:title, @nje_artist.nje_name) %>
+
+<h3 id="nje_xxx">
+    <%= %!#{@nje_artist.nje_name}! %>
+    (<%= link_to @nje_artist.nje_id, Nje::nje_member_url(@nje_artist.nje_id.to_s), target: :_blank, rel: "noopener noreferrer" %>)
+</h3>
+
+<hr />
+
+<!-- -->
+<% pxv_acnt = Artist.find_by(njeid: @nje_artist.nje_id) %>
+<% if pxv_acnt != nil %>
+    pxv:<%= pxv_acnt.pxvname %>
+    [<%= link_to "show", pxv_acnt, target: :_blank, rel: "noopener noreferrer" %>]
+    <br />
+<% end %>
+
+<!-- -->
+<% @nje_artist.path_list.each do |path| %>
+    <%= path %><br />
+<% end%>
+
+<hr />
+
+<!-- -->
+<% @nje_artist.nje_view_list_ex.each do |key, artwork| %>
+    <% path = artwork.path_list[0] %>
+    (<%= link_to artwork.art_id, Nje::nje_artwork_url(artwork.art_id.to_s), target: :_blank, rel: "noopener noreferrer" %>) 
+    <%= %!#{artwork.date} #{artwork.title} (#{path})! %>
+    <br />
+<% end%>
+
+<!-- 画像 -->
+<% @nje_artist.nje_view_list_ex.each do |key, artwork| %>
+    <% path = artwork.path_list[0] %>
+    <%= link_to image_tag(path, width: '10%', height: '10%', :alt => path), path, target: :_blank, rel: "noopener noreferrer" %>
+<% end%>

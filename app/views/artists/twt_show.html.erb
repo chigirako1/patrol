@@ -1,6 +1,29 @@
 <% provide(:title, @twtid) %>
 
-<h2 id="twt_pic_list">twt pic (<%= link_to "@#{@twtid}", get_twt_user_url(@twtid), target: :_blank, rel: "noopener noreferrer" %>)</h1>
+<h3 id="twt_pic_list">twt pic (<%= link_to "@#{@twtid}", get_twt_user_url(@twtid), target: :_blank, rel: "noopener noreferrer" %>)</h3>
+
+
+<% twt_acnt = Twitter.find_by(twtid: @twtid) %>
+<% if twt_acnt != nil %>
+    twt:<%= twt_acnt.twt_screen_name %>[<%= link_to "show", twt_acnt, target: :_blank, rel: "noopener noreferrer" %>](<%= twt_acnt.last_dl_datetime_disp %>)
+    <br />
+
+    <% pxv_acnt = Artist.find_by(pxvid: twt_acnt.pxvid) %>
+    <% if pxv_acnt != nil %>
+        pxv:<%= pxv_acnt.pxvname %> [<%= link_to "show", pxv_acnt, target: :_blank, rel: "noopener noreferrer" %>]
+        <br />
+    <% end %>
+<% end %>
+
+
+<% pxv_artist = Artist.find_by(twtid: @twtid) %>
+<% if pxv_artist != nil %>
+    pxv:<%= pxv_artist.pxvname %> [<%= link_to "show", pxv_artist, target: :_blank, rel: "noopener noreferrer" %>]
+        <%= pxv_artist.get_datetime_string(pxv_artist.last_ul_datetime) %>
+    <br />
+<% end %>
+<hr />
+
 
 <% twt_pic_list = @twt_pic_path_list.map {|x| [twt_path_str(x), x]}.sort.reverse %>
 
@@ -14,26 +37,6 @@
     <%= elem[0] %><br />
 <% end %>
 <br />
-
-
-<% twt_acnt = Twitter.find_by(twtid: @twtid) %>
-<% if twt_acnt != nil %>
-    twt:<%= twt_acnt.twt_screen_name %>[<%= link_to "show", twt_acnt %>](<%= twt_acnt.last_dl_datetime_disp %>)
-    <br />
-
-    <% pxv_acnt = Artist.find_by(pxvid: twt_acnt.pxvid) %>
-    <% if pxv_acnt != nil %>
-        pxv:<%= pxv_acnt.pxvname %> [<%= link_to "show", pxv_acnt %>]
-        <br />
-    <% end %>
-<% end %>
-
-
-<% pxv_artist = Artist.find_by(twtid: @twtid) %>
-<% if pxv_artist != nil %>
-    pxv:<%= pxv_artist.pxvname %> [<%= link_to "show", pxv_artist %>]
-    <br />
-<% end %>
 
 <hr />
 <%= form_with url: artists_path, local: true, method: :get do |f| %>
