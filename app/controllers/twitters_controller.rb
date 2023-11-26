@@ -7,7 +7,7 @@ class TwittersController < ApplicationController
 
     twitters = Twitter.joins(
       "LEFT OUTER JOIN artists ON twitters.twtid = artists.twtid"
-    ).select("artists.id AS artist_id, artists.pxvid AS artist_pxvid, artists.*, twitters.*").sort_by {|x| [x[:last_access_datetime], x[:last_dl_datetime]]}
+    ).select("artists.id AS artist_id, artists.pxvid AS artist_pxvid, artists.status AS artist_status, artists.*, twitters.*").sort_by {|x| [x[:last_access_datetime], x[:last_dl_datetime]]}
     #).select("artists.*, twitters.*")#.sort_by {|x| [x[:last_access_datetime]]}
     #twitters.first(10).each {|x|
     #  p x

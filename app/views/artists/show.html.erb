@@ -100,12 +100,13 @@
   <%= render "pics", artist: @artist %>
 
   <%= link_to "viewer", "../artists/#{@artist.id}?mode=viewer" %>
+  <% if @show_mode == "twt_pic_list" %>
+    <%= render "twt_pic_list", artist: @artist %>
+  <% end %>
   <%= render "form", artist: @artist %>
 
   <% if @show_mode == nil %>
     <br />
-  <% elsif @show_mode == "twt_pic_list" %>
-    <%= render "twt_pic_list", artist: @artist %>
   <% else %>
     <hr />
     <a href="javascript:void(0);" onclick="prev_pic();">前の画像</a>

@@ -5,17 +5,7 @@
   height: 2em;
   width: 50px;
 }
-.subtmi-btn {
-  width: 300px;
-  height: 50px;
-  border: solid 1px;
-  background: yellow;
-}
 
-.subtmi-btn:hover {
-    opacity: 1.0;
-    background: orange;
-}
 </style>
 
 <%= form_with(model: artist) do |form| %>
@@ -57,9 +47,52 @@
     <%= form.label :rating, style: "display: block" %>
     <%#= form.number_field :rating %>
     <%= form.select :rating,
-      [["優(10)", 10], ["良+(9)", 9], ["良(8)", 8], ["良-(7)", 7], ["可(6)", 6], ["可？5)", 5], 
+      [["優++(12)", 12], ["優+(11)", 11], ["優(10)", 10], ["良+(9)", 9], ["良(8)", 8], ["良-(7)", 7], ["可(6)", 6], ["可？(5)", 5], 
       ["可？？(4)", 4], ["不可？(3)", 3], ["不可(2)", 2], ["不可-(1)", 1], ["悪(-1)", -1]],
       include_blank: "選択して下さい" %>
+    <input type="button" value="↑" onclick="toggle_rate_up();" class="btn" />
+    <input type="button" value="↓" onclick="toggle_rate_down();" class="btn" />
+    <script>
+      function toggle_rate_down() {
+        let sel_box = document.getElementById("artist_rating");
+        let options = sel_box.options;
+
+        for (let i=0; i < options.length; i++)
+        {
+          if (options[i].selected)
+          {
+            if (i == options.length - 1)
+            {
+              options[0].selected = true;
+            }
+            else{
+              options[i+1].selected = true;
+            }
+            break;
+          }
+        }
+      }
+
+      function toggle_rate_up() {
+        let sel_box = document.getElementById("artist_rating");
+        let options = sel_box.options;
+
+        for (let i=0; i < options.length; i++)
+        {
+          if (options[i].selected)
+          {
+            if (i == 0)
+            {
+              options[options.length-1].selected = true;
+            }
+            else{
+              options[i-1].selected = true;
+            }
+            break;
+          }
+        }
+      }
+    </script>
   </div>
 
   <hr />
@@ -67,12 +100,12 @@
   <div>
     <%= form.label :r18, style: "display: block" %>
     <%= form.select :r18,
-      [["R18", "R18"], ["R15", "R15"], ["R12", "R12"], ["健全？", "健全"], 
+      [["R18", "R18"], ["R15", "R15"], ["R12", "R12"], ["健全？", "健全"], ["全年齢", "全年齢"], 
       ["かわいい系", "かわいい系"], ["アート系", "アート系"],["R36(危険)", "R36"]],
     include_blank: "選択して下さい" %>
-    <input type="button" value="R18" onclick="toggle_r(1);"  class="btn" />
-    <input type="button" value="R15" onclick="toggle_r(2);"  class="btn" />
-    <input type="button" value="R12" onclick="toggle_r(3);"  class="btn" />
+    <input type="button" value="R18" onclick="toggle_r(1);" class="btn" />
+    <input type="button" value="R15" onclick="toggle_r(2);" class="btn" />
+    <input type="button" value="R12" onclick="toggle_r(3);" class="btn" />
     <script>
       function toggle_r(idx) {
         //TODO: トグルするようにする
@@ -81,6 +114,17 @@
         options[idx].selected = true;
       }
     </script>
+  </div>
+
+  <div>
+    <%= form.label :twt_check, style: "display: block" %>
+    <%= form.check_box :twt_check, {}, checked_value='t', unchecked_value='' %>
+  </div>
+
+  <div>
+    <%= form.label :twt_checked_date, style: "display: block" %>
+    <%= form.datetime_field :twt_checked_date %>
+    <input type="button" value="現在時刻に設定" onclick="set_time('artist_twt_checked_date');" />
   </div>
 
   <br />
@@ -99,9 +143,9 @@
       ["作品ゼロ", "作品ゼロ"], ["一部消えた", "一部消えた"], ["ほぼ消えた", "ほぼ消えた"], 
       ["取得途中", "取得途中"], ["最新から取得し直し中", "最新から取得し直し中"], ["彼岸", "彼岸"]],
       include_blank: "選択して下さい" %>
-    <input type="button" value="長期更新なしに変更" onclick="set_longtimenosee();" />
+    <input type="button" value="長期更新なしに変更" onclick="set_noupdate();" />
     <script>
-      function set_longtimenosee() {
+      function set_noupdate() {
         let status_sel_box = document.getElementById("artist_status");
         let options = status_sel_box.options;
         options[3].selected = true;
@@ -113,6 +157,7 @@
     <%= form.label :補正, style: "display: block" %>
     <%= form.number_field :priority %>
 
+    <input type="button" value="0" onclick="set(0);" class="btn" />
     <input type="button" value="-5" onclick="plus(-5);" class="btn" />
     <input type="button" value="+10" onclick="plus(10);" class="btn" />
     <input type="button" value="+25" onclick="plus(25);" class="btn" />
@@ -122,6 +167,10 @@
         //let prio_val = elem.value;
         let prio_val = parseInt(elem.value);
         elem.value = prio_val + point;
+      }
+      function set(point) {
+        let elem = document.getElementById("artist_priority");
+        elem.value = point;
       }
     </script>
   </div>
@@ -164,7 +213,7 @@
   
   <h2>ユーザー情報</h2>
   <div>
-    <%= form.label :fetish, style: "display: block" %>
+    <%= form.label :癖（へき）, style: "display: block" %>
     <%= form.text_field :fetish %>
   </div>
   
@@ -265,17 +314,6 @@
   <div>
     <%= form.label :show_count, style: "display: block" %>
     <%= form.number_field :show_count %>
-  </div>
-  
-  <div>
-    <%= form.label :twt_check, style: "display: block" %>
-    <%= form.check_box :twt_check, {}, checked_value='t', unchecked_value='' %>
-  </div>
-
-  <div>
-    <%= form.label :twt_checked_date, style: "display: block" %>
-    <%= form.datetime_field :twt_checked_date %>
-    <input type="button" value="現在時刻に設定" onclick="set_time('artist_twt_checked_date');" />
   </div>
   
 <% end %>

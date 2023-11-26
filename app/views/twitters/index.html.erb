@@ -38,7 +38,8 @@
           <%= twitter["pxvname"] if twitter["twtname"] != twitter["pxvname"] %>
         </td>
         <td>
-          <%= link_to "Show", twitter %><br />
+          <%= link_to "Show", twitter, target: :_blank, rel: "noopener noreferrer" %><br />
+          [<%= link_to "pic", artist_twt_path(twitter.twtid), target: :_blank, rel: "noopener noreferrer" %>]<br />
           <%#= twitter["artist_id"] %>
           <%#= link_to "pxv:Show", {controller: "artists", action: "show", id: twitter["artist_id"]} %>
           <%#= link_to "pxv:Show", artist_path(twitter["artist_id"]), id: twitter["artist_id"] %>
@@ -57,7 +58,11 @@
         <td><%= twitter["last_ul_datetime"] if twitter["last_ul_datetime"] != nil %></td>
         <td><%= twitter["comment"] %></td>
         <td><%= twitter["remarks"] %></td>
-        <td><%= twitter["status"] %><br /><%= twitter["r18"] %></td>
+        <td>
+          pxv:<%= twitter["artist_status"] %><br />
+          <%= twitter["status"] %><br />
+          <%= twitter["r18"] %>
+          </td>
       </tr>
     <% end %>
   </table>

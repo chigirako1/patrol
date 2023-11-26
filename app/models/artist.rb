@@ -246,7 +246,7 @@ class Artist < ApplicationRecord
     end
 
     def self.get_twt_url(url)
-        if url =~ %r!(https?://twitter\.com/\w+/status/(\d+))\?!
+        if url =~ %r!(https?://twitter\.com/\w+/status/(\d+))\??!
             return $1, $2.to_i
         else
             return url, ""
@@ -369,7 +369,8 @@ class Artist < ApplicationRecord
     end
 
     def twt_user_url
-        %!https://twitter.com/#{twtid}!
+        #%!https://twitter.com/#{twtid}!
+        Twt::twt_user_url(twtid)
     end
 
     def pxv_user_url

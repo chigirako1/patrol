@@ -79,7 +79,10 @@
           <%= artist["status"] %>
         </td>
         <td>
-          <%= link_to "@#{artist["twtid"]}", artist.twt_user_url, target: :_blank, rel: "noopener noreferrer" if artist["twtid"] != "" %>
+          <% if artist["twtid"] != "" %>
+            <%= link_to "@#{artist["twtid"]}", artist.twt_user_url, target: :_blank, rel: "noopener noreferrer" %>
+            [<%= link_to "show", artist_twt_path(artist["twtid"]), target: :_blank, rel: "noopener noreferrer" %>]
+          <% end %>
           <%= "✓" if @twt and artist.twt_check == "t" %>
           <br />
           <%= link_to "nje:#{artist["njeid"]}", artist.nje_member_url, target: :_blank, rel: "noopener noreferrer" if artist["njeid"] != nil and artist["njeid"] != "" %>
@@ -189,8 +192,6 @@
 
 <div class="view_form">
   <%= form_with url: artists_path, local: true, method: :get do |f| %>
-    <%= f.submit "表示更新/検索", name: nil %>
-    
     <%= f.label :file, style: "display: block" %>
     <%= f.select :file, 
       options_for_select(
@@ -212,6 +213,10 @@
         selected: params[:file] 
       ) %>
     <br />
+    <hr />
+    
+    <%= f.submit("表示更新/検索", name: nil, class: 'subtmi-btn') %>
+    <hr />
     
     検索：<%= f.text_field :search_word %>
     <%= f.select :match_method, options_for_select([["(自動判断)","auto"], ["を含む","partial_match"], ["完全一致","perfect_match"], ["から始まる","begin_match"],  ["で終わる","end_match"]]) %>

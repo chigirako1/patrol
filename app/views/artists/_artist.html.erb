@@ -41,6 +41,7 @@
   <p>
     <table border="1">
       <tr>
+        <th>-</th>
         <th>評価</th>
         <th>R18</th>
         <th>予測</th>
@@ -60,6 +61,7 @@
         <th>最近</th>
       </tr>
       <tr>
+        <td><%= artist.feature %></td>
         <% if artist.rating == 0 %>
           <td bgcolor="yellow"><%= artist.rating %></td>
         <% else %>

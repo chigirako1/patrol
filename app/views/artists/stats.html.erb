@@ -1,0 +1,9 @@
+<% provide(:title, "stats") %>
+
+<h1>stats</h1>
+
+
+
+<% @artists_group.each do |key, artists| %>
+    <%= %!#{key}:#{artists.size}! %><br />
+<% end %>

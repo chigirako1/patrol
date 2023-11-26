@@ -2,9 +2,11 @@
 
 <h3 id="twt_pic_list">twt pic (<%= link_to "@#{@twtid}", get_twt_user_url(@twtid), target: :_blank, rel: "noopener noreferrer" %>)</h3>
 
-
 <% twt_acnt = Twitter.find_by(twtid: @twtid) %>
-<% if twt_acnt != nil %>
+<% if twt_acnt == nil %>
+    <%= link_to "New Twt", new_twitter_path(twtid: @twtid) %>
+    <br />
+<% else %>
     twt:<%= twt_acnt.twt_screen_name %>[<%= link_to "show", twt_acnt, target: :_blank, rel: "noopener noreferrer" %>](<%= twt_acnt.last_dl_datetime_disp %>)
     <br />
 
@@ -15,11 +17,11 @@
     <% end %>
 <% end %>
 
-
 <% pxv_artist = Artist.find_by(twtid: @twtid) %>
 <% if pxv_artist != nil %>
     pxv:<%= pxv_artist.pxvname %> [<%= link_to "show", pxv_artist, target: :_blank, rel: "noopener noreferrer" %>]
         <%= pxv_artist.get_datetime_string(pxv_artist.last_ul_datetime) %>
+        <%= pxv_artist.status %>
     <br />
 <% end %>
 <hr />

@@ -59,6 +59,7 @@ class Params
     if @status == nil
       @status = ""
     end
+    
     begin_no = params[:begin_no]
     if begin_no == nil
       @begin_no = 0
@@ -194,6 +195,8 @@ class ArtistsController < ApplicationController
 
     if params[:file] == "検索"
       artists = Artist.looks(params[:target_col], params[:search_word], params[:match_method])
+      @artists_group = index_group_by(artists, prms)
+      return
     else
       artists = Artist.all
     end
@@ -295,19 +298,29 @@ class ArtistsController < ApplicationController
     end
   end
 
+  def stats
+    @artists_group = Artist.all.group_by {|x| x[:rating]}.sort.to_h
+  end
+
   # GET /artists/twt
   def twt_index
     
     filename = params[:filename]
-    if filename == nil or filename == ""
-      path = ""
+    if filename == nil
+      dir = params[:dir]
+      if dir == nil
+        dir = ""
+      end
+      @twt_urls = Twt::twt_user_list(dir)
     else
-      path = "public/#{filename}.txt"
+      if filename == ""
+        path = ""
+      else
+        path = "public/#{filename}.txt"
+      end
+      puts "path='#{path}'"
+      id_list, @twt_urls, @misc_urls = Artist.get_url_list(path)
     end
-    puts "path='#{path}'"
-
-    id_list, @twt_urls, @misc_urls = Artist.get_url_list(path)
-
   end
 
   # GET /artists/twt/1

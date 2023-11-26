@@ -9,8 +9,11 @@ Rails.application.routes.draw do
   get '/test', to: 'home#test'
   get "search" => "searches#search"
   get '/artists/:id/edit_no_update', to: 'artists#edit_no_update', as: :update_no_update_artist
+  get '/artists/stats/index', to: 'artists#stats'
   get '/artists/twt/index', to: 'artists#twt_index'
-  get '/artists/twt/:twtid', to: 'artists#twt_show'
+  get '/artists/twt/:twtid', to: 'artists#twt_show', as: 'artist_twt'
+  get '/artists/nje/index', to: 'artists#nje_index'
+  get '/artists/nje/:njeid', to: 'artists#nje_show'
 =begin
   get '/books', to: 'books#index'
   get '/books/new', to: 'books#new', as: :new_book

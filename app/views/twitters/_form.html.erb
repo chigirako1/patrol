@@ -13,13 +13,57 @@
 
   <div>
     <%= form.label :twtid, style: "display: block" %>
-    @<%= form.text_field :twtid %>
+    <% if params[:twtid].presence %>
+      @<%= form.text_field :twtid, value: params[:twtid] %>
+    <% else %>
+      @<%= form.text_field :twtid %>
+    <% end %>
   </div>
 
   <div>
     <%= form.label :twtname, style: "display: block" %>
     <%= form.text_field :twtname %>
   </div>
+
+  <div>
+    <%= form.label :コメント, style: "display: block" %>
+    <%= form.text_field :comment %>
+  </div>
+
+  <div>
+    <%= form.label :備考, style: "display: block" %>
+    <%= form.text_field :remarks %>
+  </div>
+
+  <div>
+    <%= form.label :状態, style: "display: block" %>
+    <%= form.select :status,
+      [
+        ["アカウント削除", "削除"],
+        ["凍結", "凍結"],
+        ["長期更新なし★", "長期更新なし"], 
+        ["別アカウントに移行", "別アカウントに移行"],
+      ],
+      include_blank: "選択して下さい" %>
+    <input type="button" value="長期更新なしに変更" onclick="set_noupdate();" />
+    <script>
+      function set_noupdate() {
+        let status_sel_box = document.getElementById("twitter_status");
+        let options = status_sel_box.options;
+        options[3].selected = true;
+      }
+    </script>
+  </div>
+
+  <div>
+    <%= form.label :pxvid, style: "display: block" %>
+    <%= form.number_field :pxvid %>
+  </div>
+
+  <div>
+    <%= form.submit("更新", class: 'subtmi-btn') %>
+  </div>
+  <hr />
 
   <div>
     <%= form.label :filenum, style: "display: block" %>
@@ -46,27 +90,4 @@
     <%= form.datetime_field :last_access_datetime %>
   </div>
 
-  <div>
-    <%= form.label :comment, style: "display: block" %>
-    <%= form.text_field :comment %>
-  </div>
-
-  <div>
-    <%= form.label :remarks, style: "display: block" %>
-    <%= form.text_field :remarks %>
-  </div>
-
-  <div>
-    <%= form.label :status, style: "display: block" %>
-    <%= form.text_field :status %>
-  </div>
-
-  <div>
-    <%= form.label :pxvid, style: "display: block" %>
-    <%= form.number_field :pxvid %>
-  </div>
-
-  <div>
-    <%= form.submit %>
-  </div>
 <% end %>

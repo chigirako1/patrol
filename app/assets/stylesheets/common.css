@@ -7,3 +7,16 @@ a:visited { color:purple;  }
 input { height: 1.2rem; width: 25rem; margin-bottom: .5rem; }
 textarea { height: 3rem; width: 25rem; }
 button, input[type=submit] { height: 1.4rem; width: 10rem; margin-bottom: .5rem; }
+
+.subtmi-btn {
+    width: 300px;
+    height: 50px;
+    border: solid 1px;
+    background: yellow;
+}
+
+.subtmi-btn:hover {
+    opacity: 1.0;
+    background: orange;
+}
+ 

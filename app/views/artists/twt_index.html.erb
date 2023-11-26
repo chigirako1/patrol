@@ -8,30 +8,17 @@
     <h3>
         <%= link_to "@" + key, "https://twitter.com/#{key}", target: :_blank, rel: "noopener noreferrer" %>
         <%= %! | #{twt_account.twt_screen_name}! if twt_account != nil and twt_account.twt_screen_name != "" %>
-        <% if pxv_artist != nil %>
-            [<%= link_to "show", pxv_artist, target: :_blank, rel: "noopener noreferrer" %>]
-        <% else %>
+        <%# if pxv_artist != nil %>
+            <!-- [<%= link_to "show", pxv_artist, target: :_blank, rel: "noopener noreferrer" %>] -->
+        <%# else %>
             (<%= link_to "show", key, target: :_blank, rel: "noopener noreferrer" %>)
-        <% end %>
+        <%# end %>
     </h3>
-
-    <% url_list.each do |url| %>
-        <% twturl, twtid = Artist.get_twt_url(url) %>
-        ・
-        <% if twtid == "" %>
-        <%= link_to twturl, twturl, target: :_blank, rel: "noopener noreferrer" %>
-        <% else %>
-        <%= link_to Artist.timestamp_str(twtid), twturl, target: :_blank, rel: "noopener noreferrer" %>
-        | <%= link_to "photo1", twturl + "/photo/1", target: :_blank, rel: "noopener noreferrer" %>
-        | <%= link_to %!???!, url, target: :_blank, rel: "noopener noreferrer" %>
-        <% end %>
-        <br />
-    <% end %>
-    <br />
 
     <% if twt_account != nil %>
         twt:<%= twt_account.twt_screen_name %>[<%= link_to "show", twt_account %>](<%= twt_account.last_dl_datetime_disp %>)
         <% pxv_a = Artist.find_by(pxvid: twt_account.pxvid) %>
+        <br />
         <% if pxv_a != nil %>
             | twt-pxv:<%= pxv_a.pxvname %> [<%= link_to "show", pxv_a %>]
             <br />
@@ -43,5 +30,24 @@
         [<%= link_to "show", pxv_artist, target: :_blank, rel: "noopener noreferrer" %>]
         <%= pxv_artist.get_datetime_string(pxv_artist.last_ul_datetime) %>
         <br />
+    <% end %>
+    <hr />
+
+    <% if url_list.instance_of?(Array) %>
+        <!-- url list -->
+        <% url_list.each do |url| %>
+            <% twturl, twtid = Artist.get_twt_url(url) %>
+            ・
+            <% if twtid == "" %>
+            <%= link_to twturl, twturl, target: :_blank, rel: "noopener noreferrer" %>
+            <% else %>
+            <%= link_to Artist.timestamp_str(twtid), twturl, target: :_blank, rel: "noopener noreferrer" %>
+            | <%= link_to "photo1", twturl + "/photo/1", target: :_blank, rel: "noopener noreferrer" %>
+            | <%= link_to %!???!, url, target: :_blank, rel: "noopener noreferrer" %>
+            <% end %>
+            <br />
+        <% end %>
+    <% else %>
+        
     <% end %>
 <% end %>
