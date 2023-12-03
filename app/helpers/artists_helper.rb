@@ -55,36 +55,4 @@ module ArtistsHelper
         artist.last_ul_datetime.in_time_zone('Tokyo').strftime("%y-%m-%d") != date_str
     end
 
-    def twt_path_str(path)
-        fn = File.basename path
-
-        twtid = 0
-        if fn =~ /(\d+)\s(\d+)\s(\d+\-\d+\-\d+)/
-            #puts fn
-            twtid = $1.to_i
-            pic_no = $2.to_i
-        elsif fn =~ /(\d+)\s(\d+)\s(\d+)/
-            #9715239224554008999 0 2023-11-12
-            dl_date_str = $1
-            begin
-                #dl_date = Date.parse(dl_date_str)
-            rescue Date::Error => ex
-
-            end
-            twtid = $2.to_i
-            pic_no = $3.to_i
-        else
-        end
-
-        if twtid != 0
-            ul_datestr = Artist.timestamp_str(twtid)
-            date_str = %!【#{ul_datestr}】!
-        else
-            fullpath = Rails.root.join("public/" + path)
-            mtime = File::mtime(fullpath)
-            date_str = %![#{mtime.strftime("%Y-%m-%d")}]!
-        end
-        date_str + %! (#{fn})(#{File.dirname path})!
-    end
-
 end

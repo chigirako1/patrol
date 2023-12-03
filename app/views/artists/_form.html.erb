@@ -50,9 +50,18 @@
       [["優++(12)", 12], ["優+(11)", 11], ["優(10)", 10], ["良+(9)", 9], ["良(8)", 8], ["良-(7)", 7], ["可(6)", 6], ["可？(5)", 5], 
       ["可？？(4)", 4], ["不可？(3)", 3], ["不可(2)", 2], ["不可-(1)", 1], ["悪(-1)", -1]],
       include_blank: "選択して下さい" %>
-    <input type="button" value="↑" onclick="toggle_rate_up();" class="btn" />
-    <input type="button" value="↓" onclick="toggle_rate_down();" class="btn" />
+    <input type="button" value="+" onclick="toggle_rate_up();" class="btn" />
+    <input type="button" value="-" onclick="toggle_rate_down();" class="btn" />
+    <input type="button" value="優" onclick="set_rate(3);" class="btn" />
+    <input type="button" value="良" onclick="set_rate(5);" class="btn" />
+    <input type="button" value="可" onclick="set_rate(7);" class="btn" />
     <script>
+      function set_rate(idx) {
+        let status_sel_box = document.getElementById("artist_rating");
+        let options = status_sel_box.options;
+        options[idx].selected = true;
+      }
+
       function toggle_rate_down() {
         let sel_box = document.getElementById("artist_rating");
         let options = sel_box.options;
@@ -136,7 +145,9 @@
 
   <div>
     <%= form.label :status, style: "display: block" %>
-    <%= form.select :status, [["退会", "退会"], ["停止", "停止"],
+    <%= form.select :status,
+      [["退会", "退会"],
+      ["停止", "停止"],
       ["長期更新なし★", "長期更新なし"], 
       ["半年以上更新なし", "半年以上更新なし"], 
       ["別アカウントに移行", "別アカウントに移行"],

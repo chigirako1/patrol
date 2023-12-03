@@ -95,17 +95,19 @@
     <% end %>
     twitter(X)を開く
     <% url = %!https://twitter.com/#{artist["twtid"]}! %>
-    <%= link_to "@#{artist["twtid"]}", url, target: :_blank, rel: "noopener noreferrer" %>
+    <%= link_to "@#{artist.twtid}", artist.twt_user_url, target: :_blank, rel: "noopener noreferrer" %>
   <% else %>
     <font color="red">twt未設定</font>
   <% end %>
   <%= link_to "【twtサムネイル表示】", "../artists/#{@artist.id}?mode=twt_pic_list#twt_pic_list" %>
+  <%= twt = Twitter.find_by(twtid: artist.twtid) %>
+  <%= link_to "twt", twitter_path(twt) if twt != nil %>
   <br />
 
   <% if artist.nje_p %>
     nijieを開く
     <% url = %!https://nijie.info/members.php?id=#{artist["njeid"]}! %>
-    <%= link_to "#{artist["njeid"]}", url, target: :_blank, rel: "noopener noreferrer" %>
+    <%= link_to "#{artist["njeid"]}", artist.nje_member_url, target: :_blank, rel: "noopener noreferrer" %>
   <% end %>
   <hr />
 

@@ -299,7 +299,8 @@ class ArtistsController < ApplicationController
   end
 
   def stats
-    @artists_group = Artist.all.group_by {|x| x[:rating]}.sort.to_h
+    @rating = Artist.all.group(:rating).count
+    @r18 = Artist.all.group(:r18).count
   end
 
   # GET /artists/twt
@@ -310,6 +311,9 @@ class ArtistsController < ApplicationController
       dir = params[:dir]
       if dir == nil
         dir = ""
+      elsif dir == "update"
+        Twt::db_update_by_newdir()
+        dir = "new"
       end
       @twt_urls = Twt::twt_user_list(dir)
     else
@@ -519,18 +523,13 @@ class ArtistsController < ApplicationController
       when "pxvname"
         artists = artists.sort_by {|x| [x.pxvname]}
       when "priority"
-=begin
-        artists.each do |x|
-          if x.point == "@" or x.priority == nil or x[:recent_filenum] == "@" or x[:filenum] == "@" or x[:last_ul_datetime] == "@"
-            puts x.pxvname
-          end
-        end
-=end
         artists = artists.sort_by {|x| [-x.priority, -x[:recent_filenum], -x[:filenum], x[:last_ul_datetime]]}
       when "point"
         artists = artists.sort_by {|x| [-x.point, x.priority, -x[:recent_filenum], -x[:filenum], x[:last_ul_datetime]]}
       when "-point"
         artists = artists.sort_by {|x| [x.point, -x.priority, -x[:recent_filenum], -x[:filenum], x[:last_ul_datetime]]}
+      when "予測"
+        artists = artists.sort_by {|x| [-x.prediction_up_cnt(true), x[:recent_filenum], -x[:filenum], x[:last_ul_datetime]]}
       when "last_ul_date"
         artists = artists.sort_by {|x| [x.last_ul_datetime]}
       when "twtid"
@@ -570,6 +569,8 @@ class ArtistsController < ApplicationController
         artists_group = artists.group_by {|x| x.r18}.sort.to_h
       when "priority"
         artists_group = artists.group_by {|x| -x.priority}.sort.to_h
+      when "予測"
+        artists_group = artists.group_by {|x| x.prediction_up_cnt(true)}.sort.to_h
       when "rating"
         artists_group = artists.group_by {|x| -x.rating}.sort.to_h
       when "none"

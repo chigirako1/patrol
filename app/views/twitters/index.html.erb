@@ -11,58 +11,64 @@
   <table border="1" rules="all">
     <tr>
       <th>id</th>
-      <th>twtid</th>
-      <th>twtname</th>
-      <th>show</th>
-      <th>ファイル数</th>
-      <th>最近のファイル数</th>
-      <th>最終DL日</th>
-      <th>最新アクセス日</th>
-      <th>pxvid</th>
+      <th>twtname(twtid)</th>
+      <th>投稿頻度</th>
+      <th>
+        最終アクセス日
+      </th>
       <th>PXV最終UL日</th>
+      <th>pxvid</th>
+      <th>ファイル数<br />(最近のファイル数)</th>
       <th>コメント</th>
       <th>備考</th>
       <th>状態</th>
     </tr>
-    <% twitters.first(50).each do |twitter| %>
+    <% twitters.first(100).each do |twitter| %>
       
       <% twt_url = %!https://twitter.com/#{twitter["twtid"]}! %>
-      <%# twt_url = %!https://twitter.com/}! %>
       <% pxv_url = %!https://www.pixiv.net/users/#{twitter["artist_pxvid"]}! %>
 
       <tr>
         <td><%= link_to twitter["id"], twitter %></td>
-        <td><%= link_to "@#{twitter["twtid"]}", twt_url, target: :_blank, rel: "noopener noreferrer" %></td>
         <td>
-          <%= twitter["twtname"] %><br />
-          <%= twitter["pxvname"] if twitter["twtname"] != twitter["pxvname"] %>
-        </td>
-        <td>
-          <%= link_to "Show", twitter, target: :_blank, rel: "noopener noreferrer" %><br />
-          [<%= link_to "pic", artist_twt_path(twitter.twtid), target: :_blank, rel: "noopener noreferrer" %>]<br />
-          <%#= twitter["artist_id"] %>
-          <%#= link_to "pxv:Show", {controller: "artists", action: "show", id: twitter["artist_id"]} %>
-          <%#= link_to "pxv:Show", artist_path(twitter["artist_id"]), id: twitter["artist_id"] %>
-          <%= link_to "pxv:#{twitter["artist_id"]}", "artists/" + twitter["artist_id"].to_s, target: :_blank, rel: "noopener noreferrer" if twitter["artist_pxvid"] != nil and twitter["artist_pxvid"] != "" %>
-          <br />
+          <%= twitter["twtname"] %>
+          <%#= link_to "@#{twitter["twtid"]}", twt_url, target: :_blank, rel: "noopener noreferrer" %>
+          (@<%= twitter.twtid %>)
+          [<%= link_to "Show", twitter, target: :_blank, rel: "noopener noreferrer" %>]
           
+          <%#= link_to "pic", artist_twt_path(twitter.twtid), target: :_blank, rel: "noopener noreferrer" %>
+          <br />
+          <%= twitter.status %>|<%= twitter.drawing_method %><br />
         </td>
-        <td><%= twitter["filenum"] %></td>
-        <td><%= twitter["recent_filenum"] %></td>
-        <td><%= twitter["last_dl_datetime"].in_time_zone('Tokyo').strftime("%Y-%m-%d") %></td>
-        <td><%= twitter["last_access_datetime"].in_time_zone('Tokyo').strftime("%Y-%m-%d") if twitter["last_access_datetime"] != nil %></td>
         <td>
-          <%= link_to twitter["artist_pxvid"], pxv_url, target: :_blank, rel: "noopener noreferrer" if twitter["artist_pxvid"] != nil and twitter["artist_pxvid"] != "" %>
-          <%#= twitter["artist_pxvid"] %>
+          <%= twitter.prediction %>
+          <br />
+          <%= twitter.update_frequency %>
         </td>
-        <td><%= twitter["last_ul_datetime"] if twitter["last_ul_datetime"] != nil %></td>
+        <td>
+          <%= twitter["last_access_datetime"].in_time_zone('Tokyo').strftime("%Y-%m-%d") if twitter["last_access_datetime"] != nil %>
+        </td>
+        <td bgcolor="pink"><%= twitter["last_ul_datetime"] if twitter["last_ul_datetime"] != nil %></td>
+        <td bgcolor="pink">
+          <%= twitter["pxvname"] if twitter["twtname"] != twitter["pxvname"] %>
+          <% if twitter["artist_pxvid"] != nil and twitter["artist_pxvid"] != "" %>
+            [<%= link_to twitter["artist_pxvid"], pxv_url, target: :_blank, rel: "noopener noreferrer" %>]
+            <%= %!【#{twitter["artist_status"]}】! if twitter.artist_status != "" %><br />
+            [<%= link_to "show", artist_path(twitter.artist_id), target: :_blank, rel: "noopener noreferrer" %>]
+            <br />
+            <%= twitter["r18"] %>
+          <% end %>
+        </td>
+        <td>
+          <%= twitter["filenum"] %>
+          (<%= twitter["recent_filenum"] %>)
+        </td>
         <td><%= twitter["comment"] %></td>
         <td><%= twitter["remarks"] %></td>
         <td>
-          pxv:<%= twitter["artist_status"] %><br />
-          <%= twitter["status"] %><br />
-          <%= twitter["r18"] %>
-          </td>
+          
+          
+        </td>
       </tr>
     <% end %>
   </table>

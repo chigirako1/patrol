@@ -11,7 +11,8 @@ module UrlTxtReader
 
     def get_date_delta(date)
         now = Time.zone.now  
-        days = (now - date).to_i / 60 / 60 / 24
+        #days = (now - date).to_i / 60 / 60 / 24
+        days = (now.to_date - date.to_date).to_i
     end
 
     def get_year_delta(date)

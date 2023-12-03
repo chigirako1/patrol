@@ -253,17 +253,6 @@ class Artist < ApplicationRecord
         end
     end
 
-    TW_EPOCH = 1288834974657  # 単位：ミリ秒
-    def self.get_timestamp(tweet_id)
-        timestamp = Time.at(((tweet_id >> 22) + TW_EPOCH) / 1000.0)
-    end
-
-    def self.timestamp_str(tweet_id)
-        ts = get_timestamp(tweet_id)
-        #ts.strftime("%Y-%m-%d %H:%M:%S.%L %Z")
-        ts.strftime("%Y-%m-%d")
-    end
-
     #--------------------------------------------------------------------------
     # インスタンスメソッド
     #--------------------------------------------------------------------------

@@ -81,7 +81,7 @@
         <td>
           <% if artist["twtid"] != "" %>
             <%= link_to "@#{artist["twtid"]}", artist.twt_user_url, target: :_blank, rel: "noopener noreferrer" %>
-            [<%= link_to "show", artist_twt_path(artist["twtid"]), target: :_blank, rel: "noopener noreferrer" %>]
+            [<%= link_to "twtサムネイル", artist_twt_path(artist["twtid"]), target: :_blank, rel: "noopener noreferrer" %>]
           <% end %>
           <%= "✓" if @twt and artist.twt_check == "t" %>
           <br />
@@ -231,18 +231,19 @@
     <%= f.select :sort_by, 
       options_for_select(
         [
+          ['id'], 
           ['point'], 
           ['-point'], 
+          ['priority'], 
           ['filenum'], 
+          ['last_ul_date'],
+          ['pxvname'],
+          ['twtid'],
+          ['予測'],
           ['access_date_X_last_ul_datetime'], 
           ['access_date_X_recent_filenum'], 
           ['access_date_X_recent_filenum_X_ul'], 
           ['access_date_X_pxvname_X_recent_filenum'],
-          ['pxvname'],
-          ['last_ul_date'],
-          ['twtid'],
-          ['priority'], 
-          ['id'], 
           [''],
         ],
         selected: params[:sort_by] 
@@ -263,6 +264,7 @@
           ['status'],
           ['r18'],
           ['priority'],
+          ['予測'],
           ['rating'],
         ],
         selected: params[:group_by] 

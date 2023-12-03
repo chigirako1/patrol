@@ -1,4 +1,4 @@
-<% provide(:title, @twtid) %>
+<% provide(:title, %!画像一覧 - #{@twtid}!) %>
 
 <h3 id="twt_pic_list">twt pic (<%= link_to "@#{@twtid}", get_twt_user_url(@twtid), target: :_blank, rel: "noopener noreferrer" %>)</h3>
 
@@ -7,7 +7,9 @@
     <%= link_to "New Twt", new_twitter_path(twtid: @twtid) %>
     <br />
 <% else %>
-    twt:<%= twt_acnt.twt_screen_name %>[<%= link_to "show", twt_acnt, target: :_blank, rel: "noopener noreferrer" %>](<%= twt_acnt.last_dl_datetime_disp %>)
+    twt:<%= twt_acnt.twt_screen_name %>[<%= link_to "show", twt_acnt, target: :_blank, rel: "noopener noreferrer" %>]
+    (アクセス:<%= twt_acnt.last_access_datetime_disp %>)
+    <%= twt_acnt.status %>,<%= twt_acnt.drawing_method %>
     <br />
 
     <% pxv_acnt = Artist.find_by(pxvid: twt_acnt.pxvid) %>
@@ -27,7 +29,10 @@
 <hr />
 
 
-<% twt_pic_list = @twt_pic_path_list.map {|x| [twt_path_str(x), x]}.sort.reverse %>
+<% twt_pic_list = @twt_pic_path_list.map {|x| [Twt::twt_path_str(x), x]}.sort.reverse %>
+
+更新頻度：<%= (Twt::calc_freq(@twt_pic_path_list)).to_f %>/100日
+<br />
 
 <% twt_pic_list.each do |elem| %>
     <% path = elem[1] %>
@@ -35,8 +40,8 @@
 <% end %>
 <br />
 
-<% twt_pic_list.each do |elem| %>
-    <%= elem[0] %><br />
+<% twt_pic_list.each.with_index(1) do |elem, idx| %>
+    <%= idx %>:<%= elem[0] %><br />
 <% end %>
 <br />
 

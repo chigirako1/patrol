@@ -2,8 +2,10 @@
 
 <h1>stats</h1>
 
+<% @rating.each do |key, val| %>
+    <%= %!#{key}:#{val}! %><br />
+<% end %>
 
-
-<% @artists_group.each do |key, artists| %>
-    <%= %!#{key}:#{artists.size}! %><br />
+<% @r18.each do |key, val| %>
+    <%= %!"#{key}":#{val}! %><br />
 <% end %>

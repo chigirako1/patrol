@@ -3,17 +3,12 @@ class TwittersController < ApplicationController
 
   # GET /twitters or /twitters.json
   def index
-    #@twitters = Twitter.all.sort_by {|x| [x[:last_access_datetime], x[:last_dl_datetime]]}
 
     twitters = Twitter.joins(
       "LEFT OUTER JOIN artists ON twitters.twtid = artists.twtid"
-    ).select("artists.id AS artist_id, artists.pxvid AS artist_pxvid, artists.status AS artist_status, artists.*, twitters.*").sort_by {|x| [x[:last_access_datetime], x[:last_dl_datetime]]}
-    #).select("artists.*, twitters.*")#.sort_by {|x| [x[:last_access_datetime]]}
-    #twitters.first(10).each {|x|
-    #  p x
-    #}
+    ).select("artists.id AS artist_id, artists.pxvid AS artist_pxvid, artists.status AS artist_status, artists.last_access_datetime AS artists_last_access_datetime, artists.*, twitters.*").sort_by {|x| [x[:last_access_datetime], x[:last_dl_datetime]]}
 
-    #twitters = twitters.select {|x| x.pxvid == ""}
+=begin
     twitters = twitters.sort_by {|x|
       if x[:last_ul_datetime] == nil
         ["2001-01-01"]
@@ -22,18 +17,23 @@ class TwittersController < ApplicationController
       end
     }.reverse
 
-    #twitters = twitters.sort_by {|x| [x[:last_access_datetime], x[:last_dl_datetime]]}
-    #twitters = twitters.sort_by {|x| [x[:last_dl_datetime]]}
     twitters = twitters.group_by {|x| x[:last_ul_datetime] == nil ? "nil" : "x" }
-    #@twitters_group = twitters["x"].group_by {|x| x[:last_ul_datetime].strftime("%Y")}.sort.reverse.to_h
     @twitters_group = twitters["x"].group_by {|x| "20" + x[:last_ul_datetime][0..1]}.sort.reverse.to_h
     @twitters_group["nil"] = twitters["nil"].sort_by {|x| [x[:last_access_datetime], x[:last_dl_datetime]]}
-
-    #@twitters = Twitter.all.sort_by {|x| [x[:last_access_datetime], x[:last_dl_datetime]]}
-
-    #@join.each {|x|
-    #  puts %!#{x[:pxvname]}, #{x["last_ul_datetime"]}!
-    #}
+=end
+    if params[:debug] == nil
+      twitters = twitters.select {|x| x.drawing_method != nil}
+      twitters = twitters.select {|x| !x.last_access_datetime_p(1)}
+      twitters = twitters.sort_by {|x| [x.last_access_datetime, (x.last_dl_datetime)]}
+      #twitters = twitters.select {|x| x.last_dl_datetime.year >= 2023}
+      #twitters = twitters.select {|x| x.last_dl_datetime.month >= 11}
+      twitters = twitters.select {|x| x.drawing_method != nil and (x.drawing_method == "AI" or x.drawing_method == "パクリ")}
+    else
+      twitters = twitters.select {|x| x.last_dl_datetime == nil}
+    end
+    #@twitters_group = twitters.group_by {|x| x.drawing_method}
+    @twitters_group = twitters.group_by {|x| x.rating}
+    @twitters_group = @twitters_group.sort_by {|k, v| v}.to_h
   end
 
   # GET /twitters/1 or /twitters/1.json
@@ -96,6 +96,20 @@ class TwittersController < ApplicationController
 
     # Only allow a list of trusted parameters through.
     def twitter_params
-      params.require(:twitter).permit(:twtid, :twtname, :filenum, :recent_filenum, :last_dl_datetime, :earliest_dl_datetime, :last_access_datetime, :comment, :remarks, :status, :pxvid)
+      params.require(:twitter).permit(:twtid,
+        :twtname, :filenum, :recent_filenum, :last_dl_datetime,
+        :earliest_dl_datetime, :last_access_datetime,
+        :comment, :remarks, :status, :pxvid,
+        :drawing_method,
+        :warning,
+        :alt_twtid,
+        :old_twtid,
+        :rating,
+        :r18,
+        :update_frequency,
+        :last_post_datetime,
+        :sensitive
+    
+        )
     end
 end

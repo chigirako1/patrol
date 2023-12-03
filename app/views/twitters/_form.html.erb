@@ -26,6 +26,115 @@
   </div>
 
   <div>
+    <%= form.label :状態, style: "display: block" %>
+    <%= form.select :status,
+      [
+        ["TWT巡回", "TWT巡回"],
+        ["長期更新なし★", "長期更新なし"], 
+        ["最近更新してない？", "最近更新してない？"], 
+        ["アカウント削除", "削除"],
+        ["凍結", "凍結"],
+        ["非公開アカウント", "非公開アカウント"],
+        ["別アカウントに移行", "別アカウントに移行"],
+      ],
+      include_blank: "選択して下さい" %>
+    <input type="button" value="TWT巡回に変更" onclick="set_noupdate(1);" />
+    <input type="button" value="長期更新なしに変更" onclick="set_noupdate(2);" />
+    <script>
+      function set_noupdate(idx) {
+        let status_sel_box = document.getElementById("twitter_status");
+        let options = status_sel_box.options;
+        options[idx].selected = true;
+      }
+    </script>
+  </div>
+
+  <div>
+    <%= form.label :描画方法, style: "display: block" %>
+    <%= form.select :drawing_method,
+      [
+        ["AI", "AI"],
+        ["3D", "3D"],
+        ["パクリ（転載）", "パクリ"],
+      ],
+      include_blank: "選択して下さい" %>
+    <input type="button" value="AI" onclick="set_draw_method(1);" />
+    <script>
+      function set_draw_method(idx) {
+        let status_sel_box = document.getElementById("twitter_drawing_method");
+        let options = status_sel_box.options;
+        options[idx].selected = true;
+      }
+    </script>
+  </div>
+
+  <div>
+    <%= form.label "更新頻度(100日間での投稿数)", style: "display: block" %>
+    <%= form.number_field :update_frequency %>
+  </div>
+
+  <div>
+    <% pxv = Artist.find_by(twtid: @twitter.twtid) %>
+    <%= form.label :pxvid, style: "display: block" %>
+    <%= form.number_field :pxvid %>
+    <% if pxv.presence %>
+      <%= %!pxvid="#{pxv.pxvid}"! if pxv.pxvid != twitter.pxvid %><br />
+      <%= pxv.last_access_datetime_disp %>
+      <%= link_to "show", artist_path(pxv.id), target: :_blank, rel: "noopener noreferrer" %>
+    <% end %>
+  </div>
+
+  <div>
+    <%= form.label :評価, style: "display: block" %>
+    <%= form.select :rating,
+      [
+        ["100", "100"],
+        ["90", "90"], 
+        ["80", "80"], 
+        ["70", "70"], 
+        ["60", "60"], 
+        ["50", "50"], 
+        ["40", "40"], 
+        ["30", "30"], 
+        ["20", "20"], 
+        ["10", "10"], 
+      ],
+      include_blank: "選択して下さい" %>
+  </div>
+
+  <hr />
+
+  <div>
+    <%= form.submit("更新", class: 'subtmi-btn') %>
+  </div>
+
+  <hr />
+
+  <div>
+    <%= form.label :センシティブ, style: "display: block" %>
+    <%= form.select :sensitive,
+      [
+        ["有り", "有り"],
+        ["なさそう？", "なさそう？"],
+      ],
+      include_blank: "選択して下さい" %>
+  </div>
+
+  <div>
+    <%= form.label :r18, style: "display: block" %>
+    <%= form.select :r18,
+      [
+        ["R18", "R18"],
+        ["R15", "R15"],
+        ["R12", "R12"],
+        ["全年齢", "全年齢"],
+      ],
+      include_blank: "選択して下さい" %>
+  </div>
+
+  <hr />
+
+  <div>
     <%= form.label :コメント, style: "display: block" %>
     <%= form.text_field :comment %>
   </div>
@@ -36,58 +145,65 @@
   </div>
 
   <div>
-    <%= form.label :状態, style: "display: block" %>
-    <%= form.select :status,
+    <%= form.label :別ID, style: "display: block" %>
+    <%= form.text_field :alt_twtid %>
+    <%=  %>
+    <%= link_to "@#{@twitter.alt_twtid}", Twt::twt_user_url(@twitter.alt_twtid), target: :_blank, rel: "noopener noreferrer" %>
+  </div>
+
+  <div>
+    <%= form.label :旧ID, style: "display: block" %>
+    <%= form.text_field :old_twtid %>
+    <%= link_to "@#{@twitter.old_twtid}", Twt::twt_user_url(@twitter.old_twtid), target: :_blank, rel: "noopener noreferrer" %>
+  </div>
+
+  <div>
+    <%= form.label :警告, style: "display: block" %>
+    <%= form.select :warning,
       [
-        ["アカウント削除", "削除"],
-        ["凍結", "凍結"],
-        ["長期更新なし★", "長期更新なし"], 
-        ["別アカウントに移行", "別アカウントに移行"],
+        ["パクリ", "パクリ"],
       ],
       include_blank: "選択して下さい" %>
-    <input type="button" value="長期更新なしに変更" onclick="set_noupdate();" />
-    <script>
-      function set_noupdate() {
-        let status_sel_box = document.getElementById("twitter_status");
-        let options = status_sel_box.options;
-        options[3].selected = true;
-      }
-    </script>
   </div>
 
   <div>
-    <%= form.label :pxvid, style: "display: block" %>
-    <%= form.number_field :pxvid %>
-  </div>
-
-  <div>
-    <%= form.submit("更新", class: 'subtmi-btn') %>
-  </div>
-  <hr />
-
-  <div>
-    <%= form.label :filenum, style: "display: block" %>
+    <%= form.label :総ファイル数, style: "display: block" %>
     <%= form.number_field :filenum %>
   </div>
 
   <div>
-    <%= form.label :recent_filenum, style: "display: block" %>
+    <%= form.label :最近のファイル数, style: "display: block" %>
     <%= form.number_field :recent_filenum %>
   </div>
 
   <div>
-    <%= form.label :last_dl_datetime, style: "display: block" %>
+    <%= form.label :最終DL日時, style: "display: block" %>
     <%= form.datetime_field :last_dl_datetime %>
+    <input type="button" value="現在時刻に設定" onclick="set_time('twitter_last_dl_datetime');" />
   </div>
 
   <div>
     <%= form.label :earliest_dl_datetime, style: "display: block" %>
     <%= form.datetime_field :earliest_dl_datetime %>
   </div>
+  
+  <script>
+    function set_time(elem_id) {
+      let elem = document.getElementById(elem_id);
+      const now = new Date();
+      now.setMinutes(now.getMinutes() - now.getTimezoneOffset());
+      elem.value = now.toISOString().slice(0, -8);
+    }
+  </script>
 
   <div>
-    <%= form.label :last_access_datetime, style: "display: block" %>
+    <%= form.label :最新アクセス日時, style: "display: block" %>
     <%= form.datetime_field :last_access_datetime %>
+  </div>
+
+  <div>
+    <%= form.label :最新投稿日時, style: "display: block" %>
+    <%= form.datetime_field :last_post_datetime %>
   </div>
 
 <% end %>

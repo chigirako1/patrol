@@ -1,4 +1,17 @@
+<% provide(:title, %!#{@twitter.twtname} @#{@twitter.twtid}!) %>
 <p style="color: green"><%= notice %></p>
+
+<h1>
+  <%= %!#{@twitter.twtname}! %>
+  <% twt_url = %!https://twitter.com/#{@twitter.twtid}! %>
+  (<%= link_to "@#{@twitter.twtid}", twt_url, target: :_blank, rel: "noopener noreferrer" %>)
+</h1>
+
+<%= link_to "画像表示", artist_twt_path(@twitter.twtid), target: :_blank, rel: "noopener noreferrer" %>
+<hr />
+
+<%= render "form", twitter: @twitter %>
+<hr />
 
 <%= render @twitter %>
 
