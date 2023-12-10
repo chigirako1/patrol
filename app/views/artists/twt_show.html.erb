@@ -8,7 +8,7 @@
     <br />
 <% else %>
     twt:<%= twt_acnt.twt_screen_name %>[<%= link_to "show", twt_acnt, target: :_blank, rel: "noopener noreferrer" %>]
-    (アクセス:<%= twt_acnt.last_access_datetime_disp %>)
+    <%#= twt_acnt.last_access_datetime_disp %>
     <%= twt_acnt.status %>,<%= twt_acnt.drawing_method %>
     <br />
 
@@ -31,18 +31,37 @@
 
 <% twt_pic_list = @twt_pic_path_list.map {|x| [Twt::twt_path_str(x), x]}.sort.reverse %>
 
-更新頻度：<%= (Twt::calc_freq(@twt_pic_path_list)).to_f %>/100日
+<% freq = (Twt::calc_freq(twt_pic_list.map {|x| x[1]})).to_f %>
+更新頻度：<%= freq %>/<%= Twt::CALC_FREQ_UNIT %>日
+<% if twt_acnt != nil and twt_acnt.update_frequency != nil %>
+    <% current_val_freq = twt_acnt.update_frequency %>
+    <%= %!(現在値：#{current_val_freq})! %>
+    <% if (freq - current_val_freq).abs >= 50 %>
+        現在値との差が大きい
+    <% end %>
+<% end %>
 <br />
 
-<% twt_pic_list.each do |elem| %>
+<% if params[:picn] == "" %>
+    <% show_pic_num = 15 %>
+<% elsif params[:picn] == "all" %>
+    <% show_pic_num = twt_pic_list.size %>
+<% elsif params[:picn] =~ /(\d+)/ %>
+    <% show_pic_num = $1.to_i %>
+<% else %>
+    <% show_pic_num = 15 %>
+<% end %>
+<% twt_pic_list.first(show_pic_num).each.with_index(1) do |elem, idx| %>
     <% path = elem[1] %>
+    <%= idx %>.
     <%= link_to image_tag(path, width: '10%', height: '10%', :alt => path), path, target: :_blank, rel: "noopener noreferrer" %>
 <% end %>
 <br />
 
-<% twt_pic_list.each.with_index(1) do |elem, idx| %>
+<% twt_pic_list.first(show_pic_num).each.with_index(1) do |elem, idx| %>
     <%= idx %>:<%= elem[0] %><br />
 <% end %>
+<%= twt_pic_list.size %>
 <br />
 
 <hr />

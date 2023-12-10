@@ -18,15 +18,16 @@
       </th>
       <th>PXV最終UL日</th>
       <th>pxvid</th>
-      <th>ファイル数<br />(最近のファイル数)</th>
-      <th>コメント</th>
+      <th>サムネイル</th>
       <th>備考</th>
       <th>状態</th>
     </tr>
-    <% twitters.first(100).each do |twitter| %>
+    <% twitters.first(10).each do |twitter| %>
       
-      <% twt_url = %!https://twitter.com/#{twitter["twtid"]}! %>
-      <% pxv_url = %!https://www.pixiv.net/users/#{twitter["artist_pxvid"]}! %>
+      <% #twt_url = %!https://twitter.com/#{twitter["twtid"]}! %>
+      <% #pxv_url = %!https://www.pixiv.net/users/#{twitter["artist_pxvid"]}! %>
+      <% twt_url = Twt::twt_user_url(twitter.twtid) %>
+      <% pxv_url = Pxv::pxv_user_url(twitter.artist_pxvid) %>
 
       <tr>
         <td><%= link_to twitter["id"], twitter %></td>
@@ -39,11 +40,12 @@
           <%#= link_to "pic", artist_twt_path(twitter.twtid), target: :_blank, rel: "noopener noreferrer" %>
           <br />
           <%= twitter.status %>|<%= twitter.drawing_method %><br />
+          <%= %!※#{twitter["comment"]}! if twitter.comment != "" %>
         </td>
         <td>
           <%= twitter.prediction %>
           <br />
-          <%= twitter.update_frequency %>
+          [<%= twitter.update_frequency %>/100日]
         </td>
         <td>
           <%= twitter["last_access_datetime"].in_time_zone('Tokyo').strftime("%Y-%m-%d") if twitter["last_access_datetime"] != nil %>
@@ -60,10 +62,11 @@
           <% end %>
         </td>
         <td>
-          <%= twitter["filenum"] %>
-          (<%= twitter["recent_filenum"] %>)
+          <% list = UrlTxtReader::get_twt_pathlist(twitter.twtid) %>
+          <% list.first(3).each do |filepath| %>
+            <%= link_to image_tag(filepath, width: '15%', height: '15%'), filepath, target: :_blank, rel: "noopener noreferrer" if filepath.presence %>
+          <% end %>
         </td>
-        <td><%= twitter["comment"] %></td>
         <td><%= twitter["remarks"] %></td>
         <td>
           

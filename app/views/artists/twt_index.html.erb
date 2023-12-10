@@ -29,12 +29,16 @@
             | twt-pxv:<%= pxv_a.pxvname %> [<%= link_to "show", pxv_a, target: :_blank, rel: "noopener noreferrer" %>]
             <br />
         <% end %>
+        <% if twt_account.last_access_datetime_p(5) %>
+            <% next %>
+        <% end %>
     <% end %>
     <% if pxv_artist != nil %>
         pxv:<%= %!#{pxv_artist.pxvname}! %>
         (<%= link_to pxv_artist.pxvid, pxv_artist.pxv_user_url, target: :_blank, rel: "noopener noreferrer" %>)
         [<%= link_to "show", pxv_artist, target: :_blank, rel: "noopener noreferrer" %>]
         <%= pxv_artist.get_datetime_string(pxv_artist.last_ul_datetime) %>
+        【<%= pxv_artist.status %>】
         <br />
     <% end %>
     <hr />
@@ -47,7 +51,7 @@
             <% if twtid == "" %>
             <%= link_to twturl, twturl, target: :_blank, rel: "noopener noreferrer" %>
             <% else %>
-            <%= link_to Artist.timestamp_str(twtid), twturl, target: :_blank, rel: "noopener noreferrer" %>
+            <%= link_to Twt::timestamp_str(twtid), twturl, target: :_blank, rel: "noopener noreferrer" %>
             | <%= link_to "photo1", twturl + "/photo/1", target: :_blank, rel: "noopener noreferrer" %>
             | <%= link_to %!???!, url, target: :_blank, rel: "noopener noreferrer" %>
             <% end %>

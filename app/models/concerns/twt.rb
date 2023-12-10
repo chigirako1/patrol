@@ -76,12 +76,10 @@ module Twt
         tweet_id = 0
         pic_no = 0
         if filename =~ /(\d+)\s(\d+)\s(\d+\-\d+\-\d+)/
-            #9715239224554008999 0 2023-11-12
             #puts fn
             tweet_id = $1.to_i
             pic_no = $2.to_i
         elsif filename =~ /(\d+)\s(\d+)\s(\d+)/
-            #2023-11-12 9715239224554008999 0 
             dl_date_str = $1
             begin
                 #dl_date = Date.parse(dl_date_str)
@@ -90,6 +88,9 @@ module Twt
             end
             tweet_id = $2.to_i
             pic_no = $3.to_i
+        elsif filename =~ /(\d+)-(\d+)/
+            tweet_id = $1.to_i
+            pic_no = $2.to_i
         else
         end
         [tweet_id, pic_no]
@@ -122,31 +123,37 @@ module Twt
         date_str + %!#{4 - pic_no} (#{fn})(#{File.dirname path})!
     end
 
-    def self.get_timestamp_from_path(filepath)
+    def self.get_time_from_path(filepath)
         filename = File.basename(filepath)
         tweet_id, _  = get_tweet_id(filename)
         time = get_timestamp(tweet_id)
         time
     end
 
-    def self.calc_freq(pic_path_list)
-        latest_time = get_timestamp_from_path pic_path_list[0]
+    CALC_FREQ_DAY_NUM = 30
+    CALC_FREQ_UNIT = 100
+
+    def self.calc_freq(pic_path_list, calc_freq_day_num=CALC_FREQ_DAY_NUM)
+        if pic_path_list == nil or pic_path_list.size == 0
+            return 0
+        end
+        latest_time = get_time_from_path(pic_path_list[0])
 
         days = 1
         cnt = 0
         pic_path_list.each do |path|
-            time = get_timestamp_from_path path
+            post_time = get_time_from_path(path)
             #puts latest_time.to_date
             #puts time.to_date
-            tmp_days =  (latest_time.to_date - time.to_date).to_i + 1
-            if tmp_days >= 14
+            tmp_days =  (latest_time.to_date - post_time.to_date).to_i + 1
+            if tmp_days >= calc_freq_day_num
                 break
             end
             days = tmp_days
             cnt += 1
-            puts %!#{cnt}:#{days}[#{path}]!
+            puts %!#{cnt}:#{days}<#{post_time.strftime("%Y-%m-%d %H:%M")}>:[#{path}]!
         end
-        point = (cnt * 100 / days)
+        point = (cnt * CALC_FREQ_UNIT / days)
         puts %!#point=#{point}, cnt=#{cnt}, days=#{days}!
         point
     end

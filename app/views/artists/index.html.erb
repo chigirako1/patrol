@@ -123,8 +123,8 @@
 <% if @unknown_id_list.size != 0 %>
   <h2>unknown pixiv id list(<%= @unknown_id_list.size %>)</h2>
   <% @unknown_id_list.each do |pxvid| %>
-    <% url = %!https://www.pixiv.net/users/#{pxvid}! %>
-    <td><%= link_to pxvid, url, target: :_blank, rel: "noopener noreferrer" %></td><br />
+    <% pxvurl = Pxv::pxv_user_url(pxvid)#%!https://www.pixiv.net/users/#{pxvid}! %>
+    <td><%= link_to pxvid, pxvurl, target: :_blank, rel: "noopener noreferrer" %></td><br />
   <% end %>
 <% end %>
 
@@ -153,7 +153,7 @@
       <% if twtid == "" %>
         <%= link_to twturl, twturl, target: :_blank, rel: "noopener noreferrer" %>
       <% else %>
-        <%= link_to Artist.timestamp_str(twtid), twturl, target: :_blank, rel: "noopener noreferrer" %>
+        <%= link_to Twt::timestamp_str(twtid), twturl, target: :_blank, rel: "noopener noreferrer" %>
         | <%= link_to "photo1", twturl + "/photo/1", target: :_blank, rel: "noopener noreferrer" %>
         | <%= link_to %!???!, url, target: :_blank, rel: "noopener noreferrer" %>
       <% end %>

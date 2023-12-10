@@ -7,17 +7,18 @@
   (<%= link_to "@#{@twitter.twtid}", twt_url, target: :_blank, rel: "noopener noreferrer" %>)
 </h1>
 
-<%= link_to "画像表示", artist_twt_path(@twitter.twtid), target: :_blank, rel: "noopener noreferrer" %>
+<%= render @twitter %>
+<hr />
+
+<%#= link_to "画像表示", artist_twt_path(@twitter.twtid, picn: 15), target: :_blank, rel: "noopener noreferrer" %>
+<%= render "twt_pic_list", twitter: @twitter %>
 <hr />
 
 <%= render "form", twitter: @twitter %>
 <hr />
 
-<%= render @twitter %>
-
 <div>
-  <%= link_to "Edit this twitter", edit_twitter_path(@twitter) %> |
   <%= link_to "Back to twitters", twitters_path %>
 
-  <%= button_to "Destroy this twitter", @twitter, method: :delete %>
+  <%#= button_to "Destroy this twitter", @twitter, method: :delete %>
 </div>

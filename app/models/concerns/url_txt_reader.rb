@@ -10,9 +10,15 @@ module UrlTxtReader
     TWT_DIRLIST_PATH = "public/twt/dirlist.txt"
 
     def get_date_delta(date)
-        now = Time.zone.now  
+        if date == nil
+            puts "date==nil"
+            return 0
+        end
+        now = Time.zone.now
         #days = (now - date).to_i / 60 / 60 / 24
         days = (now.to_date - date.to_date).to_i
+        #puts "days=#{days}/#{date}/#{now}"
+        days
     end
 
     def get_year_delta(date)
@@ -182,6 +188,26 @@ module UrlTxtReader
             end
         end
         id_list
+    end
+
+    def self.get_twt_pathlist(twtid)
+        path_list = []
+
+        tpath = UrlTxtReader::get_twt_path_from_dirlist(twtid)
+        puts %!tpath=#{tpath}!
+
+        path_list << get_path_list(tpath)
+
+        twt_root = Rails.root.join("public/d_dl/Twitter/").to_s + "*/"
+        Dir.glob(twt_root).each do |path|
+            if twtid == File.basename(path)
+                puts %!path=#{path}!
+                path_list << get_path_list(path)
+                break
+            end
+        end
+
+        path_list.flatten.sort.reverse
     end
 
     def self.get_path_from_dirlist(pxvid)

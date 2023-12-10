@@ -19,15 +19,21 @@ class Twitter < ApplicationRecord
         get_date_info(last_access_datetime)
     end
 
+    def twt_user_url
+        Twt::twt_user_url(twtid)
+    end
+
+    def get_twt_pathlist
+        UrlTxtReader::get_twt_pathlist(twtid)
+    end
+
     def prediction
-        pred = 1
-
         if update_frequency.presence
-            delta_d = get_date_delta(last_access_datetime)
+            delta_d = get_date_delta(last_access_datetime)# + 1 #1日分足す
             pred = update_frequency * delta_d / 100
+            pred
         else
+            pred = 33
         end
-
-        pred
     end
 end

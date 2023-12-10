@@ -124,6 +124,7 @@ class Artist < ApplicationRecord
         path_list.flatten.sort.reverse
     end
 
+=begin
     def self.get_twt_pathlist(twtid)
         path_list = []
 
@@ -132,7 +133,6 @@ class Artist < ApplicationRecord
         path_list << get_path_list(tpath)
 
         twt_root = Rails.root.join("public/d_dl/Twitter/").to_s + "*/"
-        #Dir.glob("D:/data/src/ror/myapp/public/d_dl//*/").each do |path|
         Dir.glob(twt_root).each do |path|
             if twtid == File.basename(path)
                 path_list << get_path_list(path)
@@ -142,10 +142,15 @@ class Artist < ApplicationRecord
 
         path_list.flatten.sort.reverse
     end
+=end
+    def self.get_twt_pathlist(twtid)
+        UrlTxtReader::get_twt_pathlist(twtid)
+    end
 
     def self.get_path_list(tpath)
         UrlTxtReader::get_path_list tpath
     end
+
 =begin
     def self.get_path_list(tpath)
         tmp_list = []
@@ -363,11 +368,13 @@ class Artist < ApplicationRecord
     end
 
     def pxv_user_url
-        %!https://www.pixiv.net/users/#{pxvid}!
+        #%!https://www.pixiv.net/users/#{pxvid}!
+        Pxv::pxv_user_url(pxvid)
     end
 
     def pxv_artwork_url(artwork_id)
-        %!https://www.pixiv.net/artworks/#{artwork_id}!
+        #%!https://www.pixiv.net/artworks/#{artwork_id}!
+        Pxv::pxv_artwork_url(artwork_id)
     end
 
     def nje_member_url
