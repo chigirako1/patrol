@@ -5,6 +5,12 @@
     <% twt_account = Twitter.find_by(twtid: key) %>
     <% pxv_artist = Artist.find_by(twtid: key) %>
 
+    <% if @hide_target.include?("KNOWN") and (twt_account != nil or pxv_artist != nil) %>
+        <% next %>
+    <% end %>
+    <% if @hide_target.include?("AI") and twt_account != nil and twt_account.drawing_method == "AI" %>
+        <% next %>
+    <% end %>
     <h3>
         <%= idx %>:
         <%= link_to "@" + key, "https://twitter.com/#{key}", target: :_blank, rel: "noopener noreferrer" %>
@@ -20,6 +26,7 @@
         twt:<%= twt_account.twt_screen_name %>
         [<%= link_to "show", twt_account, target: :_blank, rel: "noopener noreferrer" %>]
         <!-- (DL:<%= twt_account.last_dl_datetime_disp %>) -->
+        <%= twt_account.rating %> | 
         (ACCESS:<%= twt_account.last_access_datetime_disp %>)
         <%= twt_account.status %>
         <%= twt_account.drawing_method %>
@@ -29,7 +36,7 @@
             | twt-pxv:<%= pxv_a.pxvname %> [<%= link_to "show", pxv_a, target: :_blank, rel: "noopener noreferrer" %>]
             <br />
         <% end %>
-        <% if twt_account.last_access_datetime_p(5) %>
+        <% if twt_account.last_access_datetime_p(@hide_day) %>
             <% next %>
         <% end %>
     <% end %>
@@ -37,8 +44,9 @@
         pxv:<%= %!#{pxv_artist.pxvname}! %>
         (<%= link_to pxv_artist.pxvid, pxv_artist.pxv_user_url, target: :_blank, rel: "noopener noreferrer" %>)
         [<%= link_to "show", pxv_artist, target: :_blank, rel: "noopener noreferrer" %>]
-        <%= pxv_artist.get_datetime_string(pxv_artist.last_ul_datetime) %>
-        【<%= pxv_artist.status %>】
+        UL:<%= pxv_artist.get_datetime_string(pxv_artist.last_ul_datetime) %>
+        ACCESS:<%= pxv_artist.last_access_datetime_disp %>
+        【<%= %!#{pxv_artist.status}! if pxv_artist.status.presence %>】
         <br />
     <% end %>
     <hr />

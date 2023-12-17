@@ -97,10 +97,15 @@
     <% url = %!https://twitter.com/#{artist["twtid"]}! %>
     <%= link_to "@#{artist.twtid}", artist.twt_user_url, target: :_blank, rel: "noopener noreferrer" %>
   <% else %>
-    <font color="red">twt未設定</font>
+    <font color="red">twt未設定
+    </font>
+      <% twt_pxv = Twitter.find_by(pxvid: artist.pxvid) %>
+      <% if twt_pxv.presence %>
+        "@<%= twt_pxv.twtid %>"
+      <% end %>
   <% end %>
   <%= link_to "【twtサムネイル表示】", "../artists/#{@artist.id}?mode=twt_pic_list#twt_pic_list" %>
-  <%= twt = Twitter.find_by(twtid: artist.twtid) %>
+  <% twt = Twitter.find_by(twtid: artist.twtid) %>
   <%= link_to "twt", twitter_path(twt) if twt != nil %>
   <br />
 

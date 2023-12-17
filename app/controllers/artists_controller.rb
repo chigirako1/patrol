@@ -49,8 +49,8 @@ class Params
     end
     puts "prediction=#{@prediction}"
 
-    if @rating == nil
-      @rating = 0
+    if @rating == nil or @rating == ""
+      @rating = -1
     else
       @rating = @rating.to_i
     end
@@ -59,6 +59,7 @@ class Params
     if @status == nil
       @status = ""
     end
+    puts "status=#{@status}"
     
     begin_no = params[:begin_no]
     if begin_no == nil
@@ -292,20 +293,57 @@ class ArtistsController < ApplicationController
       @number_of_display = 4
     end
 
-    @path_list = Artist.get_pathlist(@artist[:pxvid])
+    @path_list = Pxv::get_pathlist(@artist[:pxvid])
     if @show_mode == "twt_pic_list"
       @twt_pic_path_list = Artist.get_twt_pathlist(@artist[:twtid])
     end
   end
 
   def stats
-    @rating = Artist.all.group(:rating).count
-    @r18 = Artist.all.group(:r18).count
+    @stats = {}
+
+    col = [:rating, :r18, :status, :drawing_method, :warning]
+    col.each do |c|
+      key = "twt(ai):" + c.to_s
+      #@stats[key] = Twitter.select {|x| x.drawing_method == "AI"}.group(c).count
+      #t = Twitter.all
+      #t = Twitter.select {|x| x.drawing_method == "AI"}
+      t = Twitter.where(drawing_method: 'AI')
+      #@stats[key] = t.group(c).having("drawing_method = 'AI'").count
+      @stats[key] = t.group(c).count
+      @stats[key].delete(nil)
+      @stats[key].delete("")
+      @stats[key].delete(0)
+    end
+
+    col = [:rating, :r18, :status]
+    col.each do |c|
+      key = "pxv:" + c.to_s
+      @stats[key] = Artist.all.group(c).count
+      @stats[key].delete(nil)
+      @stats[key].delete("")
+      @stats[key].delete(0)
+    end
   end
 
   # GET /artists/twt
   def twt_index
     
+    hide_day = params[:hide_day]
+    if hide_day =~ /(\d+)/
+      @hide_day = $1.to_i
+    else
+      @hide_day = 5
+    end
+
+    hide_target = params[:hide_target]
+    if hide_target.presence
+      @hide_target = hide_target.upcase.split(",")
+    else
+      @hide_target = []
+    end
+    puts "hide_target='#{@hide_target}'"
+
     filename = params[:filename]
     if filename == nil
       dir = params[:dir]
@@ -336,6 +374,10 @@ class ArtistsController < ApplicationController
 
   # GET /artists/nje
   def nje_index
+    method = params[:method]
+    if method == "update"
+      Nje::update_db_by_fs()
+    end
     @nje_artist_list = Nje::nje_user_list
   end
 
@@ -455,7 +497,10 @@ class ArtistsController < ApplicationController
         artists = artists.select {|x| x.prediction_up_cnt(true) >= prms.prediction}
       end
       
-      if prms.rating != 0
+      if prms.rating < 0
+      elsif prms.rating == 0
+        artists = artists.select {|x| x.rating == 0}
+      else
         artists = artists.select {|x| x.rating == 0 or x.rating >= prms.rating}
       end
 
@@ -528,8 +573,10 @@ class ArtistsController < ApplicationController
         artists = artists.sort_by {|x| [-x.point, x.priority, -x[:recent_filenum], -x[:filenum], x[:last_ul_datetime]]}
       when "-point"
         artists = artists.sort_by {|x| [x.point, -x.priority, -x[:recent_filenum], -x[:filenum], x[:last_ul_datetime]]}
-      when "予測"
+      when "予測▽"
         artists = artists.sort_by {|x| [-x.prediction_up_cnt(true), x[:recent_filenum], -x[:filenum], x[:last_ul_datetime]]}
+      when "予測△"
+        artists = artists.sort_by {|x| [x.prediction_up_cnt(true), x[:recent_filenum], -x[:filenum], x[:last_ul_datetime]]}
       when "last_ul_date"
         artists = artists.sort_by {|x| [x.last_ul_datetime]}
       when "twtid"

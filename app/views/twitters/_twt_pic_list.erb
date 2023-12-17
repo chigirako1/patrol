@@ -38,13 +38,6 @@ textarea {
     </textarea>
     <br />
 
-    全画像数：<%= twt_pic_list.size %>
-    <% if twt_pic_list.size > show_pic_num %>
-        <%#= link_to "...全て表示", params.merge(picn: 'all') %>
-        <%= link_to "...全て表示", twitter_path(picn: 'all', pic_lf: '3', corr: '0') %>
-    <% end %>
-    <br />
-    
     <!-- サムネイル -->
     <% twt_pic_list.first(show_pic_num).each.with_index(1) do |elem, idx| %>
         <% path = elem[1] %>
@@ -58,6 +51,12 @@ textarea {
             <br />
         <% end %>
     <% end %>
+
+    全画像数：<%= twt_pic_list.size %>
+    <% if twt_pic_list.size > show_pic_num %>
+        <%#= link_to "...全て表示", params.merge(picn: 'all') %>
+        <%= link_to "...全て表示", twitter_path(picn: 'all', pic_lf: '3', corr: '0') %>
+    <% end %>
     <br />
 
     <% pl = twt_pic_list.map {|x| x[1]} %>
@@ -67,14 +66,14 @@ textarea {
     <% if twt_acnt != nil and twt_acnt.update_frequency != nil %>
         <% current_val_freq = twt_acnt.update_frequency %>
         <%= %!(現在の設定値：#{current_val_freq})! %>
-        <% if (freq1 - current_val_freq).abs >= 50 %>
+        <% if (freq1 - current_val_freq).abs >= 100 %>
             現在の設定値との差が大きい
         <% end %>
     <% else %>
         ※値が設定されていません※
     <% end %>
     <br />
-    直近の更新頻度：<%= freq2 %>
+    直近の更新頻度："<%= freq2 %>"
     <br />
 
 </div>

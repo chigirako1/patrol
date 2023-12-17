@@ -27,34 +27,28 @@
   <div>
     <%= form.label :twtid, style: "display: block" %>
     @<%= form.text_field :twtid %>
-    <!-- 
-    <input type="button" value="twtidの抽出" onclick="get_twtid();" />
-    <script>
-      function get_twtid() {
-        let elem = document.getElementById("artist_twtid");
-        let twtid = elem.value;
-        let result = twtid.match(/https%3A%2F%2Ftwitter\.com%2F(.*)$/);
-        if (result != null) {
-          twtid = result[1];
-          elem.value = twtid;
-        }
-      }
-    </script>
-    -->
+    <% if artist.twtid == "" %>
+      <% twt_pxv = Twitter.find_by(pxvid: artist.pxvid) %>
+      <% if twt_pxv.presence %>
+        "<%= twt_pxv.twtid %>"
+      <% end %>
+    <% end %>
   </div>
 
   <div>
     <%= form.label :rating, style: "display: block" %>
     <%#= form.number_field :rating %>
     <%= form.select :rating,
-      [["優++(12)", 12], ["優+(11)", 11], ["優(10)", 10], ["良+(9)", 9], ["良(8)", 8], ["良-(7)", 7], ["可(6)", 6], ["可？(5)", 5], 
-      ["可？？(4)", 4], ["不可？(3)", 3], ["不可(2)", 2], ["不可-(1)", 1], ["悪(-1)", -1]],
+      [["優++(12)", 12], ["優+(11)", 11], ["優(10)", 10], ["良+(9)", 9],
+      ["良(8)", 8], ["良-(7)", 7], ["可(6)", 6],
+      ["可？(5)", 5], ["可？？(4)", 4], ["不可？(3)", 3], ["不可(2)", 2], ["不可-(1)", 1], ["悪(-1)", -1]],
       include_blank: "選択して下さい" %>
     <input type="button" value="+" onclick="toggle_rate_up();" class="btn" />
     <input type="button" value="-" onclick="toggle_rate_down();" class="btn" />
-    <input type="button" value="優" onclick="set_rate(3);" class="btn" />
-    <input type="button" value="良" onclick="set_rate(5);" class="btn" />
-    <input type="button" value="可" onclick="set_rate(7);" class="btn" />
+    <input type="button" value="優(10)" onclick="set_rate(3);" class="btn" />
+    <input type="button" value="良(8)" onclick="set_rate(5);" class="btn" />
+    <input type="button" value="良-(7)" onclick="set_rate(6);" class="btn" />
+    <input type="button" value="可(6)" onclick="set_rate(7);" class="btn" />
     <script>
       function set_rate(idx) {
         let status_sel_box = document.getElementById("artist_rating");

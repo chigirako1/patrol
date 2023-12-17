@@ -23,8 +23,8 @@ class Twitter < ApplicationRecord
         Twt::twt_user_url(twtid)
     end
 
-    def get_twt_pathlist
-        UrlTxtReader::get_twt_pathlist(twtid)
+    def get_pic_filelist
+        Twt::get_pic_filelist(twtid)
     end
 
     def prediction

@@ -42,6 +42,8 @@ module Nje
         artist_list.sort.to_h
     end
 
+    def self.update_db_by_fs()
+    end
 
     def self.nje_user(njeid)
         puts njeid

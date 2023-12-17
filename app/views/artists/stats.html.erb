@@ -2,10 +2,42 @@
 
 <h1>stats</h1>
 
-<% @rating.each do |key, val| %>
-    <%= %!#{key}:#{val}! %><br />
-<% end %>
-
-<% @r18.each do |key, val| %>
-    <%= %!"#{key}":#{val}! %><br />
+<% @stats.each do |key, val| %>
+    <h2><%= key %></h2>
+    <% sum = val.values.inject(:+) %>
+    <table border="1" rules="all">
+            <tr>
+                <th>key</th>
+                <th>val</th>
+                <th>%</th>
+                <th></th>
+            </tr>
+            <% val.each do |k, v| %>
+                <tr>
+                    <td>
+                        <%= %!"#{k}"! %>
+                    </td>
+                    <td align="right">
+                        <%= %!#{v}! %>
+                    </td>
+                    <% percent = (v.to_f / sum * 100).round(1) %>
+                    
+                    <td align="right">
+                        <%= %!#{percent}! %>
+                    </td>
+                    <td>
+                        <%= "*" * ((percent / 2) + 1) %>
+                    </td>
+                </tr>
+            <% end %>
+            <tr>
+                <td>
+                    計
+                </td>
+                <td align="right">
+                    <%= %!#{sum}! %>
+                </td>
+                <td>
+                </td>
+    </table>
 <% end %>

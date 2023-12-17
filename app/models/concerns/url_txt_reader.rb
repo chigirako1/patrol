@@ -6,8 +6,6 @@ require 'find'
 module UrlTxtReader
     extend ActiveSupport::Concern
 
-    PXV_DIRLIST_PATH = "public/pxv/dirlist.txt"
-    TWT_DIRLIST_PATH = "public/twt/dirlist.txt"
 
     def get_date_delta(date)
         if date == nil
@@ -188,54 +186,6 @@ module UrlTxtReader
             end
         end
         id_list
-    end
-
-    def self.get_twt_pathlist(twtid)
-        path_list = []
-
-        tpath = UrlTxtReader::get_twt_path_from_dirlist(twtid)
-        puts %!tpath=#{tpath}!
-
-        path_list << get_path_list(tpath)
-
-        twt_root = Rails.root.join("public/d_dl/Twitter/").to_s + "*/"
-        Dir.glob(twt_root).each do |path|
-            if twtid == File.basename(path)
-                puts %!path=#{path}!
-                path_list << get_path_list(path)
-                break
-            end
-        end
-
-        path_list.flatten.sort.reverse
-    end
-
-    def self.get_path_from_dirlist(pxvid)
-        rpath = []
-        txtpath = Rails.root.join(PXV_DIRLIST_PATH).to_s
-        File.open(txtpath) { |file|
-            while line  = file.gets
-                #if line.include?(search_str)
-                if line =~ /\(#{pxvid}\)|\(\##{pxvid}\)/
-                    rpath << line.chomp
-                end
-            end
-        }
-        rpath
-    end
-
-    def self.get_twt_path_from_dirlist(twtid)
-        path = ""
-        txtpath = Rails.root.join(TWT_DIRLIST_PATH).to_s
-        File.open(txtpath) { |file|
-            while line  = file.gets
-                if line =~ %r!public/twt/./#{twtid}!
-                    path << line.chomp
-                    break
-                end
-            end
-        }
-        path
     end
 
     def self.same_name(artists)

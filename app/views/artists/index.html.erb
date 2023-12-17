@@ -239,7 +239,8 @@
           ['last_ul_date'],
           ['pxvname'],
           ['twtid'],
-          ['予測'],
+          ['予測▽'],
+          ['予測△'],
           ['access_date_X_last_ul_datetime'], 
           ['access_date_X_recent_filenum'], 
           ['access_date_X_recent_filenum_X_ul'], 
@@ -301,19 +302,19 @@
         selected: params[:r18] 
       ) %>
     <br />
-    <%= f.label :point %>
+    <%= f.label :ポイント %>
     <%= f.number_field :point, :value => params[:point] %>
     <br />
-    <%= f.label :prediction %>
+    <%= f.label :予測 %>
     <%= f.number_field :prediction, :value => params[:prediction] %>
     <br />
-    <%= f.label :rating %>
+    <%= f.label :評価 %>
     <%= f.number_field :rating, :value => params[:rating] %>
     <br />
-    <%= f.label :amount_gt %>
+    <%= f.label :ファイル数gt %>
     <%= f.number_field :amount_gt, :value => params[:amount_gt] %>
     <br />
-    <%= f.label :amount_lt %>
+    <%= f.label :ファイル数lt %>
     <%= f.number_field :amount_lt, :value => params[:amount_lt] %>
     <br />
     <%= f.label :最終アクセス日 %>

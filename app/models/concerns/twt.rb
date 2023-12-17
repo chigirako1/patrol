@@ -2,7 +2,43 @@
 
 module Twt
     extend ActiveSupport::Concern
+
+    TWT_DIRLIST_PATH = "public/twt/dirlist.txt"
     
+    def self.get_pic_filelist(twtid)
+        path_list = []
+
+        tpath = get_twt_path_from_dirlist(twtid)
+        puts %!tpath=#{tpath}!
+
+        path_list << UrlTxtReader::get_path_list(tpath)
+
+        twt_root = Rails.root.join("public/d_dl/Twitter/").to_s + "*/"
+        Dir.glob(twt_root).each do |path|
+            if twtid == File.basename(path)
+                puts %!path=#{path}!
+                path_list << UrlTxtReader::get_path_list(path)
+                break
+            end
+        end
+
+        path_list.flatten.sort.reverse
+    end
+
+    def self.get_twt_path_from_dirlist(twtid)
+        path = ""
+        txtpath = Rails.root.join(TWT_DIRLIST_PATH).to_s
+        File.open(txtpath) { |file|
+            while line  = file.gets
+                if line =~ %r!public/twt/./#{twtid}!
+                    path << line.chomp
+                    break
+                end
+            end
+        }
+        path
+    end
+
     def self.twt_user_list(target_dir)
         path_list = []
 
@@ -151,10 +187,10 @@ module Twt
             end
             days = tmp_days
             cnt += 1
-            puts %!#{cnt}:#{days}<#{post_time.strftime("%Y-%m-%d %H:%M")}>:[#{path}]!
+            #puts %!#{cnt}:#{days}<#{post_time.strftime("%Y-%m-%d %H:%M")}>:[#{path}]!
         end
         point = (cnt * CALC_FREQ_UNIT / days)
-        puts %!#point=#{point}, cnt=#{cnt}, days=#{days}!
+        puts %!point=#{point}, cnt=#{cnt}, days=#{days}!
         point
     end
 end

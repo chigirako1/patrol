@@ -5,6 +5,7 @@
   <%= %!#{@twitter.twtname}! %>
   <% twt_url = %!https://twitter.com/#{@twitter.twtid}! %>
   (<%= link_to "@#{@twitter.twtid}", twt_url, target: :_blank, rel: "noopener noreferrer" %>)
+  [<%= @twitter.rating %>]
 </h1>
 
 <%= render @twitter %>

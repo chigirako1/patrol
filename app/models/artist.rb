@@ -113,64 +113,16 @@ class Artist < ApplicationRecord
         [id_list.uniq, twt_urls, misc_urls]
     end
 
-    def self.get_pathlist(pxvid)
-        path_list = []
-
-        rpath_list = UrlTxtReader::get_path_from_dirlist(pxvid)
-        rpath_list.each do |rpath|
-            puts %!path="#{rpath}"!
-            path_list << get_path_list(rpath)
-        end
-        path_list.flatten.sort.reverse
-    end
-
-=begin
     def self.get_twt_pathlist(twtid)
-        path_list = []
-
-        tpath = UrlTxtReader::get_twt_path_from_dirlist(twtid)
-
-        path_list << get_path_list(tpath)
-
-        twt_root = Rails.root.join("public/d_dl/Twitter/").to_s + "*/"
-        Dir.glob(twt_root).each do |path|
-            if twtid == File.basename(path)
-                path_list << get_path_list(path)
-                break
-            end
-        end
-
-        path_list.flatten.sort.reverse
-    end
-=end
-    def self.get_twt_pathlist(twtid)
-        UrlTxtReader::get_twt_pathlist(twtid)
+        Twt::get_pic_filelist(twtid)
     end
 
     def self.get_path_list(tpath)
         UrlTxtReader::get_path_list tpath
     end
 
-=begin
-    def self.get_path_list(tpath)
-        tmp_list = []
-
-        if tpath == ""
-            return tmp_list
-        end
-
-        base_path = UrlTxtReader::public_path
-        Find.find(tpath) do |path|
-            if [".jpg", ".png", ".jpeg"].include?(File.extname(path))
-                #ファイル名に"#"が含まれるとだめ。マシな方法ないの？
-                tmp_list << path.gsub(base_path, "").gsub("#", "%23")
-            end
-        end
-        tmp_list
-    end
-=end
-
     def self.get_url_list(filepath)
+        puts %!get_url_list:"#{filepath}"!
         if filepath == ""
             path_list = UrlTxtReader::path_list
         else
@@ -335,7 +287,7 @@ class Artist < ApplicationRecord
     end
 
     def pic_path
-        pathlist = Artist.get_pathlist(pxvid)
+        pathlist = Pxv::get_pathlist(pxvid)
         pathlist[0]
         #"<b>test</b>".html_safe
     end

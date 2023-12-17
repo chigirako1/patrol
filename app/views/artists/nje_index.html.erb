@@ -1,11 +1,26 @@
-<% provide(:title, "nje") %>
+<% provide(:title, "nje一覧") %>
 
 <h1>nje</h1>
 
-<% @nje_artist_list.each do |key, artist| %>
-    <%#= link_to image_tag(path, width: '10%', height: '10%', :alt => path), path, target: :_blank, rel: "noopener noreferrer" %>
-    
-    <%= %!#{artist.nje_name}! %>(<%= link_to artist.nje_id, Nje::nje_member_url(artist.nje_id.to_s), target: :_blank, rel: "noopener noreferrer" %>)
-    [<%= link_to "show", key.to_s, target: :_blank, rel: "noopener noreferrer" %>]
-    <br />
-<% end %>
+<table border="1" rules="all">
+    <tr>
+        <th>id</th>
+        <th>name</th>
+        <th>njeid</th>
+        <th>show</th>
+    </tr>
+    <% @nje_artist_list.each do |key, artist| %>
+        <tr>
+            <td>id</td>
+            <td>
+                <%= %!#{artist.nje_name}! %>
+            </td>
+            <td>
+                <%= link_to artist.nje_id, Nje::nje_member_url(artist.nje_id.to_s), target: :_blank, rel: "noopener noreferrer" %>
+            </td>
+            <td>
+                <%= link_to "show", key.to_s, target: :_blank, rel: "noopener noreferrer" %>
+            </td>
+        </tr>
+    <% end %>
+</table>

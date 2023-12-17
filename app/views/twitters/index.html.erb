@@ -12,7 +12,10 @@
     <tr>
       <th>id</th>
       <th>twtname(twtid)</th>
-      <th>投稿頻度</th>
+      <th>
+        予測<br />
+        投稿頻度
+        </th>
       <th>
         最終アクセス日
       </th>
@@ -22,7 +25,7 @@
       <th>備考</th>
       <th>状態</th>
     </tr>
-    <% twitters.first(10).each do |twitter| %>
+    <% twitters.first(@num_of_disp).each do |twitter| %>
       
       <% #twt_url = %!https://twitter.com/#{twitter["twtid"]}! %>
       <% #pxv_url = %!https://www.pixiv.net/users/#{twitter["artist_pxvid"]}! %>
@@ -62,9 +65,14 @@
           <% end %>
         </td>
         <td>
-          <% list = UrlTxtReader::get_twt_pathlist(twitter.twtid) %>
-          <% list.first(3).each do |filepath| %>
-            <%= link_to image_tag(filepath, width: '15%', height: '15%'), filepath, target: :_blank, rel: "noopener noreferrer" if filepath.presence %>
+          <% if @thumbnail %>
+            <% list = twitter.get_pic_filelist() %>
+            <% twt_pic_list = list.map {|x| [Twt::twt_path_str(x), x]}.sort.reverse %>
+            <% list = twt_pic_list.map {|x| x[1]}.first(3) %>
+            <% list.each do |filepath| %>
+              <%= link_to image_tag(filepath, width: '15%', height: '15%'), filepath, target: :_blank, rel: "noopener noreferrer" if filepath.presence %>
+            <% end %>
+          <% else %>
           <% end %>
         </td>
         <td><%= twitter["remarks"] %></td>

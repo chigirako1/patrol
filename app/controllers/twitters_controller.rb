@@ -27,20 +27,57 @@ class TwittersController < ApplicationController
       mode = params[:mode]
     end
 
+    if params[:num_of_disp] == ""
+      @num_of_disp = 10
+    else
+      @num_of_disp = params[:num_of_disp].to_i
+    end
+
+    if params[:hide_within_days] == ""
+      @hide_within_days = 1
+    else
+      @hide_within_days = params[:hide_within_days].to_i
+    end
+
+    if params[:pred] == ""
+      pred_cond_gt = 0
+    else
+      pred_cond_gt = params[:pred].to_i
+    end
+
+    if params[:rating] == ""
+      rating_gt = 0
+    else
+      rating_gt = params[:rating].to_i
+    end
+
+    if params[:thumbnail].presence
+      @thumbnail = true
+    else
+      @thumbnail = false
+    end
+    puts %!thumnail="#{@thumbnail}"!
+    
     case mode
     when "id"
+      @num_of_disp = 30
+      twitters = twitters.select {|x| x.rating == nil}
       twitters = twitters.sort_by {|x| [x.id]}.reverse
+      @twitters_group = twitters.group_by {|x| x.rating}
+      return
     when "access"
       twitters = twitters.sort_by {|x| [x.last_access_datetime]}.reverse
     when "rating_nil"
+      @num_of_disp = 30
       twitters = twitters.select {|x| x.rating == nil}
       twitters = twitters.sort_by {|x| [x.last_access_datetime]}.reverse
+      @twitters_group = twitters.group_by {|x| x.rating}
     when "dl_nil"
       twitters = twitters.select {|x| x.last_dl_datetime == nil}
     when "patrol"
       twitters = twitters.select {|x| x.drawing_method != nil}
       twitters = twitters.select {|x| x.status == "TWT巡回"}
-      twitters = twitters.select {|x| !x.last_access_datetime_p(1)}
+      twitters = twitters.select {|x| !x.last_access_datetime_p(@hide_within_days)}
       #twitters = twitters.select {|x| x.get_date_delta(x.last_access_datetime) > 0}
       #twitters = twitters.select {|x| x.id == 1388}
       
@@ -49,6 +86,15 @@ class TwittersController < ApplicationController
       else
         twitters = twitters.select {|x| x.drawing_method != nil}
       end
+
+      if pred_cond_gt != 0
+        twitters = twitters.select {|x| x.prediction >= pred_cond_gt}
+      end
+
+      if rating_gt != 0
+        twitters = twitters.select {|x| x.rating == nil or x.rating >= rating_gt }
+      end
+
       twitters = twitters.sort_by {|x| [-x.prediction, x.last_access_datetime, (x.last_dl_datetime)]}
     else
       #twitters = twitters.select {|x| x.last_dl_datetime.year >= 2023}
@@ -62,7 +108,7 @@ class TwittersController < ApplicationController
   def show
     @twitter.update(last_access_datetime: Time.now)
 
-    @twt_pic_path_list = @twitter.get_twt_pathlist
+    @twt_pic_path_list = @twitter.get_pic_filelist
   end
 
   # GET /twitters/new
