@@ -32,7 +32,7 @@
         <% list = artist.artwork_list(@path_list) %>
         <% urllist = [] %>
 
-        <% list.each do |artwork_id, data| %>
+        <% list.each.with_index(1) do |(artwork_id, data), idx| %>
             <% path = data[0] %>
             <% title = data[1] %>
             <% date = data[2] %>
@@ -61,11 +61,11 @@
             <% urllist << [date, txt, url, %!#{date} #{txt} [#{fcnt} files](#{File::dirname path})!, artwork_id]  %>
             <%#= link_to txt, url, target: :_blank, rel: "noopener noreferrer" %>
             <%#= image_tag path, width: '10%', height: '10%', :alt => txt %>
-            <%= link_to image_tag(path, width: '10%', height: '10%', :alt => txt), url, target: :_blank, rel: "noopener noreferrer" %>
+            <%= idx %>.<%= link_to image_tag(path, width: '10%', height: '10%', :alt => txt), url, target: :_blank, rel: "noopener noreferrer" %>
         <% end %>
         <br />
-        <% urllist.each do |u| %>
-            (<%= link_to u[4], u[2], target: :_blank, rel: "noopener noreferrer" %>) <%= u[3].gsub("%23", "#") %><br />
+        <% urllist.each.with_index(1) do |u, idx| %>
+            <%= idx %>:(<%= link_to u[4], u[2], target: :_blank, rel: "noopener noreferrer" %>) <%= u[3].gsub("%23", "#") %><br />
         <% end %>
     <% end %>
 </div>

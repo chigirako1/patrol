@@ -1,7 +1,15 @@
 <div id="<%= dom_id artist %>">
   
   <input type="button" value="copy" onclick="copy_to_clipboard();" />
-  <textarea id="dirpath" name="dirpath" rows="1" cols="255"><%= File.dirname ("F:/dPxv" + @path_list[0]) %></textarea>
+
+  <textarea id="dirpath" name="dirpath" rows="1" cols="255">
+    <% if @path_list.size == 0 %>
+      <% txt = "" %>
+    <% else %>
+      <% txt = File.dirname ("F:/dPxv" + @path_list[0]) %>
+    <% end %>
+    <%= txt %>
+  </textarea>
   <script>
     function copy_to_clipboard() {
       let textarea = document.getElementById("dirpath");

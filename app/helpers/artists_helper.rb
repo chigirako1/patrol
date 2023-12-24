@@ -22,12 +22,14 @@ module ArtistsHelper
 
     def priority_tag(artist)
         tag = ""
-        if artist["priority"] > 0
-            tag += %!<td align="right" bgcolor="yellow">!
+        if artist.rating == 0
+            tag = %!<td align="right" bgcolor="gray">!
+        elsif artist["priority"] > 0
+            tag = %!<td align="right" bgcolor="yellow">!
         elsif artist["priority"] < 0
-            tag += %!<td align="right" bgcolor="gray">!
+            tag = %!<td align="right" bgcolor="gray">!
         else
-            tag += %!<td align="right">!
+            tag = %!<td align="right">!
         end
         tag += %!#{artist.rating}<br />[#{artist.priority}]</td>!
         tag.html_safe

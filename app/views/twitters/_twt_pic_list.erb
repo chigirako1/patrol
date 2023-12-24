@@ -6,14 +6,13 @@ textarea {
 </style>
 
 <div id="<%= dom_id twitter %>">
+    <% show_pic_num = 8 %>
     <% if params[:picn] == "" %>
-        <% show_pic_num = 10 %>
     <% elsif params[:picn] == "all" %>
         <% show_pic_num = @twt_pic_path_list.size %>
     <% elsif params[:picn] =~ /(\d+)/ %>
         <% show_pic_num = $1.to_i %>
     <% else %>
-        <% show_pic_num = 10 %>
     <% end %>
 
     <% if params[:pic_lf] =~ /(\d+)/ %>
@@ -40,6 +39,9 @@ textarea {
 
     <!-- サムネイル -->
     <% twt_pic_list.first(show_pic_num).each.with_index(1) do |elem, idx| %>
+        <% if @twt_ids != nil %>
+            <% break %>
+        <% end %>
         <% path = elem[1] %>
         <%= idx %>
         <%= link_to image_tag(path, width: '10%', height: '10%', :alt => path), path, target: :_blank, rel: "noopener noreferrer" %>
@@ -54,8 +56,8 @@ textarea {
 
     全画像数：<%= twt_pic_list.size %>
     <% if twt_pic_list.size > show_pic_num %>
-        <%#= link_to "...全て表示", params.merge(picn: 'all') %>
         <%= link_to "...全て表示", twitter_path(picn: 'all', pic_lf: '3', corr: '0') %>
+        <%= link_to "url txtチェック", twitter_path(file_check: 't', picn: 'all', pic_lf: '', corr: '0') %>
     <% end %>
     <br />
 
@@ -76,4 +78,25 @@ textarea {
     直近の更新頻度："<%= freq2 %>"
     <br />
 
+    <!-- URLのテキストファイルに含まれる画像が存在するかチェック -->
+    <% if @twt_ids != nil %>
+        <h2>チェック</h2>
+        <% @twt_ids.each do |tweet_id| %>
+            <% hit = false %>
+            <% @twt_pic_path_list.each do |path| %>
+                <% if path.include? tweet_id.to_s %>
+                    <%= tweet_id %> hit!<br />
+                    <%= link_to image_tag(path, width: '10%', height: '10%', :alt => path), path, target: :_blank, rel: "noopener noreferrer" %>
+                    <br />
+                    <% hit = true %>
+                    <% break %>
+                <% end %>
+            <% end %>
+            <% if hit == false %>
+                <%= %!#{tweet_id}(#{Twt::timestamp_str tweet_id}))! %> not hit...
+                <%= link_to tweet_id, %!http://twitter.com/#{@twitter.twtid}/status/#{tweet_id}!, target: :_blank, rel: "noopener noreferrer" %>
+                <br />
+            <% end %>
+        <% end %>
+    <% end %>
 </div>

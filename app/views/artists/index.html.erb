@@ -13,11 +13,11 @@
     <tr>
       <th>id</th>
       <th>pxvname</th>
+      <th>評価<br />[補正]</th>
       <th>pxvid</th>
       <th>show</th>
       <th>ファイル総数<br />{最近}</th>
       <th>ポイント<br />(予測)</th>
-      <th>評価<br />[補正]</th>
       <th>最終DL日</th>
       <th>最新投稿日</th>
       <th>最新アクセス日</th>
@@ -39,12 +39,12 @@
       <tr>
         <td><%= artist["id"] %></td>
         <td><%= pxvname_tag(artist) %></td>
+        <%= priority_tag(artist) %>
         <td><%= link_to artist["pxvid"], artist.pxv_user_url, target: :_blank, rel: "noopener noreferrer" %></td>
         <td><%= link_to "■■■", artist, target: :_blank, rel: "noopener noreferrer" %></td>
         <td align="right"><%= artist["filenum"] %><br />{<%= artist["recent_filenum"] %>}</td>
         <td align="right" bgcolor="cyan"><%= artist.point %><br />(<%= artist.prediction_up_cnt(true) %>)</td>
 
-        <%= priority_tag(artist) %>
 
         <td>
           <%= artist.get_datetime_string(artist.last_dl_datetime) %><br />
@@ -212,10 +212,10 @@
         ],
         selected: params[:file] 
       ) %>
-    <br />
+      <br />
     <hr />
     
-    <%= f.submit("表示更新/検索", name: nil, class: 'subtmi-btn') %>
+    <%= f.submit("検索", name: nil, class: 'subtmi-btn') %>
     <hr />
     
     検索：<%= f.text_field :search_word %>
@@ -303,22 +303,22 @@
       ) %>
     <br />
     <%= f.label :ポイント %>
-    <%= f.number_field :point, :value => params[:point] %>
+    <%= f.number_field :point, :value => params[:point] %>以上
     <br />
     <%= f.label :予測 %>
-    <%= f.number_field :prediction, :value => params[:prediction] %>
+    <%= f.number_field :prediction, :value => params[:prediction] %>以上
     <br />
     <%= f.label :評価 %>
-    <%= f.number_field :rating, :value => params[:rating] %>
+    <%= f.number_field :rating, :value => params[:rating] %>以上
     <br />
     <%= f.label :ファイル数gt %>
-    <%= f.number_field :amount_gt, :value => params[:amount_gt] %>
+    <%= f.number_field :amount_gt, :value => params[:amount_gt] %>以上
     <br />
     <%= f.label :ファイル数lt %>
-    <%= f.number_field :amount_lt, :value => params[:amount_lt] %>
+    <%= f.number_field :amount_lt, :value => params[:amount_lt] %>以下
     <br />
     <%= f.label :最終アクセス日 %>
-    <%= f.number_field :last_access_datetime, :value => params[:last_access_datetime] %>
+    <%= f.number_field :last_access_datetime, :value => params[:last_access_datetime] %>以上経過
     <br />
     <%= f.label :表示数 %>
     <%= f.number_field :display_number, :value => params[:display_number] %>

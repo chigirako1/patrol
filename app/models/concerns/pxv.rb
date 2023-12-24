@@ -4,6 +4,7 @@ module Pxv
     extend ActiveSupport::Concern
     
     PXV_DIRLIST_PATH = "public/pxv/dirlist.txt"
+    PXV_ARCHIVE_DIR_PATH = "public/f_dl/PxDl/"
 
     def self.pxv_user_url(pxvid)
         %!https://www.pixiv.net/users/#{pxvid}!
@@ -16,6 +17,10 @@ module Pxv
     def self.get_path_from_dirlist(pxvid)
         rpath = []
         txtpath = Rails.root.join(PXV_DIRLIST_PATH).to_s
+        unless File.exist? txtpath
+            return rpath
+        end
+
         File.open(txtpath) { |file|
             while line  = file.gets
                 #if line.include?(search_str)
@@ -30,7 +35,7 @@ module Pxv
     def self.get_pathlist(pxvid)
         path_list = []
 
-        current_work_dir_root = Rails.root.join("public/f_dl/PxDl/").to_s + "*/"
+        current_work_dir_root = Rails.root.join(PXV_ARCHIVE_DIR_PATH).to_s + "*/"
         Dir.glob(current_work_dir_root).each do |path|
             if File.basename(path) =~ /\(#{pxvid}\)/
                 puts %!path=#{path}!

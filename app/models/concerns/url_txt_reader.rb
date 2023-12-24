@@ -6,7 +6,6 @@ require 'find'
 module UrlTxtReader
     extend ActiveSupport::Concern
 
-
     def get_date_delta(date)
         if date == nil
             puts "date==nil"
@@ -207,5 +206,89 @@ module UrlTxtReader
         dup_twtids = chunks.select{|_, v| v.size > 1}.map(&:first)
         #puts "dup name=#{dup_pxvnames}"
         dup_twtids
+    end
+
+    def self.get_url_txt_contents(filepath)
+        puts %!get_url_list:"#{filepath}"!
+        if filepath == ""
+            path_list = UrlTxtReader::path_list
+        else
+            path_list = []
+            path_list << Rails.root.join(filepath).to_s
+            puts %!path="#{filepath}"!
+        end
+
+        txt_sum = ""
+        path_list.each do |txtpath|
+            File.open(txtpath) {|txts|
+                txt_sum << txts.read
+            }
+        end
+        txt_sum
+    end
+
+    def self.get_url_list(filepath)
+        txt_sum = get_url_txt_contents(filepath)
+        id_list, twt_urls, misc_urls = get_ulrs(txt_sum.split(/\R/).sort_by{|s| [s.downcase, s]}.uniq)
+        [id_list, twt_urls, misc_urls]
+    end
+
+    def self.get_ulrs(txts)
+        id_list = []
+        twt_urls = {}
+        misc_urls = []
+
+        #txts.each_line do |line|
+        txts.each do |line|
+            line.chomp!
+            next if line =~ /^$/
+    
+            if line =~ %r!https?://www\.pixiv\.net/users/(\d+)!
+                user_id = $1.to_i
+                id_list.push user_id
+            elsif line =~ %r!((https?://twitter\.com/(\w+)))$! or line =~ %r!((https?://twitter\.com/(\w+))/.*)!
+                url = $1
+                #twt_user_url = $2
+                twt_id = $3
+
+                if url =~ %r!(https?://twitter\.com/\w+/status/\d+)\?.*!
+                    #twt_urls.push($1)
+                    #twt_urls.push($1 + "/photo/1")
+                end
+
+                if twt_urls.has_key? twt_id
+                    # 既存に追加
+                    twt_urls[twt_id][1] << line
+                else
+                    # 新規
+                    twt_urls[twt_id] = []
+
+                    artist = Artist.find_by(twtid: twt_id)
+                    if artist != nil
+                        id_list << artist.pxvid
+                        twt_urls[twt_id][0] = true
+                    else
+                        twt_urls[twt_id][0] = false
+                    end
+
+                    twt_urls[twt_id][1] = []
+                    twt_urls[twt_id][1] << line
+                end
+            elsif line =~ %r!(https?://.*)!
+                url = $1
+                misc_urls.push url
+            else
+                misc_urls.push line
+             end
+        end
+
+        twt_urls = twt_urls.sort_by {|k, v| [v[0]?1:0, -v[1].size, k.downcase]}.to_h
+        #twt_urls_pxv_t = twt_urls.select {|x| x[0]}
+        #twt_urls_pxv_f = twt_urls.select {|x| !x[0]}
+        #twt_urls = twt_urls_pxv_t.merge(twt_urls_pxv_f)
+
+        twt_urls = twt_urls.map {|key, val| [key, val[1]]}.to_h
+
+        [id_list.uniq, twt_urls, misc_urls]
     end
 end

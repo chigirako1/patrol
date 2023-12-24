@@ -5,8 +5,44 @@
   height: 2em;
   width: 50px;
 }
-
 </style>
+
+<script>
+  function options_up(elemntId) {
+      let sel_box = document.getElementById(elemntId);
+      let options = sel_box.options;
+
+      for (let i = 0; i < options.length; i++) {
+          if (options[i].selected) {
+              if (i == 0) {
+                  options[options.length - 1].selected = true;
+              }
+              else {
+                  options[i - 1].selected = true;
+              }
+              break;
+          }
+      }
+  }
+
+  function options_down(elemntId) {
+      let sel_box = document.getElementById(elemntId);
+      let options = sel_box.options;
+
+      for (let i = 0; i < options.length; i++) {
+          if (options[i].selected) {
+              if (i == options.length - 1) {
+                  options[0].selected = true;
+              }
+              else {
+                  options[i + 1].selected = true;
+              }
+              break;
+          }
+      }
+  }
+</script>
+
 
 <%= form_with(model: artist) do |form| %>
   <% if artist.errors.any? %>
@@ -26,13 +62,15 @@
   <h2>項目</h2>
   <div>
     <%= form.label :twtid, style: "display: block" %>
-    @<%= form.text_field :twtid %>
-    <% if artist.twtid == "" %>
+    <% twtid_val = artist.twtid %>
+    <% if twtid_val == "" %>
       <% twt_pxv = Twitter.find_by(pxvid: artist.pxvid) %>
       <% if twt_pxv.presence %>
         "<%= twt_pxv.twtid %>"
+        <% twtid_val = twt_pxv.twtid %>
       <% end %>
     <% end %>
+    @<%= form.text_field :twtid, :value => twtid_val %>
   </div>
 
   <div>
@@ -43,8 +81,8 @@
       ["良(8)", 8], ["良-(7)", 7], ["可(6)", 6],
       ["可？(5)", 5], ["可？？(4)", 4], ["不可？(3)", 3], ["不可(2)", 2], ["不可-(1)", 1], ["悪(-1)", -1]],
       include_blank: "選択して下さい" %>
-    <input type="button" value="+" onclick="toggle_rate_up();" class="btn" />
-    <input type="button" value="-" onclick="toggle_rate_down();" class="btn" />
+    <input type="button" value="+" onclick="options_up('artist_rating');" class="btn" />
+    <input type="button" value="-" onclick="options_down('artist_rating');" class="btn" />
     <input type="button" value="優(10)" onclick="set_rate(3);" class="btn" />
     <input type="button" value="良(8)" onclick="set_rate(5);" class="btn" />
     <input type="button" value="良-(7)" onclick="set_rate(6);" class="btn" />
@@ -54,46 +92,6 @@
         let status_sel_box = document.getElementById("artist_rating");
         let options = status_sel_box.options;
         options[idx].selected = true;
-      }
-
-      function toggle_rate_down() {
-        let sel_box = document.getElementById("artist_rating");
-        let options = sel_box.options;
-
-        for (let i=0; i < options.length; i++)
-        {
-          if (options[i].selected)
-          {
-            if (i == options.length - 1)
-            {
-              options[0].selected = true;
-            }
-            else{
-              options[i+1].selected = true;
-            }
-            break;
-          }
-        }
-      }
-
-      function toggle_rate_up() {
-        let sel_box = document.getElementById("artist_rating");
-        let options = sel_box.options;
-
-        for (let i=0; i < options.length; i++)
-        {
-          if (options[i].selected)
-          {
-            if (i == 0)
-            {
-              options[options.length-1].selected = true;
-            }
-            else{
-              options[i-1].selected = true;
-            }
-            break;
-          }
-        }
       }
     </script>
   </div>
@@ -202,6 +200,8 @@
   <div>
     <%= form.label :特徴, style: "display: block" %>
     <%= form.select :feature, [["AI", "AI"], ["3D", "3D"]], include_blank: "選択して下さい" %>
+    <input type="button" value="↑" id="artist_feature_up" class="btn" />
+    <input type="button" value="↓" onclick="options_down('artist_feature');" class="btn" />
   </div>
   
   <hr />

@@ -111,8 +111,12 @@
     <%= form.number_field :pxvid %>
     <%= link_to "#{@twitter.pxvid}", Pxv::pxv_user_url(@twitter.pxvid), target: :_blank, rel: "noopener noreferrer" %>
     <% if pxv.presence %>
-      <%= %!pxvid="#{pxv.pxvid}"! if pxv.pxvid != twitter.pxvid %><br />
-      PXVアクセス：[<%= pxv.last_access_datetime_disp %>]
+      <br />
+      <%= %!pxvid="#{pxv.pxvid}"! if pxv.pxvid != twitter.pxvid %>
+      <br />
+      PXVアクセス:
+      [<%= pxv.last_access_datetime_disp %>]
+      [<%= pxv.status %>/<%= pxv.feature %>]
       [<%= link_to "show", artist_path(pxv.id), target: :_blank, rel: "noopener noreferrer" %>]
     <% end %>
   </div>

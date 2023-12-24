@@ -34,6 +34,7 @@ class Params
     @prediction = params[:prediction]
     @rating = params[:rating]
     @twt_chk = params[:twt_chk]
+    puts %!group_by="#{@group_by}"/sort_by="#{@sort_by}"/!
 
     if @point == nil
       @point = 0
@@ -361,7 +362,7 @@ class ArtistsController < ApplicationController
         path = "public/#{filename}.txt"
       end
       puts "path='#{path}'"
-      id_list, @twt_urls, @misc_urls = Artist.get_url_list(path)
+      id_list, @twt_urls, @misc_urls = UrlTxtReader::get_url_list(path)
     end
   end
 
@@ -501,7 +502,8 @@ class ArtistsController < ApplicationController
       elsif prms.rating == 0
         artists = artists.select {|x| x.rating == 0}
       else
-        artists = artists.select {|x| x.rating == 0 or x.rating >= prms.rating}
+        #artists = artists.select {|x| x.rating == 0 or x.rating >= prms.rating}
+        artists = artists.select {|x| x.rating >= prms.rating}
       end
 
       if prms.twt

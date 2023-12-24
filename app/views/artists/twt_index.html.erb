@@ -8,6 +8,19 @@
     <% if @hide_target.include?("KNOWN") and (twt_account != nil or pxv_artist != nil) %>
         <% next %>
     <% end %>
+    <% if @hide_target.include?("UNKNOWN") and (twt_account == nil and pxv_artist == nil) %>
+        <% next %>
+    <% end %>
+    <% if @hide_target.include?("PXV_UPDATING") and (pxv_artist != nil and pxv_artist.status != "長期更新なし") %>
+        <% next %>
+    <% else %>
+        <% if @hide_target.include?("PXV") and pxv_artist != nil %>
+            <% next %>
+        <% end %>
+        <% if @hide_target.include?("TWT") and twt_account != nil %>
+            <% next %>
+        <% end %>
+    <% end %>
     <% if @hide_target.include?("AI") and twt_account != nil and twt_account.drawing_method == "AI" %>
         <% next %>
     <% end %>
@@ -41,8 +54,12 @@
         <% end %>
     <% end %>
     <% if pxv_artist != nil %>
+        <% if pxv_artist.last_access_datetime_p(@hide_day) %>
+            <% next %>
+        <% end %>
         pxv:<%= %!#{pxv_artist.pxvname}! %>
         (<%= link_to pxv_artist.pxvid, pxv_artist.pxv_user_url, target: :_blank, rel: "noopener noreferrer" %>)
+        【<%= pxv_artist.rating %>】
         [<%= link_to "show", pxv_artist, target: :_blank, rel: "noopener noreferrer" %>]
         UL:<%= pxv_artist.get_datetime_string(pxv_artist.last_ul_datetime) %>
         ACCESS:<%= pxv_artist.last_access_datetime_disp %>

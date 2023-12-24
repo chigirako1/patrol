@@ -4,7 +4,27 @@ module Twt
     extend ActiveSupport::Concern
 
     TWT_DIRLIST_PATH = "public/twt/dirlist.txt"
+
+    def self.get_twt_tweet_ids_from_txts(twtid)
+        txt_sum = UrlTxtReader::get_url_txt_contents("")
+        twt_ids = get_tweet_ids(txt_sum.split(/\R/).sort_by{|s| [s.downcase, s]}.uniq, twtid)
+        twt_ids
+    end
     
+    def self.get_tweet_ids(txts, twtid)
+        twt_ids = []
+        txts.each do |line|
+            line.chomp!
+            if line =~ %r!https?://twitter\.com/#{twtid}/status/(\d+)!
+                tweet_id = $1.to_i
+                twt_ids << tweet_id
+            else
+                #puts line
+            end
+        end
+        twt_ids.sort.uniq
+    end
+
     def self.get_pic_filelist(twtid)
         path_list = []
 

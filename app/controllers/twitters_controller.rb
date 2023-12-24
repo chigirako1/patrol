@@ -34,7 +34,7 @@ class TwittersController < ApplicationController
     end
 
     if params[:hide_within_days] == ""
-      @hide_within_days = 1
+      @hide_within_days = 0
     else
       @hide_within_days = params[:hide_within_days].to_i
     end
@@ -74,6 +74,9 @@ class TwittersController < ApplicationController
       @twitters_group = twitters.group_by {|x| x.rating}
     when "dl_nil"
       twitters = twitters.select {|x| x.last_dl_datetime == nil}
+    when "not_patrol"
+      twitters = twitters.select {|x| x.status != "TWT巡回"}
+      twitters = twitters.select {|x| x.drawing_method != nil and (x.drawing_method == "AI")}
     when "patrol"
       twitters = twitters.select {|x| x.drawing_method != nil}
       twitters = twitters.select {|x| x.status == "TWT巡回"}
@@ -96,6 +99,13 @@ class TwittersController < ApplicationController
       end
 
       twitters = twitters.sort_by {|x| [-x.prediction, x.last_access_datetime, (x.last_dl_datetime)]}
+    when "hand"
+      twitters = twitters.select {|x| x.status == "TWT巡回"}
+      twitters = twitters.select {|x| x.drawing_method != nil and (x.drawing_method == "手描き")}
+
+      twitters = twitters.sort_by {|x| [-x.prediction, x.last_access_datetime, (x.last_dl_datetime)]}
+    when "all"
+      twitters = twitters.sort_by {|x| [-x.prediction, x.last_access_datetime, (x.last_ul_datetime || "2000-01-01")]}
     else
       #twitters = twitters.select {|x| x.last_dl_datetime.year >= 2023}
       #twitters = twitters.select {|x| x.last_dl_datetime.month >= 11}
@@ -106,8 +116,11 @@ class TwittersController < ApplicationController
 
   # GET /twitters/1 or /twitters/1.json
   def show
-    @twitter.update(last_access_datetime: Time.now)
-
+    if params[:file_check].presence
+      @twt_ids = Twt::get_twt_tweet_ids_from_txts(@twitter.twtid)
+    else
+      @twitter.update(last_access_datetime: Time.now)
+    end
     @twt_pic_path_list = @twitter.get_pic_filelist
   end
 
