@@ -107,7 +107,7 @@ module UrlTxtReader
         Rails.root.join("public").to_s
     end
 
-    def self.path_list
+    def self.txt_file_list
         path_list = []
         base_path = public_path
         puts %!basepath="#{base_path}"!
@@ -136,6 +136,11 @@ module UrlTxtReader
             end
         end
         tmp_list
+    end
+
+    def self.get_latest_txt()
+        path_list = txt_file_list.sort
+        path_list[-1]
     end
 
     def self.authors_list(filename, type)
@@ -211,7 +216,7 @@ module UrlTxtReader
     def self.get_url_txt_contents(filepath)
         puts %!get_url_list:"#{filepath}"!
         if filepath == ""
-            path_list = UrlTxtReader::path_list
+            path_list = UrlTxtReader::txt_file_list
         else
             path_list = []
             path_list << Rails.root.join(filepath).to_s
@@ -267,8 +272,19 @@ module UrlTxtReader
                     if artist != nil
                         id_list << artist.pxvid
                         twt_urls[twt_id][0] = true
+                        twt_urls[twt_id][3] = artist.rating
                     else
                         twt_urls[twt_id][0] = false
+                        twt_urls[twt_id][3] = 0
+                    end
+
+                    twt = Twitter.find_by(twtid: twt_id)
+                    if twt != nil
+                        twt_urls[twt_id][2] = true
+                        twt_urls[twt_id][4] = twt.rating
+                    else
+                        twt_urls[twt_id][2] = false
+                        twt_urls[twt_id][4] = 0
                     end
 
                     twt_urls[twt_id][1] = []
@@ -282,7 +298,7 @@ module UrlTxtReader
              end
         end
 
-        twt_urls = twt_urls.sort_by {|k, v| [v[0]?1:0, -v[1].size, k.downcase]}.to_h
+        twt_urls = twt_urls.sort_by {|k, v| [v[0]?1:0, v[2]?1:0, v[3]?v[3]:0, v[4]?v[4]:0, -v[1].size, k.downcase]}.to_h
         #twt_urls_pxv_t = twt_urls.select {|x| x[0]}
         #twt_urls_pxv_f = twt_urls.select {|x| !x[0]}
         #twt_urls = twt_urls_pxv_t.merge(twt_urls_pxv_f)

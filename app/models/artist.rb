@@ -99,7 +99,7 @@ class Artist < ApplicationRecord
             end
         end
 =end
-        path_list = UrlTxtReader::path_list
+        path_list = UrlTxtReader::txt_file_list
 
         path_list.each do |filepath|
             File.open(filepath) {|txts|

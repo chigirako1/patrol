@@ -93,8 +93,7 @@
     <% if artist["twt_check"] == "t" %>
       <h3>TWTチェック↓↓↓</h3>
     <% end %>
-    twitter(X)を開く
-    <% url = %!https://twitter.com/#{artist["twtid"]}! %>
+    twitter(X)を開く→
     <%= link_to "@#{artist.twtid}", artist.twt_user_url, target: :_blank, rel: "noopener noreferrer" %>
   <% else %>
     <font color="red">twt未設定
@@ -106,13 +105,16 @@
   <% end %>
   <%= link_to "【twtサムネイル表示】", "../artists/#{@artist.id}?mode=twt_pic_list#twt_pic_list" %>
   <% twt = Twitter.find_by(twtid: artist.twtid) %>
-  <%= link_to "twt", twitter_path(twt) if twt != nil %>
+  <% if twt.presence %>
+    <%= link_to "twt", twitter_path(twt) %>
+  <% else %>
+    <%= link_to "New Twt", new_twitter_path(twtid: artist.twtid, pxvid: artist.pxvid) %>
+  <% end %>
   <br />
 
   <% if artist.nje_p %>
     nijieを開く
-    <% url = %!https://nijie.info/members.php?id=#{artist["njeid"]}! %>
-    <%= link_to "#{artist["njeid"]}", artist.nje_member_url, target: :_blank, rel: "noopener noreferrer" %>
+    <%= link_to artist.njeid, artist.nje_member_url, target: :_blank, rel: "noopener noreferrer" %>
   <% end %>
   <hr />
 

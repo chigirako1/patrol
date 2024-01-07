@@ -81,7 +81,7 @@
         <td>
           <% if artist["twtid"] != "" %>
             <%= link_to "@#{artist["twtid"]}", artist.twt_user_url, target: :_blank, rel: "noopener noreferrer" %>
-            [<%= link_to "twtサムネイル", artist_twt_path(artist["twtid"]), target: :_blank, rel: "noopener noreferrer" %>]
+            <!-- [<%= link_to "twtサムネイル", artist_twt_path(artist["twtid"]), target: :_blank, rel: "noopener noreferrer" %>] -->
           <% end %>
           <%= "✓" if @twt and artist.twt_check == "t" %>
           <br />
@@ -123,8 +123,10 @@
 <% if @unknown_id_list.size != 0 %>
   <h2>unknown pixiv id list(<%= @unknown_id_list.size %>)</h2>
   <% @unknown_id_list.each do |pxvid| %>
-    <% pxvurl = Pxv::pxv_user_url(pxvid)#%!https://www.pixiv.net/users/#{pxvid}! %>
-    <td><%= link_to pxvid, pxvurl, target: :_blank, rel: "noopener noreferrer" %></td><br />
+    <% pxvurl = Pxv::pxv_user_url(pxvid) %>
+    <%= link_to pxvid, pxvurl, target: :_blank, rel: "noopener noreferrer" %>
+    (<%= link_to "show", artist_pxv_path(pxvid), target: :_blank, rel: "noopener noreferrer" %>)
+    <br />
   <% end %>
 <% end %>
 
@@ -132,7 +134,8 @@
 <% if @misc_urls.size != 0 %>
   <h2>misc url list(<%= @misc_urls.size %>)</h2>
   <% @misc_urls.each do |url| %>
-    <td><%= link_to url, url, target: :_blank, rel: "noopener noreferrer" %></td><br />
+    <%= link_to url, url, target: :_blank, rel: "noopener noreferrer" %>
+    <br />
   <% end %>
 <% end %>
 
@@ -143,7 +146,8 @@
     <% twt = Twitter.find_by(twtid: key) %>
    
     <h3>
-      <%= link_to "@" + key, "https://twitter.com/#{key}", target: :_blank, rel: "noopener noreferrer" %>
+      <%#= link_to "@" + key, "https://twitter.com/#{key}", target: :_blank, rel: "noopener noreferrer" %>
+      <%= link_to "@" + key, Twt::twt_user_url(key), target: :_blank, rel: "noopener noreferrer" %>
       <%= %! | #{twt.twt_screen_name}! if twt != nil %>
     </h3>
 
@@ -202,6 +206,9 @@
           ['urllist-unknown-only'], 
           ['urllist-twt-only'], 
           ['urllist-twt-only(latest)'], 
+          ['unchecked-pxv'], 
+          ['unchecked-twt'], 
+          ['twt-twt'], 
           ['pxvids'], 
           ['namelist'],
           ['namelist_djn'],

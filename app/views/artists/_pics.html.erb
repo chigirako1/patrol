@@ -6,7 +6,7 @@
     <% if @path_list.size == 0 %>
       <% txt = "" %>
     <% else %>
-      <% txt = File.dirname ("F:/dPxv" + @path_list[0]) %>
+      <% txt = File.dirname (Pxv::ARCHIVE_PATH + @path_list[0]) %>
     <% end %>
     <%= txt %>
   </textarea>
@@ -26,23 +26,25 @@
     <% end %>
   <% end %>
 
-  <% @path_list.first(@number_of_display).each do |path| %>
+  <% list = artist.artwork_list(@path_list) %>
+  <%# @path_list.first(@number_of_display).each.with_index(1) do |path, idx| %>
+  <% list.first(@number_of_display).each.with_index(1) do |(artwork_id, data), idx| %>
+    <% path = data[0] %>
     <% if path =~ /\d\d-\d\d-\d\d.*\((\d+)\)/ %>
       <% artwork_id = $1 %>
       <% url = artist.pxv_artwork_url(artwork_id) %>
-      (<%= link_to artwork_id, url, target: :_blank, rel: "noopener noreferrer" %>)
+      <%= idx %>.(<%= link_to artwork_id, url, target: :_blank, rel: "noopener noreferrer" %>)
       <%= path %><br />
     <% end %>
   <% end %> 
   
-  <% list = artist.artwork_list(@path_list) %>
-  <% list.first(@number_of_display).each do |artwork_id, data| %>
+  <% list.first(@number_of_display).each.with_index(1) do |(artwork_id, data), idx| %>
     <% path = data[0] %>
     <% title = data[1] %>
     <% date = data[2] %>
     <% fcnt = data[3] %>
     <%#= image_tag path, width: '20%', height: '20%' %>
-    <%= link_to(image_tag(path, width: '15%', height: '15%'), path, target: :_blank, rel: "noopener noreferrer") %>
+    <%= idx %>.<%= link_to(image_tag(path, width: '15%', height: '15%'), path, target: :_blank, rel: "noopener noreferrer") %>
   <% end %> 
   <br />
 </div>

@@ -1,6 +1,6 @@
 <% provide(:title, %!画像一覧 - #{@twtid}!) %>
 
-<h3 id="twt_pic_list">twt pic (<%= link_to "@#{@twtid}", get_twt_user_url(@twtid), target: :_blank, rel: "noopener noreferrer" %>)</h3>
+<h3 id="twt_pic_list">twt pic (<%= link_to "@#{@twtid}", Twt::twt_user_url(@twtid), target: :_blank, rel: "noopener noreferrer" %>)</h3>
 
 <% twt_acnt = Twitter.find_by(twtid: @twtid) %>
 <% if twt_acnt == nil %>

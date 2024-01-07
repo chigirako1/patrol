@@ -6,11 +6,65 @@
 <% 
 =begin %>
 <% @links.each do |link| %>
-  <li><a href="/<%= link %>"><%= link %></a></li>
+    <li><a href="/<%= link %>"><%= link %></a></li>
 <% end %>
 <% 
 =end %>
 <% @menus.each do |menu| %>
-  <li><%= link_to menu[:label], menu[:path], target: :_blank, rel: "noopener noreferrer" %></li>
+    <% if menu[:label] == "" %>
+        <h2>test</h2>
+    <% else %>
+        <li><%= link_to menu[:label], menu[:path], target: :_blank, rel: "noopener noreferrer" %></li>
+    <% end %>
 <% end %>
 </ul>
+
+
+<h1>tool</h1>
+<input type=”text” id="tweet_id_text" value="" />
+<input type="button" value="calc" onclick="get_info();" />
+<p id="result">result</p>
+
+
+
+
+
+
+<script>
+    function get_date(tweet_id) {
+        //let c = window.document.URL.split("/")[5];
+        let a = BigInt(tweet_id) >> 22n;
+        let b = Number(a + 1288834974657n);
+        let date = new Date(b).toLocaleString('ja-JP');
+        return date;
+        /*
+        let year = date.getFullYear();
+        let month = date.getMonth();
+        let day = date.getDate();
+        let hour = date.getHours();
+        let min = date.getMinutes();
+        let sec = date.getSeconds();
+        
+        return "" + year + month + day;*/
+    }
+
+    function get_info() {
+        let text_box = document.getElementById("tweet_id_text");
+        let text = text_box.value;
+
+        let datetxt = ""
+        let regex = /twitter\.com\/\w+\/status\/(\d+)/;
+        if (regex.test(text)) {
+            let r = text.match(regex)
+            let n = Number(r[1]);
+            datetxt = get_date(n);
+        } else {
+            let r = text.match(/(\d+)/)
+            let n = Number(r[0]);
+            datetxt = get_date(n);
+        }
+
+        const result = document.querySelector('#result');
+        result.textContent = datetxt;
+    }
+</script>

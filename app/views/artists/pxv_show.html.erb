@@ -1,0 +1,21 @@
+<% provide(:title, %!Pxv user 画像一覧 - #{@pxvid}!) %>
+
+<h3 id="pxv_pic_list"><%= @pxvid %></h3>
+
+ PXV:<%= link_to "#{@pxvid}", Pxv::pxv_user_url(@pxvid) %><br />
+
+<% pxv_artist = Artist.find_by(twtid: @pxvid) %>
+<% if pxv_artist != nil %>
+    pxv:<%= pxv_artist.pxvname %> [<%= link_to "show", pxv_artist, target: :_blank, rel: "noopener noreferrer" %>]
+        <%= pxv_artist.get_datetime_string(pxv_artist.last_ul_datetime) %>
+        <%= pxv_artist.status %>
+<% end %>
+<br />
+
+<% @pxv_pic_list.first(3).each do |path| %>
+    <%= link_to image_tag(path, width: '10%', height: '10%', :alt => path), path, target: :_blank, rel: "noopener noreferrer" %>
+    <%= path %>
+    <br />
+<% end %>
+<hr />
+

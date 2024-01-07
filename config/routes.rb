@@ -10,6 +10,8 @@ Rails.application.routes.draw do
   get "search" => "searches#search"
   get '/artists/:id/edit_no_update', to: 'artists#edit_no_update', as: :update_no_update_artist
   get '/artists/stats/index', to: 'artists#stats'
+  get '/artists/pxv/index', to: 'artists#pxv_index'
+  get '/artists/pxv/:pxvid', to: 'artists#pxv_show', as: 'artist_pxv'
   get '/artists/twt/index', to: 'artists#twt_index'
   get '/artists/twt/:twtid', to: 'artists#twt_show', as: 'artist_twt'
   get '/artists/nje/index', to: 'artists#nje_index'

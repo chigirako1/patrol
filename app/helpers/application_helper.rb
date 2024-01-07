@@ -9,9 +9,4 @@ module ApplicationHelper
       "#{page_title} - #{BASE_TITLE}"
     end
   end
-
-  def get_twt_user_url(twtid)
-    %!https://twitter.com/#{twtid}!
-  end
-
 end

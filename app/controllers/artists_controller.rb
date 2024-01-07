@@ -6,6 +6,7 @@ class Params
   attr_accessor :param_file,
     :twt,
     :ai,
+    :exclude_ai,
     :nje,
     :year_since,
     :year_until,
@@ -140,6 +141,12 @@ class Params
       #puts %!@ai=#{@ai}!
     end
 
+    
+    exclude_ai = params[:exclude_ai]
+    if exclude_ai and exclude_ai == "t"
+      @exclude_ai = true
+    end
+
     nje = params[:nje]
     if nje != nil and nje == "true"
       @nje = true
@@ -214,7 +221,8 @@ class ArtistsController < ApplicationController
       else
         datestr = prms.filename
         if prms.param_file == "urllist-twt-only(latest)"
-          path = "public/get illust url_1029.txt"
+          #path = "public/get illust url_1029.txt"
+          path = UrlTxtReader::get_latest_txt
         elsif datestr == ""
           path = ""
         else
@@ -243,6 +251,40 @@ class ArtistsController < ApplicationController
           @unknown_id_list = Artist.get_unknown_id_list(id_list)
         end
       end
+    elsif prms.param_file == "unchecked-pxv"
+      twt_pxvids = Twitter.select('pxvid')
+      pxvids = twt_pxvids.filter_map {|x| x.pxvid if x.pxvid.presence }
+      pxvids.sort.uniq.each {|pxvid|
+        artist = Artist.find_by(pxvid: pxvid)
+        if artist.presence
+        else
+          @unknown_id_list << pxvid
+        end
+      }
+    elsif prms.param_file == "unchecked-twt"
+      pxv_twtids = Artist.select('twtid')
+      twtids = pxv_twtids.filter_map {|x| x.twtid if x.twtid.presence }
+      twtids.sort.uniq.each {|twtid|
+        twt = Twitter.find_by(twtid: twtid)
+        if twt.presence
+        else
+          @misc_urls << twtid
+        end
+      }
+    elsif prms.param_file == "twt-twt"
+      alt_twt_ids = Twitter.select('alt_twtid')
+      twtids_alt = alt_twt_ids.filter_map {|x| x.alt_twtid if x.alt_twtid.presence }
+
+      old_twt_ids = Twitter.select('old_twtid')
+      twtids_old = old_twt_ids.filter_map {|x| x.old_twtid if x.old_twtid.presence }
+
+      [twtids_alt, twtids_old].flatten.sort.uniq.each {|twtid|
+        twt = Twitter.find_by(twtid: twtid)
+        if twt.presence
+        else
+          @misc_urls << Twt::twt_user_url(twtid)
+        end
+      }
     elsif prms.param_file == "pxvids"
       @twt = true
       id_list = Artist.get_id_list_tsv#get_id_list()
@@ -327,6 +369,14 @@ class ArtistsController < ApplicationController
     end
   end
 
+  # GET /artists/pxv/1
+  def pxv_show
+    @pxvid = params[:pxvid]
+
+    @pxv_pic_list = Pxv::get_pathlist(@pxvid)
+  end
+
+
   # GET /artists/twt
   def twt_index
     
@@ -356,8 +406,10 @@ class ArtistsController < ApplicationController
       end
       @twt_urls = Twt::twt_user_list(dir)
     else
-      if filename == ""
+      if filename == "all"
         path = ""
+      elsif filename == "latest"
+        path = UrlTxtReader::get_latest_txt
       else
         path = "public/#{filename}.txt"
       end
@@ -366,7 +418,7 @@ class ArtistsController < ApplicationController
     end
   end
 
-  # GET /artists/twt/1
+  # GET /artists/twt/hoge
   def twt_show
     @twtid = params[:twtid]
 
@@ -517,6 +569,10 @@ class ArtistsController < ApplicationController
   
       if prms.ai
         artists = artists.select {|x| x[:feature] == "AI"}
+      end
+
+      if prms.exclude_ai
+        artists = artists.select {|x| x[:feature] != "AI"}
       end
 
       if prms.nje

@@ -75,7 +75,7 @@
       ],
       include_blank: "選択して下さい" %>
     <input type="button" value="TWT巡回に変更" onclick="set_noupdate(1);" />
-    <input type="button" value="長期更新なしに変更" onclick="set_noupdate(2);" />
+    <input type="button" value="長期更新なしに変更" onclick="set_noupdate(3);" />
     <script>
       function set_noupdate(idx) {
         let status_sel_box = document.getElementById("twitter_status");
@@ -96,6 +96,7 @@
       ],
       include_blank: "選択して下さい" %>
     <input type="button" value="AI" onclick="set_draw_method(2);" />
+    <input type="button" value="手描き" onclick="set_draw_method(1);" />
     <script>
       function set_draw_method(idx) {
         let status_sel_box = document.getElementById("twitter_drawing_method");
@@ -108,15 +109,24 @@
   <div>
     <% pxv = Artist.find_by(twtid: @twitter.twtid) %>
     <%= form.label :pxvid, style: "display: block" %>
-    <%= form.number_field :pxvid %>
+    <% if !(@twitter.pxvid.presence) and params[:pxvid].presence %>
+      <%= form.number_field :pxvid, value: params[:pxvid] %>
+    <% else %>
+      <%= form.number_field :pxvid %>
+    <% end %>
     <%= link_to "#{@twitter.pxvid}", Pxv::pxv_user_url(@twitter.pxvid), target: :_blank, rel: "noopener noreferrer" %>
     <% if pxv.presence %>
       <br />
-      <%= %!pxvid="#{pxv.pxvid}"! if pxv.pxvid != twitter.pxvid %>
-      <br />
+      <% if pxv.pxvid != twitter.pxvid %>
+        <%= %!pxvid="#{pxv.pxvid}"! %>
+        <br />
+      <% end %>
       PXVアクセス:
       [<%= pxv.last_access_datetime_disp %>]
       [<%= pxv.status %>/<%= pxv.feature %>]
+      [<%= link_to "show", artist_path(pxv.id), target: :_blank, rel: "noopener noreferrer" %>]
+    <% elsif %>
+      <% pxv = Artist.find_by(pxvid: @twitter.pxvid) %>
       [<%= link_to "show", artist_path(pxv.id), target: :_blank, rel: "noopener noreferrer" %>]
     <% end %>
   </div>
@@ -165,7 +175,7 @@
 
   <div>
     <%= form.label :別ID, style: "display: block" %>
-    <%= form.text_field :alt_twtid %>
+    @<%= form.text_field :alt_twtid %>
     <%=  %>
     <%= link_to "@#{@twitter.alt_twtid}", Twt::twt_user_url(@twitter.alt_twtid), target: :_blank, rel: "noopener noreferrer" %>
     <% alt_twt = Twitter.find_by(twtid: @twitter.alt_twtid) %>
@@ -176,7 +186,7 @@
 
   <div>
     <%= form.label :旧ID, style: "display: block" %>
-    <%= form.text_field :old_twtid %>
+    @<%= form.text_field :old_twtid %>
     <%= link_to "@#{@twitter.old_twtid}", Twt::twt_user_url(@twitter.old_twtid), target: :_blank, rel: "noopener noreferrer" %>
   </div>
 

@@ -5,6 +5,7 @@ module Pxv
     
     PXV_DIRLIST_PATH = "public/pxv/dirlist.txt"
     PXV_ARCHIVE_DIR_PATH = "public/f_dl/PxDl/"
+    ARCHIVE_PATH = "F:/dPxv"
 
     def self.pxv_user_url(pxvid)
         %!https://www.pixiv.net/users/#{pxvid}!
