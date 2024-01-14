@@ -3,7 +3,9 @@
 module Twt
     extend ActiveSupport::Concern
 
-    TWT_DIRLIST_PATH = "public/twt/dirlist.txt"
+    TWT_CURRENT_DIR_PATH = "public/d_dl/Twitter/"
+    TWT_ARCHIVE_DIR_PATH = "public/twt"
+    TWT_DIRLIST_TXT_PATH = "#{TWT_ARCHIVE_DIR_PATH}/dirlist.txt"
 
     def self.get_twt_tweet_ids_from_txts(twtid)
         txt_sum = UrlTxtReader::get_url_txt_contents("")
@@ -29,11 +31,12 @@ module Twt
         path_list = []
 
         tpath = get_twt_path_from_dirlist(twtid)
-        puts %!tpath=#{tpath}!
+        puts %!current dir path=#{tpath}!
 
         path_list << UrlTxtReader::get_path_list(tpath)
 
-        twt_root = Rails.root.join("public/d_dl/Twitter/").to_s + "*/"
+=begin
+        twt_root = Rails.root.join(TWT_CURRENT_DIR_PATH).to_s + "*/"
         Dir.glob(twt_root).each do |path|
             if twtid == File.basename(path)
                 puts %!path=#{path}!
@@ -41,16 +44,20 @@ module Twt
                 break
             end
         end
+=end
+        twt_root = Rails.root.join().to_s + "*/"
+        dirpath = Util::get_dir_path_by_twtid(twt_root, twtid)
+        path_list << UrlTxtReader::get_path_list(dirpath)
 
         path_list.flatten.sort.reverse
     end
 
     def self.get_twt_path_from_dirlist(twtid)
         path = ""
-        txtpath = Rails.root.join(TWT_DIRLIST_PATH).to_s
+        txtpath = Rails.root.join(TWT_DIRLIST_TXT_PATH).to_s
         File.open(txtpath) { |file|
             while line  = file.gets
-                if line =~ %r!public/twt/./#{twtid}!
+                if line =~ %r!#{TWT_ARCHIVE_DIR_PATH}/./#{twtid}!
                     path << line.chomp
                     break
                 end
@@ -63,12 +70,12 @@ module Twt
         path_list = []
 
         if target_dir == "new"
-            path_list << Util::glob("public/d_dl/Twitter/")
+            path_list << Util::glob(TWT_CURRENT_DIR_PATH)
         elsif target_dir == "old"
-            path_list << Util::glob("public/twt/", "*/*")
+            path_list << Util::glob("#{TWT_ARCHIVE_DIR_PATH}/", "*/*")
         else
-            path_list << Util::glob("public/d_dl/Twitter/")
-            path_list << Util::glob("public/twt/", "*/*")
+            path_list << Util::glob(TWT_CURRENT_DIR_PATH)
+            path_list << Util::glob("#{TWT_ARCHIVE_DIR_PATH}/", "*/*")
         end
 
         artist_list = {}

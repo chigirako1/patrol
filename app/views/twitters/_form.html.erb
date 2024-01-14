@@ -181,6 +181,7 @@
     <% alt_twt = Twitter.find_by(twtid: @twitter.alt_twtid) %>
     <% if alt_twt.presence %>
       [<%= link_to "show", alt_twt, target: :_blank, rel: "noopener noreferrer" %>]
+      |<%= alt_twt.last_access_datetime_disp %>|
     <% end %>
   </div>
 

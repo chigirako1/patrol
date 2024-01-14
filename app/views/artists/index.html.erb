@@ -8,7 +8,7 @@
 <a href="#twt_url_list">twt_url_list</a>
 
 <% @artists_group.each do |key, artists| %>
-  <h2><%= "#{key}(#{artists.size})[#{@begin_no + 1}..#{[(@begin_no.to_i + @size_per_table), artists.size].min }]" %></h2>
+  <h2><%= "#{key}(全#{artists.size}件)[#{@begin_no + 1}..#{[(@begin_no.to_i + @size_per_table), artists.size].min }]" %></h2>
   <table border="1" rules="all">
     <tr>
       <th>id</th>
@@ -121,11 +121,17 @@
 
 <!-- 未知のPXV ID -->
 <% if @unknown_id_list.size != 0 %>
+  <% dirlist = Pxv::stock_dir_list %>
   <h2>unknown pixiv id list(<%= @unknown_id_list.size %>)</h2>
-  <% @unknown_id_list.each do |pxvid| %>
+  <% @unknown_id_list.each.with_index(1) do |pxvid, idx| %>
+    <%= idx %>.
     <% pxvurl = Pxv::pxv_user_url(pxvid) %>
     <%= link_to pxvid, pxvurl, target: :_blank, rel: "noopener noreferrer" %>
     (<%= link_to "show", artist_pxv_path(pxvid), target: :_blank, rel: "noopener noreferrer" %>)
+    <% user_name = Pxv::user_name(dirlist, pxvid) %>
+    <% if user_name.presence %>
+      <%= user_name %>
+    <% end %>
     <br />
   <% end %>
 <% end %>
@@ -287,6 +293,7 @@
           ['退会'],
           ['停止'], 
           ['長期更新なし'], 
+          ['「長期更新なし」を除外'], 
           ['作品ゼロ'], 
           ['一部消えた'], 
           ['取得途中'], 
@@ -336,13 +343,16 @@
     <%= f.label :TWtチェック %>
     <%= f.text_field :twt_chk, :value => params[:twt_chk] %>
     <br />
-    <%= f.check_box 'thumbnail', {checked: params[:thumbnail] == "true"}, true, false %>
+    <%= f.check_box :thumbnail, {checked: params[:thumbnail] == "true"}, true, false %>
     <%= f.label :サムネイル表示 %>
     <br />
-    <%= f.check_box 'ai', {checked: params[:ai] == "true"}, true, false %>
+    <%= f.check_box :ai, {checked: params[:ai] == "true"}, true, false %>
     <%= f.label :AI %>
     <br />
-    <%= f.check_box 'twt', {checked: params[:twt] == "true"}, true, false %>
+    <%= f.check_box :exclude_ai, {checked: params[:exclude_ai] == "true"}, true, false %>
+    <%= f.label :AI除外 %>
+    <br />
+    <%= f.check_box :twt, {checked: params[:twt] == "true"}, true, false %>
     <%= f.label :TWT %>
     <br />
     <%= f.check_box :nje, {checked: params[:nje] == "true"}, true, false %>

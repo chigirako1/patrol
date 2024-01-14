@@ -7,19 +7,6 @@ module Nje
     def self.nje_user_list
         path_list = []
 
-=begin
-        nje_root_path = Rails.root.join("public/d_dl/Nijie/").to_s + "*/"
-        puts %!"#{nje_root_path}"!
-        Dir.glob(nje_root_path).each do |path|
-            path_list << path 
-        end
-
-        nje_root_path = Rails.root.join("public/nje/nje/").to_s + "*/"
-        puts %!"#{nje_root_path}"!
-        Dir.glob(nje_root_path).each do |path|
-            path_list << path 
-        end
-=end
         path_list << Util::glob("public/d_dl/Nijie/")
         path_list << Util::glob("public/nje/nje/")
 
@@ -39,7 +26,8 @@ module Nje
                 puts %!invalid format:"#{path}" (#{__FILE__}:#{__LINE__})!
             end
         end
-        artist_list.sort.to_h
+        #artist_list.sort.to_h
+        artist_list.sort_by {|k, v| v.nje_name.downcase}.to_h
     end
 
     def self.update_db_by_fs()

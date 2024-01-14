@@ -4,7 +4,6 @@
     <%= %!#{@nje_artist.nje_name}! %>
     (<%= link_to @nje_artist.nje_id, Nje::nje_member_url(@nje_artist.nje_id.to_s), target: :_blank, rel: "noopener noreferrer" %>)
 </h3>
-
 <hr />
 
 <!-- -->
@@ -23,7 +22,8 @@
 <hr />
 
 <!-- -->
-<% @nje_artist.nje_view_list_ex.each do |key, artwork| %>
+<% view_list = @nje_artist.nje_view_list_ex %>
+<% view_list.each do |key, artwork| %>
     <% path = artwork.path_list[0] %>
     (<%= link_to artwork.art_id, Nje::nje_artwork_url(artwork.art_id.to_s), target: :_blank, rel: "noopener noreferrer" %>) 
     <%= %!#{artwork.date} #{artwork.title} (#{path})! %>
@@ -31,7 +31,7 @@
 <% end%>
 
 <!-- 画像 -->
-<% @nje_artist.nje_view_list_ex.each do |key, artwork| %>
+<% view_list.each do |key, artwork| %>
     <% path = artwork.path_list[0] %>
     <%= link_to image_tag(path, width: '10%', height: '10%', :alt => path), path, target: :_blank, rel: "noopener noreferrer" %>
 <% end%>

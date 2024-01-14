@@ -4,8 +4,9 @@ module Pxv
     extend ActiveSupport::Concern
     
     PXV_DIRLIST_PATH = "public/pxv/dirlist.txt"
-    PXV_ARCHIVE_DIR_PATH = "public/f_dl/PxDl/"
-    ARCHIVE_PATH = "F:/dPxv"
+    PXV_WORK_DIR_PATH = "public/f_dl/PxDl/"
+    PXV_WORK_TMP_DIR_PATH = "public/f_dl/PxDl-/"
+    ARCHIVE_PATH = "D:/r18/dlPic"
 
     def self.pxv_user_url(pxvid)
         %!https://www.pixiv.net/users/#{pxvid}!
@@ -33,12 +34,52 @@ module Pxv
         rpath
     end
 
+    def self.stock_dir_list()
+        current_work_dir_root = Rails.root.join(PXV_WORK_DIR_PATH).to_s + "*/"
+        dir_list = Dir.glob(current_work_dir_root)
+
+        if Dir.exist?(PXV_WORK_TMP_DIR_PATH)
+            dir_list_tmp = Util::glob(PXV_WORK_TMP_DIR_PATH, "*/*/*")
+        else
+            dir_list_tmp = []
+        end
+
+        [dir_list, dir_list_tmp].flatten
+    end
+
+    def self.current_dir_pxvid_list
+        idlist = []
+
+        stock_dir_list.each do |path|
+            if File.basename(path) =~ /\((\d+)\)-?$/
+                id = $1
+                idlist << id.to_i
+                #puts %!#{path},#{id}!
+            end
+        end
+        idlist
+    end
+
+    def self.pxvid_exist?(path, pxvid)
+        File.basename(path) =~ /\(#{pxvid}\)/
+    end
+
+    def self.user_name(pathlist, pxvid)
+        pathlist.each do |path|
+            if File.basename(path) =~ /(.*?)\(#{pxvid}\)$/
+                #puts %!#{path}:#{pxvid}!
+                return $1
+            end
+        end
+        return ""
+    end
+
     def self.get_pathlist(pxvid)
         path_list = []
 
-        current_work_dir_root = Rails.root.join(PXV_ARCHIVE_DIR_PATH).to_s + "*/"
-        Dir.glob(current_work_dir_root).each do |path|
-            if File.basename(path) =~ /\(#{pxvid}\)/
+        dir_list = stock_dir_list()
+        dir_list.each do |path|
+            if pxvid_exist?(path, pxvid)
                 puts %!path=#{path}!
                 path_list << UrlTxtReader::get_path_list(path)
                 break

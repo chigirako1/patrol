@@ -20,15 +20,156 @@
 </ul>
 
 
-<h1>tool</h1>
+<h2>検索</h2>
+
+<div class="view_form">
+  <%= form_with url: artists_path, local: true, method: :get do |f| %>
+    <%= f.label :file, style: "display: block" %>
+    <%= f.select :file, 
+      options_for_select(
+        [
+          ['検索'],
+        ],
+        selected: '検索'
+      ) %>
+      <br />
+    <hr />
+    
+    <%= f.submit("検索", name: nil, class: 'subtmi-btn') %>
+    <hr />
+    
+    検索：<%= f.text_field :search_word %>
+    <%= f.select :match_method, options_for_select([["(自動判断)","auto"], ["を含む","partial_match"], ["完全一致","perfect_match"], ["から始まる","begin_match"],  ["で終わる","end_match"]]) %>
+    <%= f.select :target_col, options_for_select([['(自動判断)'], ['pxvname'], ['pxvid']]) %>
+    <br />
+    <hr />
+
+    <%= f.label :page_title %>
+    <%= f.text_field :page_title, :value => params[:page_title] %>
+    <br />
+    <%= f.label :sort_by, style: "display: block" %>
+    <%= f.select :sort_by, 
+      options_for_select(
+        [
+          ['id'], 
+          ['point'], 
+          ['-point'], 
+          ['priority'], 
+          ['filenum'], 
+          ['last_ul_date'],
+          ['pxvname'],
+          ['twtid'],
+          ['予測▽'],
+          ['予測△'],
+          ['access_date_X_last_ul_datetime'], 
+          ['access_date_X_recent_filenum'], 
+          ['access_date_X_recent_filenum_X_ul'], 
+          ['access_date_X_pxvname_X_recent_filenum'],
+          [''],
+        ],
+        selected: params[:sort_by] 
+      ) %>
+    <br />
+    <%= f.label :group_by, style: "display: block" %>
+    <%= f.select :group_by, 
+      options_for_select(
+        [
+          ['none'],
+          ['filenum'], 
+          ['last_ul_datetime'], 
+          ['last_ul_datetime_X_filenum'], 
+          ['last_ul_datetime_ym'], 
+          ['recent_filenum'],
+          ['pxvname_fl'],
+          ['pxvname'],
+          ['status'],
+          ['r18'],
+          ['priority'],
+          ['予測'],
+          ['rating'],
+        ],
+        selected: params[:group_by] 
+      ) %>
+    <br />
+    <%= f.label :status, style: "display: block" %>
+    <%= f.select :status, 
+      options_for_select(
+        [
+          ['(全て)'], 
+          [''], 
+          ['退会'],
+          ['停止'], 
+          ['長期更新なし'], 
+          ['「長期更新なし」を除外'], 
+          ['作品ゼロ'], 
+          ['一部消えた'], 
+          ['取得途中'], 
+          ['最新から取得し直し中'], 
+          ['彼岸'], 
+        ],
+        selected: params[:status] 
+      ) %>
+    <br />
+    <%= f.label :r18, style: "display: block" %>
+    <%= f.select :r18, 
+      options_for_select(
+        [
+          [''],
+          ['R18'], 
+          ['R15'], 
+          ['R12'],
+          ['R36'],
+        ],
+        selected: params[:r18] 
+      ) %>
+    <br />
+    <%= f.label :ポイント %>
+    <%= f.number_field :point, :value => params[:point] %>以上
+    <br />
+    <%= f.label :予測 %>
+    <%= f.number_field :prediction, :value => params[:prediction] %>以上
+    <br />
+    <%= f.label :評価 %>
+    <%= f.number_field :rating, :value => params[:rating] %>以上
+    <br />
+    <%= f.label :ファイル数gt %>
+    <%= f.number_field :amount_gt, :value => params[:amount_gt] %>以上
+    <br />
+    <%= f.label :ファイル数lt %>
+    <%= f.number_field :amount_lt, :value => params[:amount_lt] %>以下
+    <br />
+    <%= f.label :最終アクセス日 %>
+    <%= f.number_field :last_access_datetime, :value => params[:last_access_datetime] %>以上経過
+    <br />
+    <%= f.label :表示数 %>
+    <%= f.number_field :display_number, :value => params[:display_number] %>
+    <br />
+    <%= f.label :対象年 %>
+    <%= f.number_field :year, :value => params[:year] %>
+    <br />
+    <%= f.label :TWtチェック %>
+    <%= f.text_field :twt_chk, :value => params[:twt_chk] %>
+    <br />
+    <%= f.check_box 'thumbnail', {checked: params[:thumbnail] == "true"}, true, false %>
+    <%= f.label :サムネイル表示 %>
+    <br />
+    <%= f.check_box 'ai', {checked: params[:ai] == "true"}, true, false %>
+    <%= f.label :AI %>
+    <br />
+    <%= f.check_box 'twt', {checked: params[:twt] == "true"}, true, false %>
+    <%= f.label :TWT %>
+    <br />
+    <%= f.check_box :nje, {checked: params[:nje] == "true"}, true, false %>
+    <%= f.label :nje %>
+    <br />
+  <% end %>
+</div>
+
+
+<h2>計算</h2>
 <input type=”text” id="tweet_id_text" value="" />
 <input type="button" value="calc" onclick="get_info();" />
-<p id="result">result</p>
-
-
-
-
-
+<p id="calc_result">result</p>
 
 <script>
     function get_date(tweet_id) {
@@ -64,7 +205,7 @@
             datetxt = get_date(n);
         }
 
-        const result = document.querySelector('#result');
+        const result = document.querySelector('#calc_result');
         result.textContent = datetxt;
     }
 </script>

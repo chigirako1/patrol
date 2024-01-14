@@ -143,7 +143,7 @@ class Params
 
     
     exclude_ai = params[:exclude_ai]
-    if exclude_ai and exclude_ai == "t"
+    if exclude_ai and exclude_ai == "true"
       @exclude_ai = true
     end
 
@@ -542,8 +542,10 @@ class ArtistsController < ApplicationController
     # select
     def index_select(artists, prms)
 
-      if prms.point != 0
+      if prms.point > 0
         artists = artists.select {|x| x.point >= prms.point}
+      elsif prms.point < 0
+        artists = artists.select {|x| x.point < 0}
       end
 
       if prms.prediction != 0
@@ -580,7 +582,10 @@ class ArtistsController < ApplicationController
         puts %!nje="#{prms.nje}"!
       end
 
-        if prms.status != "(全て)"
+      if prms.status == "(全て)"
+      elsif prms.status == "「長期更新なし」を除外"
+        artists = artists.select {|x| x.status != "長期更新なし"}
+      else
         artists = artists.select {|x| x.status == prms.status}
         puts %!status="#{prms.status}"!
       end
@@ -661,7 +666,8 @@ class ArtistsController < ApplicationController
       when "last_ul_datetime_ym"
         artists_group = artists.group_by {|x| x[:last_ul_datetime].strftime("%Y-%m")}.sort.reverse.to_h
       when "filenum"
-        artists_group = artists.group_by {|x| (x[:filenum] / 100 * 100)}.sort.reverse.to_h
+        #artists_group = artists.group_by {|x| (x[:filenum] / 100 * 100)}.sort.reverse.to_h
+        artists_group = artists.group_by {|x| (x[:filenum] / 50 * 50)}.sort.reverse.to_h
       when "recent_filenum"
         artists_group = artists.group_by {|x| (x[:recent_filenum] / 10 * 10)}.sort.reverse.to_h
       when "pxvname_fl"

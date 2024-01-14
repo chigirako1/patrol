@@ -88,17 +88,6 @@ class Artist < ApplicationRecord
     def self.get_url_list_from_all_txt
         misc_urls = []
 
-=begin
-        path_list = []
-        base_path = Rails.root.join("public").to_s
-        puts %!basepath="#{base_path}"!
-        Dir.glob(base_path + "/*") do |path|
-            puts %!path="#{path}"!
-            if path =~ /get illust url_\d+\.txt/
-                path_list << path
-            end
-        end
-=end
         path_list = UrlTxtReader::txt_file_list
 
         path_list.each do |filepath|
@@ -114,12 +103,18 @@ class Artist < ApplicationRecord
 
     def self.get_unknown_id_list(id_list)
         unknown_id_list = []
+
         artists_with_pxvid = Artist.select('pxvid')
-        pxvids = artists_with_pxvid.map {|x| x.pxvid}
-        #puts pxvids
+        db_pxv_ids = artists_with_pxvid.map {|x| x.pxvid}
+
+        curr_dir_id_list = Pxv::current_dir_pxvid_list
+
+        known_ids = [db_pxv_ids, curr_dir_id_list].flatten
+
         id_list.each {|pxvid|
-            unless pxvids.include? pxvid
+            unless known_ids.include? pxvid
               unknown_id_list << pxvid
+              #puts %!unknown:#{pxvid}!
             end
         }
         unknown_id_list.sort.uniq

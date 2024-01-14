@@ -56,6 +56,9 @@ module UrlTxtReader
     end
 
     def get_datetime_string(datetime, day_disp = false)
+        #if datetime.class.name == "String"
+        #    return "string"
+        #end
         now = Time.zone.now
         if datetime.year == now.year
           ym_format = "%m月%d日"
@@ -124,6 +127,12 @@ module UrlTxtReader
         tmp_list = []
 
         if tpath == ""
+            puts %!tpath="#{tpath}"!
+            return tmp_list
+        end
+
+        unless Dir.exist?(tpath)
+            puts %!tpath="#{tpath}"!
             return tmp_list
         end
 

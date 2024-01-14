@@ -25,7 +25,8 @@ class Twitter < ApplicationRecord
         if match_method == "auto"
             case target_col
             when "twitter_twtid"
-                match_method = "perfect_match"
+                #match_method = "perfect_match"
+                match_method = "partial_match"
             else
                 match_method = "partial_match"
             end
