@@ -6,7 +6,7 @@ textarea {
 </style>
 
 <div id="<%= dom_id twitter %>">
-    <% show_pic_num = 8 %>
+    <% show_pic_num = 5 %>
     <% if params[:picn] == "" %>
     <% elsif params[:picn] == "all" %>
         <% show_pic_num = @twt_pic_path_list.size %>
@@ -61,6 +61,7 @@ textarea {
             <br />
         <% end %>
     <% end %>
+    <br />
 
     全画像数：<%= twt_pic_list.size %>
     <% if twt_pic_list.size > show_pic_num %>
@@ -72,7 +73,7 @@ textarea {
     <% pl = twt_pic_list.map {|x| x[1]} %>
     <% freq1 = Twt::calc_freq(pl) %>
     <% freq2 = Twt::calc_freq(pl, 14) %>
-    更新頻度：<%= freq1 %>/<%= Twt::CALC_FREQ_UNIT %>日
+    更新頻度(直近)：<%= freq1 %>("<%= freq2 %>")/<%= Twt::CALC_FREQ_UNIT %>日
     <% if twt_acnt != nil and twt_acnt.update_frequency != nil %>
         <% current_val_freq = twt_acnt.update_frequency %>
         <%= %!(現在の設定値：#{current_val_freq})! %>
@@ -82,8 +83,6 @@ textarea {
     <% else %>
         ※値が設定されていません※
     <% end %>
-    <br />
-    直近の更新頻度："<%= freq2 %>"
     <br />
 
     <!-- URLのテキストファイルに含まれる画像が存在するかチェック -->

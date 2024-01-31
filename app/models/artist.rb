@@ -103,21 +103,40 @@ class Artist < ApplicationRecord
 
     def self.get_unknown_id_list(id_list)
         unknown_id_list = []
+        known_ids = known_id_list
 
+        id_list.sort.uniq.each {|pxvid|
+            unless known_ids.include? pxvid
+              unknown_id_list << pxvid
+              #puts %!unknown:#{pxvid}!
+            end
+        }
+
+        cnt_hash = id_list.group_by(&:itself).map{ |key, value| [key, value.count] }.to_h
+
+=begin
+        #puts cnt_hash
+        cnt_hash.each do |k,v|
+            puts %!#{k}=#{v}! if v > 1
+        end
+
+        unknown_id_list.each do |x|
+            puts %!#{x}=#{cnt_hash[x]}! if cnt_hash[x] > 1
+        end
+=end
+
+        #unknown_id_list.sort.uniq
+        unknown_id_list.sort_by {|x| cnt_hash[x] }
+    end
+
+    def self.known_id_list
         artists_with_pxvid = Artist.select('pxvid')
         db_pxv_ids = artists_with_pxvid.map {|x| x.pxvid}
 
         curr_dir_id_list = Pxv::current_dir_pxvid_list
 
         known_ids = [db_pxv_ids, curr_dir_id_list].flatten
-
-        id_list.each {|pxvid|
-            unless known_ids.include? pxvid
-              unknown_id_list << pxvid
-              #puts %!unknown:#{pxvid}!
-            end
-        }
-        unknown_id_list.sort.uniq
+        known_ids
     end
 
     def self.get_twt_url(url)
@@ -278,7 +297,7 @@ class Artist < ApplicationRecord
         stats
     end
 
-    def artwork_list(path_list)
+    def self.artwork_list(path_list)
         artworks = {}
 
         #puts path_list.size

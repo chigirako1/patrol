@@ -142,16 +142,18 @@
       ["停止", "停止"],
       ["長期更新なし★", "長期更新なし"], 
       ["半年以上更新なし", "半年以上更新なし"], 
+      ["1ヶ月以上更新なし", "1ヶ月以上更新なし"], 
       ["別アカウントに移行", "別アカウントに移行"],
       ["作品ゼロ", "作品ゼロ"], ["一部消えた", "一部消えた"], ["ほぼ消えた", "ほぼ消えた"], 
       ["取得途中", "取得途中"], ["最新から取得し直し中", "最新から取得し直し中"], ["彼岸", "彼岸"]],
       include_blank: "選択して下さい" %>
-    <input type="button" value="長期更新なしに変更" onclick="set_noupdate();" />
+    <input type="button" value="長期更新なしに変更" onclick="set_status(3);" />
+    <input type="button" value="半年以上更新なしに変更" onclick="set_status(4);" />
     <script>
-      function set_noupdate() {
+      function set_status(idx) {
         let status_sel_box = document.getElementById("artist_status");
         let options = status_sel_box.options;
-        options[3].selected = true;
+        options[idx].selected = true;
       }
     </script>
   </div>

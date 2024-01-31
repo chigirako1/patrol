@@ -33,17 +33,26 @@ module ArtistsHelper
         end
         #tag += %!#{artist.rating}<br />[#{artist.priority}]!
         tag += %!#{artist.rating}<br />!
+        if artist.r18.presence
+            tag += %!#{artist.r18}<br />!
+        end
+                
         tag += %!</td>!
         tag.html_safe
     end
 
-    def pic_path_tag(pxvid, no_of_disp)
+    def pic_path_tag(pxvid, no_of_disp, scale='15%')
         tag = ""
         pathlist = Pxv::get_pathlist(pxvid)
-        pathlist.first(no_of_disp).each do |path|
-            #tag += image_tag path, width: '15%', height: '15%'
-            tag += link_to image_tag(path, width: '15%', height: '15%'), path, target: :_blank, rel: "noopener noreferrer"
+        work_list = Artist.artwork_list(pathlist)
+        work_list.first(no_of_disp).each do |artwork_id, data|
+            path = data[0]
+            tag += link_to(image_tag(path, width: scale, height: scale), path, target: :_blank, rel: "noopener noreferrer")
         end
+
+        #pathlist.first(no_of_disp).each do |path|
+            #tag += link_to(image_tag(path, width: scale, height: scale), path, target: :_blank, rel: "noopener noreferrer")
+        #end
         tag.html_safe
     end
 

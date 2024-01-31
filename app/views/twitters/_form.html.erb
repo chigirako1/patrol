@@ -11,19 +11,32 @@
     </div>
   <% end %>
 
+  <% if @twitter.twtid %>
+    <h3>TWTを開く→<%= link_to %!@#{@twitter.twtid}!, Twt::twt_user_url(@twitter.twtid), target: :_blank, rel: "noopener noreferrer" %></h3>
+  <% end %>
   <div>
     <%= form.label :twtid, style: "display: block" %>
     <% if params[:twtid].presence %>
-      @<%= form.text_field :twtid, value: params[:twtid] %>
+      <% param_twtid = params[:twtid] %>
+      @<%= form.text_field :twtid, value: param_twtid %>
+      <h3>TWTを開く→<%= link_to %!@#{param_twtid}!, Twt::twt_user_url(param_twtid), target: :_blank, rel: "noopener noreferrer" %></h3>
     <% else %>
       @<%= form.text_field :twtid %>
     <% end %>
-    <%= link_to %!@#{twitter.twtid}!, Twt::twt_user_url(@twitter.twtid), target: :_blank, rel: "noopener noreferrer" %>
+    
   </div>
 
   <div>
+    <% if twitter.twtname.presence %>
+      <% twtname = twitter.twtname %>
+    <% elsif params[:twtname].presence %>
+      <% twtname = params[:twtname] %>
+    <% else %>
+      <% twtname = "" %>
+    <% end %>
+
     <%= form.label :twtname, style: "display: block" %>
-    <%= form.text_field :twtname %>
+    <%= form.text_field :twtname, value: twtname %>
   </div>
 
   <div>
@@ -59,6 +72,15 @@
   </div>
 
   <div>
+    <% if twitter.status.presence %>
+      <% status_value = twitter.status %>
+    <% elsif params[:status].presence %>
+      <% status_value = params[:status] %>
+    <% else %>
+      <% status_value = "" %>
+    <% end %>
+    <% puts %!#{status_value}/#{params[:status]}/#{twitter.status}!% %>
+
     <%= form.label :状態, style: "display: block" %>
     <%= form.select :status,
       [
@@ -68,11 +90,13 @@
         ["TWT巡回不要(PXVチェック)", "TWT巡回不要(PXVチェック)"],
         ["最近更新してない？", "最近更新してない？"], 
         ["アカウント削除", "削除"],
+        ["存在しない", "存在しない"],
         ["凍結", "凍結"],
         ["非公開アカウント", "非公開アカウント"],
-        ["別アカウントに移行", "別アカウントに移行"],
+        ["別アカウントに移行（存在はするが更新していない？）", "別アカウントに移行"],
         ["アカウントID変更", "アカウントID変更"],
       ],
+      { selected: status_value },
       include_blank: "選択して下さい" %>
     <input type="button" value="TWT巡回に変更" onclick="set_noupdate(1);" />
     <input type="button" value="長期更新なしに変更" onclick="set_noupdate(3);" />
@@ -109,12 +133,19 @@
   <div>
     <% pxv = Artist.find_by(twtid: @twitter.twtid) %>
     <%= form.label :pxvid, style: "display: block" %>
-    <% if !(@twitter.pxvid.presence) and params[:pxvid].presence %>
-      <%= form.number_field :pxvid, value: params[:pxvid] %>
-    <% else %>
+    <% if @twitter.pxvid.presence %>
       <%= form.number_field :pxvid %>
+      <%= link_to "#{@twitter.pxvid}", Pxv::pxv_user_url(@twitter.pxvid), target: :_blank, rel: "noopener noreferrer" %>
+    <% else %>
+      <% if params[:pxvid].presence %>
+        <%= form.number_field :pxvid, value: params[:pxvid] %>
+      <% elsif pxv.presence %>
+        <%= form.number_field :pxvid, value: pxv.pxvid %>
+      <% else %>
+        <%= form.number_field :pxvid %>
+      <% end %>
     <% end %>
-    <%= link_to "#{@twitter.pxvid}", Pxv::pxv_user_url(@twitter.pxvid), target: :_blank, rel: "noopener noreferrer" %>
+
     <% if pxv.presence %>
       <br />
       <% if pxv.pxvid != twitter.pxvid %>
@@ -122,12 +153,18 @@
         <br />
       <% end %>
       PXVアクセス:
+      【<%= pxv.rating %>】
       [<%= pxv.last_access_datetime_disp %>]
-      [<%= pxv.status %>/<%= pxv.feature %>]
+      [<%= pxv.status %>|<%= pxv.feature %>]
       [<%= link_to "show", artist_path(pxv.id), target: :_blank, rel: "noopener noreferrer" %>]
-    <% elsif %>
-      <% pxv = Artist.find_by(pxvid: @twitter.pxvid) %>
-      [<%= link_to "show", artist_path(pxv.id), target: :_blank, rel: "noopener noreferrer" %>]
+    <% else %>
+      <% pxv2 = Artist.find_by(pxvid: @twitter.pxvid) %>
+      <% if pxv2.presence %>
+        【<%= pxv2.rating %>】
+        [<%= pxv2.last_access_datetime_disp %>]
+        [<%= pxv2.status %>|<%= pxv2.feature %>]
+        [<%= link_to "show", artist_path(pxv2.id), target: :_blank, rel: "noopener noreferrer" %>]
+      <% end %>
     <% end %>
   </div>
 
@@ -177,9 +214,10 @@
     <%= form.label :別ID, style: "display: block" %>
     @<%= form.text_field :alt_twtid %>
     <%=  %>
-    <%= link_to "@#{@twitter.alt_twtid}", Twt::twt_user_url(@twitter.alt_twtid), target: :_blank, rel: "noopener noreferrer" %>
+    <%= link_to "@#{@twitter.alt_twtid}", Twt::twt_user_url(@twitter.alt_twtid), target: :_blank, rel: "noopener noreferrer" if @twitter.alt_twtid.presence %>
     <% alt_twt = Twitter.find_by(twtid: @twitter.alt_twtid) %>
     <% if alt_twt.presence %>
+      【<%= alt_twt.rating %>】
       [<%= link_to "show", alt_twt, target: :_blank, rel: "noopener noreferrer" %>]
       |<%= alt_twt.last_access_datetime_disp %>|
     <% end %>
@@ -188,7 +226,13 @@
   <div>
     <%= form.label :旧ID, style: "display: block" %>
     @<%= form.text_field :old_twtid %>
-    <%= link_to "@#{@twitter.old_twtid}", Twt::twt_user_url(@twitter.old_twtid), target: :_blank, rel: "noopener noreferrer" %>
+    <%= link_to "@#{@twitter.old_twtid}", Twt::twt_user_url(@twitter.old_twtid), target: :_blank, rel: "noopener noreferrer" if @twitter.old_twtid.presence %>
+    <% old_twt = Twitter.find_by(twtid: @twitter.old_twtid) %>
+    <% if old_twt.presence %>
+      【<%= old_twt.rating %>】
+      [<%= link_to "show", old_twt, target: :_blank, rel: "noopener noreferrer" %>]
+      |<%= old_twt.last_access_datetime_disp %>|
+    <% end %>
   </div>
 
   <div>
@@ -226,7 +270,11 @@
       let elem = document.getElementById(elem_id);
       const now = new Date();
       now.setMinutes(now.getMinutes() - now.getTimezoneOffset());
-      elem.value = now.toISOString().slice(0, -8);
+      let isostr = now.toISOString();
+      //2024-01-31T13:54:35.371Z
+      //                   54321
+      let val = isostr.slice(0, -5);
+      elem.value = val;
     }
   </script>
 

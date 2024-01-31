@@ -414,7 +414,7 @@ class ArtistsController < ApplicationController
         path = "public/#{filename}.txt"
       end
       puts "path='#{path}'"
-      id_list, @twt_urls, @misc_urls = UrlTxtReader::get_url_list(path)
+      @pxv_id_list, @twt_urls, @misc_urls = UrlTxtReader::get_url_list(path)
     end
   end
 
@@ -584,7 +584,14 @@ class ArtistsController < ApplicationController
 
       if prms.status == "(全て)"
       elsif prms.status == "「長期更新なし」を除外"
-        artists = artists.select {|x| x.status != "長期更新なし"}
+        excl_list = [
+          "長期更新なし",
+          "半年以上更新なし",
+          "退会",
+          "停止",
+          "作品ゼロ",
+        ]
+        artists = artists.select {|x| excl_list.include?(x.status) == false}
       else
         artists = artists.select {|x| x.status == prms.status}
         puts %!status="#{prms.status}"!
@@ -639,7 +646,7 @@ class ArtistsController < ApplicationController
       when "予測▽"
         artists = artists.sort_by {|x| [-x.prediction_up_cnt(true), x[:recent_filenum], -x[:filenum], x[:last_ul_datetime]]}
       when "予測△"
-        artists = artists.sort_by {|x| [x.prediction_up_cnt(true), x[:recent_filenum], -x[:filenum], x[:last_ul_datetime]]}
+        artists = artists.sort_by {|x| [x.prediction_up_cnt(true), x[:last_ul_datetime], x[:recent_filenum], -x[:filenum]]}
       when "last_ul_date"
         artists = artists.sort_by {|x| [x.last_ul_datetime]}
       when "twtid"
@@ -655,6 +662,20 @@ class ArtistsController < ApplicationController
       artists
     end
 
+    def filenum_g(filenum)
+      f = 0
+      if filenum >= 300
+        f = filenum / 100 * 100
+      elsif filenum >= 100
+         f = filenum / 50 * 50
+      elsif filenum >= 50
+        f = filenum / 25 * 25
+      else
+        f = filenum / 10 * 10
+      end
+      f
+    end
+
     # group_by
     def index_group_by(artists, prms)
       artists_group = {}
@@ -666,10 +687,9 @@ class ArtistsController < ApplicationController
       when "last_ul_datetime_ym"
         artists_group = artists.group_by {|x| x[:last_ul_datetime].strftime("%Y-%m")}.sort.reverse.to_h
       when "filenum"
-        #artists_group = artists.group_by {|x| (x[:filenum] / 100 * 100)}.sort.reverse.to_h
-        artists_group = artists.group_by {|x| (x[:filenum] / 50 * 50)}.sort.reverse.to_h
+        artists_group = artists.group_by {|x| filenum_g(x.filenum)}.sort.reverse.to_h
       when "recent_filenum"
-        artists_group = artists.group_by {|x| (x[:recent_filenum] / 10 * 10)}.sort.reverse.to_h
+        artists_group = artists.group_by {|x| (x.recent_filenum / 10 * 10)}.sort.reverse.to_h
       when "pxvname_fl"
         artists_group = artists.group_by {|x| x.select_group(x[:pxvname])}.sort.to_h
       when "pxvname"
@@ -681,9 +701,11 @@ class ArtistsController < ApplicationController
       when "priority"
         artists_group = artists.group_by {|x| -x.priority}.sort.to_h
       when "予測"
-        artists_group = artists.group_by {|x| x.prediction_up_cnt(true)}.sort.to_h
+        artists_group = artists.group_by {|x| x.prediction_up_cnt(true) / 10 * 10 }.sort.to_h
       when "rating"
         artists_group = artists.group_by {|x| -x.rating}.sort.to_h
+      when "評価+年齢制限"
+        artists_group = artists.group_by {|x| [-x.rating, x.r18]}.sort.to_h
       when "none"
         artists_group["none"] = artists
       else

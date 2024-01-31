@@ -1,4 +1,5 @@
 <% provide(:title, %!twt 一覧  #{params[:title]}/file:#{params[:filename]}/dir:#{params[:dir]}!) %>
+
 <h2 id="twt_url_list">twt url list (<%= @twt_urls.size %>)</h2>
 
 <% @twt_urls.each_with_index do |(key, url_list), idx| %>
@@ -24,6 +25,11 @@
     <% if @hide_target.include?("AI") and twt_account != nil and twt_account.drawing_method == "AI" %>
         <% next %>
     <% end %>
+
+    <% if twt_account and twt_account.last_access_datetime_p(@hide_day) %>
+        <% next %>
+    <% end %>
+
     <h3>
         <%= idx %>:
         <%#= link_to "@" + key, "https://twitter.com/#{key}", target: :_blank, rel: "noopener noreferrer" %>
@@ -49,9 +55,6 @@
         <% if pxv_a != nil %>
             | twt-pxv:<%= pxv_a.pxvname %> [<%= link_to "show", pxv_a, target: :_blank, rel: "noopener noreferrer" %>]
             <br />
-        <% end %>
-        <% if twt_account.last_access_datetime_p(@hide_day) %>
-            <% next %>
         <% end %>
     <% end %>
     <% if pxv_artist != nil %>
@@ -85,5 +88,23 @@
         <% end %>
     <% else %>
         
+    <% end %>
+<% end %>
+
+<% if @pxv_id_list.presence %>
+    <h2>pxv id list (<%= @pxv_id_list.size %>)</h2>
+    <% dirlist = Pxv::stock_dir_list %>
+    <% @pxv_id_list.sort.each_with_index do |pxvid, idx| %>
+        <%= idx %>.
+        <% pxvurl = Pxv::pxv_user_url(pxvid) %>
+        <%= link_to pxvid, pxvurl, target: :_blank, rel: "noopener noreferrer" %>
+        (<%= link_to "show", artist_pxv_path(pxvid), target: :_blank, rel: "noopener noreferrer" %>)
+        <% user_name = Pxv::user_name(dirlist, pxvid) %>
+        <% if user_name.presence %>
+            <%= user_name %>
+            <% p = Artist.find_by(pxvid: pxvid) %>
+            <%= p.last_access_datetime_disp if p %>
+        <% end %>
+        <br />
     <% end %>
 <% end %>

@@ -29,7 +29,7 @@
     <% if @show_mode == "stat" %>
         <% year = 0 %>
         <% month = 0 %>
-        <% list = artist.artwork_list(@path_list) %>
+        <% list = Artist.artwork_list(@path_list) %>
         <% urllist = [] %>
 
         <% list.each.with_index(1) do |(artwork_id, data), idx| %>

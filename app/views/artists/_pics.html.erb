@@ -26,7 +26,7 @@
     <% end %>
   <% end %>
 
-  <% list = artist.artwork_list(@path_list) %>
+  <% list = Artist.artwork_list(@path_list) %>
   <%# @path_list.first(@number_of_display).each.with_index(1) do |path, idx| %>
   <% list.first(@number_of_display).each.with_index(1) do |(artwork_id, data), idx| %>
     <% path = data[0] %>
@@ -37,14 +37,32 @@
       <%= path %><br />
     <% end %>
   <% end %> 
+  ---<br />
+  <% list.to_a.last(1).each.with_index(1) do |(artwork_id, data), idx| %>
+    <% path = data[0] %>
+    <% if path =~ /\d\d-\d\d-\d\d.*\((\d+)\)/ %>
+      <% artwork_id = $1 %>
+      <% url = artist.pxv_artwork_url(artwork_id) %>
+      z.(<%= link_to artwork_id, url, target: :_blank, rel: "noopener noreferrer" %>)
+      <%= path %><br />
+    <% end %>
+  <% end %> 
   
   <% list.first(@number_of_display).each.with_index(1) do |(artwork_id, data), idx| %>
     <% path = data[0] %>
     <% title = data[1] %>
     <% date = data[2] %>
     <% fcnt = data[3] %>
-    <%#= image_tag path, width: '20%', height: '20%' %>
-    <%= idx %>.<%= link_to(image_tag(path, width: '15%', height: '15%'), path, target: :_blank, rel: "noopener noreferrer") %>
+    <% ratio = '15%' %>
+    <%= idx %>.<%= link_to(image_tag(path, width: ratio, height: ratio), path, target: :_blank, rel: "noopener noreferrer") %>
+  <% end %> 
+  <% list.to_a.last(1).each.with_index(1) do |(artwork_id, data), idx| %>
+    <% path = data[0] %>
+    <% title = data[1] %>
+    <% date = data[2] %>
+    <% fcnt = data[3] %>
+    <% ratio = '15%' %>
+    z.<%= link_to(image_tag(path, width: ratio, height: ratio), path, target: :_blank, rel: "noopener noreferrer") %>
   <% end %> 
   <br />
 </div>

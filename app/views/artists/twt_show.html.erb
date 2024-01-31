@@ -4,7 +4,7 @@
 
 <% twt_acnt = Twitter.find_by(twtid: @twtid) %>
 <% if twt_acnt == nil %>
-    <%= link_to "New Twt", new_twitter_path(twtid: @twtid) %>
+    <%= link_to "New Twt", new_twitter_path(twtid: @twtid, status: "TWT巡回") %>
     <br />
 <% else %>
     twt:<%= twt_acnt.twt_screen_name %>[<%= link_to "show", twt_acnt, target: :_blank, rel: "noopener noreferrer" %>]

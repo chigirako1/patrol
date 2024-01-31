@@ -115,7 +115,7 @@ module UrlTxtReader
         base_path = public_path
         puts %!basepath="#{base_path}"!
         Dir.glob(base_path + "/*") do |path|
-            puts %!path="#{path}"!
+            #puts %!path="#{path}"!
             if path =~ /get illust url_\d+\.txt/
                 path_list << path
            end
@@ -223,7 +223,7 @@ module UrlTxtReader
     end
 
     def self.get_url_txt_contents(filepath)
-        puts %!get_url_list:"#{filepath}"!
+        puts %!get_url_txt_contents:"#{filepath}"!
         if filepath == ""
             path_list = UrlTxtReader::txt_file_list
         else
@@ -314,6 +314,7 @@ module UrlTxtReader
 
         twt_urls = twt_urls.map {|key, val| [key, val[1]]}.to_h
 
-        [id_list.uniq, twt_urls, misc_urls]
+        #[id_list.uniq, twt_urls, misc_urls]
+        [id_list, twt_urls, misc_urls]
     end
 end

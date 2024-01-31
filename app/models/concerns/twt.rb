@@ -31,7 +31,7 @@ module Twt
         path_list = []
 
         tpath = get_twt_path_from_dirlist(twtid)
-        puts %!current dir path=#{tpath}!
+        puts %!archive dir path=#{tpath}!
 
         path_list << UrlTxtReader::get_path_list(tpath)
 
@@ -45,7 +45,7 @@ module Twt
             end
         end
 =end
-        twt_root = Rails.root.join().to_s + "*/"
+        twt_root = Rails.root.join(TWT_CURRENT_DIR_PATH).to_s + "*/"
         dirpath = Util::get_dir_path_by_twtid(twt_root, twtid)
         path_list << UrlTxtReader::get_path_list(dirpath)
 

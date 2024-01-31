@@ -107,7 +107,9 @@
   <% twt = Twitter.find_by(twtid: artist.twtid) %>
   <% if twt.presence %>
     <%= link_to "twt", twitter_path(twt) %>
-  <% else %>
+    <%= twt.get_datetime_string(twt.last_access_datetime, true) if twt.last_access_datetime.presence %>
+    (<%= twt.get_date_info(twt.last_access_datetime) if twt.last_access_datetime.presence %>)
+  <% elsif artist.twtid != "" %>
     <%= link_to "New Twt", new_twitter_path(twtid: artist.twtid, pxvid: artist.pxvid) %>
   <% end %>
   <br />
@@ -135,7 +137,7 @@
         </td>
         <td>
           <font color="red">
-          <%= artist.get_datetime_string(artist.last_ul_datetime, true) %>
+            <%= artist.get_datetime_string(artist.last_ul_datetime, true) %>
           </font>
           (<%= artist.get_date_info(artist.last_ul_datetime) %>)
         </td>

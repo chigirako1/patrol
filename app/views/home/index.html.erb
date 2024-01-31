@@ -11,8 +11,8 @@
 <% 
 =end %>
 <% @menus.each do |menu| %>
-    <% if menu[:label] == "" %>
-        <h2>test</h2>
+    <% if menu[:path] == "" %>
+        <h2><%= menu[:label] %></h2>
     <% else %>
         <li><%= link_to menu[:label], menu[:path], target: :_blank, rel: "noopener noreferrer" %></li>
     <% end %>
