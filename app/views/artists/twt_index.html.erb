@@ -3,6 +3,10 @@
 <h2 id="twt_url_list">twt url list (<%= @twt_urls.size %>)</h2>
 
 <% @twt_urls.each_with_index do |(key, url_list), idx| %>
+    <% if @hide_target.include?("OTHER_THAN_PXV_LIST") or @hide_target.include?("OTHER_THAN_UNKNOWN_PXV_LIST") %>
+        <% break %>
+    <% end %>
+
     <% twt_account = Twitter.find_by(twtid: key) %>
     <% pxv_artist = Artist.find_by(twtid: key) %>
 
@@ -78,11 +82,11 @@
             <% twturl, twtid = Artist.get_twt_url(url) %>
             ・
             <% if twtid == "" %>
-            <%= link_to twturl, twturl, target: :_blank, rel: "noopener noreferrer" %>
+                <%= link_to twturl, twturl, target: :_blank, rel: "noopener noreferrer" %>
             <% else %>
-            <%= link_to Twt::timestamp_str(twtid), twturl, target: :_blank, rel: "noopener noreferrer" %>
-            | <%= link_to "photo1", twturl + "/photo/1", target: :_blank, rel: "noopener noreferrer" %>
-            | <%= link_to %!???!, url, target: :_blank, rel: "noopener noreferrer" %>
+                <%= link_to Twt::timestamp_str(twtid), twturl, target: :_blank, rel: "noopener noreferrer" %>
+                | <%= link_to "photo1", twturl + "/photo/1", target: :_blank, rel: "noopener noreferrer" %>
+                | <%= link_to %!???!, url, target: :_blank, rel: "noopener noreferrer" %>
             <% end %>
             <br />
         <% end %>
@@ -91,20 +95,67 @@
     <% end %>
 <% end %>
 
-<% if @pxv_id_list.presence %>
-    <h2>pxv id list (<%= @pxv_id_list.size %>)</h2>
-    <% dirlist = Pxv::stock_dir_list %>
-    <% @pxv_id_list.sort.each_with_index do |pxvid, idx| %>
-        <%= idx %>.
-        <% pxvurl = Pxv::pxv_user_url(pxvid) %>
-        <%= link_to pxvid, pxvurl, target: :_blank, rel: "noopener noreferrer" %>
-        (<%= link_to "show", artist_pxv_path(pxvid), target: :_blank, rel: "noopener noreferrer" %>)
-        <% user_name = Pxv::user_name(dirlist, pxvid) %>
-        <% if user_name.presence %>
-            <%= user_name %>
-            <% p = Artist.find_by(pxvid: pxvid) %>
-            <%= p.last_access_datetime_disp if p %>
+<% if @known_pxv_user_id_list.presence %>
+    <h2>既知pxv id list (<%= @known_pxv_user_id_list.size %>)</h2>
+    <table border="1" rules="all">
+        <tr>
+            <th>#</th>
+            <th>pxv</th>
+            <th>access</th>
+            <th>rating</th>
+            <th>cnt</th>
+            <th>show</th>
+            <th>status</th>
+            <th>twt</th>
+        </tr>
+        <% @known_pxv_user_id_list.each.with_index(1) do |elem, idx| %>
+            <%# p = Artist.find_by(pxvid: elem.pxvid) %>
+            <% p = elem.p %>
+            <% if p.last_access_datetime_p(@hide_day) %>
+                <% next %>
+            <% end %>
+
+            <% pxvurl = Pxv::pxv_user_url(elem.pxvid) %>
+            <tr>
+                <td><%= idx %></td>
+                <td><%= p.pxvname %>(<%= link_to elem.pxvid, pxvurl, target: :_blank, rel: "noopener noreferrer" %>)</td>
+                <td><%= p.last_access_datetime_disp %></td>
+                <td><%= p.rating %>[<%= p.r18 %>]</td>
+                <td><%= elem.cnt %></td>
+                <td><%= link_to "show", p, target: :_blank, rel: "noopener noreferrer" %></td>
+                <td><%= p.status %></td>
+
+                <% twt = Twitter.find_by(twtid: p.twtid) %>
+                <% if twt %>
+                    <td><%= twt.twtname %></td>
+                    <td>@<%= twt.twtid %></td>
+                    <td><%= twt.last_access_datetime_disp %></td>
+                    <td><%= link_to "show", twt, target: :_blank, rel: "noopener noreferrer" %></td>
+                <% else %>
+                    <td></td>
+                    <td></td>
+                    <td></td>
+                    <td></td>
+                <% end %>
+            </tr>
         <% end %>
+    </table>
+<% end %>
+
+<% if @unknown_pxv_user_id_list.presence %>
+    <h2>未知pxv id list (<%= @unknown_pxv_user_id_list.size %>)</h2>
+    <% dirlist = Pxv::stock_dir_list %>
+    <% @unknown_pxv_user_id_list.each.with_index(1) do |elem, idx| %>
+        <% user_name = Pxv::user_name(dirlist, elem.pxvid) %>
+        <% if user_name.presence %>
+            <% next %>
+        <% end %>
+        <%= idx %>.
+        [<%= elem.cnt %>]
+        <% pxvurl = Pxv::pxv_user_url(elem.pxvid) %>
+        <%= link_to elem.pxvid, pxvurl, target: :_blank, rel: "noopener noreferrer" %>
+        (<%#= link_to "show", artist_pxv_path(elem.pxvid), target: :_blank, rel: "noopener noreferrer" %>)
+        <%= user_name %>
         <br />
     <% end %>
 <% end %>

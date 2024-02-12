@@ -109,10 +109,10 @@ class TwittersController < ApplicationController
       #twitters = twitters.select {|x| x.get_date_delta(x.last_access_datetime) > 0}
       #twitters = twitters.select {|x| x.id == 1388}
       
-      if params[:target] == nil or params[:target] == ""
-        twitters = twitters.select {|x| x.drawing_method != nil and (x.drawing_method == "AI" or x.drawing_method == "パクリ")}
+      if params[:target].presence
+        twitters = twitters.select {|x| x.drawing_method == params[:target]}
       else
-        twitters = twitters.select {|x| x.drawing_method != nil}
+        twitters = twitters.select {|x| x.drawing_method != nil and (x.drawing_method == "AI" or x.drawing_method == "パクリ")}
       end
 
       if pred_cond_gt != 0

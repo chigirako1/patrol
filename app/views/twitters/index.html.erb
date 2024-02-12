@@ -65,11 +65,14 @@
             <br />
           <% end %>
           <%= %!【#{twitter.artist_status}】! if twitter.artist_status.presence %>
+          <% if twitter.artists_last_access_datetime.presence %>
+            <%= %!【#{twitter.get_date_info(twitter.artists_last_access_datetime)}】! %>
+          <% end %>
         </td>
         <td bgcolor="pink">
           <%= twitter["pxvname"] if twitter["twtname"] != twitter["pxvname"] %>
           <% if twitter["artist_pxvid"].presence %>
-            [<%= link_to twitter["artist_pxvid"], pxv_url, target: :_blank, rel: "noopener noreferrer" %>]<%= twitter["r18"] %>
+            [<%= link_to twitter["artist_pxvid"], pxv_url, target: :_blank, rel: "noopener noreferrer" %>]
             <br />
             [<%= link_to "show", artist_path(twitter.artist_id), target: :_blank, rel: "noopener noreferrer" %>]
             <br />

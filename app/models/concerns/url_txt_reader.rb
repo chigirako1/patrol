@@ -243,7 +243,8 @@ module UrlTxtReader
 
     def self.get_url_list(filepath)
         txt_sum = get_url_txt_contents(filepath)
-        id_list, twt_urls, misc_urls = get_ulrs(txt_sum.split(/\R/).sort_by{|s| [s.downcase, s]}.uniq)
+        #id_list, twt_urls, misc_urls = get_ulrs(txt_sum.split(/\R/).sort_by{|s| [s.downcase, s]}.uniq)
+        id_list, twt_urls, misc_urls = get_ulrs(txt_sum.split(/\R/))
         [id_list, twt_urls, misc_urls]
     end
 

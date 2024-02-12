@@ -2,6 +2,20 @@ require 'nkf'
 require 'find'
 require 'date'
 
+
+class PxvInfo
+    attr_reader :pxvid, :cnt, :p
+
+    #def initialize(pxvid, cnt, last_access_datetime=nil, rating=0)
+    def initialize(pxvid, cnt, p=nil)
+        @pxvid = pxvid
+        @cnt = cnt
+        @p = p
+        #@last_access_datetime = last_access_datetime
+        #@rating = rating
+    end
+end
+
 class Artist < ApplicationRecord
     include UrlTxtReader
     #extend UrlTxtReader 違いがよくわかってない
@@ -105,7 +119,8 @@ class Artist < ApplicationRecord
         unknown_id_list = []
         known_ids = known_id_list
 
-        id_list.sort.uniq.each {|pxvid|
+        #id_list.sort.uniq.each {|pxvid|
+        id_list.each {|pxvid|
             unless known_ids.include? pxvid
               unknown_id_list << pxvid
               #puts %!unknown:#{pxvid}!
@@ -126,7 +141,8 @@ class Artist < ApplicationRecord
 =end
 
         #unknown_id_list.sort.uniq
-        unknown_id_list.sort_by {|x| cnt_hash[x] }
+        #unknown_id_list.sort_by {|x| cnt_hash[x] }
+        unknown_id_list
     end
 
     def self.known_id_list
@@ -145,6 +161,27 @@ class Artist < ApplicationRecord
         else
             return url, ""
         end
+    end
+
+    def self.pxv_user_id_classify(pxv_user_id_list)
+        known_pxv_user_id_list = []
+        unknown_pxv_user_id_list = []
+
+        id_hash = pxv_user_id_list.tally
+
+        id_hash.each do |pxvid, cnt|
+            p = Artist.find_by(pxvid: pxvid)
+            if p
+                known_pxv_user_id_list << PxvInfo.new(pxvid, cnt, p)
+            else
+                unknown_pxv_user_id_list << PxvInfo.new(pxvid, cnt)
+            end
+        end
+
+        known_pxv_user_id_list.sort_by! {|x| [x.p.status, x.p.rating, x.p.r18, -(x.cnt), x.p.last_access_datetime]}
+        unknown_pxv_user_id_list.sort_by! {|x| [-(x.cnt), x.pxvid]}
+
+        [known_pxv_user_id_list, unknown_pxv_user_id_list]
     end
 
     #--------------------------------------------------------------------------

@@ -98,8 +98,8 @@
       ],
       { selected: status_value },
       include_blank: "選択して下さい" %>
-    <input type="button" value="TWT巡回に変更" onclick="set_noupdate(1);" />
-    <input type="button" value="長期更新なしに変更" onclick="set_noupdate(3);" />
+    <input type="button" value="TWT巡回に変更" onclick="set_noupdate(0);" />
+    <input type="button" value="長期更新なしに変更" onclick="set_noupdate(2);" />
     <script>
       function set_noupdate(idx) {
         let status_sel_box = document.getElementById("twitter_status");
@@ -168,6 +168,18 @@
     <% end %>
   </div>
 
+  <div>
+    <%= form.label :r18, style: "display: block" %>
+    <%= form.select :r18,
+      [
+        ["R18", "R18"],
+        ["R15", "R15"],
+        ["R12", "R12"],
+        ["全年齢", "全年齢"],
+      ],
+      include_blank: "選択して下さい" %>
+  </div>
+
   <hr />
 
   <div>
@@ -182,18 +194,6 @@
       [
         ["有り", "有り"],
         ["なさそう？", "なさそう？"],
-      ],
-      include_blank: "選択して下さい" %>
-  </div>
-
-  <div>
-    <%= form.label :r18, style: "display: block" %>
-    <%= form.select :r18,
-      [
-        ["R18", "R18"],
-        ["R15", "R15"],
-        ["R12", "R12"],
-        ["全年齢", "全年齢"],
       ],
       include_blank: "選択して下さい" %>
   </div>
@@ -217,7 +217,8 @@
     <%= link_to "@#{@twitter.alt_twtid}", Twt::twt_user_url(@twitter.alt_twtid), target: :_blank, rel: "noopener noreferrer" if @twitter.alt_twtid.presence %>
     <% alt_twt = Twitter.find_by(twtid: @twitter.alt_twtid) %>
     <% if alt_twt.presence %>
-      【<%= alt_twt.rating %>】
+      <%= alt_twt.twtname %>
+      【<%= alt_twt.rating %>|<%= alt_twt.status %>】
       [<%= link_to "show", alt_twt, target: :_blank, rel: "noopener noreferrer" %>]
       |<%= alt_twt.last_access_datetime_disp %>|
     <% end %>
@@ -229,7 +230,8 @@
     <%= link_to "@#{@twitter.old_twtid}", Twt::twt_user_url(@twitter.old_twtid), target: :_blank, rel: "noopener noreferrer" if @twitter.old_twtid.presence %>
     <% old_twt = Twitter.find_by(twtid: @twitter.old_twtid) %>
     <% if old_twt.presence %>
-      【<%= old_twt.rating %>】
+      <%= old_twt.twtname %>
+      【<%= old_twt.rating %>|<%= old_twt.status %>】
       [<%= link_to "show", old_twt, target: :_blank, rel: "noopener noreferrer" %>]
       |<%= old_twt.last_access_datetime_disp %>|
     <% end %>
@@ -273,7 +275,8 @@
       let isostr = now.toISOString();
       //2024-01-31T13:54:35.371Z
       //                   54321
-      let val = isostr.slice(0, -5);
+      //let val = isostr.slice(0, -5);
+      let val = isostr.slice(0, -8);
       elem.value = val;
     }
   </script>

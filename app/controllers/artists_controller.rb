@@ -320,7 +320,7 @@ class ArtistsController < ApplicationController
   # GET /artists/1 or /artists/1.json
   def show
     if params[:access_dt_update].presence and params[:access_dt_update] == "no"
-      @artist
+      @last_access_datetime = @artist.last_access_datetime
     else
       @last_access_datetime = @artist.last_access_datetime
       @artist.update(last_access_datetime: Time.now)
@@ -414,7 +414,11 @@ class ArtistsController < ApplicationController
         path = "public/#{filename}.txt"
       end
       puts "path='#{path}'"
-      @pxv_id_list, @twt_urls, @misc_urls = UrlTxtReader::get_url_list(path)
+      pxv_id_list, @twt_urls, @misc_urls = UrlTxtReader::get_url_list(path)
+      @known_pxv_user_id_list, @unknown_pxv_user_id_list = Artist::pxv_user_id_classify(pxv_id_list)
+      if @hide_target.include?("OTHER_THAN_UNKNOWN_PXV_LIST")
+        @known_pxv_user_id_list = []
+      end
     end
   end
 

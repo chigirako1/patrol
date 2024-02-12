@@ -3,12 +3,15 @@
 module Nje
     extend ActiveSupport::Concern
     #include Util
+
+    NJE_STOCK_PATH = "public/nje/nje/"
+    NJE_TMP_PATH = "public/d_dl/Nijie/"
     
     def self.nje_user_list
         path_list = []
 
-        path_list << Util::glob("public/d_dl/Nijie/")
-        path_list << Util::glob("public/nje/nje/")
+        path_list << Util::glob(NJE_STOCK_PATH)
+        path_list << Util::glob(NJE_TMP_PATH)
 
         artist_list = {}
         path_list.flatten.each do |path|
@@ -27,7 +30,14 @@ module Nje
             end
         end
         #artist_list.sort.to_h
-        artist_list.sort_by {|k, v| v.nje_name.downcase}.to_h
+        #artist_list.sort_by {|k, v| v.nje_name.downcase}.to_h
+
+        artist_list.each do |k, v|
+            v.artwork_list = v.nje_view_list_ex
+            #p v.artwork_list
+        end
+
+        artist_list.sort_by {|k, v| v.latest}.to_h
     end
 
     def self.update_db_by_fs()
@@ -51,13 +61,14 @@ module Nje
 end
 
 class NjeArtist
-    attr_accessor :nje_id, :nje_name, :path_list
+    attr_accessor :nje_id, :nje_name, :path_list, :artwork_list
 
     def initialize(id, name, path)
         @nje_id = id
         @nje_name = name
         @path_list = []
         @path_list << path
+        @artwork_list = nil
     end
 
     def append_path(path)
@@ -87,6 +98,10 @@ class NjeArtist
                     date = $1
                     artid = $2.to_i
                     title = $3
+                elsif filename =~ /(\d{4}-\d\d-\d\d) (.*)\((\d+)\)\.\w+/
+                    date = $1
+                    title = $2
+                    artid = $3.to_i
                 else
                     puts %!uncatch "#{path}"!
                     next
@@ -94,7 +109,7 @@ class NjeArtist
             end
             
             if artlist.include? artid
-                artlist[artid].append(path)
+                artlist[artid].append_path(path)
             else
                 artlist[artid] = NjeArtwork.new(artid, title, date, path)
             end
@@ -104,6 +119,25 @@ class NjeArtist
 
     def nje_view_list_ex
         nje_view_list(nje_pic_path_list)
+    end
+
+    def nje_member_url
+        Nje::nje_member_url(nje_id.to_s)
+    end
+
+    def latest
+        #p artwork_list
+        if artwork_list.size > 0
+            a = artwork_list.to_a
+            a[0][1].art_id
+        else
+            0
+        end
+    end
+
+    def latest_ul_date
+        a = artwork_list.to_a
+        a[0][1].date
     end
 end
 
@@ -118,7 +152,12 @@ class NjeArtwork
         @path_list << path
     end
 
-    def append(path)
+    def append_path(path)
         @path_list.unshift path
     end
+
+    def nje_artwork_url
+        Nje::nje_artwork_url(art_id.to_s)
+    end
+    
 end

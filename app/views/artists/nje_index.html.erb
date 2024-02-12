@@ -4,22 +4,34 @@
 
 <table border="1" rules="all">
     <tr>
-        <th>id</th>
+        <th>#</th>
         <th>name</th>
         <th>njeid</th>
+        <th>latest</th>
         <th>show</th>
+        <th>thumbnail</th>
     </tr>
-    <% @nje_artist_list.each do |key, artist| %>
+    <% @nje_artist_list.each.with_index(1) do |(key, artist), idx| %>
         <tr>
-            <td>id</td>
+            <td><%= idx %></td>
             <td>
                 <%= %!#{artist.nje_name}! %>
             </td>
             <td>
-                <%= link_to artist.nje_id, Nje::nje_member_url(artist.nje_id.to_s), target: :_blank, rel: "noopener noreferrer" %>
+                <%#= link_to artist.nje_id, artist.nje_member_url, target: :_blank, rel: "noopener noreferrer" %>
+                <% artist.nje_id %>
+            </td>
+            <td>
+                <%= artist.latest_ul_date %>
             </td>
             <td>
                 <%= link_to "show", key.to_s, target: :_blank, rel: "noopener noreferrer" %>
+            </td>
+            <td>
+                <% artist.artwork_list.first(1).each do |key, artwork| %>
+                    <% path = artwork.path_list[0] %>
+                    <%= link_to image_tag(path, width: '10%', height: '10%', :alt => path), path, target: :_blank, rel: "noopener noreferrer" %>
+                <% end%>
             </td>
         </tr>
     <% end %>

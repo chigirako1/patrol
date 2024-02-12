@@ -6,6 +6,8 @@ module Pxv
     PXV_DIRLIST_PATH = "public/pxv/dirlist.txt"
     PXV_WORK_DIR_PATH = "public/f_dl/PxDl/"
     PXV_WORK_TMP_DIR_PATH = "public/f_dl/PxDl-/"
+    #PXV_WORK_TMP_DIR_WC = "*/*/*"
+    PXV_WORK_TMP_DIR_WC = "*"
     ARCHIVE_PATH = "D:/r18/dlPic"
 
     def self.pxv_user_url(pxvid)
@@ -39,7 +41,7 @@ module Pxv
         dir_list = Dir.glob(current_work_dir_root)
 
         if Dir.exist?(PXV_WORK_TMP_DIR_PATH)
-            dir_list_tmp = Util::glob(PXV_WORK_TMP_DIR_PATH, "*/*/*")
+            dir_list_tmp = Util::glob(PXV_WORK_TMP_DIR_PATH, PXV_WORK_TMP_DIR_WC)
         else
             dir_list_tmp = []
         end
@@ -71,6 +73,8 @@ module Pxv
                 return $1
             end
         end
+
+        #puts %!user name not found. pxvid=#{pxvid}!
         return ""
     end
 
@@ -99,7 +103,8 @@ module Pxv
 
     def self.get_pxv_art_id(x)
         id = 0
-        if x =~ /\d\d-\d\d-\d\d.*\((\d+)\)/
+        #if x =~ /\d\d-\d\d-\d\d.*\((\d+)\)/
+        if x =~ /\d\d-\d\d-\d\d.*?\((\d+)\)/
             id = $1
         end
         id.to_i

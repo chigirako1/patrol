@@ -33,16 +33,14 @@
         selected: '検索'
       ) %>
       <br />
-    <hr />
-    
-    <%= f.submit("検索", name: nil, class: 'subtmi-btn') %>
-    <hr />
     
     検索：<%= f.text_field :search_word %>
     <%= f.select :match_method, options_for_select([["(自動判断)","auto"], ["を含む","partial_match"], ["完全一致","perfect_match"], ["から始まる","begin_match"],  ["で終わる","end_match"]]) %>
     <%= f.select :target_col, options_for_select([['(自動判断)'], ['pxvname'], ['pxvid']]) %>
     <br />
+    <%= f.submit("検索", name: nil, class: 'subtmi-btn') %>
     <hr />
+   
 
     <%= f.label :page_title %>
     <%= f.text_field :page_title, :value => params[:page_title] %>

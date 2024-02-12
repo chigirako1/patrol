@@ -36,7 +36,9 @@
         <% twt = nil %>
       <% end %>
       <tr>
-        <td><%= artist["id"] %></td>
+        <td>
+          <%= link_to artist.id, artist_path(artist, access_dt_update: "no"), target: :_blank, rel: "noopener noreferrer" %>
+        </td>
         <td><%= pxvname_tag(artist) %></td>
         <%= priority_tag(artist) %>
         <td>
