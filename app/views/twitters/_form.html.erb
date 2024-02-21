@@ -168,9 +168,11 @@
     <% end %>
   </div>
 
+  <hr />
+  
   <div>
     <%= form.label :r18, style: "display: block" %>
-    <%= form.select :r18,
+    <%#= form.select :r18,
       [
         ["R18", "R18"],
         ["R15", "R15"],
@@ -178,9 +180,24 @@
         ["全年齢", "全年齢"],
       ],
       include_blank: "選択して下さい" %>
+
+    <%= form.radio_button :r18, :R18 %>
+    <%= form.label :r18_r18, "R18" %>
+    <br />
+
+    <%= form.radio_button :r18, :R15 %>
+    <%= form.label :r18_r15, "R15" %>
+    <br />
+
+    <%= form.radio_button :r18, :R12 %>
+    <%= form.label :r18_r12, "R12" %>
+    <br />
+
+    <%= form.radio_button :r18, :全年齢 %>
+    <%= form.label :r18_全年齢, "全年齢" %>
+    <br />
   </div>
 
-  <hr />
 
   <div>
     <%= form.submit("更新", class: 'subtmi-btn') %>

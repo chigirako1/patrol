@@ -39,17 +39,17 @@
             <% fcnt = data[3] %>
             <% if date.year != year %>
                 <br />
-                <% urllist.each do |u| %>
-                    (<%= link_to u[4], u[2], target: :_blank, rel: "noopener noreferrer" %>) <%= u[3] %><br />
+                <% urllist.each.with_index(1) do |u, idx| %>
+                    <%= idx %>:(<%= link_to u[4], u[2], target: :_blank, rel: "noopener noreferrer" %>) <%= u[3] %><br />
                 <% end %>
                 <% urllist = [] %>
                 <% year = date.year %>
                 <h2><%= year %>年(<%= stats[year].sum %>)</h2>
             <% end %>
-            <% if date.month != month and stats[year].sum >= 100 %>
+            <% if date.month != month and stats[year].sum >= 25 %>
                 <br />
-                <% urllist.each do |u| %>
-                    (<%= link_to u[4], u[2], target: :_blank, rel: "noopener noreferrer" %>) <%= u[3] %><br />
+                <% urllist.each.with_index(1) do |u, idx| %>
+                    <%= idx %>:(<%= link_to u[4], u[2], target: :_blank, rel: "noopener noreferrer" %>) <%= u[3] %><br />
                 <% end %>
                 <% urllist = [] %>
                 <% month = date.month %>

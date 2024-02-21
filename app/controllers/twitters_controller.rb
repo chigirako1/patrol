@@ -228,8 +228,12 @@ class TwittersController < ApplicationController
         :r18,
         :update_frequency,
         :last_post_datetime,
-        :sensitive
-    
+        :sensitive,
+        :private_account,
+        :reverse_status,
+        :new_twtid,
+        :sub_twtid,
+        :main_twtid,
         )
     end
 end

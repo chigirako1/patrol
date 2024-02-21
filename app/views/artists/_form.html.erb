@@ -160,13 +160,58 @@
   </div>
 
   <div>
+    <%= form.label :特徴, style: "display: block" %>
+    <%= form.select :feature, [["AI", "AI"], ["3D", "3D"]], include_blank: "選択して下さい" %>
+    <input type="button" value="↑" onclick="options_up('artist_feature');" class="btn" />
+    <input type="button" value="↓" onclick="options_down('artist_feature');" class="btn" />
+  </div>
+  
+  <div>
+    <%= form.label :備考（なんでもメモ）, style: "display: block" %>
+    <%= form.text_field :remarks %>
+  </div>
+ 
+  <div>
+    <%= form.label "さかのぼり", style: "display: block" %>
+    <%= form.select :reverse_status, [
+        ["さかのぼり中", "さかのぼり中"],
+        ["さかのぼり済", "さかのぼり済"],
+      ], include_blank: "選択して下さい" %>
+    <input type="button" value="↑" onclick="options_up('artist_reverse_status');" class="btn" />
+    <input type="button" value="↓" onclick="options_down('artist_reverse_status');" class="btn" />
+  </div>
+
+  <div>
+    <%= form.label :注意点, style: "display: block" %>
+    <%= form.text_field :warnings %>
+  </div>
+
+  <div>
+    <%= form.label "コメント/etc...", style: "display: block" %>
+    <%= form.select :comment, [
+      ["体がでかい（太い）", "体がでかい（太い）"], ["宣伝が多すぎる(ぼかし/モザイク)", "宣伝が多すぎる"], 
+      ["頭身が低すぎる", "頭身が低すぎる"], ["パクリ", "パクリ"], ["BL専", "BL専"]], include_blank: "選択して下さい" %>
+  </div>
+ 
+  <hr />
+
+  <div>
+    <%= form.label :作品, style: "display: block" %>
+    <%= form.text_field :work %>
+  </div>
+
+  <div>
+    <%= form.label :キャラ, style: "display: block" %>
+    <%= form.text_field :chara %>
+  </div>
+  
+  <hr />
+
+  <div>
     <%= form.label :補正, style: "display: block" %>
     <%= form.number_field :priority %>
 
     <input type="button" value="0" onclick="set(0);" class="btn" />
-    <input type="button" value="-5" onclick="plus(-5);" class="btn" />
-    <input type="button" value="+10" onclick="plus(10);" class="btn" />
-    <input type="button" value="+25" onclick="plus(25);" class="btn" />
     <script>
       function plus(point) {
         let elem = document.getElementById("artist_priority");
@@ -181,44 +226,6 @@
     </script>
   </div>
 
-  <hr />
-
-  <div>
-    <%= form.label :備考（なんでもメモ）, style: "display: block" %>
-    <%= form.text_field :remarks %>
-  </div>
- 
-  <div>
-    <%= form.label :注意点, style: "display: block" %>
-    <%= form.text_field :warnings %>
-  </div>
-
-  <div>
-    <%= form.label "コメント/etc...", style: "display: block" %>
-    <%= form.select :comment, [
-      ["体がでかい（太い）", "体がでかい（太い）"], ["宣伝が多すぎる(ぼかし/モザイク)", "宣伝が多すぎる"], 
-      ["頭身が低すぎる", "頭身が低すぎる"], ["パクリ", "パクリ"], ["BL専", "BL専"]], include_blank: "選択して下さい" %>
-  </div>
- 
-  <div>
-    <%= form.label :特徴, style: "display: block" %>
-    <%= form.select :feature, [["AI", "AI"], ["3D", "3D"]], include_blank: "選択して下さい" %>
-    <input type="button" value="↑" id="artist_feature_up" class="btn" />
-    <input type="button" value="↓" onclick="options_down('artist_feature');" class="btn" />
-  </div>
-  
-  <hr />
-
-  <div>
-    <%= form.label :作品, style: "display: block" %>
-    <%= form.text_field :work %>
-  </div>
-
-  <div>
-    <%= form.label :キャラ, style: "display: block" %>
-    <%= form.text_field :chara %>
-  </div>
-  
   <h2>ユーザー情報</h2>
   <div>
     <%= form.label :癖（へき）, style: "display: block" %>

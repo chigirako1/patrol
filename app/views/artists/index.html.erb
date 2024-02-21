@@ -8,6 +8,9 @@
 <a href="#twt_url_list">twt_url_list</a>
 
 <% @artists_group.each do |key, artists| %>
+  <% if artists.size < @begin_no %>
+    <% next %> 
+  <% end %>
   <h2><%= "#{key}(全#{artists.size}件)[#{@begin_no + 1}..#{[(@begin_no.to_i + @size_per_table), artists.size].min }]" %></h2>
   <table border="1" rules="all">
     <tr>
@@ -249,6 +252,7 @@
           ['-point'], 
           ['priority'], 
           ['filenum'], 
+          ['recent_filenum'], 
           ['last_ul_date'],
           ['pxvname'],
           ['twtid'],
@@ -281,6 +285,7 @@
           ['予測'],
           ['rating'],
           ['評価+年齢制限'],
+          ['さかのぼり'],
         ],
         selected: params[:group_by] 
       ) %>
@@ -340,6 +345,17 @@
     <br />
     <%= f.label :対象年 %>
     <%= f.number_field :year, :value => params[:year] %>
+    <br />
+    <%= f.label :reverse_status, style: "display: block" %>
+    <%= f.select :reverse_status, 
+      options_for_select(
+        [
+          [''],
+          ["さかのぼり中"],
+          ["「さかのぼり済」を除く"],
+        ],
+        selected: params[:reverse_status] 
+      ) %>
     <br />
     <%= f.label :TWtチェック %>
     <%= f.text_field :twt_chk, :value => params[:twt_chk] %>

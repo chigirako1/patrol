@@ -25,12 +25,14 @@ class Params
     :twt_chk,
     :thumbnail,
     :begin_no,
+    :reverse_status,
     :url_list_only
 
   def initialize(params)
     @group_by = params[:group_by]
     @sort_by = params[:sort_by]
     @status = params[:status]
+    @reverse_status = params[:reverse_status]
     @point = params[:point]
     @prediction = params[:prediction]
     @rating = params[:rating]
@@ -62,6 +64,11 @@ class Params
       @status = ""
     end
     puts "status=#{@status}"
+    
+    if @reverse_status == nil
+      @reverse_status = ""
+    end
+    puts "reverse_status=#{@reverse_status}"
     
     begin_no = params[:begin_no]
     if begin_no == nil
@@ -387,13 +394,13 @@ class ArtistsController < ApplicationController
       @hide_day = 5
     end
 
-    hide_target = params[:hide_target]
-    if hide_target.presence
-      @hide_target = hide_target.upcase.split(",")
+    target = params[:target]
+    if target.presence
+      @target = target.split(",")
     else
-      @hide_target = []
+      @target = []
     end
-    puts "hide_target='#{@hide_target}'"
+    puts "target='#{@target}'"
 
     filename = params[:filename]
     if filename == nil
@@ -405,10 +412,14 @@ class ArtistsController < ApplicationController
         dir = "new"
       end
       @twt_urls = Twt::twt_user_list(dir)
+    elsif filename == ""
+      @url_file_list = UrlTxtReader::txt_file_list()
+      @twt_urls = []
     else
-      if filename == "all"
+      case filename
+      when "all"
         path = ""
-      elsif filename == "latest"
+      when "latest"
         path = UrlTxtReader::get_latest_txt
       else
         path = "public/#{filename}.txt"
@@ -416,8 +427,9 @@ class ArtistsController < ApplicationController
       puts "path='#{path}'"
       pxv_id_list, @twt_urls, @misc_urls = UrlTxtReader::get_url_list(path)
       @known_pxv_user_id_list, @unknown_pxv_user_id_list = Artist::pxv_user_id_classify(pxv_id_list)
-      if @hide_target.include?("OTHER_THAN_UNKNOWN_PXV_LIST")
-        @known_pxv_user_id_list = []
+      if @target.include?("known_pxv")
+      else
+        #@known_pxv_user_id_list = []
       end
     end
   end
@@ -539,7 +551,7 @@ class ArtistsController < ApplicationController
         :r18, :remarks, :rating, :furigana, :altname, :oldname, :chara, :work,
         :warnings, :feature, :twt_check, :earliest_ul_date, :circle_name,
         :fetish, :pxv_fav_artwork_id, :web_url, :append_info,
-        :twt_checked_date, :nje_checked_date, :show_count
+        :twt_checked_date, :nje_checked_date, :show_count, :reverse_status
       )
     end
 
@@ -601,6 +613,17 @@ class ArtistsController < ApplicationController
         puts %!status="#{prms.status}"!
       end
 
+      if prms.reverse_status == ""
+      elsif prms.reverse_status == "「さかのぼり済」を除く"
+        excl_list = [
+          "さかのぼり済",
+        ]
+        artists = artists.select {|x| excl_list.include?(x.reverse_status) == false}
+      else
+        artists = artists.select {|x| x.reverse_status == prms.reverse_status}
+        puts %!reverse_status="#{prms.reverse_status}"!
+      end
+
       if prms.r18 and prms.r18 != ""
         artists = artists.select {|x| x[:r18] == prms.r18}
         puts %!r18="#{prms.r18}"!
@@ -657,6 +680,8 @@ class ArtistsController < ApplicationController
         artists = artists.sort_by {|x| [x.twtid]}
       when "filenum"
         artists = artists.sort_by {|x| [-x.filenum]}
+      when "recent_filenum"
+        artists = artists.sort_by {|x| [-x.recent_filenum]}
       when "id"
         artists = artists.sort_by {|x| [-x.id]}
       else
@@ -710,6 +735,15 @@ class ArtistsController < ApplicationController
         artists_group = artists.group_by {|x| -x.rating}.sort.to_h
       when "評価+年齢制限"
         artists_group = artists.group_by {|x| [-x.rating, x.r18]}.sort.to_h
+      when "さかのぼり"
+        artists_group = artists.group_by {|x| [
+            if x.reverse_status
+              x.reverse_status
+            else
+              ""
+            end
+          ]
+        }.sort.to_h
       when "none"
         artists_group["none"] = artists
       else

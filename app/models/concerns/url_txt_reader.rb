@@ -115,9 +115,10 @@ module UrlTxtReader
         base_path = public_path
         puts %!basepath="#{base_path}"!
         Dir.glob(base_path + "/*") do |path|
-            #puts %!path="#{path}"!
             if path =~ /get illust url_\d+\.txt/
                 path_list << path
+                puts %!path="#{path}"!
+            else
            end
         end
         path_list
