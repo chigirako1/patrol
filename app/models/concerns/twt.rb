@@ -4,6 +4,7 @@ module Twt
     extend ActiveSupport::Concern
 
     TWT_CURRENT_DIR_PATH = "public/d_dl/Twitter/"
+    TWT_TMP_DIR_PATH     = "public/d_dl/Twitter-/"
     TWT_ARCHIVE_DIR_PATH = "public/twt"
     TWT_DIRLIST_TXT_PATH = "#{TWT_ARCHIVE_DIR_PATH}/dirlist.txt"
 
@@ -48,6 +49,12 @@ module Twt
         twt_root = Rails.root.join(TWT_CURRENT_DIR_PATH).to_s + "*/"
         dirpath = Util::get_dir_path_by_twtid(twt_root, twtid)
         path_list << UrlTxtReader::get_path_list(dirpath)
+
+        if Dir.exist?(TWT_TMP_DIR_PATH)
+            twt_root = Rails.root.join(TWT_TMP_DIR_PATH).to_s + "*/"
+            dirpath = Util::get_dir_path_by_twtid(twt_root, twtid)
+            path_list << UrlTxtReader::get_path_list(dirpath)
+        end
 
         path_list.flatten.sort.reverse
     end

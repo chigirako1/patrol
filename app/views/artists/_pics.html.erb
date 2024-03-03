@@ -37,7 +37,10 @@
       <%= path %><br />
     <% end %>
   <% end %> 
-  ---<br />
+  ---
+  <%= artist.reverse_status %> 
+  ---
+  <br />
   <% list.to_a.last(1).each.with_index(1) do |(artwork_id, data), idx| %>
     <% path = data[0] %>
     <% if path =~ /\d\d-\d\d-\d\d.*\((\d+)\)/ %>

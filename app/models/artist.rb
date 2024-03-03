@@ -121,9 +121,10 @@ class Artist < ApplicationRecord
 
         #id_list.sort.uniq.each {|pxvid|
         id_list.each {|pxvid|
+            raise "pxvidが数値ではありません" unless pxvid.is_a?(Integer)
             unless known_ids.include? pxvid
               unknown_id_list << pxvid
-              #puts %!unknown:#{pxvid}!
+              puts %!unknown:#{pxvid}!
             end
         }
 

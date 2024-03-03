@@ -143,6 +143,7 @@
       ["停止", "停止"],
       ["長期更新なし★", "長期更新なし"], 
       ["半年以上更新なし", "半年以上更新なし"], 
+      ["3ヶ月以上更新なし", "3ヶ月以上更新なし"], 
       ["1ヶ月以上更新なし", "1ヶ月以上更新なし"], 
       ["別アカウントに移行", "別アカウントに移行"],
       ["作品ゼロ", "作品ゼロ"], ["一部消えた", "一部消えた"], ["ほぼ消えた", "ほぼ消えた"], 
@@ -160,7 +161,7 @@
   </div>
 
   <div>
-    <%= form.label :特徴, style: "display: block" %>
+    <%= form.label :特徴（AI、3D、etc…）, style: "display: block" %>
     <%= form.select :feature, [["AI", "AI"], ["3D", "3D"]], include_blank: "選択して下さい" %>
     <input type="button" value="↑" onclick="options_up('artist_feature');" class="btn" />
     <input type="button" value="↓" onclick="options_down('artist_feature');" class="btn" />

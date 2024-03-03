@@ -16,6 +16,7 @@ class Params
     :status,
     :amount_gt,
     :amount_lt,
+    :recent_filenum,
     :filename,
     :last_access_datetime,
     :r18,
@@ -117,6 +118,14 @@ class Params
     end
     puts "amount=#{@amount_gt}-#{@amount_lt}"
 
+    recent_filenum = params[:recent_filenum]
+    if recent_filenum.presence
+      @recent_filenum = recent_filenum.to_i
+    else
+      @recent_filenum = 0
+    end
+    puts "recent_filenum=#{@recent_filenum}"
+
     last_access_datetime = params[:last_access_datetime]
     if last_access_datetime == nil or last_access_datetime == 0
       @last_access_datetime = 0
@@ -127,12 +136,12 @@ class Params
 
     display_number = params[:display_number]
     if display_number == nil
-      @display_number = 10
+      @display_number = 3
     else
       @display_number = display_number.to_i
     end
     if @display_number == 0
-      @display_number = 10
+      @display_number = 3
     end
     puts %!@display_number=#{@display_number}!
 
@@ -219,6 +228,7 @@ class ArtistsController < ApplicationController
 
     if prms.param_file == "urllist" or
       prms.param_file == "urllist-pxv-only" or
+      prms.param_file == "urllist-pxv-only(latest)" or
       prms.param_file == "urllist-unknown-only" or
       prms.param_file == "urllist-twt-only" or
       prms.param_file == "urllist-twt-only(latest)"
@@ -227,7 +237,7 @@ class ArtistsController < ApplicationController
         return
       else
         datestr = prms.filename
-        if prms.param_file == "urllist-twt-only(latest)"
+        if prms.param_file == "urllist-twt-only(latest)" or prms.param_file == "urllist-pxv-only(latest)"
           #path = "public/get illust url_1029.txt"
           path = UrlTxtReader::get_latest_txt
         elsif datestr == ""
@@ -243,7 +253,7 @@ class ArtistsController < ApplicationController
           @twt_urls = {}
           @twt = false
           @unknown_id_list = Artist.get_unknown_id_list(id_list)
-        elsif prms.param_file == "urllist-pxv-only"
+        elsif prms.param_file == "urllist-pxv-only" or  prms.param_file == "urllist-pxv-only(latest)"
           artists = artists.select {|x| id_list.include?(x[:pxvid])}
           @twt_urls = {}
           @twt = false
@@ -316,12 +326,19 @@ class ArtistsController < ApplicationController
       dup_twtids = UrlTxtReader::same_twtid(artists)
       puts "dup id=#{dup_twtids}"
       artists = artists.select {|x| dup_twtids.include?(x[:twtid])}
+    elsif prms.param_file == "ファイル0件未登録"
+      archive_dir_id_list = Pxv::archive_dir_id_list()
+      @unknown_id_list = Artist::get_unknown_id_list(archive_dir_id_list)
     end
 
     artists = index_select(artists, prms)
     puts %!artists.size=#{artists.size}!
     artists = index_sort(artists, prms)
-    @artists_group = index_group_by(artists, prms)
+    if artists.size > 5
+      @artists_group = index_group_by(artists, prms)
+    else
+      @artists_group[""] = artists
+    end
   end
 
   # GET /artists/1 or /artists/1.json
@@ -418,11 +435,13 @@ class ArtistsController < ApplicationController
     else
       case filename
       when "all"
-        path = ""
+        path = []
       when "latest"
         path = UrlTxtReader::get_latest_txt
+      when /latest\s+(\d)/
+        path = UrlTxtReader::get_latest_txt($1.to_i)
       else
-        path = "public/#{filename}.txt"
+        path = ["public/#{filename}.txt"]
       end
       puts "path='#{path}'"
       pxv_id_list, @twt_urls, @misc_urls = UrlTxtReader::get_url_list(path)
@@ -637,6 +656,10 @@ class ArtistsController < ApplicationController
         artists = artists.select {|x| x[:filenum] <= prms.amount_lt}
       else
       end
+
+      if prms.recent_filenum != 0
+        artists = artists.select {|x| x[:recent_filenum] >= prms.recent_filenum}
+      end
   
       if prms.year_since != 0 and  prms.year_until != 0
         artists = artists.select {|x| y = x[:last_ul_datetime].strftime("%Y").to_i; y >= prms.year_since and y <= prms.year_until}
@@ -684,6 +707,8 @@ class ArtistsController < ApplicationController
         artists = artists.sort_by {|x| [-x.recent_filenum]}
       when "id"
         artists = artists.sort_by {|x| [-x.id]}
+      when "pxv-user-id"
+        artists = artists.sort_by {|x| [-x.pxvid]}
       else
         # デフォルト？
         artists = artists.sort_by {|x| [-x.point, -x.priority, -x[:recent_filenum], -x[:filenum], x[:last_ul_datetime]]}

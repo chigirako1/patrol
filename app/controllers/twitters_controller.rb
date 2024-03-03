@@ -73,7 +73,7 @@ class TwittersController < ApplicationController
     
     case mode
     when "id"
-      @num_of_disp = 30
+      @num_of_disp = 5
       if rating_gt != 0
         twitters = twitters.select {|x| x.rating == nil or x.rating >= rating_gt }
       end
@@ -81,7 +81,14 @@ class TwittersController < ApplicationController
       #@twitters_group = twitters.group_by {|x| x.rating}
       #@twitters_group = {}
       #@twitters_group[""] = twitters
-      @twitters_group = twitters.group_by {|x| %!#{x.status}:#{x.drawing_method}! }
+      if params[:target] != nil and params[:target] == ""
+        @twitters_group = {}
+        twitters = twitters.select {|x| x.drawing_method == params[:target] or x.drawing_method == nil}
+        twitters = twitters.select {|x| !x.last_access_datetime_p(@hide_within_days)}
+        @twitters_group[""] = twitters
+      else
+        @twitters_group = twitters.group_by {|x| %!#{x.status}:#{x.drawing_method}! }
+      end
       return
     when "pxv_search"
       @num_of_disp = 30

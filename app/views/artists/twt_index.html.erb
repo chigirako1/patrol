@@ -79,7 +79,7 @@
     <% end %>
 <% end %>
 
-<% if @known_pxv_user_id_list.presence %>
+<% if @target.include?("known_pxv") and @known_pxv_user_id_list.presence %>
     <h2>既知pxv id list (<%= @known_pxv_user_id_list.size %>)</h2>
     <table border="1" rules="all">
         <tr>
@@ -90,12 +90,13 @@
             <th>cnt</th>
             <th>show</th>
             <th>status</th>
+            <th>t</th>
             <th>twt</th>
             <th></th>
             <th></th>
             <th></th>
         </tr>
-        <% @known_pxv_user_id_list.each.with_index(1) do |elem, idx| %>
+        <% @known_pxv_user_id_list.first(100).each.with_index(1) do |elem, idx| %>
             <%# p = Artist.find_by(pxvid: elem.pxvid) %>
             <% p = elem.p %>
             <% if p.last_access_datetime_p(@hide_day) %>
@@ -116,9 +117,17 @@
                 </td>
                 <td><%= p.last_access_datetime_disp %></td>
                 <td><%= p.rating %>[<%= p.r18 %>]</td>
-                <td><%= elem.cnt %></td>
+                <td>
+                    <%= elem.cnt %>
+                    <br/ >
+                    [<%= p.prediction_up_cnt %>]
+                    
+                </td>
                 <td><%= link_to "show", p, target: :_blank, rel: "noopener noreferrer" %></td>
                 <td><%= p.status %></td>
+                <td>
+                    <%= pic_path_tag(elem.pxvid, 3) %>
+                </td>
 
                 <% twt = Twitter.find_by(twtid: p.twtid) %>
                 <% if twt %>
@@ -137,7 +146,7 @@
     </table>
 <% end %>
 
-<% if @unknown_pxv_user_id_list.presence %>
+<% if @target.include?("unknown_pxv") and @unknown_pxv_user_id_list.presence %>
     <h2>未知pxv id list (<%= @unknown_pxv_user_id_list.size %>)</h2>
     <% dirlist = Pxv::stock_dir_list %>
     <% @unknown_pxv_user_id_list.each.with_index(1) do |elem, idx| %>
@@ -161,11 +170,13 @@
 <% if @url_file_list.presence %>
     <% @url_file_list.each.with_index(1) do |filename, idx| %>
         <% file = File.basename(filename, ".*") %>
-        <% url1 = artists_twt_index_path(filename: file, hide_day: 90) %>
-        <% url2 = artists_twt_index_path(filename: file, hide_day: 90, target:"OTHER_THAN_UNKNOWN_PXV_LIST") %>
+        <% url1 = artists_twt_index_path(filename: file, hide_day: 60, target:"twt,known_pxv,unknown_pxv") %>
+        <% url2 = artists_twt_index_path(filename: file, hide_day: 60, target:"unknown_pxv") %>
+        <% url3 = artists_twt_index_path(filename: file, hide_day: 60, target:"known_pxv") %>
         <%= file %>
         | <%= link_to("all", url1, target: :_blank, rel: "noopener noreferrer") %>
-        | <%= link_to("pxv only", url2, target: :_blank, rel: "noopener noreferrer") %>
+        | <%= link_to("unknown pxv only", url2, target: :_blank, rel: "noopener noreferrer") %>
+        | <%= link_to("known pxv only", url3, target: :_blank, rel: "noopener noreferrer") %>
         <br />
     <% end %>
 <% end %>

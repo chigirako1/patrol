@@ -148,9 +148,9 @@ module UrlTxtReader
         tmp_list
     end
 
-    def self.get_latest_txt()
+    def self.get_latest_txt(filecnt=1)
         path_list = txt_file_list.sort
-        path_list[-1]
+        path_list.last(filecnt)
     end
 
     def self.authors_list(filename, type)
@@ -225,12 +225,13 @@ module UrlTxtReader
 
     def self.get_url_txt_contents(filepath)
         puts %!get_url_txt_contents:"#{filepath}"!
-        if filepath == ""
+        if filepath.size == 0
             path_list = UrlTxtReader::txt_file_list
         else
             path_list = []
-            path_list << Rails.root.join(filepath).to_s
-            puts %!path="#{filepath}"!
+            filepath.each do |path|
+                path_list << Rails.root.join(path).to_s
+            end
         end
 
         txt_sum = ""

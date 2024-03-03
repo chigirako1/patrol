@@ -2,18 +2,8 @@
 
 <h3 id="nje_xxx">
     <%= %!#{@nje_artist.nje_name}! %>
-    (<%= link_to @nje_artist.nje_id, Nje::nje_member_url(@nje_artist.nje_id.to_s), target: :_blank, rel: "noopener noreferrer" %>)
+    (<%= @nje_artist.nje_id %>)
 </h3>
-<hr />
-
-<!-- -->
-<h4>pxv</h4>
-<% pxv_acnt = Artist.find_by(njeid: @nje_artist.nje_id) %>
-<% if pxv_acnt != nil %>
-    pxv:<%= pxv_acnt.pxvname %>
-    [<%= link_to "show", pxv_acnt, target: :_blank, rel: "noopener noreferrer" %>]
-    <br />
-<% end %>
 
 <h4>path list</h4>
 <% @nje_artist.path_list.each do |path| %>
@@ -24,6 +14,19 @@
 
 <% artwork_list = @nje_artist.artwork_list %>
 
+<!-- 画像 -->
+<% artwork_list.first(3).each do |key, artwork| %>
+    <% path = artwork.path_list[0] %>
+    <%= link_to image_tag(path, width: '10%', height: '10%', :alt => path), path, target: :_blank, rel: "noopener noreferrer" %>
+<% end%>
+
+<hr />
+
+<h4>nje</h4>
+<%= link_to @nje_artist.nje_id, Nje::nje_member_url(@nje_artist.nje_id.to_s), target: :_blank, rel: "noopener noreferrer" %>
+<hr />
+
+
 <!-- -->
 <% artwork_list.each do |key, artwork| %>
     <% path = artwork.path_list[0] %>
@@ -32,8 +35,11 @@
     <br />
 <% end%>
 
-<!-- 画像 -->
-<% artwork_list.each do |key, artwork| %>
-    <% path = artwork.path_list[0] %>
-    <%= link_to image_tag(path, width: '10%', height: '10%', :alt => path), path, target: :_blank, rel: "noopener noreferrer" %>
-<% end%>
+<!-- -->
+<h4>pxv</h4>
+<% pxv_acnt = Artist.find_by(njeid: @nje_artist.nje_id) %>
+<% if pxv_acnt != nil %>
+    pxv:<%= pxv_acnt.pxvname %>
+    [<%= link_to "show", pxv_acnt, target: :_blank, rel: "noopener noreferrer" %>]
+    <br />
+<% end %>

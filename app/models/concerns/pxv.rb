@@ -4,10 +4,12 @@ module Pxv
     extend ActiveSupport::Concern
     
     PXV_DIRLIST_PATH = "public/pxv/dirlist.txt"
+    PXV_ARCHIVE_DIR_PATH = "public/pxv/"
+    PXV_ARCHIVE_DIR_WC = "*/*/*"
     PXV_WORK_DIR_PATH = "public/f_dl/PxDl/"
     PXV_WORK_TMP_DIR_PATH = "public/f_dl/PxDl-/"
-    #PXV_WORK_TMP_DIR_WC = "*/*/*"
-    PXV_WORK_TMP_DIR_WC = "*"
+    PXV_WORK_TMP_DIR_WC = "*/*/*"
+    #PXV_WORK_TMP_DIR_WC = "*"
     ARCHIVE_PATH = "D:/r18/dlPic"
 
     def self.pxv_user_url(pxvid)
@@ -66,6 +68,14 @@ module Pxv
         File.basename(path) =~ /\(#{pxvid}\)/
     end
 
+    def self.get_pxv_user_id(path)
+        if File.basename(path) =~ /\(#?(\d+)\)-?$/
+            return $1.to_i
+        else
+            return ""
+        end
+    end
+
     def self.user_name(pathlist, pxvid)
         pathlist.each do |path|
             if File.basename(path) =~ /(.*?)\(#{pxvid}\)$/
@@ -110,4 +120,17 @@ module Pxv
         id.to_i
     end
 
+    def self.archive_dir_id_list
+        id_list = []
+        dir_list = Util::glob(PXV_ARCHIVE_DIR_PATH, PXV_ARCHIVE_DIR_WC)
+        dir_list.each do |path|
+            pxv_user_id = get_pxv_user_id(path)
+            if pxv_user_id != ""
+                id_list << pxv_user_id
+            else
+                #STDERR.puts %!no hit path=#{path}!
+            end
+        end
+        id_list.sort.uniq
+    end
 end

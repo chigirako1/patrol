@@ -17,6 +17,11 @@ module ArtistsHelper
             tag += "<br />"
             tag += "【#{artist.circle_name}】"
         end
+        if artist.reverse_status.presence
+            tag += "<br />"
+            tag += "[#{artist.reverse_status}]"
+        end
+
         tag.html_safe
     end
 
