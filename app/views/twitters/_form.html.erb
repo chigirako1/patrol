@@ -1,4 +1,5 @@
 <%= form_with(model: twitter) do |form| %>
+  <% pxv = Artist.find_by(twtid: @twitter.twtid) %>
   <% if twitter.errors.any? %>
     <div style="color: red">
       <h2><%= pluralize(twitter.errors.count, "error") %> prohibited this twitter from being saved:</h2>
@@ -11,6 +12,9 @@
     </div>
   <% end %>
 
+  <% if pxv.presence %>
+    PXV最終投稿日:<%= pxv.get_datetime_string(pxv.last_ul_datetime) %>
+  <% end %>
   <% if @twitter.twtid %>
     <h3>TWTを開く→<%= link_to %!@#{@twitter.twtid}!, Twt::twt_user_url(@twitter.twtid), target: :_blank, rel: "noopener noreferrer" %></h3>
   <% end %>
@@ -131,7 +135,6 @@
   </div>
 
   <div>
-    <% pxv = Artist.find_by(twtid: @twitter.twtid) %>
     <%= form.label :pxvid, style: "display: block" %>
     <% if @twitter.pxvid.presence %>
       <%= form.number_field :pxvid %>

@@ -205,7 +205,7 @@
 
 <div class="view_form">
   <%= form_with url: artists_path, local: true, method: :get do |f| %>
-    <%= f.label :file, style: "display: block" %>
+    <%= f.label :method, style: "display: block" %>
     <%= f.select :file, 
       options_for_select(
         [
@@ -226,6 +226,7 @@
           ['same_name'],
           ['same_twtid'],
           ['ファイル0件未登録'],
+          ['twt未登録twt id'],
           ['検索'],
         ],
         selected: params[:file] 
@@ -279,6 +280,7 @@
           ['last_ul_datetime'], 
           ['last_ul_datetime_X_filenum'], 
           ['last_ul_datetime_ym'], 
+          ['last_ul_datetime_y'], 
           ['recent_filenum'],
           ['pxvname_fl'],
           ['pxvname'],

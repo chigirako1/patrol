@@ -1,13 +1,9 @@
 <% provide(:title, %!twt 一覧  #{params[:title]}/file:#{params[:filename]}/dir:#{params[:dir]}!) %>
 
-<% if @twt_urls.presence %>
-    <h2 id="twt_url_list">twt url list (<%= @twt_urls.size %>)</h2>
+<% if @twt_urls.presence and @target.include?("twt") %>
+    <h2 id="未登録twt_url_list">twt url list (<%= @twt_urls.size %>)</h2>
 
     <% @twt_urls.each.with_index(1) do |(key, url_list), idx| %>
-        <% unless @target.include?("twt") %>
-            <% break %>
-        <% end %>
-
         <% twt_account = Twitter.find_by(twtid: key) %>
         <% pxv_artist = Artist.find_by(twtid: key) %>
 
@@ -20,11 +16,7 @@
             <%#= link_to "@" + key, "https://twitter.com/#{key}", target: :_blank, rel: "noopener noreferrer" %>
             <%= link_to "@" + key, Twt::twt_user_url(key), target: :_blank, rel: "noopener noreferrer" %>
             <%= %! | #{twt_account.twt_screen_name}! if twt_account != nil and twt_account.twt_screen_name != "" %>
-            <%# if pxv_artist != nil %>
-                <!-- [<%= link_to "show", pxv_artist, target: :_blank, rel: "noopener noreferrer" %>] -->
-            <%# else %>
-                (<%= link_to "show", key, target: :_blank, rel: "noopener noreferrer" %>)
-            <%# end %>
+            (<%= link_to "show", key, target: :_blank, rel: "noopener noreferrer" %>)
         </h3>
 
         <% if twt_account != nil %>
@@ -79,58 +71,73 @@
     <% end %>
 <% end %>
 
+<% pxv_list = [] %>
 <% if @target.include?("known_pxv") and @known_pxv_user_id_list.presence %>
     <h2>既知pxv id list (<%= @known_pxv_user_id_list.size %>)</h2>
     <table border="1" rules="all">
         <tr>
             <th>#</th>
-            <th>pxv</th>
-            <th>access</th>
+            <th>pxv name</th>
             <th>rating</th>
-            <th>cnt</th>
+            <th>access/ul</th>
             <th>show</th>
             <th>status</th>
-            <th>t</th>
+            <th>thubmnail p</th>
+            <th>thubmnail t</th>
             <th>twt</th>
             <th></th>
             <th></th>
             <th></th>
         </tr>
-        <% @known_pxv_user_id_list.first(100).each.with_index(1) do |elem, idx| %>
-            <%# p = Artist.find_by(pxvid: elem.pxvid) %>
+        <% idx = 0 %>
+        <% @known_pxv_user_id_list.each.with_index(1) do |elem| %>
             <% p = elem.p %>
             <% if p.last_access_datetime_p(@hide_day) %>
-                <%= p.pxvname %>:<%= p.last_access_datetime_disp %>
-                <br />
+                <% pxv_list << p %>
                 <% next %>
             <% end %>
 
+            <% if idx > 20 %>
+                <% break %>
+            <% end%>
             <% pxvurl = Pxv::pxv_user_url(elem.pxvid) %>
             <tr>
+                <% idx += 1 %>
                 <td><%= idx %></td>
                 <td>
                     <%= p.pxvname %>(<%= link_to elem.pxvid, pxvurl, target: :_blank, rel: "noopener noreferrer" %>)
                     <% if p.twtid.presence %>
                         <br />
                         <%= %!@#{p.twtid}! %>
+                        <br />
                     <% end %>
-                </td>
-                <td><%= p.last_access_datetime_disp %></td>
-                <td><%= p.rating %>[<%= p.r18 %>]</td>
-                <td>
                     <%= elem.cnt %>
-                    <br/ >
-                    [<%= p.prediction_up_cnt %>]
-                    
                 </td>
-                <td><%= link_to "show", p, target: :_blank, rel: "noopener noreferrer" %></td>
+                <td><%= p.rating %>|<%= p.r18 %></td>
+                <td>
+                    アクセス:<%= p.last_access_datetime_disp %>
+                    |
+                    UL:<%= p.get_date_info(p.last_ul_datetime) %>
+                    <!-- (<%= p.get_datetime_string(p.last_ul_datetime) %>) -->
+                </td>
+                <td>
+                    予測:<%= p.prediction_up_cnt %>
+                    <br />
+                    <%= link_to "show", p, target: :_blank, rel: "noopener noreferrer" %>
+                </td>
                 <td><%= p.status %></td>
                 <td>
-                    <%= pic_path_tag(elem.pxvid, 3) %>
+                    <%= pic_path_tag(elem.pxvid, 3, '33%') %>
                 </td>
 
                 <% twt = Twitter.find_by(twtid: p.twtid) %>
                 <% if twt %>
+                    <td>
+                        <% list = twt.get_pic_filelist_ex %>
+                        <% list.first(3).each do |filepath| %>
+                            <%= link_to image_tag(filepath, width: '13%', height: '13%'), filepath, target: :_blank, rel: "noopener noreferrer" if filepath.presence %>
+                        <% end %>
+                    </td>
                     <td><%= twt.twtname %></td>
                     <td>@<%= twt.twtid %></td>
                     <td><%= twt.last_access_datetime_disp %></td>
@@ -140,10 +147,16 @@
                     <td></td>
                     <td></td>
                     <td></td>
+                    <td></td>
                 <% end %>
             </tr>
         <% end %>
     </table>
+<% end %>
+
+<% pxv_list.each.with_index(1) do |p, idx| %>
+    <%= idx %>.<%= p.pxvname %>:<%= p.last_access_datetime_disp %>
+    <br />
 <% end %>
 
 <% if @target.include?("unknown_pxv") and @unknown_pxv_user_id_list.presence %>

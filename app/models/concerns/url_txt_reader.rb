@@ -211,7 +211,6 @@ module UrlTxtReader
         #puts "dup name=#{dup_pxvnames}"
         dup_pxvnames
     end
-
     
     def self.same_twtid(artists)
         ids = artists.map {|x| x.twtid}
@@ -243,14 +242,14 @@ module UrlTxtReader
         txt_sum
     end
 
-    def self.get_url_list(filepath)
+    def self.get_url_list(filepath, db_check=false)
         txt_sum = get_url_txt_contents(filepath)
         #id_list, twt_urls, misc_urls = get_ulrs(txt_sum.split(/\R/).sort_by{|s| [s.downcase, s]}.uniq)
-        id_list, twt_urls, misc_urls = get_ulrs(txt_sum.split(/\R/))
+        id_list, twt_urls, misc_urls = get_ulrs(txt_sum.split(/\R/), db_check)
         [id_list, twt_urls, misc_urls]
     end
 
-    def self.get_ulrs(txts)
+    def self.get_ulrs(txts, db_check=false)
         id_list = []
         twt_urls = {}
         misc_urls = []
@@ -280,7 +279,11 @@ module UrlTxtReader
                     # 新規
                     twt_urls[twt_id] = []
 
-                    artist = Artist.find_by(twtid: twt_id)
+                    if db_check
+                        artist = Artist.find_by(twtid: twt_id)
+                    else
+                        artist = nil
+                    end
                     if artist != nil
                         id_list << artist.pxvid
                         twt_urls[twt_id][0] = true
@@ -290,7 +293,11 @@ module UrlTxtReader
                         twt_urls[twt_id][3] = 0
                     end
 
-                    twt = Twitter.find_by(twtid: twt_id)
+                    if db_check
+                        twt = Twitter.find_by(twtid: twt_id)
+                    else
+                        twt = nil
+                    end
                     if twt != nil
                         twt_urls[twt_id][2] = true
                         twt_urls[twt_id][4] = twt.rating

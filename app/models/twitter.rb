@@ -50,6 +50,10 @@ class Twitter < ApplicationRecord
         ["#{target_col} LIKE?", search_word_p]
     end
 
+    def self.all_twt_id_list()
+        ids = Twitter.all.map {|x| x.twtid}
+    end
+
     def twt_screen_name
         if twtname == ""
             return ""
@@ -72,6 +76,13 @@ class Twitter < ApplicationRecord
 
     def get_pic_filelist
         Twt::get_pic_filelist(twtid)
+    end
+
+    def get_pic_filelist_ex()
+        list = get_pic_filelist
+        list = list.map {|x| [Twt::twt_path_str(x), x]}.sort.reverse
+        list = list.map {|x| x[1]}
+        list
     end
 
     def prediction

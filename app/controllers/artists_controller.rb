@@ -329,6 +329,13 @@ class ArtistsController < ApplicationController
     elsif prms.param_file == "ファイル0件未登録"
       archive_dir_id_list = Pxv::archive_dir_id_list()
       @unknown_id_list = Artist::get_unknown_id_list(archive_dir_id_list)
+    elsif prms.param_file == "twt未登録twt id"
+      #artists = artists.select {|x| x.twtid != ""}
+      twt_id_list = Twitter.all_twt_id_list
+      #puts "twt_id_list = #{twt_id_list.size} // #{twt_id_list[0..3]}"
+      #puts "artists = #{artists.size}"
+      artists = artists.select {|x| x.twtid.presence and twt_id_list.include?(x.twtid) == false}
+      #artists = artists.select {|x| x.twtid.presence}
     end
 
     artists = index_select(artists, prms)
@@ -438,13 +445,18 @@ class ArtistsController < ApplicationController
         path = []
       when "latest"
         path = UrlTxtReader::get_latest_txt
-      when /latest\s+(\d)/
+      when /latest\s+(\d+)/
         path = UrlTxtReader::get_latest_txt($1.to_i)
       else
         path = ["public/#{filename}.txt"]
       end
       puts "path='#{path}'"
-      pxv_id_list, @twt_urls, @misc_urls = UrlTxtReader::get_url_list(path)
+      if @target.include?("twt")
+        db_chek = true
+      else
+        db_chek = false
+      end
+      pxv_id_list, @twt_urls, @misc_urls = UrlTxtReader::get_url_list(path, db_chek)
       @known_pxv_user_id_list, @unknown_pxv_user_id_list = Artist::pxv_user_id_classify(pxv_id_list)
       if @target.include?("known_pxv")
       else
@@ -583,8 +595,10 @@ class ArtistsController < ApplicationController
         artists = artists.select {|x| x.point < 0}
       end
 
-      if prms.prediction != 0
+      if prms.prediction > 0
         artists = artists.select {|x| x.prediction_up_cnt(true) >= prms.prediction}
+      elsif prms.prediction < 0
+        artists = artists.select {|x| x.prediction_up_cnt(true) <= -(prms.prediction)}
       end
       
       if prms.rating < 0
@@ -627,6 +641,12 @@ class ArtistsController < ApplicationController
           "作品ゼロ",
         ]
         artists = artists.select {|x| excl_list.include?(x.status) == false}
+      elsif prms.status == "長期更新なし"
+        excl_list = [
+          "長期更新なし",
+          "半年以上更新なし",
+        ]
+        artists = artists.select {|x| excl_list.include?(x.status)}
       else
         artists = artists.select {|x| x.status == prms.status}
         puts %!status="#{prms.status}"!
@@ -740,6 +760,8 @@ class ArtistsController < ApplicationController
         artists_group = artists.group_by {|x| x.judge_number(x[:filenum]) + ":" + x[:last_ul_datetime].strftime("%Y")}.sort.reverse.to_h
       when "last_ul_datetime_ym"
         artists_group = artists.group_by {|x| x[:last_ul_datetime].strftime("%Y-%m")}.sort.reverse.to_h
+      when "last_ul_datetime_y"
+        artists_group = artists.group_by {|x| x[:last_ul_datetime].strftime("%Y")}.sort.reverse.to_h
       when "filenum"
         artists_group = artists.group_by {|x| filenum_g(x.filenum)}.sort.reverse.to_h
       when "recent_filenum"

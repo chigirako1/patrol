@@ -8,8 +8,9 @@ module Pxv
     PXV_ARCHIVE_DIR_WC = "*/*/*"
     PXV_WORK_DIR_PATH = "public/f_dl/PxDl/"
     PXV_WORK_TMP_DIR_PATH = "public/f_dl/PxDl-/"
-    PXV_WORK_TMP_DIR_WC = "*/*/*"
-    #PXV_WORK_TMP_DIR_WC = "*"
+    PXV_WORK_TMP_DIR_F_PATH = "public/f_dl/PxDl-/alphabet"
+    PXV_WORK_TMP_DIR_F_WC = "*/*/*"
+    PXV_WORK_TMP_DIR_WC = "*"
     ARCHIVE_PATH = "D:/r18/dlPic"
 
     def self.pxv_user_url(pxvid)
@@ -42,7 +43,9 @@ module Pxv
         current_work_dir_root = Rails.root.join(PXV_WORK_DIR_PATH).to_s + "*/"
         dir_list = Dir.glob(current_work_dir_root)
 
-        if Dir.exist?(PXV_WORK_TMP_DIR_PATH)
+        if Dir.exist?(PXV_WORK_TMP_DIR_F_PATH)
+            dir_list_tmp = Util::glob(PXV_WORK_TMP_DIR_PATH, PXV_WORK_TMP_DIR_F_WC)
+        elsif Dir.exist?(PXV_WORK_TMP_DIR_PATH)
             dir_list_tmp = Util::glob(PXV_WORK_TMP_DIR_PATH, PXV_WORK_TMP_DIR_WC)
         else
             dir_list_tmp = []

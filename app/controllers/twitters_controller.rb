@@ -60,7 +60,7 @@ class TwittersController < ApplicationController
             artists.twtid AS artist_twtid,
             artists.status AS artist_status,
             artists.last_access_datetime AS artists_last_access_datetime,
-            artists.*, twitters.*").where(col, word).sort_by {|x| [x[:last_access_datetime], x[:last_dl_datetime]]}
+            artists.*, twitters.*").where(col, word)#.sort_by {|x| [x[:last_access_datetime], x[:last_dl_datetime]]}
     else
       twitters = Twitter.joins(
         "LEFT OUTER JOIN artists ON twitters.twtid = artists.twtid"
@@ -68,12 +68,12 @@ class TwittersController < ApplicationController
             artists.pxvid AS artist_pxvid,
             artists.status AS artist_status,
             artists.last_access_datetime AS artists_last_access_datetime,
-            artists.*, twitters.*").sort_by {|x| [x[:last_access_datetime], x[:last_dl_datetime]]}
+            artists.*, twitters.*")#.sort_by {|x| [x[:last_access_datetime], x[:last_dl_datetime]]}
     end
     
     case mode
     when "id"
-      @num_of_disp = 5
+      #@num_of_disp = 5
       if rating_gt != 0
         twitters = twitters.select {|x| x.rating == nil or x.rating >= rating_gt }
       end
@@ -91,8 +91,9 @@ class TwittersController < ApplicationController
       end
       return
     when "pxv_search"
-      @num_of_disp = 30
+      #@num_of_disp = 30
       twitters = twitters.select {|x| x.pxvid.presence and x.artist_pxvid == nil }
+      twitters = twitters.select {|x| !x.last_access_datetime_p(@hide_within_days)}
       twitters = twitters.sort_by {|x| [x.id]}.reverse
       @twitters_group = {}
       @twitters_group[""] = twitters
@@ -100,7 +101,7 @@ class TwittersController < ApplicationController
     when "access"
       twitters = twitters.sort_by {|x| [x.last_access_datetime]}.reverse
     when "rating_nil"
-      @num_of_disp = 30
+      #@num_of_disp = 30
       twitters = twitters.select {|x| x.rating == nil}
       twitters = twitters.sort_by {|x| [x.last_access_datetime]}.reverse
       @twitters_group = twitters.group_by {|x| x.rating}
@@ -140,6 +141,11 @@ class TwittersController < ApplicationController
       twitters = twitters.select {|x| !x.last_access_datetime_p(@hide_within_days)}
       twitters = twitters.select {|x| x.status == "TWT巡回"}
       twitters = twitters.select {|x| x.drawing_method != nil and (x.drawing_method == "手描き")}
+      if rating_gt != 0
+        twitters = twitters.select {|x| x.rating != nil and x.rating >= rating_gt }
+      end
+      #twitter.artist_status
+      twitters = twitters.select {|x| x.drawing_method != nil and (x.drawing_method == "手描き")}
 
       twitters = twitters.sort_by {|x| [-x.prediction, x.last_access_datetime, (x.last_dl_datetime)]}
     when "未設定"
@@ -148,6 +154,17 @@ class TwittersController < ApplicationController
       twitters = twitters.sort_by {|x| [-x.prediction, x.last_access_datetime, (x.last_ul_datetime || "2000-01-01")]}
       @twitters_group = twitters.group_by {|x| x.status}
       return
+    when "file"
+      twitters = twitters.select {|x| !x.last_access_datetime_p(@hide_within_days)}
+      if rating_gt != 0
+        twitters = twitters.select {|x| x.rating == nil or x.rating == 0 or x.rating >= rating_gt }
+      end
+      twitters = twitters.select {|x| x.status == "TWT巡回"}
+
+      pxv_id_list, twt_urls, misc_urls = UrlTxtReader::get_url_list([], false)
+      known_ids = twt_urls.keys
+      twitters = twitters.select {|x| known_ids.include?(x.twtid) }
+      twitters = twitters.sort_by {|x| [-x.prediction, x.last_access_datetime]}
     when "all"
       twitters = twitters.sort_by {|x| [-x.prediction, x.last_access_datetime, (x.last_ul_datetime || "2000-01-01")]}
     else

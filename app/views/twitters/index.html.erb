@@ -36,18 +36,16 @@
           <%= twitter["twtname"] %>
           <%#= link_to "@#{twitter["twtid"]}", twt_url, target: :_blank, rel: "noopener noreferrer" %>
           (@<%= twitter.twtid %>)
-          [<%= link_to "Show", twitter, target: :_blank, rel: "noopener noreferrer" %>]
-          
-          <%#= link_to "pic", artist_twt_path(twitter.twtid), target: :_blank, rel: "noopener noreferrer" %>
-          <br />
           【<%= twitter.rating %>|<%= twitter.r18 %>|<%= twitter.status %>|<%= twitter.drawing_method %>】
           <br />
           <%= %!※#{twitter["comment"]}! if twitter.comment != "" %>
         </td>
         <td>
           <%= twitter.prediction %>
+          [<%= link_to "Show", twitter, target: :_blank, rel: "noopener noreferrer" %>]
           <br />
           [<%= twitter.update_frequency %>]
+          <br />
         </td>
         <td>
           <%#= twitter["last_access_datetime"].in_time_zone('Tokyo').strftime("%Y-%m-%d") if twitter["last_access_datetime"] != nil %>

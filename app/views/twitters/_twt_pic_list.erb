@@ -6,6 +6,12 @@ textarea {
 </style>
 
 <div id="<%= dom_id twitter %>">
+    <!-- PXV画像 -->
+    <% if twitter.pxvid.presence %>
+        <%= pic_path_tag(twitter.pxvid, 5, '10%') %>
+        <br />
+    <% end %>
+
     <% show_pic_num = 5 %>
     <% if params[:picn] == "" %>
     <% elsif params[:picn] == "all" %>
@@ -30,6 +36,7 @@ textarea {
     <% twt_pic_list = @twt_pic_path_list.map {|x| [Twt::twt_path_str(x), x]}.sort.reverse %>
     <% twt_acnt = twitter %>
 
+    <!-- ファイル名リスト -->
     <textarea id="pic_list" name="pic_list" rows="100" cols="255">
         <% twt_pic_list.first(show_pic_num).each.with_index(1) do |elem, idx| %>
 <%= idx %>:<%= elem[0] %>
