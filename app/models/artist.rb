@@ -115,6 +115,18 @@ class Artist < ApplicationRecord
         misc_urls.sort.uniq
     end
 
+    def self.get_unregisterd_pxv_user_id_list_from_local
+        unregisterd_pxv_user_id_list = pxvid_list = []
+        Pxv::current_dir_pxvid_list.each do |pxvid|
+            p = Artist.find_by(pxvid: pxvid)
+            if p
+            else
+                unregisterd_pxv_user_id_list << pxvid
+            end
+        end
+        unregisterd_pxv_user_id_list
+    end
+    
     def self.get_unknown_id_list(id_list)
         unknown_id_list = []
         known_ids = known_id_list
@@ -289,6 +301,10 @@ class Artist < ApplicationRecord
         end
     end
 
+    def last_ul_datetime_disp
+        get_date_info(last_ul_datetime)
+    end
+
     def twt_user_url
         #%!https://twitter.com/#{twtid}!
         Twt::twt_user_url(twtid)
@@ -340,22 +356,8 @@ class Artist < ApplicationRecord
 
         #puts path_list.size
         path_list.reverse.each do |path|
-            artwork_id = 0
-            if path =~ /(\d\d-\d\d-\d\d)\s*(.*)\((\d+)\)/
-                date_str = $1
-                artwork_title = $2
-                artwork_id = $3.to_i
-            elsif path =~ /(\d\d-\d\d-\d\d)\s*\((\d+)\)\s*(.*)/
-                date_str = $1
-                artwork_id = $2.to_i
-                artwork_title = $3
-            elsif path =~ /(\d\d-\d\d-\d\d)\s*(.*)/
-                date_str = $1
-                artwork_title = $2
-            else
-                puts %!regex no hit:"#{path}"!
-                date_str = ""
-            end
+
+            artwork_id, date_str, artwork_title = Pxv::get_pxv_artwork_info_from_path(path)
 
             begin
                 date = Date.parse(date_str)

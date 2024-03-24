@@ -17,7 +17,8 @@ module Util
     def self.get_dir_path_by_twtid(twt_root, twtid)
         puts %!twt_root="#{twt_root}", twtid="#{twtid}"!
         Dir.glob(twt_root).each do |path|
-            if twtid == File.basename(path)
+            #if twtid == File.basename(path)
+            if twtid.downcase == File.basename(path).downcase
                 puts %!path="#{path}"!
                 return path
             end

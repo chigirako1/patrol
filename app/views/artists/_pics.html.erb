@@ -50,6 +50,8 @@
       <%= path %><br />
     <% end %>
   <% end %> 
+  最初期投稿日：<%= artist.get_datetime_string(artist.earliest_ul_date, true) if artist.earliest_ul_date.presence %>
+  <br />
   
   <% list.first(@number_of_display).each.with_index(1) do |(artwork_id, data), idx| %>
     <% path = data[0] %>

@@ -336,6 +336,10 @@ class ArtistsController < ApplicationController
       #puts "artists = #{artists.size}"
       artists = artists.select {|x| x.twtid.presence and twt_id_list.include?(x.twtid) == false}
       #artists = artists.select {|x| x.twtid.presence}
+    elsif prms.param_file == "未登録pxv user id"
+      @unknown_id_list = Twitter::get_unregisterd_pxv_user_id_list()
+    elsif prms.param_file == "DB未登録pxv user id local dir"
+      @unknown_id_list = Artist::get_unregisterd_pxv_user_id_list_from_local()
     end
 
     artists = index_select(artists, prms)
@@ -457,10 +461,12 @@ class ArtistsController < ApplicationController
         db_chek = false
       end
       pxv_id_list, @twt_urls, @misc_urls = UrlTxtReader::get_url_list(path, db_chek)
-      @known_pxv_user_id_list, @unknown_pxv_user_id_list = Artist::pxv_user_id_classify(pxv_id_list)
+      known_pxv_user_id_list, unknown_pxv_user_id_list = Artist::pxv_user_id_classify(pxv_id_list)
       if @target.include?("known_pxv")
-      else
-        #@known_pxv_user_id_list = []
+        @known_pxv_user_id_list = known_pxv_user_id_list
+      end
+      if @target.include?("unknown_pxv")
+        @unknown_pxv_user_id_list = unknown_pxv_user_id_list
       end
     end
   end
@@ -645,6 +651,9 @@ class ArtistsController < ApplicationController
         excl_list = [
           "長期更新なし",
           "半年以上更新なし",
+          "3ヶ月以上更新なし",
+          "1ヶ月以上更新なし",
+          "作品ゼロ",
         ]
         artists = artists.select {|x| excl_list.include?(x.status)}
       else

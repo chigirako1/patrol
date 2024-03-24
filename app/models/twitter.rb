@@ -54,6 +54,20 @@ class Twitter < ApplicationRecord
         ids = Twitter.all.map {|x| x.twtid}
     end
 
+    def self.get_unregisterd_pxv_user_id_list()
+        unregisterd_pxv_user_id_list = []
+        
+        pxvids_in_twt_table = Twitter.select('pxvid').map {|x| x.pxvid}.compact.sort.uniq
+        pxvids_in_twt_table.each do |pxvid|
+            p = Artist.find_by(pxvid: pxvid)
+            if p
+            else
+                unregisterd_pxv_user_id_list << pxvid
+            end
+        end
+        unregisterd_pxv_user_id_list
+    end
+
     def twt_screen_name
         if twtname == ""
             return ""

@@ -5,7 +5,9 @@
 
 <h1>Artists</h1>
 
-<a href="#twt_url_list">twt_url_list</a>
+<% if @twt_urls.size > 0 %>
+  <a href="#twt_url_list">twt_url_list</a>
+<% end %>
 
 <% @artists_group.each do |key, artists| %>
   <% if artists.size < @begin_no %>
@@ -227,6 +229,8 @@
           ['same_twtid'],
           ['ファイル0件未登録'],
           ['twt未登録twt id'],
+          ['未登録pxv user id'],#in TWT table
+          ['DB未登録pxv user id local dir'],
           ['検索'],
         ],
         selected: params[:file] 

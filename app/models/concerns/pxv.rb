@@ -114,13 +114,42 @@ module Pxv
         path_list = path_list.flatten.map {|x| [get_pxv_art_id(x), File::basename(x), x]}.sort.reverse.map {|x| x[2]}
     end
 
-    def self.get_pxv_art_id(x)
+    def self.get_pxv_art_id(path)
+=begin
         id = 0
         #if x =~ /\d\d-\d\d-\d\d.*\((\d+)\)/
         if x =~ /\d\d-\d\d-\d\d.*?\((\d+)\)/
             id = $1
         end
         id.to_i
+=end
+        artwork_id, date_str, artwork_title = get_pxv_artwork_info_from_path(path)
+        artwork_id
+    end
+
+    def self.get_pxv_artwork_info_from_path(path)
+        artwork_id = 0
+        if path =~ /(\d\d-\d\d-\d\d)\s*(.*?)\((\d+)\)/
+            date_str = $1
+            artwork_title = $2
+            artwork_id = $3.to_i
+        elsif path =~ /(\d\d-\d\d-\d\d)\s*\((\d+)\)\s*(.*)/
+            date_str = $1
+            artwork_id = $2.to_i
+            artwork_title = $3
+        elsif path =~ /(\d\d-\d\d-\d\d)\s*(.*)/
+            puts %!artwork id not found:"#{path}"!
+            date_str = $1
+            artwork_title = $2
+        else
+            puts %!regex no hit:"#{path}"!
+            date_str = ""
+        end
+
+        if artwork_id < 10
+            STDERR.puts %!artwork_id=#{artwork_id}:#{path}!
+        end
+        [artwork_id, date_str, artwork_title]
     end
 
     def self.archive_dir_id_list

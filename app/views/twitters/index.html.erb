@@ -1,15 +1,24 @@
 <% provide(:title, "#{params[:page_title]} - TWT一覧") %>
 <p style="color: green"><%= notice %></p>
 
+
+<% pic_disp_mag = '13%' %>
+
 <%= link_to "Return", root_path %>
+
 
 <h1>Twitters</h1>
 
 <div id="twitters">
   <% @twitters_group.each do |key, twitters| %>
-  <h2><%= key %>(全<%= twitters.size %>件)</h2>
+  <% rem = twitters.size - @num_of_disp %>
+  <% if rem > 0 %>
+    <% rem_str = %!残り#{rem}件! %>
+  <% end %>
+  <h2><%= key %>(全<%= twitters.size %>件)<%= rem_str %></h2>
   <table border="1" rules="all">
     <tr>
+      <th>#</th>
       <th>id</th>
       <th>twtname(twtid)</th>
       <th>
@@ -25,12 +34,13 @@
       <th>備考</th>
       <th>状態</th>
     </tr>
-    <% twitters.first(@num_of_disp).each do |twitter| %>
+    <% twitters.first(@num_of_disp).each.with_index(1) do |twitter, idx| %>
       
       <% twt_url = Twt::twt_user_url(twitter.twtid) %>
       <% pxv_url = Pxv::pxv_user_url(twitter.artist_pxvid) %>
 
       <tr>
+        <td><%= idx %></td>
         <td><%= link_to twitter["id"], twitter %></td>
         <td>
           <%= twitter["twtname"] %>
@@ -83,7 +93,7 @@
             <% twt_pic_list = list.map {|x| [Twt::twt_path_str(x), x]}.sort.reverse %>
             <% list = twt_pic_list.map {|x| x[1]}.first(3) %>
             <% list.each do |filepath| %>
-              <%= link_to image_tag(filepath, width: '15%', height: '15%'), filepath, target: :_blank, rel: "noopener noreferrer" if filepath.presence %>
+              <%= link_to image_tag(filepath, width: pic_disp_mag, height: pic_disp_mag), filepath, target: :_blank, rel: "noopener noreferrer" if filepath.presence %>
             <% end %>
           <% else %>
           <% end %>

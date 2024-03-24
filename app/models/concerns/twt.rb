@@ -133,6 +133,7 @@ module Twt
                 twt_params[:twtid] = key
                 twt_params[:last_dl_datetime] = val.ctime
                 twt_params[:last_access_datetime] = val.ctime
+                #twt_params[:update_frequency] = 
                 twt = Twitter.new(twt_params)
                 twt.save
             else
