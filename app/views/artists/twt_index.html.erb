@@ -108,6 +108,9 @@
     <% @known_pxv_user_id_list, unknown_pxv_user_id_list = Artist::pxv_user_id_classify(pxv_artist_id_list) %>
 <% end %>
 
+<% pic_mag_pxv = '28%' %>
+<% pic_mag_twt = '23%' %>
+
 <% pxv_list = [] %>
 <%# if @target.include?("known_pxv") and @known_pxv_user_id_list.presence %>
 <% if @known_pxv_user_id_list.size > 0 %>
@@ -165,7 +168,7 @@
                 </td>
                 <td><%= p.status %></td>
                 <td>
-                    <%= pic_path_tag(elem.pxvid, 3, '33%') %>
+                    <%= pic_path_tag(elem.pxvid, 3, pic_mag_pxv) %>
                 </td>
 
                 <%# twt = Twitter.find_by(twtid: p.twtid) %>
@@ -174,7 +177,7 @@
                     <td>
                         <% list = twt.get_pic_filelist_ex %>
                         <% list.first(3).each do |filepath| %>
-                            <%= link_to image_tag(filepath, width: '13%', height: '13%'), filepath, target: :_blank, rel: "noopener noreferrer" if filepath.presence %>
+                            <%= link_to image_tag(filepath, width: pic_mag_twt, height: pic_mag_twt), filepath, target: :_blank, rel: "noopener noreferrer" if filepath.presence %>
                         <% end %>
                     </td>
                     <td><%= twt.twtname %></td>

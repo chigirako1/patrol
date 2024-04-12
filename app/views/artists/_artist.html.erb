@@ -108,7 +108,7 @@
   <%= link_to "【twtサムネイル表示】", "../artists/#{@artist.id}?mode=twt_pic_list#twt_pic_list" %>
   <% twt = Twitter.find_by(twtid: artist.twtid) %>
   <% if twt.presence %>
-    【<%= twt.rating %>】
+    【<%= twt.rating %>|<%= twt.status %>】
     <%= link_to "twt", twitter_path(twt) %>
     <%= twt.get_datetime_string(twt.last_access_datetime, true) if twt.last_access_datetime.presence %>
     (<%= twt.get_date_info(twt.last_access_datetime) if twt.last_access_datetime.presence %>)

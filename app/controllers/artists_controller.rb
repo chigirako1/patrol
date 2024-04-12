@@ -5,6 +5,7 @@
 class Params
   attr_accessor :param_file,
     :twt,
+    :feat_3d,
     :ai,
     :exclude_ai,
     :nje,
@@ -22,6 +23,7 @@ class Params
     :r18,
     :point,
     :prediction,
+    :force_disp_day,
     :rating,
     :twt_chk,
     :thumbnail,
@@ -36,6 +38,7 @@ class Params
     @reverse_status = params[:reverse_status]
     @point = params[:point]
     @prediction = params[:prediction]
+    @force_disp_day = params[:force_disp_day]
     @rating = params[:rating]
     @twt_chk = params[:twt_chk]
     puts %!group_by="#{@group_by}"/sort_by="#{@sort_by}"/!
@@ -53,6 +56,13 @@ class Params
       @prediction = @prediction.to_i
     end
     puts "prediction=#{@prediction}"
+
+    if @force_disp_day == nil
+      @force_disp_day = 0
+    else
+      @force_disp_day = @force_disp_day.to_i
+    end
+    puts "force_disp_day=#{@force_disp_day}"
 
     if @rating == nil or @rating == ""
       @rating = -1
@@ -151,12 +161,15 @@ class Params
       #puts %!@twt=#{@twt}!
     end
 
+    feat_3d = params[:feat_3d]
+    if feat_3d != nil and feat_3d == "true"
+      @feat_3d = true
+    end
+
     ai = params[:ai]
     if ai != nil and ai == "true"
       @ai = true
-      #puts %!@ai=#{@ai}!
     end
-
     
     exclude_ai = params[:exclude_ai]
     if exclude_ai and exclude_ai == "true"
@@ -166,7 +179,6 @@ class Params
     nje = params[:nje]
     if nje != nil and nje == "true"
       @nje = true
-      #puts %!@nje=#{@nje}!
     end
 
     thumbnail = params[:thumbnail]
@@ -174,7 +186,7 @@ class Params
       @thumbnail = true
       #puts %!@thumbnail=#{@thumbnail}!
     end
-    puts %![twt:#{@twt}],[ai:#{@ai}],[thumbnail:#{@thumbnail}]!
+    puts %![twt:#{@twt}],[ai:#{@ai}],[thumbnail:#{@thumbnail}],[feat_3d:#{@feat_3d}]!
 
     @param_file = params[:file]
     filename = params[:filename]
@@ -202,6 +214,11 @@ class ArtistsController < ApplicationController
   #extend Nje
   
   before_action :set_artist, only: %i[show edit update destroy edit_no_update]
+
+  module MethodEnum
+    REGIST_UL_DIFF = '新規登録日と最新投稿日の日数差'
+    REGIST_UL_DIFF_NEAR = '新規登録日と昔の投稿日の日数差近い'
+  end
 
   # GET /artists or /artists.json
   def index
@@ -340,6 +357,10 @@ class ArtistsController < ApplicationController
       @unknown_id_list = Twitter::get_unregisterd_pxv_user_id_list()
     elsif prms.param_file == "DB未登録pxv user id local dir"
       @unknown_id_list = Artist::get_unregisterd_pxv_user_id_list_from_local()
+    elsif prms.param_file == ArtistsController::MethodEnum::REGIST_UL_DIFF
+      artists = artists.select {|x| (x.created_at.to_date - x.last_ul_datetime.to_date).to_i > 365}
+    elsif prms.param_file == ArtistsController::MethodEnum::REGIST_UL_DIFF_NEAR
+      artists = artists.select {|x| (x.created_at.to_date - x.earliest_ul_date.to_date).to_i < 30}
     end
 
     artists = index_select(artists, prms)
@@ -602,7 +623,10 @@ class ArtistsController < ApplicationController
       end
 
       if prms.prediction > 0
-        artists = artists.select {|x| x.prediction_up_cnt(true) >= prms.prediction}
+        artists = artists.select {
+          |x| x.prediction_up_cnt(true) >= prms.prediction or
+          (prms.force_disp_day != 0 and !x.last_access_datetime_p(prms.force_disp_day))
+        }
       elsif prms.prediction < 0
         artists = artists.select {|x| x.prediction_up_cnt(true) <= -(prms.prediction)}
       end
@@ -624,6 +648,10 @@ class ArtistsController < ApplicationController
         artists = artists.select {|x| x[:twt_check] == prms.twt_chk}
       end
   
+      if prms.feat_3d
+        artists = artists.select {|x| x[:feature] == "3D"}
+      end
+
       if prms.ai
         artists = artists.select {|x| x[:feature] == "AI"}
       end

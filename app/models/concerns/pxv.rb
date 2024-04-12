@@ -127,27 +127,52 @@ module Pxv
         artwork_id
     end
 
+    def self.get_date_title_id_str_from_path(path)
+        filename = File.basename(path)
+        if filename =~ /\d\d-\d\d-\d\d/
+            #ファイル名を返す
+            return filename
+        else
+            #フォルダ名を返す
+            return File.basename(File.dirname(path))
+        end
+    end
+
     def self.get_pxv_artwork_info_from_path(path)
         artwork_id = 0
-        if path =~ /(\d\d-\d\d-\d\d)\s*(.*?)\((\d+)\)/
+        artwork_str = get_date_title_id_str_from_path(path)
+        
+        #STDERR.puts %!"#{artwork_str}"!
+
+        #if artwork_str =~ /(\d\d-\d\d-\d\d)\s*(.*?)\((\d+)\)/
+        if artwork_str =~ /(\d\d-\d\d-\d\d)\s*(.*)\((\d\d+)\)/
             date_str = $1
             artwork_title = $2
             artwork_id = $3.to_i
-        elsif path =~ /(\d\d-\d\d-\d\d)\s*\((\d+)\)\s*(.*)/
+        elsif artwork_str =~ /(\d\d-\d\d-\d\d)\s*(.*)\((\d+)\)\(\d+\)/
+            date_str = $1
+            artwork_title = $2
+            artwork_id = $3.to_i
+        elsif artwork_str =~ /(\d\d-\d\d-\d\d)\s*\((\d+)\)\s*(.*)/
             date_str = $1
             artwork_id = $2.to_i
             artwork_title = $3
-        elsif path =~ /(\d\d-\d\d-\d\d)\s*(.*)/
-            puts %!artwork id not found:"#{path}"!
+        #22-06-20 9x17x5x2_p0_master1200.jpg"
+        elsif artwork_str =~ /(\d\d-\d\d-\d\d)\s+(\d+)/
+            date_str = $1
+            artwork_id = $2.to_i
+            artwork_title = ""
+        elsif artwork_str =~ /(\d\d-\d\d-\d\d)\s*(.*)/
+            STDERR.puts %!artwork id not found:"#{path}"!
             date_str = $1
             artwork_title = $2
         else
-            puts %!regex no hit:"#{path}"!
+            STDERR.puts %!regex no hit:"#{artwork_str}"\t"#{path}"!
             date_str = ""
         end
 
-        if artwork_id < 10
-            STDERR.puts %!artwork_id=#{artwork_id}:#{path}!
+        if artwork_id < 10 and artwork_id != 0
+            STDERR.puts %!ID取得に失敗した可能性があります。artwork_id=#{artwork_id}?|"#{path}"|"#{artwork_str}"!
         end
         [artwork_id, date_str, artwork_title]
     end

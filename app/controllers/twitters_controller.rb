@@ -28,12 +28,21 @@ class TwittersController < ApplicationController
     else
       pred_cond_gt = params[:pred].to_i
     end
+    puts %!pred_cond_gt="#{pred_cond_gt}"!
+
+    if params[:force_disp_day].presence
+      force_disp_day = params[:force_disp_day].to_i
+    else
+      force_disp_day = 0
+    end
+    puts %!force_disp_day="#{force_disp_day}"!
 
     if params[:rating] == ""
       rating_gt = 0
     else
       rating_gt = params[:rating].to_i
     end
+    puts %!rating_gt="#{rating_gt}"!
 
     if params[:thumbnail].presence
       @thumbnail = true
@@ -124,7 +133,11 @@ class TwittersController < ApplicationController
       end
 
       if pred_cond_gt != 0
-        twitters = twitters.select {|x| x.prediction >= pred_cond_gt}
+        if force_disp_day == 0
+          twitters = twitters.select {|x| x.prediction >= pred_cond_gt}
+        else
+          twitters = twitters.select {|x| x.prediction >= pred_cond_gt or !x.last_access_datetime_p(force_disp_day)}
+        end
       end
 
       if rating_gt != 0
@@ -151,7 +164,9 @@ class TwittersController < ApplicationController
     when "未設定"
       twitters = twitters.select {|x| !x.last_access_datetime_p(@hide_within_days)}
       twitters = twitters.select {|x| !(x.drawing_method.presence) }
-      twitters = twitters.sort_by {|x| [-x.prediction, x.last_access_datetime, (x.last_ul_datetime || "2000-01-01")]}
+      #twitters = twitters.sort_by {|x| [-x.prediction, x.last_access_datetime, (x.last_ul_datetime || "2000-01-01")]}
+      #twitters = twitters.sort_by {|x| [x.last_access_datetime, (x.last_ul_datetime || "2000-01-01")]}.reverse
+      twitters = twitters.sort_by {|x| [-(x.artist_pxvid || 0), x.last_access_datetime, (x.last_ul_datetime || "2000-01-01")]}.reverse
       @twitters_group = twitters.group_by {|x| x.status}
       return
     when "file"
@@ -165,6 +180,25 @@ class TwittersController < ApplicationController
       known_ids = twt_urls.keys
       twitters = twitters.select {|x| known_ids.include?(x.twtid) }
       twitters = twitters.sort_by {|x| [-x.prediction, x.last_access_datetime]}
+    when "更新不可"
+      twitters = twitters.select {|x| !x.last_access_datetime_p(@hide_within_days)}
+      twitters = twitters.select {|x| x.status != "TWT巡回"}
+      @twitters_group = twitters.group_by {|x| x.status}
+      return
+=begin
+      ["TWT巡回", "TWT巡回"],
+      ["TWT巡回不要", "TWT巡回不要"],
+      ["長期更新なし★", "長期更新なし"], 
+      ["TWT巡回不要(PXVチェック)", "TWT巡回不要(PXVチェック)"],
+      ["最近更新してない？", "最近更新してない？"], 
+      ["アカウント削除", "削除"],
+      ["存在しない", "存在しない"],
+      ["凍結", "凍結"],
+      ["非公開アカウント", "非公開アカウント"],
+      ["別アカウントに移行（存在はするが更新していない？）", "別アカウントに移行"],
+      ["アカウントID変更", "アカウントID変更"],
+=end
+
     when "all"
       twitters = twitters.sort_by {|x| [-x.prediction, x.last_access_datetime, (x.last_ul_datetime || "2000-01-01")]}
     else

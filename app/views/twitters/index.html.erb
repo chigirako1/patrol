@@ -29,6 +29,7 @@
         最終アクセス日
       </th>
       <th>PXV最終UL日</th>
+      <th>PXV最終アクセス日</th>
       <th>pxvid</th>
       <th>サムネイル</th>
       <th>備考</th>
@@ -56,12 +57,11 @@
           <br />
           [<%= twitter.update_frequency %>]
           <br />
+          【<%= twitter.get_date_info(twitter.last_access_datetime) if twitter.last_access_datetime.presence %>】
         </td>
         <td>
           <%#= twitter["last_access_datetime"].in_time_zone('Tokyo').strftime("%Y-%m-%d") if twitter["last_access_datetime"] != nil %>
           <%= twitter.get_datetime_string(twitter.last_access_datetime, true) if twitter.last_access_datetime.presence %>
-          <br />
-          (<%= twitter.get_date_info(twitter.last_access_datetime) if twitter.last_access_datetime.presence %>)
         </td>
         <td bgcolor="pink">
           <% if twitter.last_ul_datetime.presence %>
@@ -73,6 +73,8 @@
             <br />
           <% end %>
           <%= %!【#{twitter.artist_status}】! if twitter.artist_status.presence %>
+        </td>
+        <td bgcolor="pink">
           <% if twitter.artists_last_access_datetime.presence %>
             <%= %!【#{twitter.get_date_info(twitter.artists_last_access_datetime)}】! %>
           <% end %>
