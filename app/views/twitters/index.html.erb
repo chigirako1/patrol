@@ -56,12 +56,11 @@
           [<%= link_to "Show", twitter, target: :_blank, rel: "noopener noreferrer" %>]
           <br />
           [<%= twitter.update_frequency %>]
-          <br />
-          【<%= twitter.get_date_info(twitter.last_access_datetime) if twitter.last_access_datetime.presence %>】
         </td>
         <td>
           <%#= twitter["last_access_datetime"].in_time_zone('Tokyo').strftime("%Y-%m-%d") if twitter["last_access_datetime"] != nil %>
-          <%= twitter.get_datetime_string(twitter.last_access_datetime, true) if twitter.last_access_datetime.presence %>
+          <%#= twitter.get_datetime_string(twitter.last_access_datetime, true) if twitter.last_access_datetime.presence %>
+          <%= twitter.get_date_info(twitter.last_access_datetime) if twitter.last_access_datetime.presence %>
         </td>
         <td bgcolor="pink">
           <% if twitter.last_ul_datetime.presence %>

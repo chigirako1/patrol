@@ -8,7 +8,7 @@ textarea {
 <div id="<%= dom_id twitter %>">
     <!-- PXV画像 -->
     <% if twitter.pxvid.presence %>
-        <%= pic_path_tag(twitter.pxvid, 5, '10%') %>
+        <%= pic_path_tag(twitter.pxvid, 5, '10%', true) %>
         <br />
     <% end %>
 

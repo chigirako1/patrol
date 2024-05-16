@@ -191,7 +191,8 @@ class Artist < ApplicationRecord
             end
         end
 
-        known_pxv_user_id_list.sort_by! {|x| [x.p.status, x.p.rating, x.p.r18, -(x.cnt), x.p.last_access_datetime]}
+        #known_pxv_user_id_list.sort_by! {|x| [x.p.status, x.p.rating, x.p.r18, -(x.cnt), x.p.last_access_datetime]}
+        known_pxv_user_id_list.sort_by! {|x| [x.p.status, x.p.rating==0 ? -11 : -x.p.rating, x.p.r18, -(x.cnt), x.p.last_access_datetime]}
         unknown_pxv_user_id_list.sort_by! {|x| [-(x.cnt), x.pxvid]}
 
         [known_pxv_user_id_list, unknown_pxv_user_id_list]

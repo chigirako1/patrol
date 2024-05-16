@@ -112,6 +112,7 @@
 <% pic_mag_twt = '23%' %>
 
 <% pxv_list = [] %>
+<% recent_pxv_list = [] %>
 <%# if @target.include?("known_pxv") and @known_pxv_user_id_list.presence %>
 <% if @known_pxv_user_id_list.size > 0 %>
     <h2>既知pxv id list (<%= @known_pxv_user_id_list.size %>)</h2>
@@ -134,7 +135,11 @@
         <% @known_pxv_user_id_list.each.with_index(1) do |elem| %>
             <% p = elem.p %>
             <% if p.last_access_datetime_p(@hide_day) %>
-                <%# pxv_list << p %>
+                <% recent_pxv_list << p %>
+                <% next %>
+            <% end %>
+            <% if p.prediction_up_cnt < @pred %>
+                <% pxv_list << p %>
                 <% next %>
             <% end %>
 
@@ -197,7 +202,7 @@
 <% end %>
 
 <% if pxv_list.size > 0 %>
-    <h2>既知pxv 最近アクセス分 (<%= pxv_list.size %>)</h2>
+    <h2>既知pxv 予測少ないやつ (<%= pxv_list.size %>)</h2>
     <table border="1" rules="all">
         <tr>
             <th>#</th>
@@ -212,7 +217,7 @@
             <th>twt show</th>
             <th>twt thumbnail</th>
         </tr>
-        <% pxv_list.first(20).each.with_index(1) do |p, idx| %>
+        <% pxv_list.first(10).each.with_index(1) do |p, idx| %>
             <tr>
                 <td><%= idx %></td>
                 <td><%= p.status %></td>
@@ -227,7 +232,10 @@
                     <br />
                     <%= link_to "show", p, target: :_blank, rel: "noopener noreferrer" %>
                 </td>
-                <td><%= p.pxvname %></td>
+                <td>
+                    <%= p.pxvname %>
+                    [<%= p.rating %>|<%= p.r18 %>]
+                </td>
                 <td>
                     <%= pic_path_tag(p.pxvid, 3, '15%') %>
                 </td>
@@ -250,6 +258,15 @@
                 <% end %>
             </tr>
         <% end %>
+    </table>
+<% end %>
+
+<% if recent_pxv_list.size > 0 %>
+    <h2>既知pxv 最近アクセス分 (<%= recent_pxv_list.size %>)</h2>
+    <% recent_pxv_list.each.with_index(1) do |p, idx| %>
+        <%= idx %>:<%= p.rating %>|<%= p.pxvname %>|<%= p.last_access_datetime_disp %>|予測:<%= p.prediction_up_cnt(true) %>|(<%= link_to "show", p, target: :_blank, rel: "noopener noreferrer" %>)
+        <br />
+    <% end %>
 <% end %>
 
 <% if @unknown_pxv_user_id_list.presence %>
@@ -279,7 +296,7 @@
         <% file = File.basename(filename, ".*") %>
         <% url_t = artists_twt_index_path(filename: file, hide_day: 60, target:"twt") %>
         <% url_u = artists_twt_index_path(filename: file, hide_day: 60, target:"unknown_pxv") %>
-        <% url_k = artists_twt_index_path(filename: file, hide_day: 60, target:"known_pxv") %>
+        <% url_k = artists_twt_index_path(filename: file, hide_day: 60, target:"known_pxv", pred: 3, force_disp_day: 90) %>
         <%= file %>
         | <%= link_to("twt", url_t, target: :_blank, rel: "noopener noreferrer") %>
         | <%= link_to("既知pxv", url_k, target: :_blank, rel: "noopener noreferrer") %>

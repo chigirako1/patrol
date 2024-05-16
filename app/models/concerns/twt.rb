@@ -1,5 +1,7 @@
 # coding: utf-8
 
+#require "active_support/core_ext/numeric/conversions"
+
 module Twt
     extend ActiveSupport::Concern
 
@@ -159,7 +161,7 @@ module Twt
             end
             tweet_id = $2.to_i
             pic_no = $3.to_i
-        elsif filename =~ /(\d+)-(\d+)/
+        elsif filename =~ /(\d\d\d+)-(\d+)/
             tweet_id = $1.to_i
             pic_no = $2.to_i
         else
@@ -191,7 +193,9 @@ module Twt
             mtime = File::mtime(fullpath)
             date_str = %![#{mtime.strftime("%Y-%m-%d")}]!
         end
-        date_str + %!#{4 - pic_no} (#{fn})(#{File.dirname path})!
+        #twt_id_str = tweet_id.to_s(:delimited)
+        twt_id_str = tweet_id.to_s.reverse.gsub(/\d{3}/, '\0,').reverse
+        %!<#{twt_id_str}>#{4 - pic_no}#{date_str}[#{fn})(#{File.dirname path}]!
     end
 
     def self.get_time_from_path(filepath)

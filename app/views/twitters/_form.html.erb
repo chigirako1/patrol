@@ -158,7 +158,7 @@
       PXVアクセス:
       【<%= pxv.rating %>】
       [<%= pxv.last_access_datetime_disp %>]
-      [<%= pxv.status %>|<%= pxv.feature %>]
+      [<%= pxv.status %>|<%= pxv.feature %>|<%= pxv.pxvname %>]
       [<%= link_to "show", artist_path(pxv.id), target: :_blank, rel: "noopener noreferrer" %>]
     <% else %>
       <% pxv2 = Artist.find_by(pxvid: @twitter.pxvid) %>

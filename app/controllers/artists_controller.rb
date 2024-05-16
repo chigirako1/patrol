@@ -443,6 +443,20 @@ class ArtistsController < ApplicationController
       @hide_day = 5
     end
 
+    force_disp_day = params[:force_disp_day]
+    if force_disp_day =~ /(\d+)/
+      @force_disp_day = $1.to_i
+    else
+      @force_disp_day = 0
+    end
+
+    pred = params[:pred]
+    if pred =~ /(\d+)/
+      @pred = $1.to_i
+    else
+      @pred = 0
+    end
+
     target = params[:target]
     if target.presence
       @target = target.split(",")

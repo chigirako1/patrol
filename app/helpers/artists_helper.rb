@@ -46,7 +46,7 @@ module ArtistsHelper
         tag.html_safe
     end
 
-    def pic_path_tag(pxvid, no_of_disp, scale='15%')
+    def pic_path_tag(pxvid, no_of_disp, scale='15%', append_txt=false)
         tag = ""
         pathlist = Pxv::get_pathlist(pxvid)
         work_list = Artist.artwork_list(pathlist)
@@ -55,9 +55,12 @@ module ArtistsHelper
             tag += link_to(image_tag(path, width: scale, height: scale), path, target: :_blank, rel: "noopener noreferrer")
         end
 
-        #pathlist.first(no_of_disp).each do |path|
-            #tag += link_to(image_tag(path, width: scale, height: scale), path, target: :_blank, rel: "noopener noreferrer")
-        #end
+        if append_txt
+            tag += %!</br>!
+            pathlist.first(1).each do |path|
+                tag += link_to(path, path, target: :_blank, rel: "noopener noreferrer")
+            end
+        end
         tag.html_safe
     end
 

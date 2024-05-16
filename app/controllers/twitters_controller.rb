@@ -119,9 +119,59 @@ class TwittersController < ApplicationController
     when "not_patrol"
       twitters = twitters.select {|x| x.status != "TWT巡回"}
       twitters = twitters.select {|x| x.drawing_method != nil and (x.drawing_method == "AI")}
-    when "patrol"
+    when "patrol3"
       twitters = twitters.select {|x| x.drawing_method != nil}
-      twitters = twitters.select {|x| x.status == "TWT巡回"}
+      twitters = twitters.select {|x|
+        #x.status == "長期更新なし" or
+        #x.status == "最近更新してない？" or
+        x.status == "削除" or
+        x.status == "存在しない" or
+        x.status == "凍結" or
+        x.status == "別アカウントに移行" or
+        x.status == "アカウントID変更"
+      }
+      if params[:target].presence
+        twitters = twitters.select {|x| x.drawing_method == params[:target]}
+      else
+        twitters = twitters.select {|x| x.drawing_method != nil and (x.drawing_method == "AI" or x.drawing_method == "パクリ")}
+      end
+
+      if pred_cond_gt != 0
+        if force_disp_day == 0
+          twitters = twitters.select {|x| x.prediction >= pred_cond_gt}
+        else
+          twitters = twitters.select {|x| x.prediction >= pred_cond_gt or !x.last_access_datetime_p(force_disp_day)}
+        end
+      end
+
+      if rating_gt != 0
+        twitters = twitters.select {|x| x.rating == nil or x.rating >= rating_gt }
+      end
+
+      case sort_by
+      when "access"
+        twitters = twitters.sort_by {|x| [x.last_access_datetime, (x.last_dl_datetime)]}#.reverse
+      else
+        twitters = twitters.sort_by {|x| [-x.prediction, x.last_access_datetime, (x.last_dl_datetime)]}
+      end
+      @twitters_group = twitters.group_by {|x| x.status}
+      #@twitters_group = @twitters_group.sort_by {|k, v| k || 0}.reverse.to_h
+      return
+    when "patrol", "patrol2"
+      twitters = twitters.select {|x| x.drawing_method != nil}
+      if mode == "patrol"
+        twitters = twitters.select {|x| x.status == "TWT巡回"}
+      else
+        twitters = twitters.select {|x|
+          x.status == "長期更新なし" or
+          x.status == "最近更新してない？" #or
+          #x.status == "削除" or
+          #x.status == "存在しない" or
+          #x.status == "凍結" or
+          #x.status == "別アカウントに移行" or
+          #x.status == "アカウントID変更"
+        }
+      end
       twitters = twitters.select {|x| !x.last_access_datetime_p(@hide_within_days)}
       #twitters = twitters.select {|x| x.get_date_delta(x.last_access_datetime) > 0}
       #twitters = twitters.select {|x| x.id == 1388}
@@ -146,7 +196,7 @@ class TwittersController < ApplicationController
 
       case sort_by
       when "access"
-        twitters = twitters.sort_by {|x| [x.last_access_datetime, (x.last_dl_datetime)]}
+        twitters = twitters.sort_by {|x| [x.last_access_datetime, (x.last_dl_datetime)]}#.reverse
       else
         twitters = twitters.sort_by {|x| [-x.prediction, x.last_access_datetime, (x.last_dl_datetime)]}
       end
