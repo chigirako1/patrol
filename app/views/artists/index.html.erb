@@ -36,7 +36,7 @@
     </tr>
     <% artists[(@begin_no)..(@begin_no + @size_per_table - 1)].each do |artist| %>
       <% if @twt %>
-        <% twt = Twitter.find_by(twtid: artist["twtid"]) %>
+        <% twt = Twitter.find_by_twtid_ignore_case(artist["twtid"]) %>
       <% else %>
         <% twt = nil %>
       <% end %>
@@ -154,10 +154,9 @@
 <% if @twt_urls.size > 0 %>
   <h2 id="twt_url_list">twt url list(<%= @twt_urls.size %>)</h2>
   <% @twt_urls.each do |key, url_list| %>
-    <% twt = Twitter.find_by(twtid: key) %>
+    <% twt = Twitter.find_by_twtid_ignore_case(key) %>
    
     <h3>
-      <%#= link_to "@" + key, "https://twitter.com/#{key}", target: :_blank, rel: "noopener noreferrer" %>
       <%= link_to "@" + key, Twt::twt_user_url(key), target: :_blank, rel: "noopener noreferrer" %>
       <%= %! | #{twt.twt_screen_name}! if twt != nil %>
     </h3>

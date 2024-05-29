@@ -105,7 +105,7 @@ module Pxv
 
         rpath_list = get_path_from_dirlist(pxvid)
         rpath_list.each do |rpath|
-            puts %!path="#{rpath}"!
+            puts %!rpath="#{rpath}"!
             path_list << UrlTxtReader::get_path_list(rpath)
         end
 

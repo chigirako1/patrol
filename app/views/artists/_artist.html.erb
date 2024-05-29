@@ -106,7 +106,7 @@
       <% end %>
   <% end %>
   <%= link_to "【twtサムネイル表示】", "../artists/#{@artist.id}?mode=twt_pic_list#twt_pic_list" %>
-  <% twt = Twitter.find_by(twtid: artist.twtid) %>
+  <% twt = Twitter.find_by_twtid_ignore_case(artist.twtid) %>
   <% if twt.presence %>
     【<%= twt.rating %>|<%= twt.status %>】
     <%= link_to "twt", twitter_path(twt) %>
@@ -157,29 +157,24 @@
   </p>
 
   <% if artist.chara != "" %>
-  <p>
-    <strong>よく描くキャラ:</strong>
-    <%= artist.chara %>
-  </p>
+    <p>
+      <strong>よく描くキャラ:</strong>
+      <%= artist.chara %>
+    </p>
   <% end %>
 
   <% if artist.work != "" %>
-  <p>
-    <strong>よく描く作品:</strong>
-    <%= artist.work %>
-  </p>
+    <p>
+      <strong>よく描く作品:</strong>
+      <%= artist.work %>
+    </p>
   <% end %>
 
   <% if artist.warnings != "" %>
-  <p>
-    <strong>注意事項:</strong>
-    <font color="red"><%= artist.warnings %></font>
-  </p>
+    <p>
+      <strong>注意事項:</strong>
+      <font color="red"><%= artist.warnings %></font>
+    </p>
   <% end %>
-
-  <h3>Pixivを開く =>
-  <% url = artist.pxv_user_url %>
-  <%= link_to artist["pxvid"], url, target: :_blank, rel: "noopener noreferrer" %>
-  </h3>
 
 </div>

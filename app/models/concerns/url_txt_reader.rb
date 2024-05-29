@@ -7,51 +7,27 @@ module UrlTxtReader
     extend ActiveSupport::Concern
 
     def get_date_delta(date)
-        if date == nil
-            puts "date==nil"
-            return 0
-        end
-        now = Time.zone.now
-        #days = (now - date).to_i / 60 / 60 / 24
-        days = (now.to_date - date.to_date).to_i
-        #puts "days=#{days}/#{date}/#{now}"
-        days
+        Util::get_date_delta(date)
     end
 
     def get_year_delta(date)
-        get_date_delta(date) / 365
+        Util::get_date_delta(date) / 365
     end
 
     def last_access_datetime_p(day = 13)
         if day < 0
-            get_date_delta(last_access_datetime) < -day
+            Util::get_date_delta(last_access_datetime) < -day
         else
-            get_date_delta(last_access_datetime) < day
+            Util::get_date_delta(last_access_datetime) < day
         end
     end
 
     def get_date_info(date)
-        days = get_date_delta(date)
-        if days >= 365
-            years, remain = days.divmod(365)
-            months = remain / 30
-            if months == 0
-                "#{years}年以上前"
-            else
-                "#{years}年#{months}ヶ月以上前"
-            end
-        elsif days >= 30
-            months = days / 30
-            "#{months}ヶ月以上前"
-        elsif days == 0
-            "24時間以内"
-        else
-            "#{days}日以内"
-        end
+        Util::get_date_info(date)
     end
 
     def get_date_info_days(date)
-        days = get_date_delta(date)
+        days = Util::get_date_delta(date)
         "#{days}日以内"
     end
 
@@ -117,7 +93,7 @@ module UrlTxtReader
         Dir.glob(base_path + "/*") do |path|
             if path =~ /get illust url_\d+\.txt/
                 path_list << path
-                puts %!path="#{path}"!
+                #puts %!txt_file_list: path="#{path}"!
             else
            end
         end
@@ -249,6 +225,12 @@ module UrlTxtReader
         [id_list, twt_urls, misc_urls]
     end
 
+    COL_PXV_EXIST = 0
+    COL_URL_LIST = 1
+    COL_TWT_EXIST = 2
+    COL_PXV_RATING = 3
+    COL_TWT_RATING = 4
+
     def self.get_ulrs(txts, db_check=false)
         id_list = []
         twt_urls = {}
@@ -267,14 +249,14 @@ module UrlTxtReader
                 #twt_user_url = $2
                 twt_id = $3
 
-                if url =~ %r!(https?://twitter\.com/\w+/status/\d+)\?.*!
+                #if url =~ %r!(https?://twitter\.com/\w+/status/\d+)\?.*!
                     #twt_urls.push($1)
                     #twt_urls.push($1 + "/photo/1")
-                end
+                #end
 
                 if twt_urls.has_key? twt_id
                     # 既存に追加
-                    twt_urls[twt_id][1] << line
+                    twt_urls[twt_id][COL_URL_LIST] << line
                 else
                     # 新規
                     twt_urls[twt_id] = []
@@ -286,28 +268,28 @@ module UrlTxtReader
                     end
                     if artist != nil
                         id_list << artist.pxvid
-                        twt_urls[twt_id][0] = true
-                        twt_urls[twt_id][3] = artist.rating
+                        twt_urls[twt_id][COL_PXV_EXIST] = true
+                        twt_urls[twt_id][COL_PXV_RATING] = artist.rating
                     else
-                        twt_urls[twt_id][0] = false
-                        twt_urls[twt_id][3] = 0
+                        twt_urls[twt_id][COL_PXV_EXIST] = false
+                        twt_urls[twt_id][COL_PXV_RATING] = 0
                     end
 
                     if db_check
-                        twt = Twitter.find_by(twtid: twt_id)
+                        twt = Twitter.find_by_twtid_ignore_case(twt_id)
                     else
                         twt = nil
                     end
                     if twt != nil
-                        twt_urls[twt_id][2] = true
-                        twt_urls[twt_id][4] = twt.rating
+                        twt_urls[twt_id][COL_TWT_EXIST] = true
+                        twt_urls[twt_id][COL_TWT_RATING] = twt.rating
                     else
-                        twt_urls[twt_id][2] = false
-                        twt_urls[twt_id][4] = 0
+                        twt_urls[twt_id][COL_TWT_EXIST] = false
+                        twt_urls[twt_id][COL_TWT_RATING] = 0
                     end
 
-                    twt_urls[twt_id][1] = []
-                    twt_urls[twt_id][1] << line
+                    twt_urls[twt_id][COL_URL_LIST] = []
+                    twt_urls[twt_id][COL_URL_LIST] << line
                 end
             elsif line =~ %r!(https?://.*)!
                 url = $1
@@ -317,14 +299,75 @@ module UrlTxtReader
              end
         end
 
-        twt_urls = twt_urls.sort_by {|k, v| [v[0]?1:0, v[2]?1:0, v[3]?v[3]:0, v[4]?v[4]:0, -v[1].size, k.downcase]}.to_h
+        twt_urls = twt_urls.sort_by {|k, v|
+            [
+                v[COL_PXV_EXIST]?1:0, 
+                v[COL_TWT_EXIST]?1:0, 
+                v[COL_PXV_RATING]?v[COL_PXV_RATING]:0, 
+                v[COL_TWT_RATING]?v[COL_TWT_RATING]:0, 
+                -v[COL_URL_LIST].size, 
+                k.downcase
+            ]
+        }.to_h
         #twt_urls_pxv_t = twt_urls.select {|x| x[0]}
         #twt_urls_pxv_f = twt_urls.select {|x| !x[0]}
         #twt_urls = twt_urls_pxv_t.merge(twt_urls_pxv_f)
 
-        twt_urls = twt_urls.map {|key, val| [key, val[1]]}.to_h
+        twt_urls = twt_urls.map {|key, val| [key, val[COL_URL_LIST]]}.to_h
 
         #[id_list.uniq, twt_urls, misc_urls]
         [id_list, twt_urls, misc_urls]
+    end
+
+    def self.get_url_txt_info(filepath)
+        txt_sum = get_url_txt_contents(filepath)
+        txts = txt_sum.split(/\R/)
+
+        pxv_id_list = []
+        twt_infos = {}
+        misc_urls = []
+
+        txts.each do |line|
+            line.chomp!
+            next if line =~ /^$/
+    
+            if line =~ %r!https?://www\.pixiv\.net/users/(\d+)!
+                user_id = $1.to_i
+                pxv_id_list.push user_id
+            elsif line =~ %r!(https?://twitter\.com/(\w+))!
+                url = $1
+                twt_id = $2
+
+                if twt_infos.has_key? twt_id
+                    # 既存
+                    twt_infos[twt_id].append_url(line)
+                else
+                    # 新規
+                    twt_url = TWT_URL.new(twt_id)
+                    twt_url.append_url(line)
+                    twt_infos[twt_id] = twt_url
+                end
+            elsif line =~ %r!(https?://.*)!
+                url = $1
+                misc_urls.push url
+            else
+                misc_urls.push line
+             end
+        end
+
+        [pxv_id_list, twt_infos, misc_urls]
+    end
+end
+
+class TWT_URL
+    attr_reader :twt_id, :url_list
+
+    def initialize(twtid)
+        @twt_id = twtid
+        @url_list = []
+    end
+
+    def append_url(url)
+        @url_list << url
     end
 end

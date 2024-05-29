@@ -78,7 +78,7 @@ class NjeArtist
     def nje_pic_path_list()
         pic_list = []
         path_list.each do |path|
-            puts path
+            puts %!nje_pic_path_list:#{path}!
             pic_list << UrlTxtReader::get_path_list(path)
         end
         pic_list.flatten.sort.reverse

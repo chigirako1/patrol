@@ -235,7 +235,7 @@
     @<%= form.text_field :alt_twtid %>
     <%=  %>
     <%= link_to "@#{@twitter.alt_twtid}", Twt::twt_user_url(@twitter.alt_twtid), target: :_blank, rel: "noopener noreferrer" if @twitter.alt_twtid.presence %>
-    <% alt_twt = Twitter.find_by(twtid: @twitter.alt_twtid) %>
+    <% alt_twt = Twitter.find_by_twtid_ignore_case(@twitter.alt_twtid) %>
     <% if alt_twt.presence %>
       <%= alt_twt.twtname %>
       【<%= alt_twt.rating %>|<%= alt_twt.status %>】
@@ -248,7 +248,7 @@
     <%= form.label :旧ID, style: "display: block" %>
     @<%= form.text_field :old_twtid %>
     <%= link_to "@#{@twitter.old_twtid}", Twt::twt_user_url(@twitter.old_twtid), target: :_blank, rel: "noopener noreferrer" if @twitter.old_twtid.presence %>
-    <% old_twt = Twitter.find_by(twtid: @twitter.old_twtid) %>
+    <% old_twt = Twitter.find_by_twtid_ignore_case(@twitter.old_twtid) %>
     <% if old_twt.presence %>
       <%= old_twt.twtname %>
       【<%= old_twt.rating %>|<%= old_twt.status %>】
@@ -268,7 +268,8 @@
 
   <div>
     <%= form.label :総ファイル数, style: "display: block" %>
-    <%= form.number_field :filenum %>
+    <%= form.number_field :filenum, value: @twt_pic_path_list.size %>
+    現在の設定値：<%= @twitter.filenum %>
   </div>
 
   <div>

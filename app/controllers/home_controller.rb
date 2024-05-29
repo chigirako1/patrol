@@ -40,11 +40,11 @@ class HomeController < ApplicationController
       { :label => "Twitter[AI] 70", :path => twitters_path(target: "AI", page_title: "AI 70", rating: 70, hide_within_days: 3, num_of_disp: 5, pred: 24, mode: "patrol", thumbnail: "t") },
       { :label => "Twitter[AI] 65", :path => twitters_path(target: "AI", page_title: "AI 65", rating: 65, hide_within_days: 4, num_of_disp: 5, pred: 27, mode: "patrol", thumbnail: "t") },
       { :label => "Twitter[AI] 60", :path => twitters_path(target: "AI", page_title: "AI 60", rating: 60, hide_within_days: 4, num_of_disp: 5, pred: 30, mode: "patrol", thumbnail: "t") },
-      { :label => "Twitter[AI] 55", :path => twitters_path(target: "AI", page_title: "AI 55", rating: 55, hide_within_days: 5, num_of_disp: 5, pred: 33, mode: "patrol", thumbnail: "t") },
+      { :label => "Twitter[AI] 55", :path => twitters_path(target: "AI", page_title: "AI 55", rating: 55, hide_within_days: 5, num_of_disp: 4, pred: 33, mode: "patrol", thumbnail: "t") },
       { :label => "Twitter[AI] 45", :path => twitters_path(target: "AI", page_title: "AI 45", rating: 45, hide_within_days: 5, num_of_disp: 3, pred: 36, mode: "patrol", thumbnail: "t") },
       { :label => "Twitter[AI] 31",
           :path => twitters_path(
-            page_title: "AI 31", rating: 31, hide_within_days: 5, num_of_disp: 10, pred: 36, mode: "patrol", thumbnail: "t"
+            page_title: "AI 31", rating: 31, hide_within_days: 5, num_of_disp: 2, pred: 36, mode: "patrol", thumbnail: "t"
           )
       },
       { :label => "-", :path => "" },
@@ -289,7 +289,7 @@ class HomeController < ApplicationController
           prediction: 6,
           rating: 10,
           last_access_datetime: 1,
-          display_number: 7,
+          display_number: 8,
           thumbnail: true
         )
       },
@@ -304,7 +304,7 @@ class HomeController < ApplicationController
           prediction: 6,
           rating: 9,
           last_access_datetime: 2,
-          display_number: 6,
+          display_number: 7,
           thumbnail: true
         )
       },
@@ -370,23 +370,6 @@ class HomeController < ApplicationController
         )
       },
       { :label => "-", :path => "" },
-      { :label => "pxv 未設定 AIチェック",
-          :path => artists_path(
-            page_title: "未設定 AIチェック", 
-            sort_by: "id", 
-            #group_by: "", 
-            exclude_ai: "true",
-            status: "「長期更新なし」を除外",
-            #point: 1, 
-            #prediction: 0, 
-            recent_filenum: 5,
-            rating: 0, 
-            last_access_datetime: 7, 
-            display_number: 10, 
-            #year: 2023, 
-            thumbnail: true
-          )
-      },
       { :label => "pxv 未設定 更新数[多]予測",
           :path => artists_path(
             page_title: "pxv 未設定 更新数[多]予測", 
@@ -480,17 +463,18 @@ class HomeController < ApplicationController
           page_title: "高評価7", sort_by: "point", group_by: "評価+年齢制限", exclude_ai: "true",
           status: "「長期更新なし」を除外",
           point: 1, 
-          prediction:8, 
-          force_disp_day: 75,
+          prediction: 12, 
+          force_disp_day: 120,
           rating: 7, 
-          last_access_datetime: 20, 
+          last_access_datetime: 60, 
           display_number: 3, 
-          year: 2023, 
+          #year: 2023, 
           thumbnail: true
         )
       },
       { :label => "-", :path => "" },
       #
+=begin
       { :label => "pxv 10 日数経過+予測数",
             :path => artists_path(
                 page_title: "10 日数経過+予測数",
@@ -507,6 +491,7 @@ class HomeController < ApplicationController
                 thumbnail: true
             )
       },
+=end
       { :label => "pxv 9 日数経過+予測数",
             :path => artists_path(
                 page_title: "9 日数経過+予測数",
@@ -575,6 +560,23 @@ class HomeController < ApplicationController
       },
       #
       { :label => "-", :path => "" },
+      { :label => "pxv 未設定 AIチェック",
+          :path => artists_path(
+            page_title: "未設定 AIチェック", 
+            sort_by: "id", 
+            #group_by: "", 
+            exclude_ai: "true",
+            status: "「長期更新なし」を除外",
+            #point: 1, 
+            prediction: 4, 
+            recent_filenum: 5,
+            rating: 0, 
+            last_access_datetime: 7, 
+            display_number: 10, 
+            #year: 2023, 
+            thumbnail: true
+          )
+      },
       { :label => "pxv 未設定 予測",
           :path => artists_path(
             page_title: "未設定 予測", 
@@ -632,10 +634,17 @@ class HomeController < ApplicationController
       },
       # ----------------------------
       { :label => "url file", :path => "" },
-      { :label => "twt(dir-all)", :path => artists_twt_index_path },
-      { :label => "twt(dir-new)", :path => artists_twt_index_path(dir: "new") },
-      { :label => "twt(dir-old)", :path => artists_twt_index_path(dir: "old") },
-      { :label => "twt(dir-DB更新 BY FS)", :path => artists_twt_index_path(dir: "update") },
+      { :label => "twt(dir-all)",
+        :path => artists_twt_index_path(
+          target:"twt"
+        )
+      },
+      { :label => "twt(dir-new)", :path => artists_twt_index_path(dir: "new", target:"twt") },
+      { :label => "twt(dir-old)", :path => artists_twt_index_path(dir: "old", target:"twt") },
+      { :label => "twt(dir-DB更新 BY FS)", :path => artists_twt_index_path(dir: "update") },#, target:"twt") },
+      { :label => "twt(dir-new-list)",
+        :path => artists_twt_index_path(dir: "new-list")
+      },
       #
       { :label => "-", :path => "" },
       { :label => "ファイルlist",
@@ -644,18 +653,33 @@ class HomeController < ApplicationController
           )
       },
       { :label => "-", :path => "" },
+      { :label => "最新ファイル all",
+          :path => artists_twt_index_path(
+            filename: "latest",
+            hide_day: 30,
+            target:"twt,twt既知,twt未知,known_pxv,unknown_pxv",
+          )
+      },
       { :label => "最新ファイル twt",
           :path => artists_twt_index_path(
             filename: "latest",
             hide_day: 30,
-            target:"twt",
+            target:"twt,twt既知,twt未知",
+          )
+      },
+      { :label => "最新ファイル 既知twt",
+          :path => artists_twt_index_path(
+            filename: "latest",
+            hide_day: 30,
+            force_disp_day: 90,
+            target:"twt,twt既知",
           )
       },
       { :label => "最新ファイル twt未知",
           :path => artists_twt_index_path(
             filename: "latest",
             hide_day: 30,
-            force_disp_day: 90,
+            #force_disp_day: 90,
             pred: 5,
             target:"twt未知",
           )
@@ -684,6 +708,23 @@ class HomeController < ApplicationController
             force_disp_day: 90,
             pred: 5,
             target:"twt"
+          )
+      },
+      { :label => "最新3ファイル 既知twt",
+          :path => artists_twt_index_path(
+            filename: "latest 3",
+            hide_day: 30,
+            force_disp_day: 90,
+            target:"twt,twt既知",
+          )
+      },
+      { :label => "最新3ファイル twt未知",
+          :path => artists_twt_index_path(
+            filename: "latest 3",
+            hide_day: 30,
+            force_disp_day: 90,
+            pred: 5,
+            target:"twt未知",
           )
       },
       { :label => "最新3ファイル 既知pxv",

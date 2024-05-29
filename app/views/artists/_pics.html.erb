@@ -18,12 +18,23 @@
     }
   </script>
   <br />
-
+<!-- 
   <% if @path_list[0] =~ /(\d\d-\d\d-\d\d)/ %>
     <font color="red"><%= $1 %></font><br />
     <% if date_diff?(artist, $1) %>
       <h3>日付が異なります</h3>
     <% end %>
+  <% end %>
+
+  # 最新のファイルが現在よりnヶ月昔の場合は表示
+  #TODO:
+
+  ↓アクセス時間更新してるので無駄
+  予測:<%= artist.prediction_up_cnt(true) %>
+-->
+  <% if @path_list[0] =~ /(\d\d-\d\d-\d\d)/ %>  
+    <%= Util::get_date_info(Date.parse($1)) %>
+    <br />
   <% end %>
 
   <% list = Artist.artwork_list(@path_list) %>

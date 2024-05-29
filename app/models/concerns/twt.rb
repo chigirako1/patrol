@@ -7,6 +7,7 @@ module Twt
 
     TWT_CURRENT_DIR_PATH = "public/d_dl/Twitter/"
     TWT_TMP_DIR_PATH     = "public/d_dl/Twitter-/"
+    TWT_TMP_DIR_PATH_A   = "public/d_dl/Twitter-/a/"
     TWT_ARCHIVE_DIR_PATH = "public/twt"
     TWT_DIRLIST_TXT_PATH = "#{TWT_ARCHIVE_DIR_PATH}/dirlist.txt"
 
@@ -52,7 +53,11 @@ module Twt
         dirpath = Util::get_dir_path_by_twtid(twt_root, twtid)
         path_list << UrlTxtReader::get_path_list(dirpath)
 
-        if Dir.exist?(TWT_TMP_DIR_PATH)
+        if Dir.exist?(TWT_TMP_DIR_PATH_A)
+            twt_root = Rails.root.join(TWT_TMP_DIR_PATH).to_s + "*/*/"
+            dirpath = Util::get_dir_path_by_twtid(twt_root, twtid)
+            path_list << UrlTxtReader::get_path_list(dirpath)
+        elsif Dir.exist?(TWT_TMP_DIR_PATH)
             twt_root = Rails.root.join(TWT_TMP_DIR_PATH).to_s + "*/"
             dirpath = Util::get_dir_path_by_twtid(twt_root, twtid)
             path_list << UrlTxtReader::get_path_list(dirpath)
@@ -89,24 +94,53 @@ module Twt
 
         artist_list = {}
         path_list.flatten.each do |path|
-            dirname = File.basename path
-            if dirname =~ /(\w+)\s*(.*)/
-                id = $1
-                name = $2.strip
-
-                if artist_list.include? id
-                    artist_list[id].append_path(path)
-                else
-                    artist_list[id] = TwtArtist.new(id, name, path)
-                end
-            else
-                puts %!invalid format:"#{path}" (#{__FILE__}:#{__LINE__})!
-            end
+            set_twt_user(artist_list, path)
         end
         #artist_list.sort_by{|s| [s[0].downcase, s[0]]}.to_h
         artist_list.sort_by{|_, v| v.ctime}.to_h
     end
 
+    def self.set_twt_user(artist_hash, path)
+        dirname = File.basename path
+        if dirname =~ /(\w+)\s*(.*)/
+            id = $1
+            name = $2.strip
+
+            if artist_hash.include? id
+                artist_hash[id].append_path(path)
+            else
+                artist_hash[id] = TwtArtist.new(id, name, path)
+                artist_hash[id].set_filenum
+            end
+        else
+            puts %!invalid format:"#{path}" (#{__FILE__}:#{__LINE__})!
+        end
+    end
+
+    def self.twt_user_infos()
+        path_list = []
+        path_list << Util::glob(TWT_CURRENT_DIR_PATH)
+
+        artist_list = {}
+        path_list.flatten.each do |path|
+            dirname = File.basename path
+            if dirname =~ /^(\w+)$/
+                twtid = $1
+
+                twt = Twitter.find_by_twtid_ignore_case(twtid)
+                if twt.presence and (twt.rating != nil and twt.rating != 0)
+                    #puts %!known @#{twtid}!
+                    next
+                end
+
+                artist_list[twtid] = TwtArtist.new(twtid, "", path)
+                artist_list[twtid].set_filenum
+            else
+                puts %!invalid format:"#{path}" (#{__FILE__}:#{__LINE__})!
+            end
+        end
+        artist_list.sort_by{|_, v| -v.num_of_files}.to_h
+    end
 
     def self.twt_user(twtid)
         puts twtid
@@ -127,22 +161,47 @@ module Twt
     def self.db_update_by_newdir()
         twt_id_list = twt_user_list("new")
         twt_id_list.each do |key, val|
-            twt = Twitter.find_by(twtid: key)
+            twt = Twitter.find_by_twtid_ignore_case(key)
             if twt == nil
                 # 新規追加
-                puts %!new;#{key}:#{val}!
                 twt_params = {}
                 twt_params[:twtid] = key
                 twt_params[:last_dl_datetime] = val.ctime
                 twt_params[:last_access_datetime] = val.ctime
-                #twt_params[:update_frequency] = 
+                twt_params[:filenum] = val.num_of_files
+                twt_params[:recent_filenum] = val.num_of_files
+                twt_params[:update_frequency] = val.calc_freq()
+                puts %!new. "#{key}"!
                 twt = Twitter.new(twt_params)
                 twt.save
             else
-                # 既存更新
-                #puts %!exist;#{key}:#{val}!
+                puts %!update;#{key}:filenum=#{val.num_of_files}!
+                if twt.filenum == val.num_of_files
+                    #更新しない
+                    next
+                end
+                twt_params = {}
+                twt_params[:last_dl_datetime] = val.ctime
+                if twt.filenum == nil
+                    twt_params[:filenum] = val.num_of_files
+                else
+                    #あほかtwt_params[:filenum] = twt.filenum + val.num_of_files
+                end
+                if twt.recent_filenum == nil
+                    twt_params[:recent_filenum] = val.num_of_files
+                end
+                twt.update(twt_params)
             end
         end
+    end
+
+    def self.get_tweet_id_from_filepath(filepath)
+        fn = File.basename filepath
+        get_tweet_id(fn)
+    end
+
+    def self.sort_by_tweet_id(pic_path_list)
+        pic_path_list.sort_by {|x| [Twt::twt_path_str(x)]}.reverse
     end
 
     def self.get_tweet_id(filename)
@@ -161,10 +220,13 @@ module Twt
             end
             tweet_id = $2.to_i
             pic_no = $3.to_i
+        elsif filename =~ /\d+-\d+-\d+\s+\((\d+)\)/
+            tweet_id = $1.to_i
         elsif filename =~ /(\d\d\d+)-(\d+)/
             tweet_id = $1.to_i
             pic_no = $2.to_i
         else
+            STDERR.puts %!regex no hit:#{filename}!
         end
         [tweet_id, pic_no]
     end
@@ -202,12 +264,16 @@ module Twt
         filename = File.basename(filepath)
         tweet_id, _  = get_tweet_id(filename)
         time = get_timestamp(tweet_id)
+        if tweet_id == 0
+            STDERR.puts %!#{tweet_id}=#{time}!
+        end
         time
     end
 
     CALC_FREQ_DAY_NUM = 30
     CALC_FREQ_UNIT = 100
 
+    # pic_path_listはソートされている必要がある（新しい順）
     def self.calc_freq(pic_path_list, calc_freq_day_num=CALC_FREQ_DAY_NUM)
         if pic_path_list == nil or pic_path_list.size == 0
             return 0
@@ -218,7 +284,7 @@ module Twt
         cnt = 0
         pic_path_list.each do |path|
             post_time = get_time_from_path(path)
-            #puts latest_time.to_date
+            
             #puts time.to_date
             tmp_days =  (latest_time.to_date - post_time.to_date).to_i + 1
             if tmp_days >= calc_freq_day_num
@@ -228,14 +294,19 @@ module Twt
             cnt += 1
             #puts %!#{cnt}:#{days}<#{post_time.strftime("%Y-%m-%d %H:%M")}>:[#{path}]!
         end
-        point = (cnt * CALC_FREQ_UNIT / days)
-        puts %!point=#{point}, cnt=#{cnt}, days=#{days}!
+        if cnt == 1 and days == 1
+            point = (cnt * CALC_FREQ_UNIT / calc_freq_day_num)
+        else
+            point = (cnt * CALC_FREQ_UNIT / days)
+            puts %!calc_freq_day_num=#{calc_freq_day_num} : point=#{point} <= cnt=#{cnt}, days=#{days}, 最新：#{latest_time.to_date}!
+        end
         point
     end
+
 end
 
 class TwtArtist
-    attr_accessor :twt_id, :twt_name, :path_list, :ctime
+    attr_accessor :twt_id, :twt_name, :path_list, :ctime, :num_of_files
 
     def initialize(id, name, path)
         @twt_id = id
@@ -244,6 +315,7 @@ class TwtArtist
         @path_list << path
 
         @ctime = File.birthtime path
+        @num_of_files = nil
     end
 
     def append_path(path)
@@ -253,10 +325,21 @@ class TwtArtist
     def twt_pic_path_list()
         pic_list = []
         path_list.each do |path|
-            puts path
+            #puts path
             pic_list << UrlTxtReader::get_path_list(path)
         end
         pic_list.flatten.sort.reverse
+    end
+
+    def calc_freq
+        pl = Twt::sort_by_tweet_id(twt_pic_path_list)
+        Twt::calc_freq(pl, 30)
+    end
+    
+    def set_filenum
+        #if @num_of_files == nil
+        #end
+        @num_of_files = twt_pic_path_list.size
     end
 
     def twt_view_list(piclist)

@@ -3,8 +3,19 @@ class Twitter < ApplicationRecord
 
     belongs_to :artists, :class_name => 'Artist', optional: true
 
-    def self.looks(target_col, search_word, match_method)
+    def self.find_by_twtid_ignore_case(twtid)
+        if twtid == nil
+            return nil
+        end
+        #Twitter.find(twtid: twtid)
+        records = Twitter.where('UPPER(twtid) = ?', twtid.upcase)
+        if records.size > 1
+            puts %!"#{twtid}":#{records.size}件のレコードが見つかりました !
+        end
+        records.first
+    end
 
+    def self.looks(target_col, search_word, match_method)
         search_word.strip!
         puts %!#{target_col}, #{search_word}, #{match_method}!
 
@@ -68,6 +79,28 @@ class Twitter < ApplicationRecord
         unregisterd_pxv_user_id_list
     end
 
+    def self.twt_user_classify(twt_url_infos)
+        pxvid_list = []
+        registered_twt_acnt_list = {}
+        unregistered_twt_acnt_list = {}
+        twt_url_infos.each do |twt_id, twt_url_info|
+            twt = Twitter.find_by_twtid_ignore_case(twt_id)
+            pxv = Artist.find_by(twtid: twt_id)
+            if twt and pxv
+                pxvid_list << pxv.pxvid
+                #registered_twt_acnt_list[twt_id] = twt_url_info.url_list
+            elsif pxv
+                pxvid_list << pxv.pxvid
+            elsif twt
+                registered_twt_acnt_list[twt_id] = twt_url_info.url_list
+            else
+                unregistered_twt_acnt_list[twt_id] = twt_url_info.url_list
+            end
+        end
+
+        [registered_twt_acnt_list, unregistered_twt_acnt_list, pxvid_list]
+    end
+    
     def twt_screen_name
         if twtname == ""
             return ""

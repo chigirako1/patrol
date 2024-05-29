@@ -33,7 +33,7 @@ textarea {
         <% corr = 0 %>
     <% end %>
 
-    <% twt_pic_list = @twt_pic_path_list.map {|x| [Twt::twt_path_str(x), x]}.sort.reverse %>
+    <% twt_pic_list = @twt_pic_path_list.map {|x| [Twt::twt_path_str(x), x, Twt::get_tweet_id_from_filepath(x)]}.sort.reverse %>
     <% twt_acnt = twitter %>
 
     <!-- ファイル名リスト -->
@@ -50,22 +50,22 @@ textarea {
             <% break %>
         <% end %>
         <% path = elem[1] %>
-        <%= idx %>
+        <%= idx %>.
         <%= link_to image_tag(path, width: '10%', height: '10%', :alt => path), path, target: :_blank, rel: "noopener noreferrer" %>
+        <% if elem[2][1] != 0 %>
+            <%= "複" %>
+        <% end %>
         <% if corr != 0 and corr == idx %>
             <br />
         <% end %>
         <% if pic_lf != 0 and idx % pic_lf == 0 %>
             <br />
             <% i = idx - 3 %>
-            <%= i + 1 %>.<%= twt_pic_list[i][0] %>
-            <br />
-            <% i += 1 %>
-            <%= i + 1 %>.<%= twt_pic_list[i][0] %>
-            <br />
-            <% i += 1 %>
-            <%= i + 1 %>.<%= twt_pic_list[i][0] %>
-            <br />
+            <% 3.times do |x| %>
+                <%= i + 1 %>.<%= twt_pic_list[i][0] %>
+                <br />
+                <% i += 1 %>
+            <% end %>
         <% end %>
     <% end %>
     <br />
@@ -78,13 +78,16 @@ textarea {
     <br />
 
     <% pl = twt_pic_list.map {|x| x[1]} %>
-    <% freq1 = Twt::calc_freq(pl) %>
-    <% freq2 = Twt::calc_freq(pl, 14) %>
-    更新頻度(直近)：<%= freq1 %>("<%= freq2 %>")/<%= Twt::CALC_FREQ_UNIT %>日
+    <% freq_90d = Twt::calc_freq(pl, 90) %>
+    <% freq_30d = Twt::calc_freq(pl, 30) %>
+    <% freq_15d = Twt::calc_freq(pl, 15) %>
+    <% ary = [freq_90d, freq_30d, freq_15d] %>
+    <% avg = ary.sum / ary.size %>
+    【更新頻度<%= Twt::CALC_FREQ_UNIT %>日あたり(90/30/14)】"<%= freq_90d %>/<%= freq_30d %>/<%= freq_15d %>""<%= avg %>"
     <% if twt_acnt != nil and twt_acnt.update_frequency != nil %>
         <% current_val_freq = twt_acnt.update_frequency %>
-        <%= %!(現在の設定値：#{current_val_freq})! %>
-        <% if (freq1 - current_val_freq).abs >= 100 %>
+        →<%= %!#{current_val_freq}! %>(現在の設定値)
+        <% if (avg - current_val_freq).abs >= 100 %>
             現在の設定値との差が大きい
         <% end %>
     <% else %>
@@ -99,7 +102,8 @@ textarea {
             <% hit = false %>
             <% @twt_pic_path_list.each do |path| %>
                 <% if path.include? tweet_id.to_s %>
-                    <%= tweet_id %> hit!<br />
+                    <%= tweet_id %> hit!(<%= Twt::timestamp_str(tweet_id) %>)
+                    <br />
                     <%= link_to image_tag(path, width: '10%', height: '10%', :alt => path), path, target: :_blank, rel: "noopener noreferrer" %>
                     <br />
                     <% hit = true %>

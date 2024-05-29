@@ -299,7 +299,8 @@ class ArtistsController < ApplicationController
       pxv_twtids = Artist.select('twtid')
       twtids = pxv_twtids.filter_map {|x| x.twtid if x.twtid.presence }
       twtids.sort.uniq.each {|twtid|
-        twt = Twitter.find_by(twtid: twtid)
+        twt = Twitter.find_by_twtid_ignore_case(twtid)
+        
         if twt.presence
         else
           @misc_urls << twtid
@@ -313,7 +314,7 @@ class ArtistsController < ApplicationController
       twtids_old = old_twt_ids.filter_map {|x| x.old_twtid if x.old_twtid.presence }
 
       [twtids_alt, twtids_old].flatten.sort.uniq.each {|twtid|
-        twt = Twitter.find_by(twtid: twtid)
+        twt = Twitter.find_by_twtid_ignore_case(twtid)
         if twt.presence
         else
           @misc_urls << Twt::twt_user_url(twtid)
@@ -394,7 +395,7 @@ class ArtistsController < ApplicationController
 
     @path_list = Pxv::get_pathlist(@artist[:pxvid])
     if @show_mode == "twt_pic_list"
-      @twt_pic_path_list = Artist.get_twt_pathlist(@artist[:twtid])
+      @twt_pic_path_list = Twt::get_pic_filelist(@artist[:twtid])
     end
   end
 
@@ -459,7 +460,7 @@ class ArtistsController < ApplicationController
 
     target = params[:target]
     if target.presence
-      @target = target.split(",")
+      @target = target.split(",").map {|x| x.strip}
     else
       @target = []
     end
@@ -470,14 +471,16 @@ class ArtistsController < ApplicationController
       dir = params[:dir]
       if dir == nil
         dir = ""
+        @known_twt_url_list = Twt::twt_user_list(dir)
+        puts %!@known_twt_url_list.size=#{@known_twt_url_list.size}!
       elsif dir == "update"
         Twt::db_update_by_newdir()
-        dir = "new"
+      elsif dir == "new-list"
+        @twt_user_infos = Twt::twt_user_infos()
       end
-      @twt_urls = Twt::twt_user_list(dir)
     elsif filename == ""
       @url_file_list = UrlTxtReader::txt_file_list()
-      @twt_urls = []
+      @known_twt_url_list = []
     else
       case filename
       when "all"
@@ -495,8 +498,24 @@ class ArtistsController < ApplicationController
       else
         db_chek = false
       end
-      pxv_id_list, @twt_urls, @misc_urls = UrlTxtReader::get_url_list(path, db_chek)
-      known_pxv_user_id_list, unknown_pxv_user_id_list = Artist::pxv_user_id_classify(pxv_id_list)
+      #pxv_id_list, @twt_urls, @misc_urls = UrlTxtReader::get_url_list(path, db_chek)
+      pxv_id_list, twt_url_infos, @misc_urls = UrlTxtReader::get_url_txt_info(path)
+=begin
+      @twt_urls = {}
+      twt_url_infos.each do |key, val|
+        @twt_urls[key] = val.url_list
+      end
+=end
+      known_twt_url_list, unknown_twt_url_list, pxvid_list2 = Twitter::twt_user_classify(twt_url_infos)
+      if @target.include?("twt既知")
+        @known_twt_url_list = known_twt_url_list
+        #@twt_urls = known_twt_url_list
+      end
+      if @target.include?("twt未知")
+        @unknown_twt_url_list = unknown_twt_url_list
+      end
+
+      known_pxv_user_id_list, unknown_pxv_user_id_list = Artist::pxv_user_id_classify([pxv_id_list, pxvid_list2].flatten)
       if @target.include?("known_pxv")
         @known_pxv_user_id_list = known_pxv_user_id_list
       end
@@ -510,7 +529,7 @@ class ArtistsController < ApplicationController
   def twt_show
     @twtid = params[:twtid]
 
-    @twt_pic_path_list = Artist.get_twt_pathlist(@twtid)
+    @twt_pic_path_list = Twt::get_pic_filelist(@twtid)
   end
 
   # GET /artists/nje

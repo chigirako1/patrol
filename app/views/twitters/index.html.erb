@@ -21,6 +21,7 @@
       <th>#</th>
       <th>id</th>
       <th>twtname(twtid)</th>
+      <th>ファイル数</th>
       <th>
         予測<br />
         投稿頻度(100日あたり枚数)
@@ -52,14 +53,16 @@
           <%= %!※#{twitter["comment"]}! if twitter.comment != "" %>
         </td>
         <td>
+          <%= twitter.filenum %><br />
+          <%= twitter.recent_filenum %>
+        </td>
+        <td>
           <%= twitter.prediction %>
           [<%= link_to "Show", twitter, target: :_blank, rel: "noopener noreferrer" %>]
           <br />
           [<%= twitter.update_frequency %>]
         </td>
         <td>
-          <%#= twitter["last_access_datetime"].in_time_zone('Tokyo').strftime("%Y-%m-%d") if twitter["last_access_datetime"] != nil %>
-          <%#= twitter.get_datetime_string(twitter.last_access_datetime, true) if twitter.last_access_datetime.presence %>
           <%= twitter.get_date_info(twitter.last_access_datetime) if twitter.last_access_datetime.presence %>
         </td>
         <td bgcolor="pink">

@@ -57,6 +57,11 @@
     </div>
   <% end %>
 
+  <h3>Pixivを開く =>
+    <% url = artist.pxv_user_url %>
+    <%= link_to artist["pxvid"], url, target: :_blank, rel: "noopener noreferrer" %>
+  </h3>
+
   <h1>編集</h1>
 
   <h2>項目</h2>

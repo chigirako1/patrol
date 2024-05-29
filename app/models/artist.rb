@@ -68,10 +68,6 @@ class Artist < ApplicationRecord
         @artist = Artist.where("#{target_col} LIKE?", search_word_p)
     end
 
-    def self.get_twt_pathlist(twtid)
-        Twt::get_pic_filelist(twtid)
-    end
-
     def self.get_path_list(tpath)
         UrlTxtReader::get_path_list tpath
     end
@@ -261,7 +257,6 @@ class Artist < ApplicationRecord
     end
 
     def prediction_up_cnt(use_ac_date = false)
-        #if use_ac_date and last_ul_datetime < last_access_datetime and get_date_delta(last_access_datetime) <= 26
         if use_ac_date
             datetime = last_access_datetime
         else
@@ -294,10 +289,8 @@ class Artist < ApplicationRecord
         end
 
         if last_access_datetime.year == Time.zone.now.year
-            #last_access_datetime.in_time_zone('Tokyo').strftime("%m月%d日")
             get_date_info_days(last_access_datetime)
         else
-            #last_access_datetime.in_time_zone('Tokyo').strftime("%Y-%m-%d")
             get_date_info(last_access_datetime)
         end
     end
@@ -307,17 +300,14 @@ class Artist < ApplicationRecord
     end
 
     def twt_user_url
-        #%!https://twitter.com/#{twtid}!
         Twt::twt_user_url(twtid)
     end
 
     def pxv_user_url
-        #%!https://www.pixiv.net/users/#{pxvid}!
         Pxv::pxv_user_url(pxvid)
     end
 
     def pxv_artwork_url(artwork_id)
-        #%!https://www.pixiv.net/artworks/#{artwork_id}!
         Pxv::pxv_artwork_url(artwork_id)
     end
 
