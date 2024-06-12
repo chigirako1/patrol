@@ -88,7 +88,7 @@
             <br />
             [<%= link_to "show", artist_path(twitter.artist_id), target: :_blank, rel: "noopener noreferrer" %>]
             <br />
-            
+            【<%=  twitter.artist_rating %>|<%=  twitter.artist_status %>】
           <% end %>
         </td>
         <td>
@@ -99,6 +99,7 @@
             <% list.each do |filepath| %>
               <%= link_to image_tag(filepath, width: pic_disp_mag, height: pic_disp_mag), filepath, target: :_blank, rel: "noopener noreferrer" if filepath.presence %>
             <% end %>
+            <%= twt_pic_list.size %>
           <% else %>
           <% end %>
         </td>

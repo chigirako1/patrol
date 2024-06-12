@@ -493,33 +493,25 @@ class ArtistsController < ApplicationController
         path = ["public/#{filename}.txt"]
       end
       puts "path='#{path}'"
-      if @target.include?("twt")
-        db_chek = true
-      else
-        db_chek = false
-      end
-      #pxv_id_list, @twt_urls, @misc_urls = UrlTxtReader::get_url_list(path, db_chek)
+
+      pxvid_list2 = []
       pxv_id_list, twt_url_infos, @misc_urls = UrlTxtReader::get_url_txt_info(path)
-=begin
-      @twt_urls = {}
-      twt_url_infos.each do |key, val|
-        @twt_urls[key] = val.url_list
-      end
-=end
-      known_twt_url_list, unknown_twt_url_list, pxvid_list2 = Twitter::twt_user_classify(twt_url_infos)
       if @target.include?("twt既知")
+        known_twt_url_list, unknown_twt_url_list, pxvid_list2 = Twitter::twt_user_classify(twt_url_infos)
         @known_twt_url_list = known_twt_url_list
         #@twt_urls = known_twt_url_list
       end
       if @target.include?("twt未知")
-        @unknown_twt_url_list = unknown_twt_url_list
+        known_twt_url_list, unknown_twt_url_list, pxvid_list2 = Twitter::twt_user_classify(twt_url_infos)
+        @unknown_twt_url_list = unknown_twt_url_list.sort_by {|k,v| -v.size}.to_h
       end
 
-      known_pxv_user_id_list, unknown_pxv_user_id_list = Artist::pxv_user_id_classify([pxv_id_list, pxvid_list2].flatten)
       if @target.include?("known_pxv")
+        known_pxv_user_id_list, unknown_pxv_user_id_list = Artist::pxv_user_id_classify([pxv_id_list, pxvid_list2].flatten)
         @known_pxv_user_id_list = known_pxv_user_id_list
       end
       if @target.include?("unknown_pxv")
+        known_pxv_user_id_list, unknown_pxv_user_id_list = Artist::pxv_user_id_classify([pxv_id_list, pxvid_list2].flatten)
         @unknown_pxv_user_id_list = unknown_pxv_user_id_list
       end
     end
@@ -851,7 +843,8 @@ class ArtistsController < ApplicationController
       when "rating"
         artists_group = artists.group_by {|x| -x.rating}.sort.to_h
       when "評価+年齢制限"
-        artists_group = artists.group_by {|x| [-x.rating, x.r18]}.sort.to_h
+        #artists_group = artists.group_by {|x| [-x.rating, x.r18]}.sort.to_h
+        artists_group = artists.group_by {|x| [x.rating, x.r18]}.sort.reverse.to_h
       when "さかのぼり"
         artists_group = artists.group_by {|x| [
             if x.reverse_status

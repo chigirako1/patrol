@@ -244,7 +244,8 @@ module UrlTxtReader
             if line =~ %r!https?://www\.pixiv\.net/users/(\d+)!
                 user_id = $1.to_i
                 id_list.push user_id
-            elsif line =~ %r!((https?://twitter\.com/(\w+)))$! or line =~ %r!((https?://twitter\.com/(\w+))/.*)!
+            #elsif line =~ %r!((https?://twitter\.com/(\w+)))$! or line =~ %r!((https?://twitter\.com/(\w+))/.*)!
+            elsif line =~ %r!((https?://(?:x|twitter)\.com/(\w+)))$! or line =~ %r!((https?://(?:x|twitter)\.com/(\w+))/.*)!
                 url = $1
                 #twt_user_url = $2
                 twt_id = $3
@@ -262,7 +263,7 @@ module UrlTxtReader
                     twt_urls[twt_id] = []
 
                     if db_check
-                        artist = Artist.find_by(twtid: twt_id)
+                        artist = Artist.find_by_twtid_ignore_case(twt_id)
                     else
                         artist = nil
                     end
@@ -334,7 +335,8 @@ module UrlTxtReader
             if line =~ %r!https?://www\.pixiv\.net/users/(\d+)!
                 user_id = $1.to_i
                 pxv_id_list.push user_id
-            elsif line =~ %r!(https?://twitter\.com/(\w+))!
+            #elsif line =~ %r!(https?://twitter\.com/(\w+))!
+            elsif line =~ %r!(https?://(?:x|twitter)\.com/(\w+))!
                 url = $1
                 twt_id = $2
 

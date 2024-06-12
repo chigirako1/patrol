@@ -76,7 +76,8 @@
         let text = text_box.value;
 
         let datetxt = ""
-        let regex = /twitter\.com\/\w+\/status\/(\d+)/;
+        //let regex = /twitter\.com\/\w+\/status\/(\d+)/;
+        let regex = /(?:x|twitter)\.com\/\w+\/status\/(\d+)/;
         if (regex.test(text)) {
             let r = text.match(regex)
             let n = Number(r[1]);

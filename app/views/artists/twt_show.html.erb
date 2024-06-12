@@ -19,7 +19,7 @@
     <% end %>
 <% end %>
 
-<% pxv_artist = Artist.find_by(twtid: @twtid) %>
+<% pxv_artist = Artist.find_by_twtid_ignore_case(@twtid) %>
 <% if pxv_artist != nil %>
     pxv:<%= pxv_artist.pxvname %> [<%= link_to "show", pxv_artist, target: :_blank, rel: "noopener noreferrer" %>]
         <%= pxv_artist.get_datetime_string(pxv_artist.last_ul_datetime) %>

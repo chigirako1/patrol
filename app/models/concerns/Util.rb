@@ -26,6 +26,9 @@ module Util
         elsif days >= 30
             months = days / 30
             "#{months}ヶ月以上前"
+        elsif days >= 7
+            weeks = days / 7
+            "#{weeks}週間以上前"
         elsif days == 0
             "24時間以内"
         else

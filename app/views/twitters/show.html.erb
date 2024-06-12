@@ -3,7 +3,8 @@
 
 <h1>
   <%= %!#{@twitter.twtname}! %>
-  <% twt_url = %!https://twitter.com/#{@twitter.twtid}! %>
+  <%# twt_url = %!https://twitter.com/#{@twitter.twtid}! %>
+  <% twt_url = @twitter.twt_user_url() %>
   (<%= link_to "@#{@twitter.twtid}", twt_url, target: :_blank, rel: "noopener noreferrer" %>)
   [<%= @twitter.rating %>]
 </h1>

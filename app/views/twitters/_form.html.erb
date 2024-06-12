@@ -1,5 +1,5 @@
 <%= form_with(model: twitter) do |form| %>
-  <% pxv = Artist.find_by(twtid: @twitter.twtid) %>
+  <% pxv = Artist.find_by_twtid_ignore_case(@twitter.twtid) %>
   <% if twitter.errors.any? %>
     <div style="color: red">
       <h2><%= pluralize(twitter.errors.count, "error") %> prohibited this twitter from being saved:</h2>
@@ -158,15 +158,27 @@
       PXVアクセス:
       【<%= pxv.rating %>】
       [<%= pxv.last_access_datetime_disp %>]
-      [<%= pxv.status %>|<%= pxv.feature %>|<%= pxv.pxvname %>]
+      [<%= pxv.status %>|<%= pxv.feature %>|<%= pxv.pxvname %>|<%= pxv.r18 %>]
       [<%= link_to "show", artist_path(pxv.id), target: :_blank, rel: "noopener noreferrer" %>]
+      予測：<%= pxv.prediction_up_cnt(true) %>
     <% else %>
       <% pxv2 = Artist.find_by(pxvid: @twitter.pxvid) %>
       <% if pxv2.presence %>
         【<%= pxv2.rating %>】
         [<%= pxv2.last_access_datetime_disp %>]
-        [<%= pxv2.status %>|<%= pxv2.feature %>]
+        [<%= pxv2.status %>|<%= pxv2.feature %>|<%= pxv2.pxvname %>|<%= pxv2.r18 %>]
         [<%= link_to "show", artist_path(pxv2.id), target: :_blank, rel: "noopener noreferrer" %>]
+        予測：<%= pxv2.prediction_up_cnt(true) %>
+      <% else %>
+        <% pxv3 = Artist.looks("pxvname", twtname, "partial_match") %>
+        <% if pxv3.presence %>
+          <br />
+          類似名あり：
+          <% pxv3.each do |pxv_n| %>
+            【<%= pxv_n.pxvname %>|<%= pxv_n.pxvid %>】
+            <br />
+          <% end %>
+        <% end %>
       <% end %>
     <% end %>
   </div>
@@ -268,8 +280,9 @@
 
   <div>
     <%= form.label :総ファイル数, style: "display: block" %>
+    現在の設定値：<%= @twitter.filenum %>↓<br />
+    
     <%= form.number_field :filenum, value: @twt_pic_path_list.size %>
-    現在の設定値：<%= @twitter.filenum %>
   </div>
 
   <div>
@@ -296,8 +309,8 @@
       let isostr = now.toISOString();
       //2024-01-31T13:54:35.371Z
       //                   54321
-      //let val = isostr.slice(0, -5);
-      let val = isostr.slice(0, -8);
+      let val = isostr.slice(0, -5);
+      //let val = isostr.slice(0, -8);
       elem.value = val;
     }
   </script>
@@ -309,6 +322,7 @@
 
   <div>
     <%= form.label :最新投稿日時, style: "display: block" %>
+    <%= @twitter.last_post_datetime %>↓<br />
     <%= form.datetime_field :last_post_datetime %>
   </div>
 

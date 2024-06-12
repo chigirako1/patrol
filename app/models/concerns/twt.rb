@@ -21,7 +21,8 @@ module Twt
         twt_ids = []
         txts.each do |line|
             line.chomp!
-            if line =~ %r!https?://twitter\.com/#{twtid}/status/(\d+)!
+            #if line =~ %r!https?://twitter\.com/#{twtid}/status/(\d+)!
+            if line =~ %r!https?://(?:x|twitter)\.com/#{twtid}/status/(\d+)!
                 tweet_id = $1.to_i
                 twt_ids << tweet_id
             else
@@ -151,11 +152,12 @@ module Twt
     end
 
     def self.twt_user_url(twtid)
-        %!https://twitter.com/#{twtid}!
+        #%!https://twitter.com/#{twtid}!
+        %!https://x.com/#{twtid}!
     end
 
-    def self.twt_tweet_url(tweet_id)
-        %!https://nijie.info/view.php?id=#{tweet_id}!
+    def self.twt_tweet_url(screen_name, tweet_id)
+        %!http://x.com/#{screen_name}/status/#{tweet_id}!
     end
 
     def self.db_update_by_newdir()
@@ -185,7 +187,7 @@ module Twt
                 if twt.filenum == nil
                     twt_params[:filenum] = val.num_of_files
                 else
-                    #あほかtwt_params[:filenum] = twt.filenum + val.num_of_files
+                    #あほかtwt_params[:filenum] = 
                 end
                 if twt.recent_filenum == nil
                     twt_params[:recent_filenum] = val.num_of_files
@@ -225,6 +227,7 @@ module Twt
         elsif filename =~ /(\d\d\d+)-(\d+)/
             tweet_id = $1.to_i
             pic_no = $2.to_i
+        elsif filename =~ /TID\-unknown\-/
         else
             STDERR.puts %!regex no hit:#{filename}!
         end

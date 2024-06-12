@@ -57,7 +57,7 @@
     <% if path =~ /\d\d-\d\d-\d\d.*\((\d+)\)/ %>
       <% artwork_id = $1 %>
       <% url = artist.pxv_artwork_url(artwork_id) %>
-      z.(<%= link_to artwork_id, url, target: :_blank, rel: "noopener noreferrer" %>)
+      <%= list.size %>.(<%= link_to artwork_id, url, target: :_blank, rel: "noopener noreferrer" %>)
       <%= path %><br />
     <% end %>
   <% end %> 
@@ -81,7 +81,7 @@
     <% date = data[2] %>
     <% fcnt = data[3] %>
     <% ratio = '15%' %>
-    z.<%= link_to(image_tag(path, width: ratio, height: ratio), path, target: :_blank, rel: "noopener noreferrer") %>
+    <%= list.size %>.<%= link_to(image_tag(path, width: ratio, height: ratio), path, target: :_blank, rel: "noopener noreferrer") %>
   <% end %> 
   <br />
 </div>

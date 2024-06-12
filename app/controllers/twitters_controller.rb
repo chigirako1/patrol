@@ -9,6 +9,7 @@ class TwittersController < ApplicationController
     else
       mode = params[:mode]
     end
+    puts %!mode="#{mode}"!
 
     if params[:num_of_disp].presence
       @num_of_disp = params[:num_of_disp].to_i
@@ -56,8 +57,15 @@ class TwittersController < ApplicationController
     else
       sort_by = ""
     end
-    puts %!sort_by="#{@sort_by}"!
+    puts %!sort_by="#{sort_by}"!
     
+    if params[:no_pxv].presence
+      no_pxv = true
+    else
+      no_pxv = false
+    end
+    puts %!no_pxv="#{no_pxv}"!
+
     if mode == "search"
       #twitters = Twitter.looks(params[:target_col], params[:search_word], params[:match_method])
       col, word = Twitter.looks("(自動判断)", params[:search_word], "auto")
@@ -68,6 +76,7 @@ class TwittersController < ApplicationController
             twitters.twtid AS twitter_twtid,
             artists.twtid AS artist_twtid,
             artists.status AS artist_status,
+            artists.rating AS artist_rating,
             artists.last_access_datetime AS artists_last_access_datetime,
             artists.*, twitters.*").where(col, word)#.sort_by {|x| [x[:last_access_datetime], x[:last_dl_datetime]]}
     else
@@ -76,20 +85,23 @@ class TwittersController < ApplicationController
       ).select("artists.id AS artist_id,
             artists.pxvid AS artist_pxvid,
             artists.status AS artist_status,
+            artists.rating AS artist_rating,
             artists.last_access_datetime AS artists_last_access_datetime,
             artists.*, twitters.*")#.sort_by {|x| [x[:last_access_datetime], x[:last_dl_datetime]]}
     end
-    
+
+    if no_pxv
+      twitters = twitters.select {|x| !(x.pxvid.presence) and x.artist_pxvid == nil }
+    end
+
     case mode
     when "id"
-      #@num_of_disp = 5
       if rating_gt != 0
-        twitters = twitters.select {|x| x.rating == nil or x.rating >= rating_gt }
+        twitters = twitters.select {|x| x.rating == nil or x.rating >= rating_gt}
       end
-      twitters = twitters.sort_by {|x| [x.id]}.reverse
-      #@twitters_group = twitters.group_by {|x| x.rating}
-      #@twitters_group = {}
-      #@twitters_group[""] = twitters
+      if sort_by == "id"
+        twitters = twitters.sort_by {|x| [x.id]}.reverse
+      end
       if params[:target] != nil and params[:target] == ""
         @twitters_group = {}
         twitters = twitters.select {|x| x.drawing_method == params[:target] or x.drawing_method == nil}

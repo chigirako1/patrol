@@ -102,8 +102,6 @@
     </script>
   </div>
 
-  <hr />
-
   <div>
     <%= form.label :r18, style: "display: block" %>
     <%= form.select :r18,
@@ -122,17 +120,6 @@
         options[idx].selected = true;
       }
     </script>
-  </div>
-
-  <div>
-    <%= form.label :twt_check, style: "display: block" %>
-    <%= form.check_box :twt_check, {}, checked_value='t', unchecked_value='' %>
-  </div>
-
-  <div>
-    <%= form.label :twt_checked_date, style: "display: block" %>
-    <%= form.datetime_field :twt_checked_date %>
-    <input type="button" value="現在時刻に設定" onclick="set_time('artist_twt_checked_date');" />
   </div>
 
   <br />

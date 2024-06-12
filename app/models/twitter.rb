@@ -25,7 +25,8 @@ class Twitter < ApplicationRecord
             elsif search_word =~ /@(\w+)/
                 target_col = "twitter_twtid"
                 search_word = $1
-            elsif search_word =~ %r!www\.twitter\.com/(\d+)!
+            elsif search_word =~ %r!www\.twitter\.com/(\d+)! or
+                search_word =~ %r!www\.x\.com/(\d+)!
                 target_col = "twitter_twtid"
                 search_word = $1
             else
@@ -85,7 +86,7 @@ class Twitter < ApplicationRecord
         unregistered_twt_acnt_list = {}
         twt_url_infos.each do |twt_id, twt_url_info|
             twt = Twitter.find_by_twtid_ignore_case(twt_id)
-            pxv = Artist.find_by(twtid: twt_id)
+            pxv = Artist.find_by_twtid_ignore_case(twt_id)
             if twt and pxv
                 pxvid_list << pxv.pxvid
                 #registered_twt_acnt_list[twt_id] = twt_url_info.url_list
@@ -102,11 +103,14 @@ class Twitter < ApplicationRecord
     end
     
     def twt_screen_name
+        twtname
+=begin
         if twtname == ""
             return ""
         else
             return twtname
         end
+=end
     end
 
     def last_dl_datetime_disp
@@ -132,9 +136,14 @@ class Twitter < ApplicationRecord
         list
     end
 
-    def prediction
+    def prediction(datetime_arg=nil)
         if update_frequency.presence
-            delta_d = get_date_delta(last_access_datetime)# + 1 #1日分足す
+            if datetime_arg == nil
+                dt = last_access_datetime
+            else
+                dt = datetime_arg
+            end
+            delta_d = get_date_delta(dt)
             pred = update_frequency * delta_d / 100
             pred
         else

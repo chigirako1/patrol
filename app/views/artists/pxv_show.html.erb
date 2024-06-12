@@ -4,7 +4,7 @@
 
  PXV:<%= link_to "#{@pxvid}", Pxv::pxv_user_url(@pxvid) %><br />
 
-<% pxv_artist = Artist.find_by(twtid: @pxvid) %>
+<% pxv_artist = Artist.find_by_twtid_ignore_case(@pxvid) %>
 <% if pxv_artist != nil %>
     pxv:<%= pxv_artist.pxvname %> [<%= link_to "show", pxv_artist, target: :_blank, rel: "noopener noreferrer" %>]
         <%= pxv_artist.get_datetime_string(pxv_artist.last_ul_datetime) %>

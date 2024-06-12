@@ -21,6 +21,13 @@ module ArtistsHelper
             tag += "<br />"
             tag += "[#{artist.reverse_status}]"
         end
+        tag += "<br />"
+        tag += "("
+        tag += link_to(artist["pxvid"], artist.pxv_user_url, target: :_blank, rel: "noopener noreferrer")
+        tag += ")"
+
+        tag += "<br />"
+        tag += artist.status 
 
         tag.html_safe
     end
@@ -54,6 +61,7 @@ module ArtistsHelper
             path = data[0]
             tag += link_to(image_tag(path, width: scale, height: scale), path, target: :_blank, rel: "noopener noreferrer")
         end
+        #tag += %!#{work_list.size}!
 
         if append_txt
             tag += %!</br>!

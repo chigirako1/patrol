@@ -22,6 +22,16 @@ class Artist < ApplicationRecord
 
     has_one :twitters, :class_name => 'Twitter'
 
+    C_ARTIST_TARGET_AUTO = "(自動判断)"
+    C_ARTIST_TARGET_PXVID = "pxvid"
+    C_ARTIST_TARGET_PXVNAME = "pxvname"
+
+    C_ARTIST_MATCH_AUTO = "auto"
+    C_ARTIST_MATCH_PERFECT = "perfect_match"
+    C_ARTIST_MATCH_PARTIAL = "partial_match"
+    C_ARTIST_MATCH_BEGIN = "begin_match"
+    C_ARTIST_MATCH_END = "end_match"
+
     #--------------------------------------------------------------------------
     # クラスメソッド
     #--------------------------------------------------------------------------
@@ -66,6 +76,17 @@ class Artist < ApplicationRecord
             search_word_p = search_word
         end
         @artist = Artist.where("#{target_col} LIKE?", search_word_p)
+    end
+
+    def self.find_by_twtid_ignore_case(twtid)
+        if twtid == nil
+            return nil
+        end
+        records = Artist.where('UPPER(twtid) = ?', twtid.upcase)
+        if records.size > 1
+            puts %!"#{twtid}":#{records.size}件のレコードが見つかりました !
+        end
+        records.first
     end
 
     def self.get_path_list(tpath)
@@ -165,7 +186,8 @@ class Artist < ApplicationRecord
     end
 
     def self.get_twt_url(url)
-        if url =~ %r!(https?://twitter\.com/\w+/status/(\d+))\??!
+        #if url =~ %r!(https?://twitter\.com/\w+/status/(\d+))\??!
+        if url =~ %r!(https?://(?:x|twitter)\.com/\w+/status/(\d+))\??!
             return $1, $2.to_i
         else
             return url, ""
@@ -179,16 +201,20 @@ class Artist < ApplicationRecord
         id_hash = pxv_user_id_list.tally
 
         id_hash.each do |pxvid, cnt|
+            #puts %!dbg:#{pxvid}!
             p = Artist.find_by(pxvid: pxvid)
             if p
                 known_pxv_user_id_list << PxvInfo.new(pxvid, cnt, p)
             else
+                #puts %!dbg:#{pxvid}, #{cnt}!
                 unknown_pxv_user_id_list << PxvInfo.new(pxvid, cnt)
             end
         end
 
         #known_pxv_user_id_list.sort_by! {|x| [x.p.status, x.p.rating, x.p.r18, -(x.cnt), x.p.last_access_datetime]}
         known_pxv_user_id_list.sort_by! {|x| [x.p.status, x.p.rating==0 ? -11 : -x.p.rating, x.p.r18, -(x.cnt), x.p.last_access_datetime]}
+        #puts %!dbg:#{unknown_pxv_user_id_list.size}!
+        #puts %!dbg:#{unknown_pxv_user_id_list[0]}!
         unknown_pxv_user_id_list.sort_by! {|x| [-(x.cnt), x.pxvid]}
 
         [known_pxv_user_id_list, unknown_pxv_user_id_list]

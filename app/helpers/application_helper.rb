@@ -9,4 +9,8 @@ module ApplicationHelper
       "#{page_title} - #{BASE_TITLE}"
     end
   end
+
+  def link_to_ex(txt, link)
+    link_to(txt, link, target: :_blank, rel: "noopener noreferrer")
+  end
 end
