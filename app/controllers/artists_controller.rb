@@ -220,6 +220,14 @@ class ArtistsController < ApplicationController
     REGIST_UL_DIFF_NEAR = '新規登録日と昔の投稿日の日数差近い'
   end
 
+  def api_hoge
+    @artist = Artist.find(params[:id])
+    #respond_to do |format|
+    #  format.json {render json: @artist}
+    #end
+    render json: @artist
+  end
+
   # GET /artists or /artists.json
   def index
     @twt_urls = {}
@@ -376,10 +384,8 @@ class ArtistsController < ApplicationController
 
   # GET /artists/1 or /artists/1.json
   def show
-    if params[:access_dt_update].presence and params[:access_dt_update] == "no"
-      @last_access_datetime = @artist.last_access_datetime
-    else
-      @last_access_datetime = @artist.last_access_datetime
+    @last_access_datetime = @artist.last_access_datetime
+    if params[:access_dt_update].presence and params[:access_dt_update] == "yes"
       @artist.update(last_access_datetime: Time.now)
     end
 

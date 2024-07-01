@@ -13,25 +13,6 @@
     </h2>
   </p>
 
-<%
-=begin %>
-    t.datetime "earliest_ul_date"
-    t.string "pxv_path"
-    t.integer "tech_point"
-    t.integer "sense_point"
-    t.string "good_point"
-    t.string "bad_point"
-    t.integer "pxv_fav_artwork_id"
-    t.string "fetish"
-    t.string "obtain_direction"
-    t.integer "next_obtain_artwork_id"
-    t.string "twt_check"
-    t.string "web_url"
-    t.datetime "djn_check_date"
-    t.integer "zip"
-<%
-=end %>
-
   <p>
     <% if artist["status"] != "" %>
       <h3>Status:<%= artist.status %></h3>
@@ -45,21 +26,10 @@
         <th>評価</th>
         <th>R18</th>
         <th>予測</th>
-        <th>ポイント</th>
-        <th>補正</th>
         <th>コメント</th>
         <th>備考</th>
-        <th>技術点</th>
-        <th>感性点</th>
-        <th>長所</th>
-        <th>短所</th>
         <th>癖（へき）</th>
-        <th>取得方向</th>
-        <th>djnチェック日</th>
-        <th>zip/pdf化</th>
         <th>ファイル数</th>
-        <th>最近</th>
-        <th></th>
       </tr>
       <tr>
         <td><%= artist.feature %></td>
@@ -70,33 +40,19 @@
         <% end %>
         <td><%= artist.r18 %></td>
         <td><%= artist.prediction_up_cnt(true) %></td>
-        <td><%= artist.point %></td>
-        <td><%= artist.priority %></td>
         <td><%= artist.comment %></td>
         <td><%= artist.remarks %></td>
-        <td><%= artist.tech_point %></td>
-        <td><%= artist.sense_point %></td>
-        <td><%= artist.good_point %></td>
-        <td><%= artist.bad_point %></td>
         <td><%= artist.fetish %></td>
-        <td><%= artist.obtain_direction %></td>
-        <td><%= artist.djn_check_date %></td>
-        <td><%= artist.zip %></td>
-        <td><%= artist.filenum %></td>
-        <td><%= artist.recent_filenum %></td>
-        <td><%= artist.reverse_status %></td>
+        <td><%= artist.filenum %>(<%= artist.recent_filenum %>)</td>
       </tr>
     </table>
   </p>
 
   <hr />
 
-  <% if artist["twtid"] != "" %>
-    <% if artist["twt_check"] == "t" %>
-      <h3>TWTチェック↓↓↓</h3>
-    <% end %>
+  <% if artist.twtid.presence %>
     twitter(X)を開く→
-    <%= link_to "@#{artist.twtid}", artist.twt_user_url, target: :_blank, rel: "noopener noreferrer" %>
+    <%= link_to_ex "@#{artist.twtid}", artist.twt_user_url %>
   <% else %>
     <font color="red">twt未設定
     </font>
@@ -108,12 +64,13 @@
   <%= link_to "【twtサムネイル表示】", "../artists/#{@artist.id}?mode=twt_pic_list#twt_pic_list" %>
   <% twt = Twitter.find_by_twtid_ignore_case(artist.twtid) %>
   <% if twt.presence %>
-    【<%= twt.rating %>|<%= twt.status %>】
-    <%= link_to "twt", twitter_path(twt) %>
+    (<%= twt.twtname %>)
+    <%= twt.drawing_method %>【<%= twt.rating %>】<%= twt.status %>
+    [<%= link_to "■twt■", twitter_path(twt) %>]
     <%= twt.get_datetime_string(twt.last_access_datetime, true) if twt.last_access_datetime.presence %>
     (<%= twt.get_date_info(twt.last_access_datetime) if twt.last_access_datetime.presence %>)
   <% elsif artist.twtid != "" %>
-    <%= link_to "New Twt", new_twitter_path(twtid: artist.twtid, pxvid: artist.pxvid, status: "TWT巡回", twtname: artist.pxvname) %>
+    <%#= link_to "New Twt", new_twitter_path(twtid: artist.twtid, pxvid: artist.pxvid, status: "TWT巡回", twtname: artist.pxvname) %>
   <% end %>
   <br />
 
@@ -123,14 +80,12 @@
   <% end %>
   <hr />
 
-
   <p>
     <table border="1">
       <tr>
         <th>最新DL日</th>
         <th>最新投稿日</th>
         <th>最初期投稿日</th>
-        <!-- <th>最終アクセス日</th>-->
         <th>前回アクセス日</th>
       </tr>
       <tr>
@@ -155,6 +110,7 @@
       </tr>
     </table>
   </p>
+    <%= link_to "表示リフレッシュ", artist_path(artist, access_dt_update: "no") %>
 
   <% if artist.chara != "" %>
     <p>

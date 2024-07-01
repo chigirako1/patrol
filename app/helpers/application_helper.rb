@@ -10,7 +10,11 @@ module ApplicationHelper
     end
   end
 
-  def link_to_ex(txt, link)
-    link_to(txt, link, target: :_blank, rel: "noopener noreferrer")
+  def link_to_ex(txt, link, newtab=true)
+    if newtab
+      link_to(txt, link, target: :_blank, rel: "noopener noreferrer")
+    else
+      link_to(txt, link)
+    end
   end
 end

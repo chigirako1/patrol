@@ -12,18 +12,19 @@
     </div>
   <% end %>
 
+  <%= link_to %!表示リフレッシュ!, twitter_path(@twitter, refresh: "y") %>
   <% if pxv.presence %>
     PXV最終投稿日:<%= pxv.get_datetime_string(pxv.last_ul_datetime) %>
   <% end %>
   <% if @twitter.twtid %>
-    <h3>TWTを開く→<%= link_to %!@#{@twitter.twtid}!, Twt::twt_user_url(@twitter.twtid), target: :_blank, rel: "noopener noreferrer" %></h3>
+    <h3>TWTを開く→<%= link_to_ex %!@#{@twitter.twtid}!, Twt::twt_user_url(@twitter.twtid) %></h3>
   <% end %>
   <div>
     <%= form.label :twtid, style: "display: block" %>
     <% if params[:twtid].presence %>
       <% param_twtid = params[:twtid] %>
       @<%= form.text_field :twtid, value: param_twtid %>
-      <h3>TWTを開く→<%= link_to %!@#{param_twtid}!, Twt::twt_user_url(param_twtid), target: :_blank, rel: "noopener noreferrer" %></h3>
+      <h3>TWTを開く→<%= link_to_ex %!@#{param_twtid}!, Twt::twt_user_url(param_twtid) %></h3>
     <% else %>
       @<%= form.text_field :twtid %>
     <% end %>
@@ -149,33 +150,29 @@
       <% end %>
     <% end %>
 
-    <% if pxv.presence %>
-      <br />
-      <% if pxv.pxvid != twitter.pxvid %>
-        <%= %!pxvid="#{pxv.pxvid}"! %>
-        <br />
-      <% end %>
-      PXVアクセス:
+    <% if pxv.presence and twitter.pxvid == "" %>
+      <%= %!pxvid="#{pxv.pxvid}"! %>
       【<%= pxv.rating %>】
-      [<%= pxv.last_access_datetime_disp %>]
+      [A:<%= pxv.last_access_datetime_disp %>|DL:<%= pxv.last_dl_datetime_disp %>]|最新UL:<%= pxv.last_ul_datetime_disp %>]
       [<%= pxv.status %>|<%= pxv.feature %>|<%= pxv.pxvname %>|<%= pxv.r18 %>]
-      [<%= link_to "show", artist_path(pxv.id), target: :_blank, rel: "noopener noreferrer" %>]
+      [<%= link_to_ex("show", artist_path(pxv.id, access_dt_update: "yes")) %>]
       予測：<%= pxv.prediction_up_cnt(true) %>
     <% else %>
       <% pxv2 = Artist.find_by(pxvid: @twitter.pxvid) %>
       <% if pxv2.presence %>
-        【<%= pxv2.rating %>】
-        [<%= pxv2.last_access_datetime_disp %>]
-        [<%= pxv2.status %>|<%= pxv2.feature %>|<%= pxv2.pxvname %>|<%= pxv2.r18 %>]
-        [<%= link_to "show", artist_path(pxv2.id), target: :_blank, rel: "noopener noreferrer" %>]
+        <%= pxv2.pxvname %>(<%= pxv2.twtid %>)【<%= pxv2.rating %>】<%= pxv2.r18 %>
+        [<%= pxv2.status %>|<%= pxv2.feature %>|
+        [DL:<%= pxv2.last_dl_datetime_disp %>|最新UL:<%= pxv2.last_ul_datetime_disp %>]
+        [<%= link_to_ex("show", artist_path(pxv2.id, access_dt_update: "yes")) %>]
         予測：<%= pxv2.prediction_up_cnt(true) %>
+        [A:<%= pxv2.last_access_datetime_disp %>]
       <% else %>
         <% pxv3 = Artist.looks("pxvname", twtname, "partial_match") %>
-        <% if pxv3.presence %>
+        <% if pxv3.presence and @twitter.twtname.presence and @twitter.twtname.size > 2 %>
           <br />
           類似名あり：
           <% pxv3.each do |pxv_n| %>
-            【<%= pxv_n.pxvname %>|<%= pxv_n.pxvid %>】
+            【<%= pxv_n.pxvname %>(<%= pxv_n.pxvid %>)|@<%= pxv_n.twtid %>】|<%= pxv_n.feature %>
             <br />
           <% end %>
         <% end %>
@@ -219,7 +216,7 @@
   </div>
 
   <hr />
-
+<!--
   <div>
     <%= form.label :センシティブ, style: "display: block" %>
     <%= form.select :sensitive,
@@ -231,6 +228,7 @@
   </div>
 
   <hr />
+-->
 
   <div>
     <%= form.label :コメント, style: "display: block" %>
@@ -250,9 +248,10 @@
     <% alt_twt = Twitter.find_by_twtid_ignore_case(@twitter.alt_twtid) %>
     <% if alt_twt.presence %>
       <%= alt_twt.twtname %>
-      【<%= alt_twt.rating %>|<%= alt_twt.status %>】
+      【<%= alt_twt.rating %>|<%= alt_twt.drawing_method %>|<%= alt_twt.status %>】
       [<%= link_to "show", alt_twt, target: :_blank, rel: "noopener noreferrer" %>]
       |<%= alt_twt.last_access_datetime_disp %>|
+      <%= %!|PXVID:#{alt_twt.pxvid}! if alt_twt.pxvid.presence %>
     <% end %>
   </div>
 
@@ -291,39 +290,46 @@
   </div>
 
   <div>
-    <%= form.label :最終DL日時, style: "display: block" %>
+    <%= form.label :最新DL日時, style: "display: block" %>
     <%= form.datetime_field :last_dl_datetime %>
     <input type="button" value="現在時刻に設定" onclick="set_time('twitter_last_dl_datetime');" />
   </div>
 
   <div>
-    <%= form.label :earliest_dl_datetime, style: "display: block" %>
-    <%= form.datetime_field :earliest_dl_datetime %>
+    <%= form.label :最新投稿日時, style: "display: block" %>
+    <!--
+    <%= form.datetime_field :last_post_datetime %>
+    -->
+    <% twt_pic_list = @twt_pic_path_list.map {|x| [Twt::twt_path_str(x), x]}.sort.reverse %>
+    <% if twt_pic_list[0] != nil %>
+      <% ul_date = Twt::get_time_from_path(twt_pic_list[0][1]) %>
+      <%= @twitter.last_post_datetime %>↓<br />
+      <%= form.datetime_field :last_post_datetime, value: ul_date.strftime("%Y-%m-%d %H:%M:%S") %>
+    <% else %>
+      <%= form.datetime_field :last_post_datetime %>
+    <% end %>
   </div>
-  
-  <script>
-    function set_time(elem_id) {
-      let elem = document.getElementById(elem_id);
-      const now = new Date();
-      now.setMinutes(now.getMinutes() - now.getTimezoneOffset());
-      let isostr = now.toISOString();
-      //2024-01-31T13:54:35.371Z
-      //                   54321
-      let val = isostr.slice(0, -5);
-      //let val = isostr.slice(0, -8);
-      elem.value = val;
-    }
-  </script>
 
   <div>
     <%= form.label :最新アクセス日時, style: "display: block" %>
     <%= form.datetime_field :last_access_datetime %>
   </div>
-
-  <div>
-    <%= form.label :最新投稿日時, style: "display: block" %>
-    <%= @twitter.last_post_datetime %>↓<br />
-    <%= form.datetime_field :last_post_datetime %>
-  </div>
-
 <% end %>
+
+<script>
+  function set_time(elem_id) {
+    let elem = document.getElementById(elem_id);
+    let date = new Date(elem.value);
+
+    const now = new Date();
+    now.setMinutes(now.getMinutes() - now.getTimezoneOffset());
+    now.setSeconds(date.getSeconds());//よくわからないが秒の値を変更前と合わせないとブラウザでエラーになる
+    
+    let isostr = now.toISOString();
+    //2024-01-31T13:54:35.371Z
+    //                   54321
+    let val = isostr.slice(0, -5);
+    //let val = isostr.slice(0, -8);
+    elem.value = val;
+  }
+</script>

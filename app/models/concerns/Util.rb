@@ -26,7 +26,7 @@ module Util
         elsif days >= 30
             months = days / 30
             "#{months}ヶ月以上前"
-        elsif days >= 7
+        elsif days >= 14
             weeks = days / 7
             "#{weeks}週間以上前"
         elsif days == 0
@@ -34,6 +34,10 @@ module Util
         else
             "#{days}日以内"
         end
+    end
+
+    def self.get_public_path(path)
+        Rails.root.join("public" + path).to_s
     end
 
     def self.glob(ipath, glob_param="*/")

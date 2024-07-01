@@ -19,58 +19,42 @@
       <th>id</th>
       <th>pxvname</th>
       <th>評価</th>
-      <th>ファイル総数<br />{最近}</th>
+      <th>ファイル総数{最近}</th>
       <th>最終DL日</th>
-      <th>最新投稿日</th>
-      <th>予測<br />最新アクセス日</th>
+      <th>予測/最新アクセス日</th>
       <th>twt/nje</th>
-      <th>twt DL日</th>
-      <th>コメント<br />特徴</th>
+      <th>twt アクセス日</th>
+      <th>コメント/特徴</th>
+      <th>最新投稿日</th>
       <% if @thumbnail %>
         <th>pic</th>
       <% end %>
     </tr>
     <% artists[(@begin_no)..(@begin_no + @size_per_table - 1)].each do |artist| %>
-      <% if @twt %>
+      <% if true#@twt %>
         <% twt = Twitter.find_by_twtid_ignore_case(artist["twtid"]) %>
       <% else %>
         <% twt = nil %>
       <% end %>
       <tr>
         <td>
-          <%= link_to artist.id, artist_path(artist, access_dt_update: "no"), target: :_blank, rel: "noopener noreferrer" %>
+          <%= link_to_ex(artist.id, artist_path(artist, access_dt_update: "no")) %>
         </td>
         <td>
           <%= pxvname_tag(artist) %>
           <br />
-          <%= artist["feature"] %>
+          <%= artist.feature %>
         </td>
         <%= priority_tag(artist) %>
         <td align="right">
           <%= artist.filenum %>
-          <br />
           {<%= artist.recent_filenum %>}
-          <br />
-          <%#= artist.point %>
         </td>
         <td>
-          <%#= artist.get_datetime_string(artist.last_dl_datetime) %>
           <%= artist.last_dl_datetime_disp %>
         </td>
-
-        <% if artist.get_date_delta(artist["last_ul_datetime"]) < 30 %>
-          <td bgcolor="gray">
-        <% elsif artist.get_date_delta(artist["last_ul_datetime"]) > 365 %>
-          <td bgcolor="orange">
-        <% else %>
-          <td>
-        <% end %>
-        <%#= artist.get_datetime_string(artist.last_ul_datetime) %>
-        <%= artist.get_date_info(artist["last_ul_datetime"]) %>
-        </td>
-
         <% if artist.last_access_datetime_p(7) %>
-          <td bgcolor="gray">
+          <td bgcolor="lightgray">
         <% elsif artist.get_date_delta(artist.last_access_datetime) > 365 %>
           <td bgcolor="yellow">
         <% else %>
@@ -78,32 +62,48 @@
         <% end %>
           <%= artist.prediction_up_cnt(true) %>
           <br />
-          <%= link_to "■■■", artist, target: :_blank, rel: "noopener noreferrer" %>
+          <%= link_to_ex("■pxv■", artist_path(artist, access_dt_update: "yes")) %>
           <br />
           <%= artist.last_access_datetime_disp %>
         </td>
 
         <!-- -->
         <td>
-          <% if artist["twtid"] != "" %>
-            <%#= link_to "@#{artist["twtid"]}", artist.twt_user_url, target: :_blank, rel: "noopener noreferrer" %>
-            <%= "@#{artist.twtid}" %>
-            <!--[<%= link_to "twtサムネイル", artist_twt_path(artist["twtid"]), target: :_blank, rel: "noopener noreferrer" %>]-->
+          <% if artist.twtid.presence and artist.twtid != "-" %>
+            <%= link_to_ex "@#{artist.twtid}", artist.twt_user_url %>
             <% if twt %>
-              [<%= link_to "twt", twt, target: :_blank, rel: "noopener noreferrer" %>]
-              <%= twt.status %>|
-              <%= twt.get_datetime_string(twt.last_access_datetime, true) if twt.last_access_datetime.presence %>
+              <br />
+              [<%= link_to_ex "twt", twt %>]
+              <br />
               (<%= twt.get_date_info(twt.last_access_datetime) if twt.last_access_datetime.presence %>)
-            <% elsif @twt %>
-              new
+              <br />
+              <%= twt.status %>
+              <br />
+              <%= artist.get_date_info(twt.last_dl_datetime) %>
             <% end %>
           <% end %>
           <%= "✓" if @twt and artist.twt_check == "t" %>
           <br />
-          <%= link_to "nje:#{artist["njeid"]}", artist.nje_member_url, target: :_blank, rel: "noopener noreferrer" if artist["njeid"] != nil and artist["njeid"] != "" %>
+          <% if artist.njeid.presence %>
+            <%= link_to_ex "nje:#{artist["njeid"]}", artist.nje_member_url %>
+          <% end %>
         </td>
-        <td><%= artist.get_date_info(twt.last_dl_datetime) if twt %></td>
-        <td><%= artist.warnings %><br /><%= artist["comment"] %></td>
+        <td><%= twt.get_datetime_string(twt.last_access_datetime, true) if twt and twt.last_access_datetime.presence %></td>
+        <td><%= artist.warnings %><br /><%= artist.comment %></td>
+        <% if artist.get_date_delta(artist.last_ul_datetime) < 7 %>
+          <td bgcolor="palegreen">
+        <% elsif artist.get_date_delta(artist.last_ul_datetime) > 180 %>
+          <td bgcolor="yellow">
+        <% elsif artist.get_date_delta(artist.last_ul_datetime) > 365 %>
+          <td bgcolor="orange">
+        <% else %>
+          <td>
+        <% end %>
+          <%= artist.get_date_info(artist.last_ul_datetime) %>
+          <% if artist.status.presence %>
+            ※<%= artist.status %>
+          <% end%>
+        </td>
         <% if @thumbnail %>
           <td><%= pic_path_tag(artist.pxvid, 3) %></td>
         <% end %>
@@ -121,10 +121,10 @@
   <% @authors_list.each do |elem| %>
     <% name = elem[0] %>
     <% url = %!https://www.google.com/search?q=#{name}! %>
-    「<%= link_to name, url, target: :_blank, rel: "noopener noreferrer" %>」<%= ":#{elem[1]}" %><br />
+    「<%= link_to_ex name, url %>」<%= ":#{elem[1]}" %><br />
     <ul>
     <% elem[2].each do |x| %>
-      <li><%= "#{x.pxvname}(#{x.pxvid})" %><%= link_to "[show]", x, target: :_blank, rel: "noopener noreferrer" %></ li>
+      <li><%= "#{x.pxvname}(#{x.pxvid})" %><%= link_to_ex "[show]", x %></ li>
     <% end %>  
     </ul>
   <% end %>
@@ -138,7 +138,7 @@
     <%= idx %>.
     <% pxvurl = Pxv::pxv_user_url(pxvid) %>
     <%= link_to pxvid, pxvurl, target: :_blank, rel: "noopener noreferrer" %>
-    (<%= link_to "show", artist_pxv_path(pxvid), target: :_blank, rel: "noopener noreferrer" %>)
+    (<%= link_to_ex "show", artist_pxv_path(pxvid) %>)
     <% user_name = Pxv::user_name(dirlist, pxvid) %>
     <% if user_name.presence %>
       <%= user_name %>
@@ -151,7 +151,7 @@
 <% if @misc_urls.size != 0 %>
   <h2>misc url list(<%= @misc_urls.size %>)</h2>
   <% @misc_urls.each do |url| %>
-    <%= link_to url, url, target: :_blank, rel: "noopener noreferrer" %>
+    <%= link_to_ex url, url %>
     <br />
   <% end %>
 <% end %>
@@ -186,7 +186,7 @@
       <% pxv_a = Artist.find_by(pxvid: twt.pxvid) %>
       <br />
       <% if pxv_a != nil %>
-        pxv:<%= pxv_a.pxvname %> [<%= link_to "show", pxv_a %>]
+        pxv:<%= pxv_a.pxvname %> [<%= link_to_ex "show", pxv_a %>]
         <br />
       <% end %>
     <% end %>

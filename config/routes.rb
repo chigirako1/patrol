@@ -8,6 +8,7 @@ Rails.application.routes.draw do
   get '/help', to: 'home#help'
   get '/test', to: 'home#test'
   get "search" => "searches#search"
+  get '/artists/:id/api_hoge', to: 'artists#api_hoge', as: :artist_api_hoge
   get '/artists/:id/edit_no_update', to: 'artists#edit_no_update', as: :update_no_update_artist
   get '/artists/stats/index', to: 'artists#stats'
   get '/artists/pxv/index', to: 'artists#pxv_index'

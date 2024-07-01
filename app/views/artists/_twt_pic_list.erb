@@ -1,5 +1,5 @@
 <div id="<%= dom_id artist %>">
-    <h1 id="twt_pic_list">twt pic (<%= link_to "@#{artist["twtid"]}", artist.twt_user_url, target: :_blank, rel: "noopener noreferrer" %>)</h1>
+    <h1 id="twt_pic_list">twt pic (<%= link_to_ex "@#{artist.twtid}", artist.twt_user_url %>)</h1>
     
     <% twt_pic_list = @twt_pic_path_list.map {|x| [Twt::twt_path_str(x), x]}.sort.reverse %>
 

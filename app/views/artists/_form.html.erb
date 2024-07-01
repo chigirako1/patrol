@@ -3,7 +3,7 @@
   padding-left: 1em;
   padding-right: 1em;
   height: 2em;
-  width: 50px;
+  width: 100px;
 }
 </style>
 
@@ -41,8 +41,46 @@
           }
       }
   }
-</script>
 
+  function set_time(elem_id, col_n = -8) {
+    let elem = document.getElementById(elem_id);
+    let date = new Date(elem.value);
+
+    const now = new Date();
+    now.setMinutes(now.getMinutes() - now.getTimezoneOffset());
+    now.setSeconds(date.getSeconds());//よくわからないが秒の値を変更前と合わせないとブラウザでエラーになる
+    elem.value = now.toISOString().slice(0, col_n);
+  }
+
+  function getJson() {
+    var url = '<%= artist_api_hoge_path(artist.id) %>';
+    fetch(url)
+    .then(function (data) {
+      return data.json();
+    })
+    .then(function (json) {
+      let data = json.pxvname;
+      let elem = document.getElementById('artist_circle_name');
+      elem.value = data;
+    });
+  }
+
+  function set_option(elemid, idx) {
+    let status_sel_box = document.getElementById("artist_" + elemid);
+    let options = status_sel_box.options;
+    options[idx].selected = true;
+  }
+
+  function plus_rate(elem_id, point) {
+    let elem = document.getElementById("artist_" + elem_id);
+    let prio_val = parseInt(elem.value);
+    elem.value = prio_val + point;
+  }
+  function set_rate(elem_id, point) {
+    let elem = document.getElementById("artist_" + elem_id);
+    elem.value = point;
+  }
+</script>
 
 <%= form_with(model: artist) do |form| %>
   <% if artist.errors.any? %>
@@ -59,7 +97,7 @@
 
   <h3>Pixivを開く =>
     <% url = artist.pxv_user_url %>
-    <%= link_to artist["pxvid"], url, target: :_blank, rel: "noopener noreferrer" %>
+    <%= link_to_ex artist.pxvid, url %>
   </h3>
 
   <h1>編集</h1>
@@ -80,33 +118,30 @@
 
   <div>
     <%= form.label :rating, style: "display: block" %>
-    <%#= form.number_field :rating %>
-    <%= form.select :rating,
-      [["優++(12)", 12], ["優+(11)", 11], ["優(10)", 10], ["良+(9)", 9],
-      ["良(8)", 8], ["良-(7)", 7], ["可(6)", 6],
-      ["可？(5)", 5], ["可？？(4)", 4], ["不可？(3)", 3], ["不可(2)", 2], ["不可-(1)", 1], ["悪(-1)", -1]],
-      include_blank: "選択して下さい" %>
-    <input type="button" value="+" onclick="options_up('artist_rating');" class="btn" />
-    <input type="button" value="-" onclick="options_down('artist_rating');" class="btn" />
-    <input type="button" value="優(10)" onclick="set_rate(3);" class="btn" />
-    <input type="button" value="良+(9)" onclick="set_rate(4);" class="btn" />
-    <input type="button" value="良(8)" onclick="set_rate(5);" class="btn" />
-    <input type="button" value="良-(7)" onclick="set_rate(6);" class="btn" />
-    <input type="button" value="可(6)" onclick="set_rate(7);" class="btn" />
-    <script>
-      function set_rate(idx) {
-        let status_sel_box = document.getElementById("artist_rating");
-        let options = status_sel_box.options;
-        options[idx].selected = true;
-      }
-    </script>
+    <%= form.number_field :rating %>
+    <input type="button" value="+5" onclick="plus_rate('rating', 5);" class="btn" />
+    <input type="button" value="-5" onclick="plus_rate('rating', -5);" class="btn" />
+    <br />
+    <input type="button" value="優(100)" onclick="set_rate('rating', 100);" class="btn" />
+    <input type="button" value="良+(90)" onclick="set_rate('rating', 90);" class="btn" />
+    <input type="button" value="良(80)" onclick="set_rate('rating', 80);" class="btn" />
+    <input type="button" value="良-(70)" onclick="set_rate('rating', 70);" class="btn" />
+    <input type="button" value="可(60)" onclick="set_rate('rating', 60);" class="btn" />
   </div>
 
   <div>
     <%= form.label :r18, style: "display: block" %>
     <%= form.select :r18,
-      [["R18", "R18"], ["R15", "R15"], ["R12", "R12"], ["健全？", "健全"], ["全年齢", "全年齢"], 
-      ["かわいい系", "かわいい系"], ["アート系", "アート系"],["R36(危険)", "R36"]],
+      [
+        ["R18", "R18"],
+        ["R15", "R15"],
+        ["R12", "R12"],
+        ["健全？", "健全"],
+        ["全年齢", "全年齢"], 
+        ["かわいい系", "かわいい系"],
+        ["アート系", "アート系"],
+        ["R36(危険)", "R36"]
+      ],
     include_blank: "選択して下さい" %>
     <input type="button" value="R18" onclick="toggle_r(1);" class="btn" />
     <input type="button" value="R15" onclick="toggle_r(2);" class="btn" />
@@ -125,6 +160,7 @@
   <br />
   <div>
     <%= form.submit("更新", class: 'subtmi-btn') %>
+    <input type="button" value="最新DL日時を現在日時に設定" onclick="set_time('artist_last_dl_datetime', -5);" />
   </div>
 
   <h2>その他</h2>
@@ -142,27 +178,8 @@
       ["作品ゼロ", "作品ゼロ"], ["一部消えた", "一部消えた"], ["ほぼ消えた", "ほぼ消えた"], 
       ["取得途中", "取得途中"], ["最新から取得し直し中", "最新から取得し直し中"], ["彼岸", "彼岸"]],
       include_blank: "選択して下さい" %>
-    <input type="button" value="長期更新なしに変更" onclick="set_status(3);" />
-    <input type="button" value="半年以上更新なしに変更" onclick="set_status(4);" />
-    <script>
-      function set_status(idx) {
-        let status_sel_box = document.getElementById("artist_status");
-        let options = status_sel_box.options;
-        options[idx].selected = true;
-      }
-    </script>
-  </div>
-
-  <div>
-    <%= form.label :特徴（AI、3D、etc…）, style: "display: block" %>
-    <%= form.select :feature, [["AI", "AI"], ["3D", "3D"]], include_blank: "選択して下さい" %>
-    <input type="button" value="↑" onclick="options_up('artist_feature');" class="btn" />
-    <input type="button" value="↓" onclick="options_down('artist_feature');" class="btn" />
-  </div>
-  
-  <div>
-    <%= form.label :備考（なんでもメモ）, style: "display: block" %>
-    <%= form.text_field :remarks %>
+    <input type="button" value="長期更新なしに変更" onclick="set_option('status', 3);" />
+    <input type="button" value="半年以上更新なしに変更" onclick="set_option('status', 4);" />
   </div>
  
   <div>
@@ -173,6 +190,21 @@
       ], include_blank: "選択して下さい" %>
     <input type="button" value="↑" onclick="options_up('artist_reverse_status');" class="btn" />
     <input type="button" value="↓" onclick="options_down('artist_reverse_status');" class="btn" />
+    <input type="button" value="さかのぼり中" onclick="set_option('reverse_status', 1);" class="btn" />
+    <input type="button" value="さかのぼり済" onclick="set_option('reverse_status', 2);" class="btn" />
+  </div>
+
+  <div>
+    <%= form.label :特徴（AI、3D、etc…）, style: "display: block" %>
+    <%= form.select :feature, [["AI", "AI"], ["3D", "3D"]], include_blank: "選択して下さい" %>
+    <input type="button" value="↑" onclick="options_up('artist_feature');" class="btn" />
+    <input type="button" value="↓" onclick="options_down('artist_feature');" class="btn" />
+    <input type="button" value="AI" onclick="set_option('feature', 1);"  class="btn" />
+  </div>
+  
+  <div>
+    <%= form.label :備考（なんでもメモ）, style: "display: block" %>
+    <%= form.text_field :remarks %>
   </div>
 
   <div>
@@ -206,18 +238,6 @@
     <%= form.number_field :priority %>
 
     <input type="button" value="0" onclick="set(0);" class="btn" />
-    <script>
-      function plus(point) {
-        let elem = document.getElementById("artist_priority");
-        //let prio_val = elem.value;
-        let prio_val = parseInt(elem.value);
-        elem.value = prio_val + point;
-      }
-      function set(point) {
-        let elem = document.getElementById("artist_priority");
-        elem.value = point;
-      }
-    </script>
   </div>
 
   <h2>ユーザー情報</h2>
@@ -271,6 +291,7 @@
   <div>
     <%= form.label :サークル名, style: "display: block" %>
     <%= form.text_field :circle_name %>
+    <input type="button" value="get jsonテスト" onclick="getJson();" />
   </div>
   
   <div>
@@ -292,12 +313,20 @@
 
   <div>
     <%= form.label :last_ul_datetime, style: "display: block" %>
-    <%= form.datetime_field :last_ul_datetime %>
+    <% if @path_list[0] =~ /(\d\d-\d\d-\d\d)/ %>  
+      <% upl_date = Date.parse($1).beginning_of_day.strftime('%Y-%m-%dT%T') %>
+      <%= @artist.last_ul_datetime %>↓
+      <br />
+      <%= form.datetime_field :last_ul_datetime, :value => upl_date %>
+    <% else %>
+      <%= form.datetime_field :last_ul_datetime %>
+    <% end %>
   </div>
 
   <div>
     <%= form.label :last_access_datetime, style: "display: block" %>
     <%= form.datetime_field :last_access_datetime %>
+    <!--<input type="button" value="現在時刻に設定" onclick="set_time('artist_last_access_datetime', -5);" />-->
   </div>
 
   <div>
@@ -308,17 +337,7 @@
   <div>
     <%= form.label :nje_checked_date, style: "display: block" %>
     <%= form.datetime_field :nje_checked_date %>
-    <input type="button" value="現在時刻に設定" onclick="set_time('artist_nje_checked_date');" />
   </div>
-
-  <script>
-    function set_time(elem_id) {
-      let elem = document.getElementById(elem_id);
-      const now = new Date();
-      now.setMinutes(now.getMinutes() - now.getTimezoneOffset());
-      elem.value = now.toISOString().slice(0, -8);
-    }
-  </script>
 
   <div>
     <%= form.label :show_count, style: "display: block" %>

@@ -23,11 +23,9 @@ module ArtistsHelper
         end
         tag += "<br />"
         tag += "("
-        tag += link_to(artist["pxvid"], artist.pxv_user_url, target: :_blank, rel: "noopener noreferrer")
+        tag += link_to_ex(artist["pxvid"], artist.pxv_user_url)
         tag += ")"
-
         tag += "<br />"
-        tag += artist.status 
 
         tag.html_safe
     end
@@ -43,8 +41,7 @@ module ArtistsHelper
         else
             tag = %!<td align="right">!
         end
-        #tag += %!#{artist.rating}<br />[#{artist.priority}]!
-        tag += %!#{artist.rating}<br />!
+        tag += %!【#{artist.rating}】!
         if artist.r18.presence
             tag += %!#{artist.r18}<br />!
         end
@@ -84,4 +81,14 @@ module ArtistsHelper
         artist.last_ul_datetime.in_time_zone('Tokyo').strftime("%y-%m-%d") != date_str
     end
 
+    def pre_bgcolor(pred_cnt, threshold=2)
+        if pred_cnt == 0
+            bgcolor = "grey"
+        elsif pred_cnt > threshold
+            bgcolor = "orange"
+        else
+            bgcolor = "beige"
+        end
+        bgcolor
+    end
 end

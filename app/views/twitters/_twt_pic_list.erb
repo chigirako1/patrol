@@ -8,8 +8,10 @@ textarea {
 <div id="<%= dom_id twitter %>">
     <!-- PXV画像 -->
     <% if twitter.pxvid.presence %>
+        PXV:<br />
         <%= pic_path_tag(twitter.pxvid, 5, '10%', true) %>
         <br />
+        TWT:<br />
     <% end %>
 
     <% show_pic_num = 5 %>
@@ -70,7 +72,7 @@ textarea {
     <% end %>
     
     <% if twt_pic_list.size > show_pic_num %>
-        <%= link_to "...全て表示", twitter_path(picn: 'all', pic_lf: '3', corr: '0') %>
+        <%= link_to "...全て表示", twitter_path(picn: 'all', pic_lf: '3', corr: '0', refresh: "y") %>
         <%= link_to "url txtチェック", twitter_path(file_check: 't', picn: 'all', pic_lf: '', corr: '0') %>
     <% end %>
     全画像数：<%= twt_pic_list.size %>
@@ -95,8 +97,10 @@ textarea {
     <% end %>
     計算結果"<%= avg %>"
     (<%= freq_90d %>/<%= freq_30d %>/<%= freq_15d %>)
-    <% dt = Twt::get_time_from_path(twt_pic_list[0][1]) %>
-    【予測】<%= twitter.prediction(dt) %>
+    <% if twt_pic_list[0] != nil %>
+        <% dt = Twt::get_time_from_path(twt_pic_list[0][1]) %>
+        【予測】<%= twitter.prediction(dt) %>
+    <% end %>
     <br />
 
     <!-- URLのテキストファイルに含まれる画像が存在するかチェック -->

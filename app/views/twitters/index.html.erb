@@ -1,11 +1,9 @@
 <% provide(:title, "#{params[:page_title]} - TWT一覧") %>
 <p style="color: green"><%= notice %></p>
 
-
 <% pic_disp_mag = '13%' %>
 
 <%= link_to "Return", root_path %>
-
 
 <h1>Twitters</h1>
 
@@ -19,22 +17,15 @@
   <table border="1" rules="all">
     <tr>
       <th>#</th>
-      <th>id</th>
+      <th>ID</th>
       <th>twtname(twtid)</th>
-      <th>ファイル数</th>
       <th>
-        予測<br />
-        投稿頻度(100日あたり枚数)
-        </th>
-      <th>
-        最終アクセス日
+        予測/最終アクセス日
       </th>
-      <th>PXV最終UL日</th>
-      <th>PXV最終アクセス日</th>
       <th>pxvid</th>
+      <th>PXV最終アクセス日</th>
+      <th>PXV最終UL日</th>
       <th>サムネイル</th>
-      <th>備考</th>
-      <th>状態</th>
     </tr>
     <% twitters.first(@num_of_disp).each.with_index(1) do |twitter, idx| %>
       
@@ -45,50 +36,54 @@
         <td><%= idx %></td>
         <td><%= link_to twitter["id"], twitter %></td>
         <td>
-          <%= twitter["twtname"] %>
-          <%#= link_to "@#{twitter["twtid"]}", twt_url, target: :_blank, rel: "noopener noreferrer" %>
-          (@<%= twitter.twtid %>)
-          【<%= twitter.rating %>|<%= twitter.r18 %>|<%= twitter.status %>|<%= twitter.drawing_method %>】
+          <%= twitter.drawing_method %>【<%= twitter.rating %>】<%= twitter.r18 %>
           <br />
-          <%= %!※#{twitter["comment"]}! if twitter.comment != "" %>
-        </td>
-        <td>
-          <%= twitter.filenum %><br />
-          <%= twitter.recent_filenum %>
+          <%= twitter.twtname %>
+          (@<%= twitter.twtid %>)
+          <br />
+          [<%= twitter.status %>]
+          <br />
+          <%= twitter.filenum %>(<%= twitter.recent_filenum %>) [頻度：<%= twitter.update_frequency %>]
+          <br />
+          <%= %!※#{twitter.comment}! if twitter.comment != "" %>
+          <%= twitter.remarks %>
         </td>
         <td>
           <%= twitter.prediction %>
-          [<%= link_to "Show", twitter, target: :_blank, rel: "noopener noreferrer" %>]
           <br />
-          [<%= twitter.update_frequency %>]
-        </td>
-        <td>
+          [<%= link_to_ex "■twt■", twitter %>]
+          <br />
           <%= twitter.get_date_info(twitter.last_access_datetime) if twitter.last_access_datetime.presence %>
+        </td>
+        <!-- pxv -->
+        <% pxv = Artist.find_by(pxvid: twitter.pxvid) %>
+        <td bgcolor="pink">
+          <%= %!【#{twitter.artist_rating}】! if twitter.artist_rating.presence %>
+          <%= twitter.pxvname if twitter.twtname != twitter.pxvname %>
+          <% if twitter.artist_pxvid.presence %>
+            (<%= link_to_ex twitter.artist_pxvid, pxv_url %>)
+            <br />
+            <%= pxv.filenum %>(<%= pxv.recent_filenum %>)
+          <% end %>
+        </td>
+        <td bgcolor="pink">
+          <% if twitter.artist_id.presence %>
+            [<%= link_to_ex("■pxv■", artist_path(twitter.artist_id, access_dt_update: "yes")) %>]
+            <br />
+          <% end %>
+          <% if twitter.artists_last_access_datetime.presence %>
+            <%= %!(#{twitter.get_date_info(twitter.artists_last_access_datetime)})! %>
+          <% end %>
         </td>
         <td bgcolor="pink">
           <% if twitter.last_ul_datetime.presence %>
             <% d = Date.parse(twitter.last_ul_datetime) %><!-- なぜかわからないがstring"22-11-31"になってる -->
             <%#= twitter.get_datetime_string(twitter.last_ul_datetime, true) %>
-            <%= twitter.get_datetime_string(d, true) %>
+            <%#= twitter.get_datetime_string(d, true) %>
             <br />
             <%= %!(#{twitter.get_date_info(d)})! %>
             <br />
-          <% end %>
-          <%= %!【#{twitter.artist_status}】! if twitter.artist_status.presence %>
-        </td>
-        <td bgcolor="pink">
-          <% if twitter.artists_last_access_datetime.presence %>
-            <%= %!【#{twitter.get_date_info(twitter.artists_last_access_datetime)}】! %>
-          <% end %>
-        </td>
-        <td bgcolor="pink">
-          <%= twitter["pxvname"] if twitter["twtname"] != twitter["pxvname"] %>
-          <% if twitter["artist_pxvid"].presence %>
-            [<%= link_to twitter["artist_pxvid"], pxv_url, target: :_blank, rel: "noopener noreferrer" %>]
-            <br />
-            [<%= link_to "show", artist_path(twitter.artist_id), target: :_blank, rel: "noopener noreferrer" %>]
-            <br />
-            【<%=  twitter.artist_rating %>|<%=  twitter.artist_status %>】
+            <%= %!※#{twitter.artist_status}! if twitter.artist_status.presence %>
           <% end %>
         </td>
         <td>
@@ -102,11 +97,6 @@
             <%= twt_pic_list.size %>
           <% else %>
           <% end %>
-        </td>
-        <td><%= twitter["remarks"] %></td>
-        <td>
-          
-          
         </td>
       </tr>
     <% end %>

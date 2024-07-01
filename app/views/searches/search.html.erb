@@ -24,7 +24,7 @@
     <td><%= artist.id %></td>
     <td><%= link_to artist["pxvid"], pxv_url, target: :_blank, rel: "noopener noreferrer" %></td>
     <td><%= artist.pxvname %></td>
-    <td><%= link_to "■■■■", artist, target: :_blank, rel: "noopener noreferrer" %></td>
+    <td><%= link_to_ex "■pxv■", artist %></td>
     <% if artist["twtid"] == "" %>
       <td></td>
     <% else %>

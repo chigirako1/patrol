@@ -212,7 +212,19 @@ class Artist < ApplicationRecord
         end
 
         #known_pxv_user_id_list.sort_by! {|x| [x.p.status, x.p.rating, x.p.r18, -(x.cnt), x.p.last_access_datetime]}
-        known_pxv_user_id_list.sort_by! {|x| [x.p.status, x.p.rating==0 ? -11 : -x.p.rating, x.p.r18, -(x.cnt), x.p.last_access_datetime]}
+        #known_pxv_user_id_list.sort_by! {|x| [x.p.status, x.p.rating==0 ? -11 : -x.p.rating, x.p.r18, -(x.cnt), x.p.last_access_datetime]}
+        known_pxv_user_id_list.sort_by! {|x|
+            [
+                x.p.feature,
+                -(x.cnt), 
+                x.p.status, 
+                x.p.rating==0 ? -11 : -x.p.rating, 
+                x.p.r18, 
+                x.p.last_access_datetime
+            ]
+        }
+
+
         #puts %!dbg:#{unknown_pxv_user_id_list.size}!
         #puts %!dbg:#{unknown_pxv_user_id_list[0]}!
         unknown_pxv_user_id_list.sort_by! {|x| [-(x.cnt), x.pxvid]}
@@ -229,9 +241,9 @@ class Artist < ApplicationRecord
         pt = pred_cnt
 
         # 評価
-        if rating == nil or rating < 6
+        if rating == nil or rating < 60
             comp = 100
-        elsif rating < 8
+        elsif rating < 80
             comp = 125
         else
             comp = 150
@@ -314,11 +326,11 @@ class Artist < ApplicationRecord
             return ""
         end
 
-        if last_access_datetime.year == Time.zone.now.year
-            get_date_info_days(last_access_datetime)
-        else
+        #if last_access_datetime.year == Time.zone.now.year
+            #get_date_info_days(last_access_datetime)
+        #else
             get_date_info(last_access_datetime)
-        end
+        #end
     end
 
     def last_ul_datetime_disp

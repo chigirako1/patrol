@@ -66,11 +66,16 @@ class TwittersController < ApplicationController
     end
     puts %!no_pxv="#{no_pxv}"!
 
+    if true
+      sql_query = "LEFT OUTER JOIN artists ON twitters.twtid = artists.twtid"
+    else
+      sql_query = "LEFT OUTER JOIN artists ON UPPER(twitters.twtid) = UPPER(artists.twtid)"
+    end
+    
     if mode == "search"
-      #twitters = Twitter.looks(params[:target_col], params[:search_word], params[:match_method])
       col, word = Twitter.looks("(自動判断)", params[:search_word], "auto")
       twitters = Twitter.joins(
-        "LEFT OUTER JOIN artists ON twitters.twtid = artists.twtid"
+        sql_query
       ).select("artists.id AS artist_id,
             artists.pxvid AS artist_pxvid,
             twitters.twtid AS twitter_twtid,
@@ -78,23 +83,36 @@ class TwittersController < ApplicationController
             artists.status AS artist_status,
             artists.rating AS artist_rating,
             artists.last_access_datetime AS artists_last_access_datetime,
-            artists.*, twitters.*").where(col, word)#.sort_by {|x| [x[:last_access_datetime], x[:last_dl_datetime]]}
+            artists.*, twitters.*").where(col, word)
     else
       twitters = Twitter.joins(
-        "LEFT OUTER JOIN artists ON twitters.twtid = artists.twtid"
+        sql_query
       ).select("artists.id AS artist_id,
             artists.pxvid AS artist_pxvid,
             artists.status AS artist_status,
             artists.rating AS artist_rating,
             artists.last_access_datetime AS artists_last_access_datetime,
-            artists.*, twitters.*")#.sort_by {|x| [x[:last_access_datetime], x[:last_dl_datetime]]}
+            artists.*, twitters.*")
     end
 
     if no_pxv
-      twitters = twitters.select {|x| !(x.pxvid.presence) and x.artist_pxvid == nil }
+      twitters = twitters.select {|x| !(x.pxvid.presence) and x.artist_pxvid == nil or x.artist_status == "長期更新なし" or x.artist_status == "半年以上更新なし"}
     end
 
     case mode
+    when "同一"
+      dup_ids = []
+      twtids = Twitter.select('twtid')
+      h = twtids.chunk {|x| x.twtid.upcase}
+      h.each do |k,v|
+        if v.size > 1
+          dup_ids = k
+        end
+      end
+      twitters = twitters.select {|x| dup_ids.include?(x.twtid.upcase)}
+      @twitters_group = {}
+      @twitters_group[""] = twitters
+      return
     when "id"
       if rating_gt != 0
         twitters = twitters.select {|x| x.rating == nil or x.rating >= rating_gt}
@@ -275,6 +293,7 @@ class TwittersController < ApplicationController
   def show
     if params[:file_check].presence
       @twt_ids = Twt::get_twt_tweet_ids_from_txts(@twitter.twtid)
+    elsif params[:refresh].presence and params[:refresh] == "y"
     else
       @twitter.update(last_access_datetime: Time.now)
     end

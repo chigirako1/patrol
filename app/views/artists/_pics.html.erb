@@ -18,35 +18,19 @@
     }
   </script>
   <br />
-<!-- 
-  <% if @path_list[0] =~ /(\d\d-\d\d-\d\d)/ %>
-    <font color="red"><%= $1 %></font><br />
-    <% if date_diff?(artist, $1) %>
-      <h3>日付が異なります</h3>
-    <% end %>
-  <% end %>
-
-  # 最新のファイルが現在よりnヶ月昔の場合は表示
-  #TODO:
-
-  ↓アクセス時間更新してるので無駄
-  予測:<%= artist.prediction_up_cnt(true) %>
--->
   <% if @path_list[0] =~ /(\d\d-\d\d-\d\d)/ %>  
-    <%= Util::get_date_info(Date.parse($1)) %>
+    最新投稿日：<%= Util::get_date_info(Date.parse($1)) %>
     <br />
   <% end %>
 
   <% list = Artist.artwork_list(@path_list) %>
-  <%# @path_list.first(@number_of_display).each.with_index(1) do |path, idx| %>
   <% list.first(@number_of_display).each.with_index(1) do |(artwork_id, data), idx| %>
     <% path = data[0] %>
     <% artwork_id = Pxv::get_pxv_art_id(path) %>
-    <%# if path =~ /\d\d-\d\d-\d\d.*\((\d+)\)/ %>
-    <%# artwork_id = $1 %>
     <% url = artist.pxv_artwork_url(artwork_id) %>
-    <%= idx %>.(<%= link_to artwork_id, url, target: :_blank, rel: "noopener noreferrer" %>)
-    <%= path %><br />
+    <%= idx %>.
+    (<%= link_to_ex artwork_id, url %>)
+    <%= path.gsub("%23", "#") %><br />
   <% end %> 
   ---
   <%= artist.reverse_status %> 
@@ -57,8 +41,9 @@
     <% if path =~ /\d\d-\d\d-\d\d.*\((\d+)\)/ %>
       <% artwork_id = $1 %>
       <% url = artist.pxv_artwork_url(artwork_id) %>
-      <%= list.size %>.(<%= link_to artwork_id, url, target: :_blank, rel: "noopener noreferrer" %>)
-      <%= path %><br />
+      <%= list.size %>.
+      (<%= link_to_ex artwork_id, url %>)
+      <%= path.gsub("%23", "#") %><br />
     <% end %>
   <% end %> 
   最初期投稿日：<%= artist.get_datetime_string(artist.earliest_ul_date, true) if artist.earliest_ul_date.presence %>
@@ -70,18 +55,22 @@
     <% date = data[2] %>
     <% fcnt = data[3] %>
     <% ratio = '15%' %>
-    <%= idx %>.<%= link_to(image_tag(path, width: ratio, height: ratio), path, target: :_blank, rel: "noopener noreferrer") %>
+    <%= idx %>.
+    <%= link_to_ex(image_tag(path, width: ratio, height: ratio), path) %>
     <% if fcnt > 1 %> 
       )))
     <% end %> 
-  <% end %> 
+  <% end %>
+
+  <!-- 最初期のファイル -->
   <% list.to_a.last(1).each.with_index(1) do |(artwork_id, data), idx| %>
     <% path = data[0] %>
     <% title = data[1] %>
     <% date = data[2] %>
     <% fcnt = data[3] %>
     <% ratio = '15%' %>
-    <%= list.size %>.<%= link_to(image_tag(path, width: ratio, height: ratio), path, target: :_blank, rel: "noopener noreferrer") %>
+    <%= list.size %>.
+    <%= link_to_ex(image_tag(path, width: ratio, height: ratio), path) %>
   <% end %> 
   <br />
 </div>

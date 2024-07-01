@@ -1,4 +1,10 @@
-<% provide(:title, @artist.pxvname) %>
+<% if @artist.twtid.presence %>
+  <% title = "" %>
+<% else %>
+  <% title = %!@\!! %>
+<% end %>
+<% title = title + %!【#{@artist.rating}】#{@artist.pxvname}! %>
+<% provide(:title, title) %>
 <p style="color: green"><%= notice %></p>
 
 <%
@@ -73,7 +79,7 @@
     } else if (e.key == 'ArrowRight') {
       next_pic();
     } else if (e.key == 'Escape') {
-      page_close();
+      //page_close();
     }
     //Console.log("test");
     return false; 
