@@ -158,7 +158,7 @@ module Pxv
             artwork_id = $2.to_i
             artwork_title = $3
         #22-06-20 9x17x5x2_p0_master1200.jpg"
-        elsif artwork_str =~ /(\d\d-\d\d-\d\d)\s+(\d+)/
+        elsif artwork_str =~ /(\d\d-\d\d-\d\d)\s+\d{4}(\d+)/
             #??なんかちがうぽい
             date_str = $1
             artwork_id = $2.to_i

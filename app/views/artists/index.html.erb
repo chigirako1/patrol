@@ -1,12 +1,18 @@
-<% provide(:title, "#{params[:page_title]} - 一覧") %>
+<% page_title = "#{params[:page_title]} - 一覧" %>
+<% provide(:title, page_title) %>
 <p style="color: green"><%= notice %></p>
 
 <%= link_to "Return", root_path %>
 
-<h1>Artists</h1>
+<h1>Artists [<%= page_title %>]</h1>
 
 <% if @twt_urls.size > 0 %>
   <a href="#twt_url_list">twt_url_list</a>
+<% end %>
+
+<% search_word = params[:search_word] %>
+<% if search_word.presence %>
+  検索ワード：「<b><%= search_word %></b>」
 <% end %>
 
 <% @artists_group.each do |key, artists| %>
@@ -16,19 +22,21 @@
   <h2><%= "#{key}(全#{artists.size}件)[#{@begin_no + 1}..#{[(@begin_no.to_i + @size_per_table), artists.size].min }]" %></h2>
   <table border="1" rules="all">
     <tr>
-      <th>id</th>
-      <th>pxvname</th>
+      <th>ID</th>
       <th>評価</th>
-      <th>ファイル総数{最近}</th>
+      <th>pxvname</th>
       <th>最終DL日</th>
       <th>予測/最新アクセス日</th>
-      <th>twt/nje</th>
-      <th>twt アクセス日</th>
       <th>コメント/特徴</th>
+      <th>twt</th>
+      <th>twt DL</th>
+      <th>twt UL</th>
       <th>最新投稿日</th>
       <% if @thumbnail %>
         <th>pic</th>
       <% end %>
+      <th>ファイル数(最近)</th>
+      <th>nje</th>
     </tr>
     <% artists[(@begin_no)..(@begin_no + @size_per_table - 1)].each do |artist| %>
       <% if true#@twt %>
@@ -40,15 +48,9 @@
         <td>
           <%= link_to_ex(artist.id, artist_path(artist, access_dt_update: "no")) %>
         </td>
+        <%= priority_tag(artist) %>
         <td>
           <%= pxvname_tag(artist) %>
-          <br />
-          <%= artist.feature %>
-        </td>
-        <%= priority_tag(artist) %>
-        <td align="right">
-          <%= artist.filenum %>
-          {<%= artist.recent_filenum %>}
         </td>
         <td>
           <%= artist.last_dl_datetime_disp %>
@@ -66,30 +68,38 @@
           <br />
           <%= artist.last_access_datetime_disp %>
         </td>
+        <td><%= artist.warnings %><br /><%= artist.comment %></td>
 
-        <!-- -->
-        <td>
+        <!-- twt -->
+        <td bgcolor="	lightskyblue">
           <% if artist.twtid.presence and artist.twtid != "-" %>
-            <%= link_to_ex "@#{artist.twtid}", artist.twt_user_url %>
+            @<%= artist.twtid %>
             <% if twt %>
+              【<%= twt.rating %>】<%= twt.r18 %>
               <br />
-              [<%= link_to_ex "twt", twt %>]
+              [<%= link_to_ex "■twt■", twt %>]<%= twt.prediction %>
+              <% if artist.twtid != twt.twtid %>
+                <%= link_to_ex "@#{twt.twtid}", artist.twt_user_url %>
+              <% end %>
               <br />
-              (<%= twt.get_date_info(twt.last_access_datetime) if twt.last_access_datetime.presence %>)
+              <%= twt.get_date_info(twt.last_access_datetime) if twt.last_access_datetime.presence %>
               <br />
-              <%= twt.status %>
-              <br />
-              <%= artist.get_date_info(twt.last_dl_datetime) %>
             <% end %>
           <% end %>
-          <%= "✓" if @twt and artist.twt_check == "t" %>
-          <br />
-          <% if artist.njeid.presence %>
-            <%= link_to_ex "nje:#{artist["njeid"]}", artist.nje_member_url %>
+        </td>
+        <td bgcolor="	lightskyblue">
+          <% if twt %>
+            <%= Util.get_date_info(twt.last_dl_datetime) if twt.last_dl_datetime.presence %>
+            <br />
+            <%= twt.filenum %>
           <% end %>
         </td>
-        <td><%= twt.get_datetime_string(twt.last_access_datetime, true) if twt and twt.last_access_datetime.presence %></td>
-        <td><%= artist.warnings %><br /><%= artist.comment %></td>
+        <td bgcolor="	lightskyblue">
+          <% if twt %>
+            [<%= twt.status %>]
+            <br />
+          <% end %>
+        </td>
         <% if artist.get_date_delta(artist.last_ul_datetime) < 7 %>
           <td bgcolor="palegreen">
         <% elsif artist.get_date_delta(artist.last_ul_datetime) > 180 %>
@@ -101,12 +111,33 @@
         <% end %>
           <%= artist.get_date_info(artist.last_ul_datetime) %>
           <% if artist.status.presence %>
-            ※<%= artist.status %>
+            <br />
+            (※<%= artist.status %>)
+          <% end%>
+          <% if artist.reverse_status.presence %>
+            <br />
+            [<%= artist.reverse_status %>]
           <% end%>
         </td>
         <% if @thumbnail %>
-          <td><%= pic_path_tag(artist.pxvid, 3) %></td>
+          <td>
+            <% if artist.filenum < 1000 %>
+              <%= pic_path_tag(artist.pxvid, 3) %>
+            <% else %>
+              ファイル数が多いので割愛
+            <% end %>
+          </td>
         <% end %>
+        <td align="right">
+          <%= artist.filenum %>
+          (<%= artist.recent_filenum %>)
+        </td>
+        <td bgcolor="pink">
+          <br />
+          <% if artist.njeid.presence %>
+            <%= link_to_ex "nje:#{artist["njeid"]}", artist.nje_member_url %>
+          <% end %>
+        </td>
       </tr>
     <% end %>
   </table>
@@ -115,6 +146,18 @@
 <%= link_to "< prev", "../artists?#{get_url_params}&begin_no=#{@begin_no.to_i - @size_per_table}" %>|
 <%= link_to "next >", "../artists?#{get_url_params}&begin_no=#{@begin_no.to_i + @size_per_table}" %>
 <%#= link_to "last >>", "../artists?#{get_url_params}&begin_no=#{@artists_group.size - @size_per_table}" %>
+
+
+<% @artists_group.each do |key, artists| %>
+  <% if artists.size == 0 and params[:file] == "検索" %>
+    <% if search_word =~ %r!https?://www\.pixiv\.net/users/(\d+)! %>
+      <% pxv_user_id = $1 %>
+      <% dirlist = Pxv::stock_dir_list %>
+      <% user_name = Pxv::user_name(dirlist, pxv_user_id) %>
+      <h3>DB未登録だが、フォルダあり：<%= user_name %>(<%= pxv_user_id %>)</h3>
+    <% end %>
+  <% end %>
+<% end %>
 
 <% if @authors_list.size != 0 %>
   <h2>author name list</h2>
@@ -142,6 +185,13 @@
     <% user_name = Pxv::user_name(dirlist, pxvid) %>
     <% if user_name.presence %>
       <%= user_name %>
+    <% end %>
+    <% twt = Twitter.find_by(pxvid: pxvid) %>
+    <% if twt.presence %>
+      <%= twt.twt_screen_name %>
+      (<%= link_to_ex "■twt■", twt %>)
+      @<%= twt.twtid %>
+      【<%= twt.rating %>】
     <% end %>
     <br />
   <% end %>
@@ -238,6 +288,7 @@
           ['DB未登録pxv user id local dir'],
           [ArtistsController::MethodEnum::REGIST_UL_DIFF],
           [ArtistsController::MethodEnum::REGIST_UL_DIFF_NEAR],
+          [ArtistsController::MethodEnum::TWTID_CASE_DIFF],
           ['検索'],
         ],
         selected: params[:file] 
@@ -248,7 +299,7 @@
     <%= f.submit("検索", name: nil, class: 'subtmi-btn') %>
     <hr />
     
-    検索：<%= f.text_field :search_word %>
+    検索：<%= f.text_field :search_word, :value => params[:search_word] %>
     <%= f.select :match_method, options_for_select([["(自動判断)","auto"], ["を含む","partial_match"], ["完全一致","perfect_match"], ["から始まる","begin_match"],  ["で終わる","end_match"]]) %>
     <%= f.select :target_col, options_for_select([['(自動判断)'], ['pxvname'], ['pxvid']]) %>
     <br />

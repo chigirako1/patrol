@@ -53,7 +53,7 @@
   }
 
   function getJson() {
-    var url = '<%= artist_api_hoge_path(artist.id) %>';
+    var url = '<%= artist_api_hoge_path(artist.id, api: ArtistsController::ApiEnum::ARTIST_INFO) %>';
     fetch(url)
     .then(function (data) {
       return data.json();
@@ -95,6 +95,9 @@
     </div>
   <% end %>
 
+  <hr />
+  <%= link_to "表示リフレッシュ", artist_path(artist, access_dt_update: "no", thumbnail: :yes) %>
+
   <h3>Pixivを開く =>
     <% url = artist.pxv_user_url %>
     <%= link_to_ex artist.pxvid, url %>
@@ -114,6 +117,31 @@
       <% end %>
     <% end %>
     @<%= form.text_field :twtid, :value => twtid_val %>
+
+    <% if artist.twtid.presence %>
+      <%= link_to_ex "@#{artist.twtid}", artist.twt_user_url %>
+      <% twt = Twitter.find_by_twtid_ignore_case(artist.twtid) %>
+      <% if twt.presence %>
+        PXVID:<%= twt.pxvid %>
+      <br />
+        <%= twt.twtname %>
+        [<%= twt.drawing_method %>]【<%= twt.rating %>】<%= twt.status %>
+        [<%= link_to "■twt■", twitter_path(twt) %>]
+        ACCS:(<%= twt.get_date_info(twt.last_access_datetime) if twt.last_access_datetime.presence %>)
+        予測：<%= twt.prediction %>
+        <hr />
+      <% elsif artist.twtid != "" %>
+        <%#= link_to "New Twt", new_twitter_path(twtid: artist.twtid, pxvid: artist.pxvid, status: "TWT巡回", twtname: artist.pxvname) %>
+      <% end %>
+    <% else %>
+      <font color="red">twt未設定
+      </font>
+        <% twt_pxv = Twitter.find_by(pxvid: artist.pxvid) %>
+        <% if twt_pxv.presence %>
+          "@<%= twt_pxv.twtid %>"
+        <% end %>
+    <% end %>
+    <br />
   </div>
 
   <div>
@@ -163,6 +191,20 @@
     <input type="button" value="最新DL日時を現在日時に設定" onclick="set_time('artist_last_dl_datetime', -5);" />
   </div>
 
+  <hr />
+  
+  <div>
+    <%= form.label "さかのぼり", style: "display: block" %>
+    <%= form.select :reverse_status, [
+        ["さかのぼり中", "さかのぼり中"],
+        ["さかのぼり済", "さかのぼり済"],
+      ], include_blank: "選択して下さい" %>
+    <input type="button" value="↑" onclick="options_up('artist_reverse_status');" class="btn" />
+    <input type="button" value="↓" onclick="options_down('artist_reverse_status');" class="btn" />
+    <input type="button" value="さかのぼり中" onclick="set_option('reverse_status', 1);" class="btn" />
+    <input type="button" value="さかのぼり済" onclick="set_option('reverse_status', 2);" class="btn" />
+  </div>
+
   <h2>その他</h2>
 
   <div>
@@ -182,18 +224,6 @@
     <input type="button" value="半年以上更新なしに変更" onclick="set_option('status', 4);" />
   </div>
  
-  <div>
-    <%= form.label "さかのぼり", style: "display: block" %>
-    <%= form.select :reverse_status, [
-        ["さかのぼり中", "さかのぼり中"],
-        ["さかのぼり済", "さかのぼり済"],
-      ], include_blank: "選択して下さい" %>
-    <input type="button" value="↑" onclick="options_up('artist_reverse_status');" class="btn" />
-    <input type="button" value="↓" onclick="options_down('artist_reverse_status');" class="btn" />
-    <input type="button" value="さかのぼり中" onclick="set_option('reverse_status', 1);" class="btn" />
-    <input type="button" value="さかのぼり済" onclick="set_option('reverse_status', 2);" class="btn" />
-  </div>
-
   <div>
     <%= form.label :特徴（AI、3D、etc…）, style: "display: block" %>
     <%= form.select :feature, [["AI", "AI"], ["3D", "3D"]], include_blank: "選択して下さい" %>
@@ -264,6 +294,11 @@
   <div>
     <%= form.label :njeid, style: "display: block" %>
     <%= form.text_field :njeid %>
+
+    <% if artist.nje_p %>
+      nijieを開く
+      <%= link_to artist.njeid, artist.nje_member_url, target: :_blank, rel: "noopener noreferrer" %>
+    <% end %>
   </div>
 
   <hr />

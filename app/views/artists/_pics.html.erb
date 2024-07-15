@@ -57,6 +57,14 @@
     <% ratio = '15%' %>
     <%= idx %>.
     <%= link_to_ex(image_tag(path, width: ratio, height: ratio), path) %>
+    <% name = File.basename path %>
+    <% no = 1 %>
+    <% if name =~ /^(\d+)\./ %>
+      <% no = $1.to_i %>
+    <% end %>
+    <% if no != 1 %> 
+      not 1
+    <% end %>
     <% if fcnt > 1 %> 
       )))
     <% end %> 

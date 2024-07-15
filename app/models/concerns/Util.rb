@@ -14,6 +14,10 @@ module Util
     end
 
     def self.get_date_info(date)
+        if date == nil
+            return "(未設定)"
+        end
+
         days = Util::get_date_delta(date)
         if days >= 365
             years, remain = days.divmod(365)

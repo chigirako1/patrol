@@ -25,7 +25,6 @@ module Twt
         twt_ids = []
         txts.each do |line|
             line.chomp!
-            #if line =~ %r!https?://twitter\.com/#{twtid}/status/(\d+)!
             if line =~ %r!https?://(?:x|twitter)\.com/#{twtid}/status/(\d+)!
                 tweet_id = $1.to_i
                 twt_ids << tweet_id
@@ -44,16 +43,6 @@ module Twt
 
         path_list << UrlTxtReader::get_path_list(tpath)
 
-=begin
-        twt_root = Rails.root.join(TWT_CURRENT_DIR_PATH).to_s + "*/"
-        Dir.glob(twt_root).each do |path|
-            if twtid == File.basename(path)
-                puts %!path=#{path}!
-                path_list << UrlTxtReader::get_path_list(path)
-                break
-            end
-        end
-=end
         twt_root = Rails.root.join(TWT_CURRENT_DIR_PATH).to_s + "*/"
         dirpath = Util::get_dir_path_by_twtid(twt_root, twtid)
         path_list << UrlTxtReader::get_path_list(dirpath)
@@ -109,13 +98,15 @@ module Twt
     def self.set_twt_user(artist_hash, path)
         dirname = File.basename path
         if dirname =~ /(\w+)\s*(.*)/
-            id = $1.downcase
+            twtid = $1
+            id = twtid.downcase
             name = $2.strip
 
             if artist_hash.include? id
                 artist_hash[id].append_path(path)
             else
-                artist_hash[id] = TwtArtist.new(id, name, path)
+                #artist_hash[id] = TwtArtist.new(id, name, path)
+                artist_hash[id] = TwtArtist.new(twtid, name, path)
                 artist_hash[id].set_filenum
             end
         else
@@ -148,12 +139,10 @@ module Twt
         artist_hash.sort_by{|_, v| -v.num_of_files}.to_h
     end
 
-    def self.twt_user(twtid)
-        puts twtid
-        list = Twt::twt_user_list
-        user = list[twtid.to_i]
-        #puts user
-        user
+    def self.user_exist?(twtid)
+        path_list = Util::glob(TWT_CURRENT_DIR_PATH)
+        list = path_list.map {|x| File.basename(x).downcase}
+        return list.include? twtid.downcase
     end
 
     def self.twt_user_url(twtid)
@@ -172,13 +161,17 @@ module Twt
                 # 新規追加
                 pic_path_list = val.twt_pic_path_list
                 twt_params = {}
-                twt_params[:twtid] = key
+                twt_params[:twtid] = val.twt_id
                 twt_params[:last_dl_datetime] = val.ctime
                 twt_params[:last_access_datetime] = val.ctime
                 twt_params[:last_post_datetime] = val.last_post_datetime(pic_path_list)
                 twt_params[:filenum] = val.num_of_files
                 twt_params[:recent_filenum] = val.num_of_files
                 twt_params[:update_frequency] = val.calc_freq(pic_path_list)
+                pxv = Artist.find_by_twtid_ignore_case(val.twt_id)
+                if pxv
+                    twt_params[:pxvid] = pxv.pxvid
+                end
                 puts %!new. "#{key}"!
                 twt = Twitter.new(twt_params)
                 twt.save
@@ -337,6 +330,17 @@ module Twt
         point
     end
 
+    class TwtDirs
+        def initialize
+            path_list = Util::glob(TWT_CURRENT_DIR_PATH)
+            @twt_user_list = path_list.map {|x| File.basename(x).downcase}
+        end
+    
+        def user_exist?(twtid)
+            puts %!#{twtid}!
+            return @twt_user_list.include? twtid.downcase
+        end
+    end
 end
 
 class TwtArtist
@@ -446,3 +450,4 @@ class TwtArtwork
         @path_list << path
     end
 end
+

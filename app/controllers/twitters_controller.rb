@@ -293,6 +293,10 @@ class TwittersController < ApplicationController
   def show
     if params[:file_check].presence
       @twt_ids = Twt::get_twt_tweet_ids_from_txts(@twitter.twtid)
+      if @twitter.old_twtid.presence
+        old_twt_ids = Twt::get_twt_tweet_ids_from_txts(@twitter.old_twtid)
+        @twt_ids = [@twt_ids, old_twt_ids].flatten
+      end
     elsif params[:refresh].presence and params[:refresh] == "y"
     else
       @twitter.update(last_access_datetime: Time.now)

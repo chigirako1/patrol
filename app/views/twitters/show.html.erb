@@ -8,6 +8,10 @@
   [<%= @twitter.rating %>]
 </h1>
 
+<% if @twitter.status.presence and @twitter.status != Twitter::STATUS_PATROL %>
+  <h3><%= @twitter.status %></h3>
+<% end %>
+
 <%= render @twitter %>
 <hr />
 

@@ -12,7 +12,7 @@
     </div>
   <% end %>
 
-  <%= link_to %!表示リフレッシュ!, twitter_path(@twitter, refresh: "y") %>
+  <%= link_to %!表示リフレッシュ!, twitter_path(@twitter, refresh: "y") if @twitter.twtid %>
   <% if pxv.presence %>
     PXV最終投稿日:<%= pxv.get_datetime_string(pxv.last_ul_datetime) %>
   <% end %>
@@ -136,62 +136,7 @@
   </div>
 
   <div>
-    <%= form.label :pxvid, style: "display: block" %>
-    <% if @twitter.pxvid.presence %>
-      <%= form.number_field :pxvid %>
-      <%= link_to "#{@twitter.pxvid}", Pxv::pxv_user_url(@twitter.pxvid), target: :_blank, rel: "noopener noreferrer" %>
-    <% else %>
-      <% if params[:pxvid].presence %>
-        <%= form.number_field :pxvid, value: params[:pxvid] %>
-      <% elsif pxv.presence %>
-        <%= form.number_field :pxvid, value: pxv.pxvid %>
-      <% else %>
-        <%= form.number_field :pxvid %>
-      <% end %>
-    <% end %>
-
-    <% if pxv.presence and twitter.pxvid == "" %>
-      <%= %!pxvid="#{pxv.pxvid}"! %>
-      【<%= pxv.rating %>】
-      [A:<%= pxv.last_access_datetime_disp %>|DL:<%= pxv.last_dl_datetime_disp %>]|最新UL:<%= pxv.last_ul_datetime_disp %>]
-      [<%= pxv.status %>|<%= pxv.feature %>|<%= pxv.pxvname %>|<%= pxv.r18 %>]
-      [<%= link_to_ex("show", artist_path(pxv.id, access_dt_update: "yes")) %>]
-      予測：<%= pxv.prediction_up_cnt(true) %>
-    <% else %>
-      <% pxv2 = Artist.find_by(pxvid: @twitter.pxvid) %>
-      <% if pxv2.presence %>
-        <%= pxv2.pxvname %>(<%= pxv2.twtid %>)【<%= pxv2.rating %>】<%= pxv2.r18 %>
-        [<%= pxv2.status %>|<%= pxv2.feature %>|
-        [DL:<%= pxv2.last_dl_datetime_disp %>|最新UL:<%= pxv2.last_ul_datetime_disp %>]
-        [<%= link_to_ex("show", artist_path(pxv2.id, access_dt_update: "yes")) %>]
-        予測：<%= pxv2.prediction_up_cnt(true) %>
-        [A:<%= pxv2.last_access_datetime_disp %>]
-      <% else %>
-        <% pxv3 = Artist.looks("pxvname", twtname, "partial_match") %>
-        <% if pxv3.presence and @twitter.twtname.presence and @twitter.twtname.size > 2 %>
-          <br />
-          類似名あり：
-          <% pxv3.each do |pxv_n| %>
-            【<%= pxv_n.pxvname %>(<%= pxv_n.pxvid %>)|@<%= pxv_n.twtid %>】|<%= pxv_n.feature %>
-            <br />
-          <% end %>
-        <% end %>
-      <% end %>
-    <% end %>
-  </div>
-
-  <hr />
-  
-  <div>
     <%= form.label :r18, style: "display: block" %>
-    <%#= form.select :r18,
-      [
-        ["R18", "R18"],
-        ["R15", "R15"],
-        ["R12", "R12"],
-        ["全年齢", "全年齢"],
-      ],
-      include_blank: "選択して下さい" %>
 
     <%= form.radio_button :r18, :R18 %>
     <%= form.label :r18_r18, "R18" %>
@@ -210,25 +155,82 @@
     <br />
   </div>
 
-
+  <hr />
+  
   <div>
     <%= form.submit("更新", class: 'subtmi-btn') %>
+    <input type="button" value="DL日時を現在時刻に設定" onclick="set_time('twitter_last_dl_datetime');" />
   </div>
 
-  <hr />
-<!--
   <div>
-    <%= form.label :センシティブ, style: "display: block" %>
-    <%= form.select :sensitive,
-      [
-        ["有り", "有り"],
-        ["なさそう？", "なさそう？"],
-      ],
-      include_blank: "選択して下さい" %>
+    <%= form.label :pxvid, style: "display: block" %>
+    <% if @twitter.pxvid.presence %>
+      <%= link_to_ex "#{@twitter.pxvid}", Pxv::pxv_user_url(@twitter.pxvid) %>
+      <br />
+      <%= form.number_field :pxvid %>
+    <% else %>
+      <% if params[:pxvid].presence %>
+        <%= form.number_field :pxvid, value: params[:pxvid] %>
+      <% elsif pxv.presence %>
+        <%= form.number_field :pxvid, value: pxv.pxvid %>
+        <%= "new" %>
+      <% else %>
+        <%= form.number_field :pxvid %>
+      <% end %>
+    <% end %>
+
+    <% if pxv.presence and twitter.pxvid == "" %>
+      <%= %!pxvid="#{pxv.pxvid}"! %>
+      【<%= pxv.rating %>】
+      [A:<%= pxv.last_access_datetime_disp %>|DL:<%= pxv.last_dl_datetime_disp %>]|最新UL:<%= pxv.last_ul_datetime_disp %>]
+      [※<%= pxv.status %>|<%= pxv.feature %>|<%= pxv.pxvname %>|<%= pxv.r18 %>]
+      [<%= link_to_ex("show", artist_path(pxv.id, access_dt_update: "yes")) %>]
+      予測：<%= pxv.prediction_up_cnt(true) %>
+        <br />
+        <%= pic_path_tag(twitter.pxvid, 5, '10%', true) %>
+        <br />
+    <% else %>
+      <% pxv2 = Artist.find_by(pxvid: @twitter.pxvid) %>
+      <% if pxv2.presence %>
+        <br />
+        【<%= pxv2.rating %>】<%= pxv2.r18 %>
+        <br />
+        <%= pxv2.pxvname %>(@<%= pxv2.twtid %>)
+        [※<%= pxv2.status %>|<%= pxv2.feature %>|
+        <br />
+        [DL:<%= pxv2.last_dl_datetime_disp %>|最新UL:<%= pxv2.last_ul_datetime_disp %>]
+        <br />
+        [<%= link_to_ex("■pxv■", artist_path(pxv2.id, access_dt_update: "yes")) %>]
+        予測：<%= pxv2.prediction_up_cnt(true) %>
+        [A:<%= pxv2.last_access_datetime_disp %>]
+        <br />
+        <%= pxv2.filenum %>
+        <br />
+        <% if pxv2.filenum < 1000 %>
+          <%= pic_path_tag(@twitter.pxvid, 5, '10%', true) %>
+          <br />
+        <% end %>
+      <% else %>
+        <% pxv3 = Artist.looks("pxvname", twtname, "partial_match") %>
+        <% if pxv3.presence and @twitter.twtname.presence and @twitter.twtname.size > 2 %>
+          <br />
+          類似名あり：<br />
+          <% pxv3.each do |pxv_n| %>
+            【<%= pxv_n.pxvname %>(<%= pxv_n.pxvid %>)|@<%= pxv_n.twtid %>】|<%= pxv_n.feature %>
+            <%= link_to_ex("■pxv■", artist_path(pxv_n.id, access_dt_update: "yes")) %>
+            <br />
+          <% end %>
+        <% elsif twitter.pxvid %>
+          <br />
+          <% dirlist = Pxv::stock_dir_list %>
+          <% user_name = Pxv::user_name(dirlist, twitter.pxvid) %>
+          <%= user_name %>(未登録)
+        <% end %>
+      <% end %>
+    <% end %>
   </div>
 
   <hr />
--->
 
   <div>
     <%= form.label :コメント, style: "display: block" %>
@@ -244,12 +246,12 @@
     <%= form.label :別ID, style: "display: block" %>
     @<%= form.text_field :alt_twtid %>
     <%=  %>
-    <%= link_to "@#{@twitter.alt_twtid}", Twt::twt_user_url(@twitter.alt_twtid), target: :_blank, rel: "noopener noreferrer" if @twitter.alt_twtid.presence %>
+    <%= link_to_ex "@#{@twitter.alt_twtid}", Twt::twt_user_url(@twitter.alt_twtid) if @twitter.alt_twtid.presence %>
     <% alt_twt = Twitter.find_by_twtid_ignore_case(@twitter.alt_twtid) %>
     <% if alt_twt.presence %>
       <%= alt_twt.twtname %>
       【<%= alt_twt.rating %>|<%= alt_twt.drawing_method %>|<%= alt_twt.status %>】
-      [<%= link_to "show", alt_twt, target: :_blank, rel: "noopener noreferrer" %>]
+      [<%= link_to_ex "■twt■", alt_twt %>]
       |<%= alt_twt.last_access_datetime_disp %>|
       <%= %!|PXVID:#{alt_twt.pxvid}! if alt_twt.pxvid.presence %>
     <% end %>
@@ -258,12 +260,12 @@
   <div>
     <%= form.label :旧ID, style: "display: block" %>
     @<%= form.text_field :old_twtid %>
-    <%= link_to "@#{@twitter.old_twtid}", Twt::twt_user_url(@twitter.old_twtid), target: :_blank, rel: "noopener noreferrer" if @twitter.old_twtid.presence %>
+    <%= link_to_ex "@#{@twitter.old_twtid}", Twt::twt_user_url(@twitter.old_twtid) if @twitter.old_twtid.presence %>
     <% old_twt = Twitter.find_by_twtid_ignore_case(@twitter.old_twtid) %>
     <% if old_twt.presence %>
       <%= old_twt.twtname %>
       【<%= old_twt.rating %>|<%= old_twt.status %>】
-      [<%= link_to "show", old_twt, target: :_blank, rel: "noopener noreferrer" %>]
+      [<%= link_to_ex "■twt■", old_twt %>]
       |<%= old_twt.last_access_datetime_disp %>|
     <% end %>
   </div>
@@ -277,11 +279,17 @@
       include_blank: "選択して下さい" %>
   </div>
 
+  <hr />
+  
   <div>
     <%= form.label :総ファイル数, style: "display: block" %>
     現在の設定値：<%= @twitter.filenum %>↓<br />
     
-    <%= form.number_field :filenum, value: @twt_pic_path_list.size %>
+    <% if @twt_pic_path_list %>
+      <%= form.number_field :filenum, value: @twt_pic_path_list.size %>
+    <% else %>
+      <%= form.number_field :filenum %>
+    <% end %>
   </div>
 
   <div>
@@ -292,16 +300,16 @@
   <div>
     <%= form.label :最新DL日時, style: "display: block" %>
     <%= form.datetime_field :last_dl_datetime %>
-    <input type="button" value="現在時刻に設定" onclick="set_time('twitter_last_dl_datetime');" />
   </div>
 
   <div>
     <%= form.label :最新投稿日時, style: "display: block" %>
-    <!--
-    <%= form.datetime_field :last_post_datetime %>
-    -->
-    <% twt_pic_list = @twt_pic_path_list.map {|x| [Twt::twt_path_str(x), x]}.sort.reverse %>
-    <% if twt_pic_list[0] != nil %>
+    <% if @twt_pic_path_list %>
+      <% twt_pic_list = @twt_pic_path_list.map {|x| [Twt::twt_path_str(x), x]}.sort.reverse %>
+    <% else %>
+      <% twt_pic_list = nil %>
+    <% end %>
+    <% if twt_pic_list and twt_pic_list[0] != nil %>
       <% ul_date = Twt::get_time_from_path(twt_pic_list[0][1]) %>
       <%= @twitter.last_post_datetime %>↓<br />
       <%= form.datetime_field :last_post_datetime, value: ul_date.strftime("%Y-%m-%d %H:%M:%S") %>

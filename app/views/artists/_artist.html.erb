@@ -48,51 +48,16 @@
     </table>
   </p>
 
-  <hr />
-
-  <% if artist.twtid.presence %>
-    twitter(X)を開く→
-    <%= link_to_ex "@#{artist.twtid}", artist.twt_user_url %>
-  <% else %>
-    <font color="red">twt未設定
-    </font>
-      <% twt_pxv = Twitter.find_by(pxvid: artist.pxvid) %>
-      <% if twt_pxv.presence %>
-        "@<%= twt_pxv.twtid %>"
-      <% end %>
-  <% end %>
-  <%= link_to "【twtサムネイル表示】", "../artists/#{@artist.id}?mode=twt_pic_list#twt_pic_list" %>
-  <% twt = Twitter.find_by_twtid_ignore_case(artist.twtid) %>
-  <% if twt.presence %>
-    (<%= twt.twtname %>)
-    <%= twt.drawing_method %>【<%= twt.rating %>】<%= twt.status %>
-    [<%= link_to "■twt■", twitter_path(twt) %>]
-    <%= twt.get_datetime_string(twt.last_access_datetime, true) if twt.last_access_datetime.presence %>
-    (<%= twt.get_date_info(twt.last_access_datetime) if twt.last_access_datetime.presence %>)
-  <% elsif artist.twtid != "" %>
-    <%#= link_to "New Twt", new_twitter_path(twtid: artist.twtid, pxvid: artist.pxvid, status: "TWT巡回", twtname: artist.pxvname) %>
-  <% end %>
-  <br />
-
-  <% if artist.nje_p %>
-    nijieを開く
-    <%= link_to artist.njeid, artist.nje_member_url, target: :_blank, rel: "noopener noreferrer" %>
-  <% end %>
-  <hr />
-
   <p>
     <table border="1">
       <tr>
-        <th>最新DL日</th>
         <th>最新投稿日</th>
+        <th>DB登録日</th>
         <th>最初期投稿日</th>
         <th>前回アクセス日</th>
+        <th>最新DL日</th>
       </tr>
       <tr>
-        <td>
-          <%= artist.get_datetime_string(artist.last_dl_datetime, true) %>
-          (<%= artist.get_date_info(artist.last_dl_datetime) %>)
-        </td>
         <td>
           <font color="red">
             <%= artist.get_datetime_string(artist.last_ul_datetime, true) %>
@@ -100,17 +65,25 @@
           (<%= artist.get_date_info(artist.last_ul_datetime) %>)
         </td>
         <td>
+          <%= artist.get_date_info(artist.created_at) %>
+        </td>
+        <td>
           <%= artist.get_datetime_string(artist.earliest_ul_date, true) if artist.earliest_ul_date.presence %>
         </td>
         <td>
-          <%#= artist.get_datetime_string(artist.last_access_datetime, true) %>
-          <%= artist.get_datetime_string(@last_access_datetime, true) %>
-          (<%= artist.get_date_info(@last_access_datetime) %>)
+          <%= artist.get_date_info(@last_access_datetime) %>
+        </td>
+        <td>
+          <%= artist.get_date_info(artist.last_dl_datetime) %>
+          (<%= artist.get_datetime_string(artist.last_dl_datetime, true) %>)
         </td>
       </tr>
     </table>
   </p>
-    <%= link_to "表示リフレッシュ", artist_path(artist, access_dt_update: "no") %>
+  
+  <% if @path_list.size == 0 %>
+    <%= link_to "サムネイル強制表示", artist_path(artist, thumbnail: :yes, number_of_display: 5) %>
+  <% end %>
 
   <% if artist.chara != "" %>
     <p>

@@ -218,14 +218,30 @@ class ArtistsController < ApplicationController
   module MethodEnum
     REGIST_UL_DIFF = '新規登録日と最新投稿日の日数差'
     REGIST_UL_DIFF_NEAR = '新規登録日と昔の投稿日の日数差近い'
+    TWTID_CASE_DIFF = 'twt screen name大文字・小文字違い'
+  end
+
+  module ApiEnum
+    ARTIST_INFO = 0
+    UPDATE_ACCESS_DATE = 1
   end
 
   def api_hoge
-    @artist = Artist.find(params[:id])
-    #respond_to do |format|
-    #  format.json {render json: @artist}
-    #end
-    render json: @artist
+    puts %!api=#{params[:api]}!
+    case params[:api].to_i
+      when ApiEnum::ARTIST_INFO
+        puts %!pxv!
+        @artist = Artist.find(params[:id])
+        #respond_to do |format|
+        #  format.json {render json: @artist}
+        #end
+        render json: @artist
+      when ApiEnum::UPDATE_ACCESS_DATE
+        puts %!update ad!
+        @artist.update(last_access_datetime: Time.now)
+      else
+        puts "else"
+      end
   end
 
   # GET /artists or /artists.json
@@ -370,6 +386,23 @@ class ArtistsController < ApplicationController
       artists = artists.select {|x| (x.created_at.to_date - x.last_ul_datetime.to_date).to_i > 365}
     elsif prms.param_file == ArtistsController::MethodEnum::REGIST_UL_DIFF_NEAR
       artists = artists.select {|x| (x.created_at.to_date - x.earliest_ul_date.to_date).to_i < 30}
+    elsif prms.param_file == ArtistsController::MethodEnum::TWTID_CASE_DIFF
+      hit_list = []
+      twt_id_list = Twitter.all_twt_id_list
+      hash = twt_id_list.to_h {|x| [x.upcase, x]}
+
+      pxv_twtid_list = Artist.all.map {|x| x.twtid}
+      pxv_twtid_list.each do |twtid|
+        key = twtid.upcase
+        if hash.has_key? (key)
+          val = hash[key]
+          if val != twtid
+            hit_list << twtid
+            puts %!key="#{key}"/val="#{val}"!
+          end
+        end
+      end
+      artists = artists.select {|x| x.twtid.presence and hit_list.include?(x.twtid) }
     end
 
     artists = index_select(artists, prms)
@@ -399,7 +432,19 @@ class ArtistsController < ApplicationController
       @number_of_display = 4
     end
 
-    @path_list = Pxv::get_pathlist(@artist[:pxvid])
+    thumbnail = true
+    if params[:thumbnail] == "yes"
+    elsif @artist.filenum > 1000
+      thumbnail = false
+    end
+    puts %!thubmnail=#{thumbnail}/#{params[:thumbnail]}!
+
+    if thumbnail
+      @path_list = Pxv::get_pathlist(@artist[:pxvid])
+    else
+      @path_list = []
+    end
+
     if @show_mode == "twt_pic_list"
       @twt_pic_path_list = Twt::get_pic_filelist(@artist[:twtid])
     end

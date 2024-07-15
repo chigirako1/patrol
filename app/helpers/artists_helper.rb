@@ -1,7 +1,7 @@
 module ArtistsHelper
 
     def pxvname_tag(artist)
-        tag = artist.pxvname
+        tag = %!<b>#{artist.pxvname}</b>!
         if artist.append_info != nil and artist.append_info != ""
             tag += %!【#{artist.append_info}】!
         end
@@ -17,10 +17,12 @@ module ArtistsHelper
             tag += "<br />"
             tag += "【#{artist.circle_name}】"
         end
+=begin
         if artist.reverse_status.presence
             tag += "<br />"
             tag += "[#{artist.reverse_status}]"
         end
+=end
         tag += "<br />"
         tag += "("
         tag += link_to_ex(artist["pxvid"], artist.pxv_user_url)
@@ -33,14 +35,15 @@ module ArtistsHelper
     def priority_tag(artist)
         tag = ""
         if artist.rating == 0
-            tag = %!<td align="right" bgcolor="orange">!
+            tag = %!<td bgcolor="orange">!
         elsif artist["priority"] > 0
-            tag = %!<td align="right" bgcolor="yellow">!
+            tag = %!<td bgcolor="yellow">!
         elsif artist["priority"] < 0
-            tag = %!<td align="right" bgcolor="gray">!
+            tag = %!<td bgcolor="gray">!
         else
-            tag = %!<td align="right">!
+            tag = %!<td>!
         end
+        tag += artist.feature
         tag += %!【#{artist.rating}】!
         if artist.r18.presence
             tag += %!#{artist.r18}<br />!
@@ -58,9 +61,9 @@ module ArtistsHelper
             path = data[0]
             tag += link_to(image_tag(path, width: scale, height: scale), path, target: :_blank, rel: "noopener noreferrer")
         end
-        #tag += %!#{work_list.size}!
 
         if append_txt
+            tag += %!#{work_list.size}!
             tag += %!</br>!
             pathlist.first(1).each do |path|
                 tag += link_to(path, path, target: :_blank, rel: "noopener noreferrer")
@@ -81,10 +84,12 @@ module ArtistsHelper
         artist.last_ul_datetime.in_time_zone('Tokyo').strftime("%y-%m-%d") != date_str
     end
 
-    def pre_bgcolor(pred_cnt, threshold=2)
+    def pre_bgcolor(pred_cnt, threshold1, threshold2)
         if pred_cnt == 0
             bgcolor = "grey"
-        elsif pred_cnt > threshold
+        elsif pred_cnt >= threshold1
+            bgcolor = "yellow"
+        elsif pred_cnt >= threshold2
             bgcolor = "orange"
         else
             bgcolor = "beige"

@@ -3,16 +3,22 @@ class Twitter < ApplicationRecord
 
     belongs_to :artists, :class_name => 'Artist', optional: true
 
-    def self.find_by_twtid_ignore_case(twtid)
+    STATUS_PATROL = "TWT巡回"
+
+    def self.find_by_twtid_ignore_case(twtid, ignore=true)
         if twtid == nil
             return nil
         end
-        #Twitter.find(twtid: twtid)
-        records = Twitter.where('UPPER(twtid) = ?', twtid.upcase)
-        if records.size > 1
-            puts %!"#{twtid}":#{records.size}件のレコードが見つかりました !
+
+        if ignore
+            records = Twitter.where('UPPER(twtid) = ?', twtid.upcase)
+            if records.size > 1
+                puts %!"#{twtid}":#{records.size}件のレコードが見つかりました !
+            end
+            records.first
+        else
+            Twitter.find(twtid: twtid)
         end
-        records.first
     end
 
     def self.looks(target_col, search_word, match_method)

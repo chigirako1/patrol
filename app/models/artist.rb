@@ -78,15 +78,20 @@ class Artist < ApplicationRecord
         @artist = Artist.where("#{target_col} LIKE?", search_word_p)
     end
 
-    def self.find_by_twtid_ignore_case(twtid)
+    def self.find_by_twtid_ignore_case(twtid, ignore=true)
         if twtid == nil
             return nil
         end
-        records = Artist.where('UPPER(twtid) = ?', twtid.upcase)
-        if records.size > 1
-            puts %!"#{twtid}":#{records.size}件のレコードが見つかりました !
+
+        if ignore
+            records = Artist.where('UPPER(twtid) = ?', twtid.upcase)
+            if records.size > 1
+                puts %!"#{twtid}":#{records.size}件のレコードが見つかりました !
+            end
+            records.first
+        else
+            Artist.find_by(twtid: twtid)
         end
-        records.first
     end
 
     def self.get_path_list(tpath)
