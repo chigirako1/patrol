@@ -415,4 +415,12 @@ class Artist < ApplicationRecord
 
         artworks.to_a.reverse.to_h
     end
+
+    def status_disp(txt="※")
+        if status.presence
+            txt + status
+        else
+            ""
+        end
+    end
 end

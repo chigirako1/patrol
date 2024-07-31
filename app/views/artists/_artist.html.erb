@@ -14,17 +14,12 @@
   </p>
 
   <p>
-    <% if artist["status"] != "" %>
-      <h3>Status:<%= artist.status %></h3>
-    <% end %>
-  </p>
-
-  <p>
     <table border="1">
       <tr>
         <th>-</th>
         <th>評価</th>
         <th>R18</th>
+        <th>twt</th>
         <th>予測</th>
         <th>コメント</th>
         <th>備考</th>
@@ -39,6 +34,7 @@
           <td><%= artist.rating %></td>
         <% end %>
         <td><%= artist.r18 %></td>
+        <td><%= artist.twtid %></td>
         <td><%= artist.prediction_up_cnt(true) %></td>
         <td><%= artist.comment %></td>
         <td><%= artist.remarks %></td>

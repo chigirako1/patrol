@@ -55,6 +55,7 @@
           [<%= link_to_ex "■twt■", twitter %>]
           <br />
           <%= twitter.get_date_info(twitter.last_access_datetime) if twitter.last_access_datetime.presence %>
+          <br />
           [頻度：<%= twitter.update_frequency %>]
         </td>
         <!-- pxv -->
@@ -64,8 +65,6 @@
             <%= %!【#{pxv.rating}】! %>
             <%= twitter.pxvname if twitter.twtname != twitter.pxvname %>
             (<%= link_to_ex pxv.pxvid, pxv.pxv_user_url %>)
-            <br />
-            <%= pxv.filenum %>(<%= pxv.recent_filenum %>)
           <% elsif twitter.artist_pxvid.presence %>
             <% pxv_url = Pxv::pxv_user_url(twitter.artist_pxvid) %>
             (<%= link_to_ex twitter.artist_pxvid, pxv_url %>)
@@ -83,6 +82,8 @@
             <% if twitter.artists_last_access_datetime.presence %>
               <%= %!(#{twitter.get_date_info(twitter.artists_last_access_datetime)})! %>
             <% end %>
+            <br />
+            <%= pxv.filenum %>(<%= pxv.recent_filenum %>)
           <% end %>
         </td>
         <td bgcolor="pink">
@@ -93,12 +94,19 @@
             <br />
             <%= %!(#{twitter.get_date_info(d)})! %>
             <br />
-            <%= %!※#{twitter.artist_status}! if twitter.artist_status.presence %>
+            <% if twitter.artist_status.presence %>
+              <b><%= %!※#{twitter.artist_status}! %></b>
+            <% end %>
           <% end %>
         </td>
-        <td>
-          <%= Util.get_date_info(twitter.last_post_datetime) if twitter.last_post_datetime %>
-        </td>
+        <% if twitter.last_post_datetime %>
+          <% bgcolor = "beige" %>
+          <td bgcolor="<%= bgcolor %>">
+            <%= Util.get_date_info(twitter.last_post_datetime) %>
+          </td>
+        <% else %>
+          <td></td>
+        <% end %>
         <td>
           <% if @thumbnail %>
             <% list = twitter.get_pic_filelist() %>

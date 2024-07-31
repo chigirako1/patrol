@@ -540,6 +540,10 @@ class ArtistsController < ApplicationController
         path = UrlTxtReader::get_latest_txt
       when /latest\s+(\d+)/
         path = UrlTxtReader::get_latest_txt($1.to_i)
+      when /target23(\d{2})/
+        path = UrlTxtReader::txt_file_list($1 + "\\d{2}")
+      when /target(\d{4})/
+        path = UrlTxtReader::txt_file_list($1 + "\\d+")
       else
         path = ["public/#{filename}.txt"]
       end

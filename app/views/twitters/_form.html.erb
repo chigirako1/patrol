@@ -173,7 +173,8 @@
         <%= form.number_field :pxvid, value: params[:pxvid] %>
       <% elsif pxv.presence %>
         <%= form.number_field :pxvid, value: pxv.pxvid %>
-        <%= "new" %>
+        new
+        <%= pxv.pxvname %>
       <% else %>
         <%= form.number_field :pxvid %>
       <% end %>
@@ -183,12 +184,12 @@
       <%= %!pxvid="#{pxv.pxvid}"! %>
       【<%= pxv.rating %>】
       [A:<%= pxv.last_access_datetime_disp %>|DL:<%= pxv.last_dl_datetime_disp %>]|最新UL:<%= pxv.last_ul_datetime_disp %>]
-      [※<%= pxv.status %>|<%= pxv.feature %>|<%= pxv.pxvname %>|<%= pxv.r18 %>]
+      [<%= pxv.status_disp %>|<%= pxv.feature %>|<%= pxv.pxvname %>|<%= pxv.r18 %>]
       [<%= link_to_ex("show", artist_path(pxv.id, access_dt_update: "yes")) %>]
       予測：<%= pxv.prediction_up_cnt(true) %>
-        <br />
-        <%= pic_path_tag(twitter.pxvid, 5, '10%', true) %>
-        <br />
+      <br />
+      <%= pic_path_tag(twitter.pxvid, 5, '10%', true) %>
+      <br />
     <% else %>
       <% pxv2 = Artist.find_by(pxvid: @twitter.pxvid) %>
       <% if pxv2.presence %>
@@ -196,7 +197,7 @@
         【<%= pxv2.rating %>】<%= pxv2.r18 %>
         <br />
         <%= pxv2.pxvname %>(@<%= pxv2.twtid %>)
-        [※<%= pxv2.status %>|<%= pxv2.feature %>|
+        [<%= pxv2.status_disp %>|<%= pxv2.feature %>|
         <br />
         [DL:<%= pxv2.last_dl_datetime_disp %>|最新UL:<%= pxv2.last_ul_datetime_disp %>]
         <br />
@@ -224,7 +225,7 @@
           <br />
           <% dirlist = Pxv::stock_dir_list %>
           <% user_name = Pxv::user_name(dirlist, twitter.pxvid) %>
-          <%= user_name %>(未登録)
+          <%= user_name %>(DB未登録)
         <% end %>
       <% end %>
     <% end %>

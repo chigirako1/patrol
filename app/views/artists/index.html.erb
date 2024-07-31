@@ -55,14 +55,11 @@
         <td>
           <%= artist.last_dl_datetime_disp %>
         </td>
-        <% if artist.last_access_datetime_p(7) %>
-          <td bgcolor="lightgray">
-        <% elsif artist.get_date_delta(artist.last_access_datetime) > 365 %>
-          <td bgcolor="yellow">
-        <% else %>
-          <td>
-        <% end %>
-          <%= artist.prediction_up_cnt(true) %>
+        <% pred = artist.prediction_up_cnt(true) %>
+        <% ac_delta = artist.get_date_delta(artist.last_access_datetime) %>
+        <% ac_bg_color = access_date_bg_color(ac_delta, pred) %>
+        <td bgcolor="<%= ac_bg_color %>">
+          <%= pred %>
           <br />
           <%= link_to_ex("■pxv■", artist_path(artist, access_dt_update: "yes")) %>
           <br />
@@ -71,13 +68,13 @@
         <td><%= artist.warnings %><br /><%= artist.comment %></td>
 
         <!-- twt -->
-        <td bgcolor="	lightskyblue">
+        <td bgcolor="lightskyblue">
           <% if artist.twtid.presence and artist.twtid != "-" %>
             @<%= artist.twtid %>
             <% if twt %>
               【<%= twt.rating %>】<%= twt.r18 %>
               <br />
-              [<%= link_to_ex "■twt■", twt %>]<%= twt.prediction %>
+              <%= twt.prediction %>[<%= link_to_ex "■twt■", twt %>]
               <% if artist.twtid != twt.twtid %>
                 <%= link_to_ex "@#{twt.twtid}", artist.twt_user_url %>
               <% end %>
@@ -87,32 +84,28 @@
             <% end %>
           <% end %>
         </td>
-        <td bgcolor="	lightskyblue">
+        <td bgcolor="lightskyblue">
           <% if twt %>
             <%= Util.get_date_info(twt.last_dl_datetime) if twt.last_dl_datetime.presence %>
             <br />
             <%= twt.filenum %>
           <% end %>
         </td>
-        <td bgcolor="	lightskyblue">
+        <td bgcolor="lightskyblue">
           <% if twt %>
+            <%= Util.get_date_info(twt.last_post_datetime) %>
+            <br />
             [<%= twt.status %>]
             <br />
           <% end %>
         </td>
-        <% if artist.get_date_delta(artist.last_ul_datetime) < 7 %>
-          <td bgcolor="palegreen">
-        <% elsif artist.get_date_delta(artist.last_ul_datetime) > 180 %>
-          <td bgcolor="yellow">
-        <% elsif artist.get_date_delta(artist.last_ul_datetime) > 365 %>
-          <td bgcolor="orange">
-        <% else %>
-          <td>
-        <% end %>
+        <% ul_delta = artist.get_date_delta(artist.last_ul_datetime) %>
+        <% ul_bg_color = date_bg_color(ul_delta) %>
+        <td bgcolor="<%= ul_bg_color %>">
           <%= artist.get_date_info(artist.last_ul_datetime) %>
           <% if artist.status.presence %>
             <br />
-            (※<%= artist.status %>)
+            <b>(※<%= artist.status %>)</b>
           <% end%>
           <% if artist.reverse_status.presence %>
             <br />
@@ -154,7 +147,11 @@
       <% pxv_user_id = $1 %>
       <% dirlist = Pxv::stock_dir_list %>
       <% user_name = Pxv::user_name(dirlist, pxv_user_id) %>
-      <h3>DB未登録だが、フォルダあり：<%= user_name %>(<%= pxv_user_id %>)</h3>
+      <% if user_name.presence %>
+        <h3>DB未登録だが、フォルダあり："<%= user_name %>"(<%= pxv_user_id %>)</h3>
+      <% else %>
+        <h3>pxv:"<%= pxv_user_id %>" not found</h3>
+      <% end %>
     <% end %>
   <% end %>
 <% end %>
@@ -170,91 +167,6 @@
       <li><%= "#{x.pxvname}(#{x.pxvid})" %><%= link_to_ex "[show]", x %></ li>
     <% end %>  
     </ul>
-  <% end %>
-<% end %>
-
-<!-- 未知のPXV ID -->
-<% if @unknown_id_list.size != 0 %>
-  <% dirlist = Pxv::stock_dir_list %>
-  <h2>unknown pixiv id list(<%= @unknown_id_list.size %>)</h2>
-  <% @unknown_id_list.each.with_index(1) do |pxvid, idx| %>
-    <%= idx %>.
-    <% pxvurl = Pxv::pxv_user_url(pxvid) %>
-    <%= link_to pxvid, pxvurl, target: :_blank, rel: "noopener noreferrer" %>
-    (<%= link_to_ex "show", artist_pxv_path(pxvid) %>)
-    <% user_name = Pxv::user_name(dirlist, pxvid) %>
-    <% if user_name.presence %>
-      <%= user_name %>
-    <% end %>
-    <% twt = Twitter.find_by(pxvid: pxvid) %>
-    <% if twt.presence %>
-      <%= twt.twt_screen_name %>
-      (<%= link_to_ex "■twt■", twt %>)
-      @<%= twt.twtid %>
-      【<%= twt.rating %>】
-    <% end %>
-    <br />
-  <% end %>
-<% end %>
-
-<!-- その他のURL -->
-<% if @misc_urls.size != 0 %>
-  <h2>misc url list(<%= @misc_urls.size %>)</h2>
-  <% @misc_urls.each do |url| %>
-    <%= link_to_ex url, url %>
-    <br />
-  <% end %>
-<% end %>
-
-<!-- TWt URL -->
-<% if @twt_urls.size > 0 %>
-  <h2 id="twt_url_list">twt url list(<%= @twt_urls.size %>)</h2>
-  <% @twt_urls.each do |key, url_list| %>
-    <% twt = Twitter.find_by_twtid_ignore_case(key) %>
-   
-    <h3>
-      <%= link_to "@" + key, Twt::twt_user_url(key), target: :_blank, rel: "noopener noreferrer" %>
-      <%= %! | #{twt.twt_screen_name}! if twt != nil %>
-    </h3>
-
-    <% url_list.each do |url| %>
-      <% twturl, twtid = Artist.get_twt_url(url) %>
-      ・
-      <% if twtid == "" %>
-        <%= link_to twturl, twturl, target: :_blank, rel: "noopener noreferrer" %>
-      <% else %>
-        <%= link_to Twt::timestamp_str(twtid), twturl, target: :_blank, rel: "noopener noreferrer" %>
-        | <%= link_to "photo1", twturl + "/photo/1", target: :_blank, rel: "noopener noreferrer" %>
-        | <%= link_to %!???!, url, target: :_blank, rel: "noopener noreferrer" %>
-      <% end %>
-      <br />
-    <% end %>
-    <br />
-
-    <% if twt != nil %>
-      twt:<%= twt.twt_screen_name %>[<%= link_to "show", twt %>](<%= twt.last_dl_datetime_disp %>)
-      <% pxv_a = Artist.find_by(pxvid: twt.pxvid) %>
-      <br />
-      <% if pxv_a != nil %>
-        pxv:<%= pxv_a.pxvname %> [<%= link_to_ex "show", pxv_a %>]
-        <br />
-      <% end %>
-    <% end %>
-    <% pxv_artist = Artist.find_by_twtid_ignore_case(key) %>
-    <% if pxv_artist != nil %>
-      pxv:<%= %!#{pxv_artist.pxvname}! %>
-      (<%= link_to pxv_artist.pxvid, pxv_artist.pxv_user_url, target: :_blank, rel: "noopener noreferrer" %>)
-      [<%= link_to "show", pxv_artist, target: :_blank, rel: "noopener noreferrer" %>]
-      <%= pxv_artist.get_datetime_string(pxv_artist.last_ul_datetime) %>
-      <br />
-    <% end %>
-
-    <% if pxv_artist != nil and pxv_a != nil %>
-    <% elsif pxv_artist == nil and pxv_a == nil %>
-    <% elsif pxv_artist == nil and pxv_a != nil %>
-    <% elsif pxv_artist != nil and pxv_a == nil %>
-    <% else %>
-    <% end %>
   <% end %>
 <% end %>
 

@@ -35,14 +35,16 @@ module ArtistsHelper
     def priority_tag(artist)
         tag = ""
         if artist.rating == 0
-            tag = %!<td bgcolor="orange">!
-        elsif artist["priority"] > 0
-            tag = %!<td bgcolor="yellow">!
-        elsif artist["priority"] < 0
-            tag = %!<td bgcolor="gray">!
+            bgcolor = "orange"
+        elsif artist.priority > 0
+            bgcolor = "yellow"
+        elsif artist.priority < 0
+            bgcolor = "gray"
+        elsif artist.rating < 75
+            bgcolor = "lightgray"
         else
-            tag = %!<td>!
         end
+        tag += %!<td bgcolor="#{bgcolor}">!
         tag += artist.feature
         tag += %!【#{artist.rating}】!
         if artist.r18.presence
@@ -93,6 +95,42 @@ module ArtistsHelper
             bgcolor = "orange"
         else
             bgcolor = "beige"
+        end
+        bgcolor
+    end
+
+    def date_bg_color(dayn)
+        if dayn < 7
+            bgcolor = "palegreen"
+        elsif dayn > 365
+            bgcolor = "red"
+        elsif dayn > 180
+            bgcolor = "yellow"
+        elsif dayn > 90
+            bgcolor = "khaki"
+        else
+            bgcolor = "beige"
+        end
+        bgcolor
+    end
+
+    def access_date_bg_color(dayn, pred)
+        if pred > 5
+            bgcolor = "pink"
+        elsif pred == 0
+            bgcolor = "gray"
+        else
+            if dayn < 7
+                bgcolor = "lightgray"
+            elsif dayn > 365
+                bgcolor = "red"
+            elsif dayn > 180
+                bgcolor = "yellow"
+            elsif dayn > 90
+                bgcolor = "khaki"
+            else
+                bgcolor = "beige"
+            end
         end
         bgcolor
     end

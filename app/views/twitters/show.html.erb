@@ -4,7 +4,7 @@
 <h1>
   <%= %!#{@twitter.twtname}! %>
   <% twt_url = @twitter.twt_user_url() %>
-  (<%= link_to "@#{@twitter.twtid}", twt_url, target: :_blank, rel: "noopener noreferrer" %>)
+  (<%= link_to_ex "@#{@twitter.twtid}", twt_url %>)
   [<%= @twitter.rating %>]
 </h1>
 
@@ -15,7 +15,6 @@
 <%= render @twitter %>
 <hr />
 
-<%#= link_to "画像表示", artist_twt_path(@twitter.twtid, picn: 15), target: :_blank, rel: "noopener noreferrer" %>
 <%= render "twt_pic_list", twitter: @twitter %>
 <hr />
 

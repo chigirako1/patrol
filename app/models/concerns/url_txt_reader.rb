@@ -86,12 +86,14 @@ module UrlTxtReader
         Rails.root.join("public").to_s
     end
 
-    def self.txt_file_list
+    def self.txt_file_list(rgx="\\d+")
         path_list = []
         base_path = public_path
         puts %!basepath="#{base_path}"!
+        rg_filename = %r!get illust url_#{rgx}\.txt!
+        p rg_filename
         Dir.glob(base_path + "/*") do |path|
-            if path =~ /get illust url_\d+\.txt/
+            if path =~ rg_filename
                 path_list << path
                 #puts %!txt_file_list: path="#{path}"!
             else

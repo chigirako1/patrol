@@ -17,7 +17,13 @@
       document.execCommand("copy");
     }
   </script>
-  <br />
+
+  <% if artist.status.presence %>
+    <h3>Status:<%= artist.status %></h3>
+  <% else %>
+    <br />
+  <% end %>
+
   <% if @path_list[0] =~ /(\d\d-\d\d-\d\d)/ %>  
     最新投稿日：<%= Util::get_date_info(Date.parse($1)) %>
     <br />
