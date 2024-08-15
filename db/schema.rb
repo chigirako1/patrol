@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.0].define(version: 2023_12_06_042925) do
+ActiveRecord::Schema[7.0].define(version: 2024_08_13_063522) do
   create_table "artists", force: :cascade do |t|
     t.string "pxvname"
     t.integer "pxvid"
@@ -55,6 +55,7 @@ ActiveRecord::Schema[7.0].define(version: 2023_12_06_042925) do
     t.datetime "twt_checked_date"
     t.datetime "nje_checked_date"
     t.integer "show_count"
+    t.string "reverse_status"
   end
 
   create_table "books", force: :cascade do |t|
@@ -71,6 +72,18 @@ ActiveRecord::Schema[7.0].define(version: 2023_12_06_042925) do
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
     t.index ["book_id"], name: "index_comments_on_book_id"
+  end
+
+  create_table "tweets", force: :cascade do |t|
+    t.integer "tweet_id", null: false
+    t.string "screen_name", null: false
+    t.string "status"
+    t.integer "rating"
+    t.integer "num"
+    t.string "remarks"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["tweet_id"], name: "index_tweets_on_tweet_id", unique: true
   end
 
   create_table "twitters", force: :cascade do |t|
@@ -96,6 +109,11 @@ ActiveRecord::Schema[7.0].define(version: 2023_12_06_042925) do
     t.integer "update_frequency"
     t.datetime "last_post_datetime"
     t.string "sensitive"
+    t.string "private_account"
+    t.string "reverse_status"
+    t.string "new_twtid"
+    t.string "sub_twtid"
+    t.string "main_twtid"
   end
 
   create_table "users", force: :cascade do |t|

@@ -95,7 +95,9 @@
           <% if twt %>
             <%= Util.get_date_info(twt.last_post_datetime) %>
             <br />
-            [<%= twt.status %>]
+            <% if twt.status.presence and twt.status != "TWT巡回" %>
+              <b>[<%= twt.status %>]</b>
+            <% end %>
             <br />
           <% end %>
         </td>

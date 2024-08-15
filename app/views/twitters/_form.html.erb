@@ -184,8 +184,8 @@
       <%= %!pxvid="#{pxv.pxvid}"! %>
       【<%= pxv.rating %>】
       [A:<%= pxv.last_access_datetime_disp %>|DL:<%= pxv.last_dl_datetime_disp %>]|最新UL:<%= pxv.last_ul_datetime_disp %>]
-      [<%= pxv.status_disp %>|<%= pxv.feature %>|<%= pxv.pxvname %>|<%= pxv.r18 %>]
-      [<%= link_to_ex("show", artist_path(pxv.id, access_dt_update: "yes")) %>]
+      [<%= artist_status_tag(pxv) %>|<%= pxv.feature %>|<%= pxv.pxvname %>|<%= pxv.r18 %>]
+      [<%= link_to_ex("■pxv■", artist_path(pxv.id, access_dt_update: "yes")) %>]
       予測：<%= pxv.prediction_up_cnt(true) %>
       <br />
       <%= pic_path_tag(twitter.pxvid, 5, '10%', true) %>
@@ -197,15 +197,13 @@
         【<%= pxv2.rating %>】<%= pxv2.r18 %>
         <br />
         <%= pxv2.pxvname %>(@<%= pxv2.twtid %>)
-        [<%= pxv2.status_disp %>|<%= pxv2.feature %>|
+        [<%= artist_status_tag(pxv2) %>|<%= pxv2.feature %>]<%= pxv2.filenum %>
         <br />
-        [DL:<%= pxv2.last_dl_datetime_disp %>|最新UL:<%= pxv2.last_ul_datetime_disp %>]
+        DL:<%= pxv2.last_dl_datetime_disp %>|最新UL:<%= pxv2.last_ul_datetime_disp %>
         <br />
-        [<%= link_to_ex("■pxv■", artist_path(pxv2.id, access_dt_update: "yes")) %>]
         予測：<%= pxv2.prediction_up_cnt(true) %>
-        [A:<%= pxv2.last_access_datetime_disp %>]
-        <br />
-        <%= pxv2.filenum %>
+        [<%= link_to_ex("■pxv■", artist_path(pxv2.id, access_dt_update: "yes")) %>]
+        A:<%= pxv2.last_access_datetime_disp %>
         <br />
         <% if pxv2.filenum < 1000 %>
           <%= pic_path_tag(@twitter.pxvid, 5, '10%', true) %>

@@ -127,20 +127,46 @@ textarea {
             対象なし
         <% end %>
         <% @twt_ids.each do |tweet_id| %>
+            <% tweet = Tweet.find_by(tweet_id: tweet_id) %>
             <% hit = false %>
             <% @twt_pic_path_list.each do |path| %>
                 <% if path.include? tweet_id.to_s %>
-                    <%#= tweet_id %> hit!(<%= Twt::timestamp_str(tweet_id) %>)
-                    <%#= link_to_ex image_tag(path, width: '10%', height: '10%', :alt => path), path %>
+                    hit!(<%= Twt::timestamp_str(tweet_id) %>)|<%= tweet_id %> 
+                    <% if params[:show_pic].presence %>
+                        <%= link_to_ex image_tag(path, width: '10%', height: '10%', :alt => path), path %>
+                    <% end %>
+                    <% if tweet.presence %>
+                    <% else %>
+                        <!-- DBになければDBに登録 -->
+                        <% Tweet::create_record(@twitter.twtid, tweet_id) %>
+                        |DBレコード新規登録
+                    <% end %>
                     <br />
                     <% hit = true %>
                     <% break %>
                 <% end %>
             <% end %>
-            <% if hit == false %>
+            <% if hit %>
+            <% else %>
                 <br />
                 <%= %!#{tweet_id}(#{Twt::timestamp_str tweet_id}))! %> not hit...
-                <%= link_to tweet_id, Twt::twt_tweet_url(@twitter.twtid, tweet_id), target: :_blank, rel: "noopener noreferrer" %>
+                <%= link_to_ex tweet_id, Twt::twt_tweet_url(@twitter.twtid, tweet_id) %>
+                <% if tweet.presence %>
+                    <% if tweet.status == Tweet::StatusEnum::UNACCESSIBLE %>
+                        <%= Tweet::StatusEnum::UNACCESSIBLE %>
+                    <% else %>
+                        <% url = twitter_path(file_check: 't', picn: 'all', pic_lf: '', corr: '0', show_pic: 't', tweet_st: Tweet::StatusEnum::DELETED, tweet_id: tweet_id) %>
+                        <%= link_to("'削除済み'として更新", url) %>
+                    <% end %>
+                <% else %>
+                    <% if params[:tweet_id].to_i == tweet_id and params[:tweet_st] == Tweet::StatusEnum::UNACCESSIBLE %>
+                        <!-- -->
+                        <% Tweet::create_record(@twitter.twtid, tweet_id, Tweet::StatusEnum::UNACCESSIBLE) %>
+                    <% else %>
+                        <% url = twitter_path(file_check: 't', picn: 'all', pic_lf: '', corr: '0', show_pic: 't', tweet_st: Tweet::StatusEnum::UNACCESSIBLE, tweet_id: tweet_id) %>
+                        <%= link_to("'アクセス不可'として更新", url) %>
+                    <% end %>
+                <% end %>
                 <br />
                 <br />
             <% end %>

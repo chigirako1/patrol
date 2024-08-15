@@ -18,19 +18,18 @@
                 <%= %!#{artist.nje_name}! %>
             </td>
             <td>
-                <%#= link_to artist.nje_id, artist.nje_member_url, target: :_blank, rel: "noopener noreferrer" %>
                 <% artist.nje_id %>
             </td>
             <td>
                 <%= artist.latest_ul_date %>
             </td>
             <td>
-                <%= link_to "show", key.to_s, target: :_blank, rel: "noopener noreferrer" %>
+                <%= link_to "■nje■", key.to_s, target: :_blank, rel: "noopener noreferrer" %>
             </td>
             <td>
                 <% artist.artwork_list.first(1).each do |key, artwork| %>
                     <% path = artwork.path_list[0] %>
-                    <%= link_to image_tag(path, width: '10%', height: '10%', :alt => path), path, target: :_blank, rel: "noopener noreferrer" %>
+                    <%= link_to_ex image_tag(path, width: '10%', height: '10%', :alt => path), path %>
                 <% end%>
             </td>
         </tr>

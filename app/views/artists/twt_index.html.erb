@@ -18,6 +18,7 @@
 <% key_name_recent_a    = %!5:最近アクセス #{@hide_day}日以内! %>
 <% key_name_recent_short= %!6:最近アクセス #{hide_day_short}日以内! %>
 <% key_name_rating_low  = "7:rating < #{rating_thre}" %>
+<% key_name_ai  = "8:AI" %>
 
 <% pxv_artist_id_list = [] %>
 <% twt_group = Hash.new { |h, k| h[k] = [] } %>
@@ -26,7 +27,9 @@
     <% idx = 0 %>
     <% @known_twt_url_list.each do |key, url_list| %>
         <% twt_account = Twitter.find_by_twtid_ignore_case(key) %>
-        <% if twt_account.rating.presence and twt_account.rating != 0 and twt_account.rating < rating_thre %>
+        <% if twt_account.drawing_method == "AI" %>
+            <% twt_group[key_name_ai] << [twt_account, url_list] %>
+        <% elsif twt_account.rating.presence and twt_account.rating != 0 and twt_account.rating < rating_thre %>
             <% twt_group[key_name_rating_low] << [twt_account, url_list] %>
         <% elsif twt_account.last_access_datetime_p(hide_day_short) %>
             <% twt_group[key_name_recent_short] << [twt_account, url_list] %>
@@ -137,8 +140,8 @@
                     </td>
                     <td>
                         <% if pred >= @pred %>
-                            <% list = twt_account.get_pic_filelist_ex %>
-                            <% list.first(3).each do |filepath| %>
+                            <% tlist = twt_account.get_pic_filelist_ex %>
+                            <% tlist.first(3).each do |filepath| %>
                                 <%= link_to image_tag(filepath, width: '13%', height: '13%'), filepath, target: :_blank, rel: "noopener noreferrer" if filepath.presence %>
                             <% end %>
                         <% end %>
@@ -195,6 +198,7 @@
             <% end %>
         </table>
         <% if list.size > twt_disp_number  %>
+            <%= list.size %> - <%= twt_disp_number %><br />
             残り：<%= list.size - twt_disp_number %>
         <% end %>
     <% end %>
@@ -253,16 +257,20 @@
     <% @known_pxv_user_id_list, unknown_pxv_user_id_list = Artist::pxv_user_id_classify(pxv_artist_id_list) %>
 <% end %>
 
+<h2>登録済み pxv list (<%= @known_pxv_user_id_list.size %>)</h2>
+
 <% pxv_group = Hash.new { |h, k| h[k] = [] } %>
 <% recent_pxv_list = [] %>
 
-<% key_pxv_list_set_m = "1.設定済み(多) > #{@pred * 2}" %>
-<% key_pxv_list_set = "2.設定済み(普)" %>
-<% key_pxv_list_unset_many = "3.未設定(多) > #{@pred * 2}" %>
-<% key_pxv_list_unset_few = "4.未設定(少) < #{@pred * 2}" %>
-<% key_pxv_list_pred_few = "5.予測少" %>
-<% key_pxv_list_ai = "6.AI" %>
-<% key_pxv_list_recent = "7.最近アクセス" %>
+<% key_pxv_list_set_m           = "11.設定済み(多) > #{@pred * 2}" %>
+<% key_pxv_list_set             = "12.設定済み(普)" %>
+<% key_pxv_list_unset_many      = "21.未設定(多) > #{@pred * 2}" %>
+<% key_pxv_list_unset_few       = "22.未設定(少) < #{@pred * 2}" %>
+<% key_pxv_list_pred_few_pred_n = "31.予測少( > n)" %>
+<% key_pxv_list_pred_few        = "32.予測少" %>
+<% key_pxv_list_pred_few_access = "33.予測少(アクセス)" %>
+<% key_pxv_list_ai              = "41.AI" %>
+<% key_pxv_list_recent          = "91.最近アクセス" %>
 
 <% if @known_pxv_user_id_list.size > 0 %>
     <% @known_pxv_user_id_list.each do |elem| %>
@@ -285,6 +293,10 @@
         <% elsif p.last_access_datetime_p(@hide_day) %>
             <% recent_pxv_list << elem %>
             <% #pxv_group[key_pxv_list_recent] << elem %>
+        <% elsif p.last_access_datetime_p(-60) %>
+            <% pxv_group[key_pxv_list_pred_few_access] << elem %>
+        <% elsif pred >= 3 %>
+            <% pxv_group[key_pxv_list_pred_few_pred_n] << elem %>
         <% else %>
             <% pxv_group[key_pxv_list_pred_few] << elem %>
         <% end %>
@@ -305,7 +317,7 @@
                 <th>#</th>
                 <th>pxv name</th>
                 <th>予測</th>
-                <th>show</th>
+                <th>アクセス</th>
                 <th>ul</th>
                 <th>thubmnail p</th>
                 <th>twt</th>

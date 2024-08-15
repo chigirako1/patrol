@@ -26,8 +26,12 @@
 
   <% if @path_list[0] =~ /(\d\d-\d\d-\d\d)/ %>  
     最新投稿日：<%= Util::get_date_info(Date.parse($1)) %>
-    <br />
+  <% else %>
+    最新投稿日(DB)：
+    <%= artist.get_datetime_string(artist.last_ul_datetime, true) %>
+    (<%= artist.get_date_info(artist.last_ul_datetime) %>)
   <% end %>
+    <br />
 
   <% list = Artist.artwork_list(@path_list) %>
   <% list.first(@number_of_display).each.with_index(1) do |(artwork_id, data), idx| %>
@@ -72,7 +76,7 @@
       not 1
     <% end %>
     <% if fcnt > 1 %> 
-      )))
+      (<%= fcnt %>)
     <% end %> 
   <% end %>
 

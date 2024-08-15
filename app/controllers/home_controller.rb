@@ -559,7 +559,7 @@ class HomeController < ApplicationController
           reverse_status: "「さかのぼり済」を除く",
           point: 0, 
           prediction: 0, 
-          rating: 80,
+          rating: 75,
           last_access_datetime: 20, 
           display_number: 5, 
           year: 0, 
@@ -1020,6 +1020,9 @@ class HomeController < ApplicationController
       # ----------------------------
       { :label => "stats", :path => "" },
       { :label => "Artist::stats", :path => artists_stats_index_path },
+      # ----------------------------
+      { :label => "Tweet", :path => "" },
+      { :label => "Tweet", :path => tweets_path },
       # ----------------------------
       { :label => "", :path => "" },
       { :label => "User", :path => users_path },

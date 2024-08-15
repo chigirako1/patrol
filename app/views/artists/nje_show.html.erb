@@ -22,10 +22,8 @@
 
 <hr />
 
-<h4>nje</h4>
-<%= link_to @nje_artist.nje_id, Nje::nje_member_url(@nje_artist.nje_id.to_s), target: :_blank, rel: "noopener noreferrer" %>
+<h3>nje => <%= link_to @nje_artist.nje_id, Nje::nje_member_url(@nje_artist.nje_id.to_s), target: :_blank, rel: "noopener noreferrer" %></h3>
 <hr />
-
 
 <!-- -->
 <% artwork_list.each do |key, artwork| %>
