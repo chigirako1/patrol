@@ -47,6 +47,7 @@ module Pxv
             dir_list_tmp = Util::glob(PXV_WORK_TMP_DIR_PATH, PXV_WORK_TMP_DIR_F_WC)
         elsif Dir.exist?(PXV_WORK_TMP_DIR_PATH)
             dir_list_tmp = Util::glob(PXV_WORK_TMP_DIR_PATH, PXV_WORK_TMP_DIR_WC)
+            #puts %![]dir_list_tmp=#{dir_list_tmp}!
         else
             dir_list_tmp = []
         end
@@ -91,22 +92,24 @@ module Pxv
         return ""
     end
 
-    def self.get_pathlist(pxvid)
+    def self.get_pathlist(pxvid, archive_dir=true)
         path_list = []
 
         dir_list = stock_dir_list()
         dir_list.each do |path|
             if pxvid_exist?(path, pxvid)
-                puts %!path=#{path}!
+                puts %![get_pathlist]path=#{path}!
                 path_list << UrlTxtReader::get_path_list(path)
-                break
+                #break
             end
         end
 
-        rpath_list = get_path_from_dirlist(pxvid)
-        rpath_list.each do |rpath|
-            puts %!rpath="#{rpath}"!
-            path_list << UrlTxtReader::get_path_list(rpath)
+        if archive_dir
+            rpath_list = get_path_from_dirlist(pxvid)
+            rpath_list.each do |rpath|
+                puts %![get_pathlist]rpath="#{rpath}"!
+                path_list << UrlTxtReader::get_path_list(rpath)
+            end
         end
 
         #path_list.flatten.sort.reverse
@@ -158,11 +161,10 @@ module Pxv
             artwork_id = $2.to_i
             artwork_title = $3
         #22-06-20 9x17x5x2_p0_master1200.jpg"
-        elsif artwork_str =~ /(\d\d-\d\d-\d\d)\s+\d{4}(\d+)/
-            #??なんかちがうぽい
+        elsif artwork_str =~ /(\d\d-\d\d-\d\d)\s+(\d+)/
             date_str = $1
             artwork_id = $2.to_i
-            artwork_title = ""
+            artwork_title = "(*不明*)"
         elsif artwork_str =~ /(\d\d-\d\d-\d\d)\s*(.*)/
             #STDERR.puts %!artwork id not found:"#{path}"!
             date_str = $1

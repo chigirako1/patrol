@@ -324,6 +324,9 @@
     <%= f.label :最終アクセス日 %>
     <%= f.number_field :last_access_datetime, :value => params[:last_access_datetime] %>以上経過
     <br />
+    <%= f.label :最終アクセス日がn日以上経過した場合は強制表示 %>
+    <%= f.number_field :force_disp_day, :value => params[:force_disp_day] %>
+    <br />
     <%= f.label :表示数 %>
     <%= f.number_field :display_number, :value => params[:display_number] %>
     <br />

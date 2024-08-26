@@ -227,7 +227,7 @@ class Artist < ApplicationRecord
                 x.p.r18, 
                 x.p.last_access_datetime
             ]
-        }
+        } if known_pxv_user_id_list
 
 
         #puts %!dbg:#{unknown_pxv_user_id_list.size}!
@@ -414,6 +414,14 @@ class Artist < ApplicationRecord
         end
 
         artworks.to_a.reverse.to_h
+    end
+
+    def self.artwork_list_file_num(alist)
+        sum = 0
+        alist.each do |key,val|
+            sum += val[3]
+        end
+        sum
     end
 
     def status_disp(txt="※")

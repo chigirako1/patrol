@@ -104,8 +104,6 @@ textarea {
     計算結果"<%= avg %>"
     (<%= freq_90d %>/<%= freq_30d %>/<%= freq_15d %>)
     <% if twt_pic_list[0] != nil %>
-        <% dt = Twt::get_time_from_path(twt_pic_list[0][1]) %>
-        【予測】<%= twitter.prediction(dt) %>
     <% end %>
     <br />
 
@@ -115,8 +113,12 @@ textarea {
     <% twt_pic_list.first(1).each do |elem| %>
         <% tweet_id = elem[2][0] %>
         <b>
-        <%= tweet_id.to_s.reverse.gsub(/\d{3}/, '\0,').reverse %>
+        <%#= tweet_id.to_s.reverse.gsub(/\d{3}/, '\0,').reverse %>
+        <%= Twt::tweet_id_with_comma(tweet_id) %>
         </b>
+        (<%= Twt::date_info(tweet_id) %>)
+        <% dt = Twt::get_time_from_path(twt_pic_list[0][1]) %>
+        【予測】<%= twitter.prediction(dt) %>
         <br />
     <% end %>
 
@@ -162,6 +164,7 @@ textarea {
                     <% if params[:tweet_id].to_i == tweet_id and params[:tweet_st] == Tweet::StatusEnum::UNACCESSIBLE %>
                         <!-- -->
                         <% Tweet::create_record(@twitter.twtid, tweet_id, Tweet::StatusEnum::UNACCESSIBLE) %>
+                        'アクセス不可'として更新しました。
                     <% else %>
                         <% url = twitter_path(file_check: 't', picn: 'all', pic_lf: '', corr: '0', show_pic: 't', tweet_st: Tweet::StatusEnum::UNACCESSIBLE, tweet_id: tweet_id) %>
                         <%= link_to("'アクセス不可'として更新", url) %>

@@ -17,7 +17,7 @@ class Twitter < ApplicationRecord
             end
             records.first
         else
-            Twitter.find(twtid: twtid)
+            Twitter.find_by(twtid: twtid)
         end
     end
 
@@ -86,13 +86,19 @@ class Twitter < ApplicationRecord
         unregisterd_pxv_user_id_list
     end
 
-    def self.twt_user_classify(twt_url_infos)
+    def self.twt_user_classify(twt_url_infos, pxv_chk=true)
         pxvid_list = []
         registered_twt_acnt_list = {}
         unregistered_twt_acnt_list = {}
         twt_url_infos.each do |twt_id, twt_url_info|
-            twt = Twitter.find_by_twtid_ignore_case(twt_id)
-            pxv = Artist.find_by_twtid_ignore_case(twt_id)
+            if pxv_chk
+                pxv = Artist.find_by_twtid_ignore_case(twt_id)
+                ignore_case = true
+            else
+                pxv = nil
+                ignore_case = false
+            end
+            twt = Twitter.find_by_twtid_ignore_case(twt_id, ignore_case)
             if twt and pxv
                 pxvid_list << pxv.pxvid
                 #registered_twt_acnt_list[twt_id] = twt_url_info.url_list

@@ -214,13 +214,26 @@ class HomeController < ApplicationController
             thumbnail: ""
           )
       },
+      { :label => "-", :path => "" },
+      { :label => "Twitter ファイル 95",
+          :path => twitters_path(
+            page_title: "ファイル 95",
+            mode: "file",
+            rating: 95,
+            hide_within_days: 30,
+            num_of_disp: 8,
+            pred: 2,
+            no_pxv: "t",
+            thumbnail: "t"
+          )
+      },
       { :label => "Twitter ファイル 90",
           :path => twitters_path(
             page_title: "ファイル 90",
             mode: "file",
             rating: 90,
-            hide_within_days: 30,
-            num_of_disp: 5,
+            hide_within_days: 40,
+            num_of_disp: 7,
             pred: 3,
             no_pxv: "t",
             thumbnail: "t"
@@ -939,40 +952,6 @@ class HomeController < ApplicationController
       },
       # -----------
       { :label => "-", :path => "" },
-      { :label => "2407 all",
-          :path => artists_twt_index_path(
-            filename: "target2407",
-            hide_day: 30,
-            pred: 5,
-            target:"twt,twt既知,twt未知,known_pxv,unknown_pxv",
-          )
-      },
-      { :label => "2407 未知twt/pxv",
-          :path => artists_twt_index_path(
-            filename: "target2407",
-            hide_day: 30,
-            #pred: 5,
-            target:"twt未知,unknown_pxv",
-          )
-      },
-      { :label => "2407 既知twt",
-          :path => artists_twt_index_path(
-            filename: "target2407",
-            hide_day: 30,
-            pred: 9,
-            target:"twt,twt既知",
-          )
-      },
-      { :label => "2407 既知pxv",
-          :path => artists_twt_index_path(
-            filename: "target2407",
-            hide_day: 30,
-            pred: PRED_PXV,
-            target:"known_pxv",
-          )
-      },
-      # -----------
-      { :label => "-", :path => "" },
       { :label => "全ファイル twt",
           :path => artists_twt_index_path(
             filename: "all",
@@ -995,7 +974,7 @@ class HomeController < ApplicationController
           :path => artists_twt_index_path(
             filename: "all",
             #hide_day: 30,
-            target:"twt未知"
+            target: ArtistsController::FileTarget::TWT_UNKNOWN_ONLY
           )
       },
       { :label => "全ファイル 既知pxv",
@@ -1011,7 +990,7 @@ class HomeController < ApplicationController
           :path => artists_twt_index_path(
             filename: "all",
             #hide_day: 30,
-            target:"unknown_pxv"
+            target: ArtistsController::FileTarget::PXV_UNKNOWN_ONLY
           )
       },
       # ----------------------------

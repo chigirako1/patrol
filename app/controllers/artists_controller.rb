@@ -126,7 +126,7 @@ class Params
     else
       @amount_lt = amount_lt.to_i
     end
-    puts "amount=#{@amount_gt}-#{@amount_lt}"
+    puts "amount=<gt:#{@amount_gt}/lt:#{@amount_lt}>"
 
     recent_filenum = params[:recent_filenum]
     if recent_filenum.presence
@@ -224,6 +224,11 @@ class ArtistsController < ApplicationController
   module ApiEnum
     ARTIST_INFO = 0
     UPDATE_ACCESS_DATE = 1
+  end
+
+  module FileTarget
+    TWT_UNKNOWN_ONLY = "unknown_twt_only"
+    PXV_UNKNOWN_ONLY = "unknown_pxv_only"
   end
 
   def api_hoge
@@ -440,10 +445,13 @@ class ArtistsController < ApplicationController
     puts %!thubmnail=#{thumbnail}/#{params[:thumbnail]}!
 
     if thumbnail
-      @path_list = Pxv::get_pathlist(@artist[:pxvid])
+      archive_dir = true
+      #@path_list = Pxv::get_pathlist(@artist[:pxvid])
     else
-      @path_list = []
+      archive_dir = false
+      #@path_list = []
     end
+    @path_list = Pxv::get_pathlist(@artist[:pxvid], archive_dir)
 
     if @show_mode == "twt_pic_list"
       @twt_pic_path_list = Twt::get_pic_filelist(@artist[:twtid])
@@ -549,25 +557,32 @@ class ArtistsController < ApplicationController
       end
       puts "path='#{path}'"
 
-      pxvid_list2 = []
-      pxv_id_list, twt_url_infos, @misc_urls = UrlTxtReader::get_url_txt_info(path)
-      if @target.include?("twt既知")
-        known_twt_url_list, unknown_twt_url_list, pxvid_list2 = Twitter::twt_user_classify(twt_url_infos)
-        @known_twt_url_list = known_twt_url_list
-        #@twt_urls = known_twt_url_list
-      end
-      if @target.include?("twt未知")
-        known_twt_url_list, unknown_twt_url_list, pxvid_list2 = Twitter::twt_user_classify(twt_url_infos)
-        @unknown_twt_url_list = unknown_twt_url_list.sort_by {|k,v| -v.size}.to_h
-      end
-
-      if @target.include?("known_pxv")
-        known_pxv_user_id_list, unknown_pxv_user_id_list = Artist::pxv_user_id_classify([pxv_id_list, pxvid_list2].flatten)
-        @known_pxv_user_id_list = known_pxv_user_id_list
-      end
-      if @target.include?("unknown_pxv")
-        known_pxv_user_id_list, unknown_pxv_user_id_list = Artist::pxv_user_id_classify([pxv_id_list, pxvid_list2].flatten)
-        @unknown_pxv_user_id_list = unknown_pxv_user_id_list
+      if @target.size == 1 and @target[0] == ArtistsController::FileTarget::PXV_UNKNOWN_ONLY
+        @unknown_pxv_user_id_list = UrlTxtReader::get_unknown_pxv_id_list(path)
+      elsif @target.size == 1 and @target[0] == ArtistsController::FileTarget::TWT_UNKNOWN_ONLY
+        @unknown_twt_url_list = UrlTxtReader::get_unknown_twt_url_list(path)
+        puts %!size=#{@unknown_twt_url_list.size}!
+      else
+        pxvid_list2 = []
+        pxv_id_list, twt_url_infos, @misc_urls = UrlTxtReader::get_url_txt_info(path)
+        if @target.include?("twt既知")
+          known_twt_url_list, unknown_twt_url_list, pxvid_list2 = Twitter::twt_user_classify(twt_url_infos)
+          @known_twt_url_list = known_twt_url_list
+          #@twt_urls = known_twt_url_list
+        end
+        if @target.include?("twt未知")
+          known_twt_url_list, unknown_twt_url_list, pxvid_list2 = Twitter::twt_user_classify(twt_url_infos)
+          @unknown_twt_url_list = unknown_twt_url_list.sort_by {|k,v| -v.size}.to_h
+        end
+  
+        if @target.include?("known_pxv")
+          known_pxv_user_id_list, unknown_pxv_user_id_list = Artist::pxv_user_id_classify([pxv_id_list, pxvid_list2].flatten)
+          @known_pxv_user_id_list = known_pxv_user_id_list
+        end
+        if @target.include?("unknown_pxv")
+          known_pxv_user_id_list, unknown_pxv_user_id_list = Artist::pxv_user_id_classify([pxv_id_list, pxvid_list2].flatten)
+          @unknown_pxv_user_id_list = unknown_pxv_user_id_list
+        end
       end
     end
   end
@@ -702,6 +717,7 @@ class ArtistsController < ApplicationController
         artists = artists.select {|x| x.point < 0}
       end
 
+      puts %!artists.size=#{artists.size}!
       if prms.prediction > 0
         artists = artists.select {
           |x| x.prediction_up_cnt(true) >= prms.prediction or
@@ -710,6 +726,7 @@ class ArtistsController < ApplicationController
       elsif prms.prediction < 0
         artists = artists.select {|x| x.prediction_up_cnt(true) <= -(prms.prediction)}
       end
+      puts %!artists.size=#{artists.size}!
       
       if prms.rating < 0
       elsif prms.rating == 0
@@ -785,12 +802,17 @@ class ArtistsController < ApplicationController
         puts %!r18="#{prms.r18}"!
       end
 
+      puts %!artists.size=#{artists.size}!
       if prms.amount_gt != 0 and prms.amount_lt != 0
-        artists = artists.select {|x| prms.amount_gt < x[:filenum] and x[:filenum] <= prms.amount_lt}
+        artists = artists.select {|x| prms.amount_gt < x.filenum and x.filenum <= prms.amount_lt}
+        puts %!#{prms.amount_gt}/#{prms.amount_lt}!
       elsif prms.amount_gt != 0
-        artists = artists.select {|x| prms.amount_gt < x[:filenum]}
+        artists = artists.select {|x| prms.amount_gt < x.filenum}
+        puts %!#{prms.amount_gt}!
+        puts %!#{artists.size}!
       elsif prms.amount_lt != 0
-        artists = artists.select {|x| x[:filenum] <= prms.amount_lt}
+        artists = artists.select {|x| x.filenum <= prms.amount_lt}
+        puts %!#{prms.amount_lt}!
       else
       end
 

@@ -269,6 +269,11 @@ module Twt
         ts.strftime("%Y-%m-%d %H:%M")
     end
 
+    def self.date_info(tweet_id)
+        ts = get_timestamp(tweet_id)
+        Util::get_date_info(ts)
+    end
+
     def self.twt_path_str(path)
         fn = File.basename path
 
@@ -283,8 +288,13 @@ module Twt
             date_str = %![#{mtime.strftime("%Y-%m-%d")}]!
         end
         #twt_id_str = tweet_id.to_s(:delimited)
-        twt_id_str = tweet_id.to_s.reverse.gsub(/\d{3}/, '\0,').reverse
+        #twt_id_str = tweet_id.to_s.reverse.gsub(/\d{3}/, '\0,').reverse
+        twt_id_str = tweet_id_with_comma(tweet_id)
         %!<#{twt_id_str}>#{4 - pic_no}#{date_str}[#{fn})(#{File.dirname path}]!
+    end
+
+    def self.tweet_id_with_comma(tweet_id)
+        tweet_id.to_s.reverse.gsub(/\d{3}/, '\0,').reverse
     end
 
     def self.get_time_from_path(filepath)

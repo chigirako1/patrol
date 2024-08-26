@@ -265,14 +265,17 @@ class TwittersController < ApplicationController
       end
       twitters = twitters.select {|x| x.status == "TWT巡回"}
 
-      pxv_id_list, twt_urls, misc_urls = UrlTxtReader::get_url_list([], false)
-      known_ids = twt_urls.keys
+      #pxv_id_list, twt_urls, misc_urls = UrlTxtReader::get_url_list([], false)
+      #known_ids = twt_urls.keys
+      known_ids = UrlTxtReader::get_twt_id_list([])
       twitters = twitters.select {|x| known_ids.include?(x.twtid) }
       twitters = twitters.sort_by {|x| [-x.prediction, x.last_access_datetime]}
+      @twitters_group = twitters.group_by {|x| [x.rating, x.r18]}
+      return
     when "更新不可"
       twitters = twitters.select {|x| !x.last_access_datetime_p(@hide_within_days)}
       twitters = twitters.select {|x| x.status != "TWT巡回"}
-      @twitters_group = twitters.group_by {|x| x.status}
+      @twitters_group = twitters.group_by {|x| [x.status, x.r18]}
       return
 =begin
       ["TWT巡回", "TWT巡回"],
@@ -302,10 +305,12 @@ class TwittersController < ApplicationController
   def show
     if params[:file_check].presence
       @twt_ids = Twt::get_twt_tweet_ids_from_txts(@twitter.twtid)
+=begin
       if @twitter.old_twtid.presence
         old_twt_ids = Twt::get_twt_tweet_ids_from_txts(@twitter.old_twtid)
         @twt_ids = [@twt_ids, old_twt_ids].flatten
       end
+=end
     elsif params[:refresh].presence and params[:refresh] == "y"
     else
       @twitter.update(last_access_datetime: Time.now)

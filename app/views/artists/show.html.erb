@@ -3,7 +3,7 @@
 <% else %>
   <% title = %!@\!! %>
 <% end %>
-<% title = title + %!【#{@artist.rating}】#{@artist.pxvname}! %>
+<% title = title + %!【#{@artist.rating}#{"🔞" if @artist.r18 == "R18"}】#{@artist.pxvname}! %>
 <% provide(:title, title) %>
 <p style="color: green"><%= notice %></p>
 

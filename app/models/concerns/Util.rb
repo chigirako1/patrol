@@ -48,7 +48,7 @@ module Util
         path_list = []
 
         root_path = Rails.root.join(ipath).to_s + glob_param
-        puts %!glob:"#{root_path}"!
+        puts %!Util::glob:"#{root_path}", param="#{glob_param}"!
         Dir.glob(root_path).each do |path|
             path_list << path 
         end
@@ -72,5 +72,15 @@ module Util
             end
         end
         ""
+    end
+
+    def self.month_enumrator(head, tail)
+        e = Enumerator.new do |yielder|
+      
+            while head <= tail
+                yielder << head
+                head = head.next_month
+            end
+        end
     end
 end

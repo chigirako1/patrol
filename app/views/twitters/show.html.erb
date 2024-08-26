@@ -1,4 +1,4 @@
-<% provide(:title, %!【#{@twitter.rating}】#{@twitter.twtname} @#{@twitter.twtid}!) %>
+<% provide(:title, %!【#{@twitter.rating}#{"🔞" if @twitter.r18 == "R18"}】#{@twitter.twtname} @#{@twitter.twtid}!) %>
 <p style="color: green"><%= notice %></p>
 
 <h1>

@@ -27,7 +27,7 @@
   <% if @path_list[0] =~ /(\d\d-\d\d-\d\d)/ %>  
     最新投稿日：<%= Util::get_date_info(Date.parse($1)) %>
   <% else %>
-    最新投稿日(DB)：
+    最新投稿日(DB):
     <%= artist.get_datetime_string(artist.last_ul_datetime, true) %>
     (<%= artist.get_date_info(artist.last_ul_datetime) %>)
   <% end %>
@@ -55,8 +55,15 @@
       (<%= link_to_ex artwork_id, url %>)
       <%= path.gsub("%23", "#") %><br />
     <% end %>
-  <% end %> 
-  最初期投稿日：<%= artist.get_datetime_string(artist.earliest_ul_date, true) if artist.earliest_ul_date.presence %>
+  <% end %>
+  <%= Artist.artwork_list_file_num(list) %>(全ファイル数)
+  <br />
+  最初期投稿日(DB登録データ):<%= artist.get_datetime_string(artist.earliest_ul_date, true) if artist.earliest_ul_date.presence %>
+  <br />
+
+  <% if artist.filenum > 1000 %>
+    一部のみ表示？
+  <% end %>
   <br />
   
   <% list.first(@number_of_display).each.with_index(1) do |(artwork_id, data), idx| %>
