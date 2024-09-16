@@ -58,11 +58,11 @@ textarea {
             <% break %>
         <% end %>
         <% path = elem[1] %>
-        <%= idx %>.
-        <%= link_to image_tag(path, width: '10%', height: '10%', :alt => path), path, target: :_blank, rel: "noopener noreferrer" %>
         <% if elem[2][1] != 0 %>
             <%= "複" %>
         <% end %>
+        <%= idx %>.
+        <%= link_to image_tag(path, width: '10%', height: '10%', :alt => path), path, target: :_blank, rel: "noopener noreferrer" %>
         <% if corr != 0 and corr == idx %>
             <br />
         <% end %>

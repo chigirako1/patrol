@@ -46,6 +46,7 @@ class HomeController < ApplicationController
       { :label => "Twitter[AI] 65", :path => twitters_path(target: "AI", page_title: "AI 65", rating: 65, hide_within_days: 10, num_of_disp: 5, pred: 27, mode: "patrol", thumbnail: "t") },
       { :label => "Twitter[AI] 60", :path => twitters_path(target: "AI", page_title: "AI 60", rating: 60, hide_within_days: 14, num_of_disp: 5, pred: 30, mode: "patrol", thumbnail: "t") },
       { :label => "Twitter[AI] 55", :path => twitters_path(target: "AI", page_title: "AI 55", rating: 55, hide_within_days: 18, num_of_disp: 4, pred: 33, mode: "patrol", thumbnail: "t") },
+      { :label => "Twitter[AI] 50", :path => twitters_path(target: "AI", page_title: "AI 50", rating: 50, hide_within_days: 20, num_of_disp: 3, pred: 34, mode: "patrol", thumbnail: "t") },
       { :label => "Twitter[AI] 45", :path => twitters_path(target: "AI", page_title: "AI 45", rating: 45, hide_within_days: 22, num_of_disp: 3, pred: 36, mode: "patrol", thumbnail: "t") },
       { :label => "Twitter[AI] 31",
           :path => twitters_path(
@@ -53,14 +54,26 @@ class HomeController < ApplicationController
           )
       },
       { :label => "-", :path => "" },
-      { :label => "Twitter[AI] ご無沙汰 75",
+      { :label => "Twitter[AI] ご無沙汰 80",
         :path => twitters_path(
-          page_title: "AI ご無沙汰 75",
+          page_title: "AI ご無沙汰 80",
           target: "AI",
           sort_by: "access",
-          rating: 75,
+          rating: 80,
           hide_within_days: 14,
           num_of_disp: 6,
+          mode: "patrol",
+          thumbnail: "t",
+        )
+      },
+      { :label => "Twitter[AI] ご無沙汰 70",
+        :path => twitters_path(
+          page_title: "AI ご無沙汰 70",
+          target: "AI",
+          sort_by: "access",
+          rating: 70,
+          hide_within_days: 14,
+          num_of_disp: 5,
           mode: "patrol",
           thumbnail: "t",
         )
@@ -77,13 +90,37 @@ class HomeController < ApplicationController
           thumbnail: "t",
         )
       },
+      { :label => "Twitter[AI] ご無沙汰 50",
+        :path => twitters_path(
+          page_title: "AI ご無沙汰 50",
+          target: "AI",
+          sort_by: "access",
+          rating: 50,
+          hide_within_days: 28,
+          num_of_disp: 3,
+          mode: "patrol",
+          thumbnail: "t",
+        )
+      },
+      { :label => "Twitter[AI] ご無沙汰 40",
+        :path => twitters_path(
+          page_title: "AI ご無沙汰 40",
+          target: "AI",
+          sort_by: "access",
+          rating: 40,
+          hide_within_days: 42,
+          num_of_disp: 3,
+          mode: "patrol",
+          thumbnail: "t",
+        )
+      },
       { :label => "Twitter[AI] ご無沙汰 30",
         :path => twitters_path(
           page_title: "AI ご無沙汰 30",
           target: "AI",
           sort_by: "access",
           rating: 31,
-          hide_within_days: 30,
+          hide_within_days: 56,
           num_of_disp: 3,
           mode: "patrol",
           thumbnail: "t",
@@ -793,9 +830,9 @@ class HomeController < ApplicationController
             group_by: "評価+年齢制限", 
             status: "長期更新なし",
             twt: "true",
-            rating: 80,
+            rating: 85,
             display_number: 3,
-            last_access_datetime: 21, 
+            last_access_datetime: 90, 
             thumbnail: true,
           )
       },
@@ -846,6 +883,12 @@ class HomeController < ApplicationController
             filename: "",
           )
       },
+      { :label => "artwork id",
+          :path => artists_twt_index_path(
+            filename: "all",
+            target: ArtistsController::FileTarget::PXV_ARTWORK_LIST
+          )
+      },
       { :label => "-", :path => "" },
       { :label => "最新ファイル all",
           :path => artists_twt_index_path(
@@ -853,6 +896,20 @@ class HomeController < ApplicationController
             hide_day: 30,
             pred: 5,
             target:"twt,twt既知,twt未知,known_pxv,unknown_pxv",
+          )
+      },
+      { :label => "最新ファイル 実験pxv",
+          :path => artists_twt_index_path(
+            filename: "latest",
+            hide_day: 30,
+            target: ArtistsController::FileTarget::PXV_EXPERIMENT
+          )
+      },
+      { :label => "最新ファイル 実験twt",
+          :path => artists_twt_index_path(
+            filename: "latest",
+            hide_day: 30,
+            target: ArtistsController::FileTarget::TWT_EXPERIMENT
           )
       },
       { :label => "最新ファイル twt",
@@ -974,6 +1031,7 @@ class HomeController < ApplicationController
           :path => artists_twt_index_path(
             filename: "all",
             #hide_day: 30,
+            url_cnt: 2,
             target: ArtistsController::FileTarget::TWT_UNKNOWN_ONLY
           )
       },

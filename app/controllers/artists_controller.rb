@@ -20,6 +20,7 @@ class Params
     :recent_filenum,
     :filename,
     :last_access_datetime,
+    :last_ul_datetime,
     :r18,
     :point,
     :prediction,
@@ -144,6 +145,14 @@ class Params
     end
     puts "last_access_datetime=#{@last_access_datetime}"
 
+    last_ul_datetime = params[:last_ul_datetime]
+    if last_ul_datetime == nil or last_ul_datetime == 0
+      @last_ul_datetime = 0
+    else
+      @last_ul_datetime = last_ul_datetime.to_i
+    end
+    puts "last_ul_datetime=#{@last_ul_datetime}"
+
     display_number = params[:display_number]
     if display_number == nil
       @display_number = 3
@@ -219,6 +228,7 @@ class ArtistsController < ApplicationController
     REGIST_UL_DIFF = '新規登録日と最新投稿日の日数差'
     REGIST_UL_DIFF_NEAR = '新規登録日と昔の投稿日の日数差近い'
     TWTID_CASE_DIFF = 'twt screen name大文字・小文字違い'
+    TABLE_UPDATE_NEW_USER = '新規ユーザーDB登録'
   end
 
   module ApiEnum
@@ -229,6 +239,14 @@ class ArtistsController < ApplicationController
   module FileTarget
     TWT_UNKNOWN_ONLY = "unknown_twt_only"
     PXV_UNKNOWN_ONLY = "unknown_pxv_only"
+    TWT_EXPERIMENT = "twt_experiment"
+    PXV_EXPERIMENT = "pxv_experiment"
+    PXV_ARTWORK_LIST = "pxv_artwork_list"
+  end
+
+  module Status
+    LONG_TERM_NO_UPDATS = "長期更新なし"
+    SIX_MONTH_NO_UPDATS = "半年以上更新なし"
   end
 
   def api_hoge
@@ -264,9 +282,15 @@ class ArtistsController < ApplicationController
 
     @artists_group = {}
 
-    if params[:file] == "検索"
+    case params[:file]
+    when "検索"
       artists = Artist.looks(params[:target_col], params[:search_word], params[:match_method])
       @artists_group = index_group_by(artists, prms)
+      return
+    when MethodEnum::TABLE_UPDATE_NEW_USER
+      Pxv::db_update_by_newdir()
+      artists = Artist.select {|x| (x.created_at.to_date - Date.today.to_date).to_i == 0}
+      @artists_group[""] = artists
       return
     else
       artists = Artist.all
@@ -309,7 +333,7 @@ class ArtistsController < ApplicationController
           @twt = true
         else
           artists = artists.select {|x| id_list.include?(x[:pxvid])}
-          puts %!artists.size=#{artists.size}!
+          #puts %!artists.size=#{artists.size}!
           @twt = true
           @unknown_id_list = Artist.get_unknown_id_list(id_list)
         end
@@ -548,6 +572,10 @@ class ArtistsController < ApplicationController
         path = UrlTxtReader::get_latest_txt
       when /latest\s+(\d+)/
         path = UrlTxtReader::get_latest_txt($1.to_i)
+      when /target23$/
+        path = UrlTxtReader::txt_file_list("\\d{4}")
+      when /target(\d{2})$/
+        path = UrlTxtReader::txt_file_list($1 + "\\d{4}")
       when /target23(\d{2})/
         path = UrlTxtReader::txt_file_list($1 + "\\d{2}")
       when /target(\d{4})/
@@ -557,11 +585,26 @@ class ArtistsController < ApplicationController
       end
       puts "path='#{path}'"
 
-      if @target.size == 1 and @target[0] == ArtistsController::FileTarget::PXV_UNKNOWN_ONLY
-        @unknown_pxv_user_id_list = UrlTxtReader::get_unknown_pxv_id_list(path)
-      elsif @target.size == 1 and @target[0] == ArtistsController::FileTarget::TWT_UNKNOWN_ONLY
-        @unknown_twt_url_list = UrlTxtReader::get_unknown_twt_url_list(path)
-        puts %!size=#{@unknown_twt_url_list.size}!
+      if @target.size == 1 and @target[0] != "known_pxv"#適当すぎる。。。
+        pxvid_list2 = []
+        if @target[0] == ArtistsController::FileTarget::PXV_UNKNOWN_ONLY
+          @unknown_pxv_user_id_list = UrlTxtReader::get_unknown_pxv_id_list(path)
+        elsif @target[0] == ArtistsController::FileTarget::TWT_UNKNOWN_ONLY
+          @unknown_twt_url_list = UrlTxtReader::get_unknown_twt_url_list(path)
+          puts %!size=#{@unknown_twt_url_list.size}!
+        elsif @target[0] == ArtistsController::FileTarget::PXV_EXPERIMENT
+          pxv_id_list, twt_url_infos, @misc_urls = UrlTxtReader::get_url_txt_info(path)
+          known_pxv_user_id_list, unknown_pxv_user_id_list = Artist::pxv_user_id_classify([pxv_id_list, pxvid_list2].flatten)
+          @known_pxv_user_id_list = known_pxv_user_id_list
+        elsif @target[0] == ArtistsController::FileTarget::TWT_EXPERIMENT
+          pxv_id_list, twt_url_infos, @misc_urls = UrlTxtReader::get_url_txt_info(path)
+          known_twt_url_list, unknown_twt_url_list, pxvid_list2 = Twitter::twt_user_classify(twt_url_infos)
+          @known_twt_url_list = known_twt_url_list
+        elsif @target[0] == ArtistsController::FileTarget::PXV_ARTWORK_LIST
+          _, _, _, @pxv_artwork_id_list = UrlTxtReader::get_url_txt_info(path, false, false, false, true)
+        else
+          puts %!????!
+        end
       else
         pxvid_list2 = []
         pxv_id_list, twt_url_infos, @misc_urls = UrlTxtReader::get_url_txt_info(path)
@@ -717,7 +760,6 @@ class ArtistsController < ApplicationController
         artists = artists.select {|x| x.point < 0}
       end
 
-      puts %!artists.size=#{artists.size}!
       if prms.prediction > 0
         artists = artists.select {
           |x| x.prediction_up_cnt(true) >= prms.prediction or
@@ -726,7 +768,7 @@ class ArtistsController < ApplicationController
       elsif prms.prediction < 0
         artists = artists.select {|x| x.prediction_up_cnt(true) <= -(prms.prediction)}
       end
-      puts %!artists.size=#{artists.size}!
+      #puts %!artists.size=#{artists.size}!
       
       if prms.rating < 0
       elsif prms.rating == 0
@@ -735,6 +777,7 @@ class ArtistsController < ApplicationController
         #artists = artists.select {|x| x.rating == 0 or x.rating >= prms.rating}
         artists = artists.select {|x| x.rating >= prms.rating}
       end
+      #puts %!artists.size=#{artists.size}!
 
       if prms.twt
         artists = artists.select {|x| x[:twtid] != "" and x[:twtid] != "-"}
@@ -742,8 +785,9 @@ class ArtistsController < ApplicationController
       end
 
       if prms.twt_chk
-        artists = artists.select {|x| x[:twt_check] == prms.twt_chk}
+        #artists = artists.select {|x| x[:twt_check] == prms.twt_chk}
       end
+      puts %!artists.size=#{artists.size}!
   
       if prms.feat_3d
         artists = artists.select {|x| x[:feature] == "3D"}
@@ -756,6 +800,7 @@ class ArtistsController < ApplicationController
       if prms.exclude_ai
         artists = artists.select {|x| x[:feature] != "AI"}
       end
+      #puts %!artists.size=#{artists.size}!
 
       if prms.nje
         artists = artists.select {|x| x.nje_p}
@@ -785,6 +830,7 @@ class ArtistsController < ApplicationController
         artists = artists.select {|x| x.status == prms.status}
         puts %!status="#{prms.status}"!
       end
+      puts %!artists.size=#{artists.size}!
 
       if prms.reverse_status == ""
       elsif prms.reverse_status == "「さかのぼり済」を除く"
@@ -796,6 +842,7 @@ class ArtistsController < ApplicationController
         artists = artists.select {|x| x.reverse_status == prms.reverse_status}
         puts %!reverse_status="#{prms.reverse_status}"!
       end
+      puts %!artists.size=#{artists.size}!
 
       if prms.r18 and prms.r18 != ""
         artists = artists.select {|x| x[:r18] == prms.r18}
@@ -830,6 +877,18 @@ class ArtistsController < ApplicationController
         # 負の値の場合は最近アクセスしたものを選択
         artists = artists.select {|x| x.last_access_datetime_p(prms.last_access_datetime)}
       end
+
+      if prms.last_ul_datetime > 0
+        artists = artists.select {|x|
+          day = Util::get_date_delta(x.last_ul_datetime);
+          day >= prms.last_ul_datetime
+        }
+      elsif prms.last_ul_datetime < 0
+        # 負の値の場合は最近アクセスしたものを選択
+        #artists = artists.select {|x| x.last_ul_datetime_p(prms.last_ul_datetime)}
+      end
+      puts %!artists.size=#{artists.size}!
+
       artists
     end
 

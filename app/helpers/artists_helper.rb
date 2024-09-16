@@ -5,15 +5,15 @@ module ArtistsHelper
         if artist.append_info != nil and artist.append_info != ""
             tag += %!【#{artist.append_info}】!
         end
-        if artist.altname != ""
+        if artist.altname.presence
             tag += "<br />"
             tag += "別名:(#{artist.altname})"
         end
-        if artist.oldname != ""
+        if artist.oldname.presence
             tag += "<br />"
             tag += "旧名:(#{artist.oldname})"
         end
-        if artist.circle_name != ""
+        if artist.circle_name.presence
             tag += "<br />"
             tag += "【#{artist.circle_name}】"
         end
@@ -99,9 +99,28 @@ module ArtistsHelper
         bgcolor
     end
 
+    def pre_bgcolor_ex(pred_cnt)
+        if pred_cnt >= 30
+            bgcolor = "pink"
+        elsif pred_cnt >= 20
+            bgcolor = "#FFFF00"#"yellow"
+        elsif pred_cnt >= 10
+            bgcolor = "#DDDD44"
+        elsif pred_cnt >= 5
+            bgcolor = "lightskyblue"#"#999900"
+        elsif pred_cnt == 0
+            bgcolor = "grey"
+        else
+            bgcolor = "beige"
+        end
+        bgcolor
+    end
+
     def date_bg_color(dayn)
         if dayn < 7
             bgcolor = "palegreen"
+        elsif dayn > 365 * 2
+            bgcolor = "darkred"
         elsif dayn > 365
             bgcolor = "red"
         elsif dayn > 180

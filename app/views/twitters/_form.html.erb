@@ -215,7 +215,14 @@
           <br />
           類似名あり：<br />
           <% pxv3.each do |pxv_n| %>
-            【<%= pxv_n.pxvname %>(<%= pxv_n.pxvid %>)|@<%= pxv_n.twtid %>】|<%= pxv_n.feature %>
+            <%= pxv_n.feature %>【<%= pxv_n.pxvname %>(<%= pxv_n.pxvid %>)】
+            [@<%= pxv_n.twtid %>
+            <% if pxv_n.twtid == @twitter.twtid %>
+              TWT ID一致
+            <% else %>
+              != <%= @twitter.twtid %> TWT ID不一致
+            <% end %>
+            ]
             <%= link_to_ex("■pxv■", artist_path(pxv_n.id, access_dt_update: "yes")) %>
             <br />
           <% end %>

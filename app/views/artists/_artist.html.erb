@@ -7,9 +7,9 @@
 
     <% furigana = %![#{artist.furigana}]! if artist.furigana != ""%>
     <%= furigana %>
-    <%= %!/別名"#{artist.altname}"! if artist.altname != "" %>
-    <%= %!/旧名"#{artist.oldname}"! if artist.oldname != "" %>
-    <%= %!/サークル名："#{artist.circle_name}"! if artist.circle_name != "" %>
+    <%= %!/別名"#{artist.altname}"! if artist.altname.presence %>
+    <%= %!/旧名"#{artist.oldname}"! if artist.oldname.presence %>
+    <%= %!/サークル名："#{artist.circle_name}"! if artist.circle_name.presence %>
     </h2>
   </p>
 
@@ -81,21 +81,21 @@
     <%= link_to "サムネイル強制表示", artist_path(artist, thumbnail: :yes, number_of_display: 5) %>
   <% end %>
 
-  <% if artist.chara != "" %>
+  <% if artist.chara.presence %>
     <p>
       <strong>よく描くキャラ:</strong>
       <%= artist.chara %>
     </p>
   <% end %>
 
-  <% if artist.work != "" %>
+  <% if artist.work.presence %>
     <p>
       <strong>よく描く作品:</strong>
       <%= artist.work %>
     </p>
   <% end %>
 
-  <% if artist.warnings != "" %>
+  <% if artist.warnings.presence %>
     <p>
       <strong>注意事項:</strong>
       <font color="red"><%= artist.warnings %></font>

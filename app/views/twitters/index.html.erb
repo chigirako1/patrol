@@ -77,7 +77,12 @@
             <% end %>
             <%= pxv.prediction_up_cnt(true) %>
             <br />
-            [<%= link_to_ex("■pxv■", artist_path(twitter.artist_id, access_dt_update: "yes")) if twitter.artist_id.presence %>]
+            <% if twitter.artist_id.presence %>
+              [<%= link_to_ex("■pxv■", artist_path(twitter.artist_id, access_dt_update: "yes")) %>]
+            <% else %>
+              [<%= link_to_ex("■pxv■", artist_path(pxv, access_dt_update: "yes")) %>]
+              (@<%= twitter.twtid %>)
+            <% end %>
             <br />
             <% if twitter.artists_last_access_datetime.presence %>
               <%= %!(#{twitter.get_date_info(twitter.artists_last_access_datetime)})! %>

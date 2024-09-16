@@ -406,6 +406,9 @@ class Artist < ApplicationRecord
                 else
                     #puts artwork_id
                     #puts artwork_title
+                    if artwork_id < 10
+                        STDERR.puts %!warning:artwork id=#{artwork_id}, #{artwork_title}, #{date}!
+                    end
                     artworks[artwork_id] = [path, %!#{artwork_title}!, date, 1]
                 end
             else

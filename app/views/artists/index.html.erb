@@ -28,14 +28,15 @@
       <th>最終DL日</th>
       <th>予測/最新アクセス日</th>
       <th>コメント/特徴</th>
+      <th>最新投稿日</th>
+      <!-- twt -->
       <th>twt</th>
       <th>twt DL</th>
       <th>twt UL</th>
-      <th>最新投稿日</th>
+      <th>ファイル数(最近)</th>
       <% if @thumbnail %>
         <th>pic</th>
       <% end %>
-      <th>ファイル数(最近)</th>
       <th>nje</th>
     </tr>
     <% artists[(@begin_no)..(@begin_no + @size_per_table - 1)].each do |artist| %>
@@ -66,6 +67,19 @@
           <%= artist.last_access_datetime_disp %>
         </td>
         <td><%= artist.warnings %><br /><%= artist.comment %></td>
+        <% ul_delta = artist.get_date_delta(artist.last_ul_datetime) %>
+        <% ul_bg_color = date_bg_color(ul_delta) %>
+        <td bgcolor="<%= ul_bg_color %>">
+          <%= artist.get_date_info(artist.last_ul_datetime) %>
+          <% if artist.status.presence %>
+            <br />
+            <font color="pink"><b>(※<%= artist.status %>)</b></font>
+          <% end%>
+          <% if artist.reverse_status.presence %>
+            <br />
+            [<%= artist.reverse_status %>]
+          <% end%>
+        </td>
 
         <!-- twt -->
         <td bgcolor="lightskyblue">
@@ -96,23 +110,14 @@
             <%= Util.get_date_info(twt.last_post_datetime) %>
             <br />
             <% if twt.status.presence and twt.status != "TWT巡回" %>
-              <b>[<%= twt.status %>]</b>
+              <font color="red"><b>[<%= twt.status %>]</b></font>
             <% end %>
             <br />
           <% end %>
         </td>
-        <% ul_delta = artist.get_date_delta(artist.last_ul_datetime) %>
-        <% ul_bg_color = date_bg_color(ul_delta) %>
-        <td bgcolor="<%= ul_bg_color %>">
-          <%= artist.get_date_info(artist.last_ul_datetime) %>
-          <% if artist.status.presence %>
-            <br />
-            <b>(※<%= artist.status %>)</b>
-          <% end%>
-          <% if artist.reverse_status.presence %>
-            <br />
-            [<%= artist.reverse_status %>]
-          <% end%>
+        <td align="right">
+          <%= artist.filenum %>
+          (<%= artist.recent_filenum %>)
         </td>
         <% if @thumbnail %>
           <td>
@@ -123,10 +128,6 @@
             <% end %>
           </td>
         <% end %>
-        <td align="right">
-          <%= artist.filenum %>
-          (<%= artist.recent_filenum %>)
-        </td>
         <td bgcolor="pink">
           <br />
           <% if artist.njeid.presence %>
@@ -203,6 +204,7 @@
           [ArtistsController::MethodEnum::REGIST_UL_DIFF],
           [ArtistsController::MethodEnum::REGIST_UL_DIFF_NEAR],
           [ArtistsController::MethodEnum::TWTID_CASE_DIFF],
+          [ArtistsController::MethodEnum::TABLE_UPDATE_NEW_USER],
           ['検索'],
         ],
         selected: params[:file] 
@@ -285,6 +287,7 @@
           ['一部消えた'], 
           ['取得途中'], 
           ['最新から取得し直し中'], 
+          ["最新追っかけ中", "最新追っかけ中"], 
           ['彼岸'], 
         ],
         selected: params[:status] 
@@ -322,7 +325,10 @@
     <%= f.number_field :amount_lt, :value => params[:amount_lt] %>以下
     <br />
     <%= f.label :最終アクセス日 %>
-    <%= f.number_field :last_access_datetime, :value => params[:last_access_datetime] %>以上経過
+    <%= f.number_field :last_access_datetime, :value => params[:last_access_datetime] %>日以上経過
+    <br />
+    <%= f.label :最終投稿（公開）日 %>
+    <%= f.number_field :last_ul_datetime, :value => params[:last_ul_datetime] %>日以上経過
     <br />
     <%= f.label :最終アクセス日がn日以上経過した場合は強制表示 %>
     <%= f.number_field :force_disp_day, :value => params[:force_disp_day] %>

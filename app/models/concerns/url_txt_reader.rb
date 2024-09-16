@@ -360,23 +360,20 @@ module UrlTxtReader
         unknown
     end
 
-    def self.get_url_txt_info(filepath, pxv=true, twt=true, etc=true)
+    def self.get_url_txt_info(filepath, pxv=true, twt=true, etc=true, pxv_artwork=false)
         txt_sum = get_url_txt_contents(filepath)
         txts = txt_sum.split(/\R/)
 
         pxv_id_list = []
         twt_infos = {}
         misc_urls = []
+        pxv_artwork_id_list = []
 
         txts.each do |line|
             line.chomp!
             next if line =~ /^$/
     
-            if pxv and line =~ %r!https?://www\.pixiv\.net/users/(\d+)!
-                user_id = $1.to_i
-                pxv_id_list.push user_id
-            #elsif line =~ %r!(https?://twitter\.com/(\w+))!
-            elsif twt and line =~ %r!(https?://(?:x|twitter)\.com/(\w+))!
+            if twt and line =~ %r!(https?://(?:x|twitter)\.com/(\w+))!
                 url = $1
                 twt_id = $2
 
@@ -389,6 +386,11 @@ module UrlTxtReader
                     twt_url.append_url(line)
                     twt_infos[twt_id] = twt_url
                 end
+            elsif pxv and line =~ %r!https?://www\.pixiv\.net/users/(\d+)!
+                user_id = $1.to_i
+                pxv_id_list.push user_id
+            elsif pxv_artwork and line =~ %r!https?://www\.pixiv\.net/artworks/(\d+)!
+                pxv_artwork_id_list << $1.to_i
             elsif etc and line =~ %r!(https?://.*)!
                 url = $1
                 misc_urls.push url
@@ -397,7 +399,8 @@ module UrlTxtReader
              end
         end
 
-        [pxv_id_list, twt_infos, misc_urls]
+        #[pxv_id_list, twt_infos, misc_urls]
+        [pxv_id_list, twt_infos, misc_urls, pxv_artwork_id_list]
     end
 end
 
