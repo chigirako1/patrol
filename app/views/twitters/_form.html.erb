@@ -183,7 +183,7 @@
     <% if pxv.presence and twitter.pxvid == "" %>
       <%= %!pxvid="#{pxv.pxvid}"! %>
       【<%= pxv.rating %>】
-      [A:<%= pxv.last_access_datetime_disp %>|DL:<%= pxv.last_dl_datetime_disp %>]|最新UL:<%= pxv.last_ul_datetime_disp %>]
+      [A:<%= pxv.last_access_datetime_disp %>|DL:<%= pxv.last_dl_datetime_disp %>]
       [<%= artist_status_tag(pxv) %>|<%= pxv.feature %>|<%= pxv.pxvname %>|<%= pxv.r18 %>]
       [<%= link_to_ex("■pxv■", artist_path(pxv.id, access_dt_update: "yes")) %>]
       予測：<%= pxv.prediction_up_cnt(true) %>
@@ -194,16 +194,14 @@
       <% pxv2 = Artist.find_by(pxvid: @twitter.pxvid) %>
       <% if pxv2.presence %>
         <br />
-        【<%= pxv2.rating %>】<%= pxv2.r18 %>
+        【<%= pxv2.rating %>】<%= pxv2.r18 %>|<%= pxv2.filenum %>
         <br />
         <%= pxv2.pxvname %>(@<%= pxv2.twtid %>)
-        [<%= artist_status_tag(pxv2) %>|<%= pxv2.feature %>]<%= pxv2.filenum %>
-        <br />
-        DL:<%= pxv2.last_dl_datetime_disp %>|最新UL:<%= pxv2.last_ul_datetime_disp %>
+        [<%= artist_status_tag(pxv2) %>|<%= pxv2.feature %>]
         <br />
         予測：<%= pxv2.prediction_up_cnt(true) %>
         [<%= link_to_ex("■pxv■", artist_path(pxv2.id, access_dt_update: "yes")) %>]
-        A:<%= pxv2.last_access_datetime_disp %>
+        A:<%= pxv2.last_access_datetime_disp %>|DL:<%= pxv2.last_dl_datetime_disp %>
         <br />
         <% if pxv2.filenum < 1000 %>
           <%= pic_path_tag(@twitter.pxvid, 5, '10%', true) %>
@@ -273,19 +271,21 @@
       【<%= old_twt.rating %>|<%= old_twt.status %>】
       [<%= link_to_ex "■twt■", old_twt %>]
       |<%= old_twt.last_access_datetime_disp %>|
+      <%= %!|PXVID:#{old_twt.pxvid}! if old_twt.pxvid.presence %>
     <% end %>
   </div>
 
   <div>
     <%= form.label :主ID, style: "display: block" %>
     @<%= form.text_field :main_twtid %>
-    <%= link_to_ex "@#{@twitter.sub_twtid}", Twt::twt_user_url(@twitter.main_twtid) if @twitter.main_twtid.presence %>
+    <%= link_to_ex "@#{@twitter.main_twtid}", Twt::twt_user_url(@twitter.main_twtid) if @twitter.main_twtid.presence %>
     <% main_twtid = Twitter.find_by_twtid_ignore_case(@twitter.main_twtid) %>
     <% if main_twtid.presence %>
       <%= main_twtid.twtname %>
       【<%= main_twtid.rating %>|<%= main_twtid.status %>】
       [<%= link_to_ex "■twt■", main_twtid %>]
       |<%= main_twtid.last_access_datetime_disp %>|
+      <%= %!|PXVID:#{main_twtid.pxvid}! if main_twtid.pxvid.presence %>
     <% end %>
   </div>
 
@@ -299,6 +299,7 @@
       【<%= sub_twt.rating %>|<%= sub_twt.status %>】
       [<%= link_to_ex "■twt■", sub_twt %>]
       |<%= sub_twt.last_access_datetime_disp %>|
+      <%= %!|PXVID:#{sub_twt.pxvid}! if sub_twt.pxvid.presence %>
     <% end %>
   </div>
 

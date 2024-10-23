@@ -787,7 +787,7 @@ class ArtistsController < ApplicationController
       if prms.twt_chk
         #artists = artists.select {|x| x[:twt_check] == prms.twt_chk}
       end
-      puts %!artists.size=#{artists.size}!
+      #puts %!artists.size=#{artists.size}!
   
       if prms.feat_3d
         artists = artists.select {|x| x[:feature] == "3D"}
@@ -830,7 +830,7 @@ class ArtistsController < ApplicationController
         artists = artists.select {|x| x.status == prms.status}
         puts %!status="#{prms.status}"!
       end
-      puts %!artists.size=#{artists.size}!
+      #puts %!artists.size=#{artists.size}!
 
       if prms.reverse_status == ""
       elsif prms.reverse_status == "「さかのぼり済」を除く"
@@ -842,14 +842,14 @@ class ArtistsController < ApplicationController
         artists = artists.select {|x| x.reverse_status == prms.reverse_status}
         puts %!reverse_status="#{prms.reverse_status}"!
       end
-      puts %!artists.size=#{artists.size}!
+      #puts %!artists.size=#{artists.size}!
 
       if prms.r18 and prms.r18 != ""
         artists = artists.select {|x| x[:r18] == prms.r18}
         puts %!r18="#{prms.r18}"!
       end
 
-      puts %!artists.size=#{artists.size}!
+      #puts %!artists.size=#{artists.size}!
       if prms.amount_gt != 0 and prms.amount_lt != 0
         artists = artists.select {|x| prms.amount_gt < x.filenum and x.filenum <= prms.amount_lt}
         puts %!#{prms.amount_gt}/#{prms.amount_lt}!

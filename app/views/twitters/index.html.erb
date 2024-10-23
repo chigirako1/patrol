@@ -98,9 +98,13 @@
             <%#= twitter.get_datetime_string(d, true) %>
             <br />
             <%= %!(#{twitter.get_date_info(d)})! %>
-            <br />
             <% if twitter.artist_status.presence %>
+              <br />
               <b><%= %!※#{twitter.artist_status}! %></b>
+            <% end %>
+            <% if pxv.presence and pxv.reverse_status.presence %>
+              <br />
+              <%= %![#{pxv.reverse_status}]! %>
             <% end %>
           <% end %>
         </td>

@@ -52,27 +52,36 @@ textarea {
     </textarea>
     <br />
 
+    <% fsize_sum = 0 %>
     <!-- サムネイル -->
-    <% twt_pic_list.first(show_pic_num).each.with_index(1) do |elem, idx| %>
-        <% if @twt_ids != nil %>
-            <% break %>
-        <% end %>
-        <% path = elem[1] %>
-        <% if elem[2][1] != 0 %>
-            <%= "複" %>
-        <% end %>
-        <%= idx %>.
-        <%= link_to image_tag(path, width: '10%', height: '10%', :alt => path), path, target: :_blank, rel: "noopener noreferrer" %>
-        <% if corr != 0 and corr == idx %>
-            <br />
-        <% end %>
-        <% if pic_lf != 0 and idx % pic_lf == 0 %>
-            <br />
-            <% i = idx - 3 %>
-            <% 3.times do |x| %>
-                <%= i + 1 %>.<%= twt_pic_list[i][0] %>
+    <% if @twt_ids == nil %>
+        <% twt_pic_list.first(show_pic_num).each.with_index(1) do |elem, idx| %>
+            <%= idx %>
+            <% path = elem[1] %>
+            <% if elem[2][1] != 0 %>
+                (<%= "複" %>)
+                <% d_ratio = '5%' %>
+            <% else %>
+                <% d_ratio = '10%' %>
+            <% end %>
+            .
+
+            <% phys_path = Util::get_public_path(elem[1]) %>
+            <% filesize = FileTest.size(phys_path) %>
+            <% fsize_sum += filesize %>
+
+            <%= link_to image_tag(path, width: d_ratio, height: d_ratio, :alt => path), path, target: :_blank, rel: "noopener noreferrer" %>
+            <% if corr != 0 and corr == idx %>
                 <br />
-                <% i += 1 %>
+            <% end %>
+            <% if pic_lf != 0 and idx % pic_lf == 0 %>
+                <br />
+                <% i = idx - 3 %>
+                <% 3.times do |x| %>
+                    <%= i + 1 %>.<%= twt_pic_list[i][0] %>
+                    <br />
+                    <% i += 1 %>
+                <% end %>
             <% end %>
         <% end %>
     <% end %>
@@ -103,6 +112,7 @@ textarea {
     <% end %>
     計算結果"<%= avg %>"
     (<%= freq_90d %>/<%= freq_30d %>/<%= freq_15d %>)
+    ファイルサイズ平均：<%= (fsize_sum / show_pic_num) / 1024 %> KB
     <% if twt_pic_list[0] != nil %>
     <% end %>
     <br />
@@ -116,9 +126,9 @@ textarea {
         <%#= tweet_id.to_s.reverse.gsub(/\d{3}/, '\0,').reverse %>
         <%= Twt::tweet_id_with_comma(tweet_id) %>
         </b>
-        (<%= Twt::date_info(tweet_id) %>)
+        (公開日時：<%= Twt::date_info(tweet_id) %>)
         <% dt = Twt::get_time_from_path(twt_pic_list[0][1]) %>
-        【予測】<%= twitter.prediction(dt) %>
+        【以降の投稿数予測】<%= twitter.prediction(dt) %>
         <br />
     <% end %>
 
@@ -155,7 +165,7 @@ textarea {
                 <%= link_to_ex tweet_id, Twt::twt_tweet_url(@twitter.twtid, tweet_id) %>
                 <% if tweet.presence %>
                     <% if tweet.status == Tweet::StatusEnum::UNACCESSIBLE %>
-                        <%= Tweet::StatusEnum::UNACCESSIBLE %>
+                        <b><%= Tweet::StatusEnum::UNACCESSIBLE %></b>
                     <% else %>
                         <% url = twitter_path(file_check: 't', picn: 'all', pic_lf: '', corr: '0', show_pic: 't', tweet_st: Tweet::StatusEnum::DELETED, tweet_id: tweet_id) %>
                         <%= link_to("'削除済み'として更新", url) %>

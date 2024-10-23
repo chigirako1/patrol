@@ -183,6 +183,12 @@ module Pxv
             date_str = $1
             artwork_id = $2.to_i
             artwork_title = $3
+        elsif artwork_str =~ /(\d\d-\d\d-\d\d)\s+(\d{8})_p\d/
+            #https://www.pixiv.net/artworks/8235311x
+            #                               8083357x
+            date_str = $1
+            artwork_id = $2.to_i
+            artwork_title = "(*不明*)"
         elsif artwork_str =~ /(\d\d-\d\d-\d\d)\s+\d{4}(\d+)/
             date_str = $1
             artwork_id = $2.to_i
@@ -203,6 +209,7 @@ module Pxv
 
         if artwork_id < 10 and artwork_id != 0
             STDERR.puts %!ID取得に失敗した可能性があります。artwork_id=#{artwork_id}?|"#{path}"|"#{artwork_str}"!
+            artwork_id = 0
         end
         [artwork_id, date_str, artwork_title]
     end
@@ -315,24 +322,24 @@ module Pxv
             return
         end
 
-        STDERR.print %!最古UL日:\t#{pxv.earliest_ul_date.strftime("%Y-%m-%d")} => #{pxv_artist.earliest_ul_date.strftime("%Y-%m-%d")}!
+        #STDERR.print %!最古UL日:\t#{pxv.earliest_ul_date.strftime("%Y-%m-%d")} => #{pxv_artist.earliest_ul_date.strftime("%Y-%m-%d")}!
         if pxv_artist.earliest_ul_date < pxv.earliest_ul_date
             pxv_params[:earliest_ul_date] = pxv_artist.earliest_ul_date
-            print " 更新"
+            #print " 更新"
         end
         puts
 
-        STDERR.print %!最終UL日:\t#{pxv.last_ul_datetime.strftime("%Y-%m-%d")} => #{pxv_artist.last_ul_datetime.strftime("%Y-%m-%d")}!
+        #STDERR.print %!最終UL日:\t#{pxv.last_ul_datetime.strftime("%Y-%m-%d")} => #{pxv_artist.last_ul_datetime.strftime("%Y-%m-%d")}!
         if pxv_artist.last_ul_datetime > pxv.last_ul_datetime
             pxv_params[:last_ul_datetime] = pxv_artist.last_ul_datetime
-            print " 更新"
+            #print " 更新"
         end
         puts
 
-        STDERR.print %!最新DL日:\t#{pxv.last_dl_datetime.strftime("%Y-%m-%d")} => #{pxv_artist.last_dl_datetime.strftime("%Y-%m-%d")}!
+        #STDERR.print %!最新DL日:\t#{pxv.last_dl_datetime.strftime("%Y-%m-%d")} => #{pxv_artist.last_dl_datetime.strftime("%Y-%m-%d")}!
         if pxv_artist.last_dl_datetime > pxv.last_dl_datetime
             pxv_params[:last_dl_datetime] = pxv_artist.last_dl_datetime
-            print " 更新"
+            #print " 更新"
         end
         puts
 

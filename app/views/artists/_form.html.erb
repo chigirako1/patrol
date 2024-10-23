@@ -122,12 +122,14 @@
       <%= link_to_ex "@#{artist.twtid}", artist.twt_user_url %>
       <% twt = Twitter.find_by_twtid_ignore_case(artist.twtid) %>
       <% if twt.presence %>
+        (@<%= twt.twtid %>)
         PXVID:<%= twt.pxvid %>
-      <br />
+        <br />
         <%= twt.twtname %>
-        [<%= twt.drawing_method %>]【<%= twt.rating %>】<%= twt.status %>
+        [<%= twt.drawing_method %>]【<%= twt.rating %>|<%= twt.r18 %>】<%= twt.status %>
         [<%= link_to "■twt■", twitter_path(twt) %>]
         ACCS:(<%= twt.get_date_info(twt.last_access_datetime) if twt.last_access_datetime.presence %>)
+        UL:(<%= twt.get_date_info(twt.last_post_datetime) if twt.last_post_datetime.presence %>)
         予測：<%= twt.prediction %>
         <hr />
       <% elsif artist.twtid != "" %>
@@ -199,6 +201,8 @@
     <%= form.select :reverse_status, [
         ["さかのぼり中", "さかのぼり中"],
         ["さかのぼり済", "さかのぼり済"],
+        ["さかのぼり不可", "さかのぼり不可"],
+        ["さかのぼり不要", "さかのぼり不要"],
       ], include_blank: "選択して下さい" %>
     <input type="button" value="↑" onclick="options_up('artist_reverse_status');" class="btn" />
     <input type="button" value="↓" onclick="options_down('artist_reverse_status');" class="btn" />
@@ -290,6 +294,11 @@
   </div>
 
   <div>
+    <%= form.label :よみ, style: "display: block" %>
+    <%= form.text_field :furigana %>
+  </div>
+
+  <div>
     <%= form.label :pxvname, style: "display: block" %>
     <%= form.text_field :pxvname %>
   </div>
@@ -314,11 +323,6 @@
   <div>
     <%= form.label :付加情報, style: "display: block" %>
     <%= form.text_field :append_info %>
-  </div>
-
-  <div>
-    <%= form.label :よみ, style: "display: block" %>
-    <%= form.text_field :furigana %>
   </div>
 
   <div>

@@ -120,11 +120,21 @@ class TwittersController < ApplicationController
       elsif rating_gt == 0
         twitters = twitters.select {|x| x.rating == nil or x.rating == rating_gt}
       end
+
       if sort_by == "id"
         twitters = twitters.sort_by {|x| [x.id]}.reverse
       elsif  sort_by == "pred"
         twitters = twitters.sort_by {|x| [-x.prediction, x.last_access_datetime, (x.last_dl_datetime)]}
       end
+
+      if pred_cond_gt != 0
+        if force_disp_day == 0
+          twitters = twitters.select {|x| x.prediction >= pred_cond_gt}
+        else
+          twitters = twitters.select {|x| x.prediction >= pred_cond_gt or !x.last_access_datetime_p(force_disp_day)}
+        end
+      end
+      
       if params[:target] != nil and params[:target] == ""
         @twitters_group = {}
         twitters = twitters.select {|x| x.drawing_method == params[:target] or x.drawing_method == nil}

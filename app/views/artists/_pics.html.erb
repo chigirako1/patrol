@@ -24,8 +24,12 @@
     <br />
   <% end %>
 
-  <% if @path_list[0] =~ /(\d\d-\d\d-\d\d)/ %>  
-    最新投稿日：<%= Util::get_date_info(Date.parse($1)) %>
+  <% if @path_list[0] =~ /(\d\d-\d\d-\d\d)/ %>
+    <% pub_date = Date.parse($1) %>
+    最新投稿日：<%= Util::get_date_info(pub_date) %>
+    <% if artist.last_ul_datetime > pub_date %>
+      <b>↓最新のファイルでない可能性があります</b>
+    <% end %>
   <% else %>
     最新投稿日(DB):
     <%= artist.get_datetime_string(artist.last_ul_datetime, true) %>
@@ -48,13 +52,17 @@
   <br />
   <% list.to_a.last(1).each.with_index(1) do |(artwork_id, data), idx| %>
     <% path = data[0] %>
-    <% #if path =~ /\d\d-\d\d-\d\d.*\((\d+)\)/ %>
-      <% #artwork_id = $1 %>
-      <% url = artist.pxv_artwork_url(artwork_id) %>
-      <%= list.size %>.
-      (<%= link_to_ex artwork_id, url %>)
-      <%= path.gsub("%23", "#") %><br />
-    <% #end %>
+    <% url = artist.pxv_artwork_url(artwork_id) %>
+    <%= list.size %>.
+    (<%= link_to_ex artwork_id, url %>)
+    <%= path.gsub("%23", "#") %><br />
+    <% if @path_list[-1] =~ /(\d\d-\d\d-\d\d)/ %>
+      <% pub_date = Date.parse($1) %>
+      <% if artist.earliest_ul_date.to_date < pub_date %>
+        <b>↑最古のファイルでない可能性があります(<%= %!#{pub_date}!%>)</b> > <%= %!#{artist.earliest_ul_date.to_date}! %>
+        <br />
+      <% end %>
+    <% end %>
   <% end %>
   <% if list.presence %>
     <% file_num = Artist.artwork_list_file_num(list) %>
@@ -82,7 +90,7 @@
       <% no = $1.to_i %>
     <% end %>
     <% if no != 1 %> 
-      not 1
+      !1!
     <% end %>
     <% if fcnt > 1 %> 
       (<%= fcnt %>枚)
