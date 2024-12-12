@@ -35,6 +35,12 @@ module Twt
         twt_ids.sort.uniq
     end
 
+    def self.get_twt_user_path_list(path, wc, twtid)
+        twt_root = Rails.root.join(path).to_s + wc
+        dirpath = Util::get_dir_path_by_twtid(twt_root, twtid)
+        UrlTxtReader::get_path_list(dirpath)
+    end
+
     def self.get_pic_filelist(twtid)
         path_list = []
 
@@ -43,9 +49,12 @@ module Twt
 
         path_list << UrlTxtReader::get_path_list(tpath)
 
+=begin
         twt_root = Rails.root.join(TWT_CURRENT_DIR_PATH).to_s + "*/"
         dirpath = Util::get_dir_path_by_twtid(twt_root, twtid)
         path_list << UrlTxtReader::get_path_list(dirpath)
+=end
+        path_list << get_twt_user_path_list(TWT_CURRENT_DIR_PATH, "*/", twtid)
 
         if Dir.exist?(TWT_TMP_DIR_PATH_A)
             twt_root = Rails.root.join(TWT_TMP_DIR_PATH).to_s + "*/*/"
@@ -219,43 +228,88 @@ module Twt
         end
     end
 
-    def self.get_tweet_id_from_filepath(filepath)
+    def self.db_update_dup_files()
+        hash_hash = Hash.new { |h, k| h[k] = [] }
+        i = 0
+        dir_path = TWT_CURRENT_DIR_PATH
+        pic_list = UrlTxtReader::get_path_list(dir_path)
+        pic_list.each do |path|
+            hash_val = Util::file_hash path
+            filesize = FileTest.size(path)
+            hash_hash[[hash_val, filesize]] << path
+
+            i += 1
+            if i % 100 == 0
+                print "."
+            end
+            if i % 1000 == 0
+                puts i
+            end
+        end
+        puts ""
+
+        hash_hash.each do |k, v|
+            if v.size < 2
+                next
+            end
+            hash_val = k[0]
+            filesize = k[1]
+
+            puts
+            puts "#" * 100
+            puts "key=#{hash_val}/filesize=#{filesize}"
+            puts "#" * 100
+
+            dup_tweet_list = []
+            tweet_id_hash = {}
+           
+            v.each do |path|
+                tweet_id, pic_no = get_tweet_info_from_filepath(path)
+                if tweet_id_hash.has_key? tweet_id
+                    # 同一のTweet idの場合は単純に同じツイートを多重で保存しただけとして記録しない
+                    puts %!DLミス(重複):"#{path}"!
+                    next
+                end
+                tweet_id_hash[tweet_id] = true
+                dirname = File.basename(File.dirname path)
+                puts %!@#{dirname}:#{tweet_id}:#{pic_no} "#{path}"!
+                dup_tweet_list << [dirname, tweet_id, pic_no]
+            end
+            puts ""
+
+            scrn_names = dup_tweet_list.map {|x| x[0]}
+            if scrn_names.uniq.size != 1
+                puts %!異なるスクリーンネームに保存されているファイルがあります:#{scrn_names.uniq}!
+            end
+
+            dup_tweet_list = dup_tweet_list.sort_by {|x| x[1]}[1..-1]
+            dup_tweet_list.each do |x|
+                #twt_screen_name = x[0]
+                #tweet_id = x[1]
+                #pic_no = x[2]
+                twt_screen_name, tweet_id, pic_no = x
+                tweet = Tweet.find_by(tweet_id: tweet_id)
+                if tweet == nil
+                    Tweet::create_record(twt_screen_name, tweet_id, Tweet::StatusEnum::DUPLICATE, pic_no)
+                    #puts %!同一のファイルです:#{tweet_id}-#{pic_no}(@#{twt_screen_name})!
+                else
+                    puts "すでに登録済みです:#{tweet_id}"
+                end
+            end
+        end
+    end
+
+    def self.get_tweet_info_from_filepath(filepath)
         fn = File.basename filepath
-        get_tweet_id(fn)
+        get_tweet_info(fn)
     end
 
     def self.sort_by_tweet_id(pic_path_list)
         pic_path_list.sort_by {|x| [Twt::twt_path_str(x)]}.reverse
     end
 
-    def self.get_tweet_id(filename)
-        tweet_id = 0
-        pic_no = 0
-        if filename =~ /(\d+)\s(\d+)\s(\d+\-\d+\-\d+)/
-            #puts fn
-            tweet_id = $1.to_i
-            pic_no = $2.to_i
-        elsif filename =~ /(\d+)\s(\d+)\s(\d+)/
-            dl_date_str = $1
-            begin
-                #dl_date = Date.parse(dl_date_str)
-            rescue Date::Error => ex
-
-            end
-            tweet_id = $2.to_i
-            pic_no = $3.to_i
-        elsif filename =~ /\d+-\d+-\d+\s+\((\d+)\)/
-            tweet_id = $1.to_i
-        elsif filename =~ /(\d\d\d+)-(\d+)/
-            tweet_id = $1.to_i
-            pic_no = $2.to_i
-        elsif filename =~ /TID\-unknown\-/
-        elsif filename =~ /^[\w\-]{15}\./
-            #STDERR.puts %![dbg] #{filename}!
-        else
-            STDERR.puts %!regex no hit:#{filename}!
-        end
-        [tweet_id, pic_no]
+    def self.get_tweet_info(filename)
+        TweetInfo::get_tweet_info(filename)
     end
 
     TW_EPOCH = 1288834974657  # 単位：ミリ秒
@@ -277,7 +331,7 @@ module Twt
     def self.twt_path_str(path)
         fn = File.basename path
 
-        tweet_id, pic_no = get_tweet_id(fn)
+        tweet_id, pic_no = get_tweet_info(fn)
 
         if tweet_id != 0
             ul_datestr = timestamp_str(tweet_id)
@@ -299,7 +353,7 @@ module Twt
 
     def self.get_time_from_path(filepath)
         filename = File.basename(filepath)
-        tweet_id, _  = get_tweet_id(filename)
+        tweet_id, _  = get_tweet_info(filename)
         time = get_timestamp(tweet_id)
         if tweet_id == 0
             STDERR.puts %!#{tweet_id}=#{time}!
@@ -406,6 +460,7 @@ class TwtArtist
         @num_of_files = twt_pic_path_list.size
     end
 
+=begin ???バグでは？
     def twt_view_list(piclist)
         artlist = {}
         piclist.each do |path|
@@ -421,7 +476,7 @@ class TwtArtist
                     artid = $2.to_i
                     title = $3
                 else
-                    puts %!uncatch "#{path}"!
+                    puts %!unmatch "#{path}"!
                     next
                 end
             end
@@ -438,6 +493,7 @@ class TwtArtist
     def twt_view_list_ex
         twt_view_list(twt_pic_path_list)
     end
+=end
 
     def last_post_datetime(pic_path_list)
         Twt::get_time_from_path(pic_path_list[0])
@@ -460,4 +516,3 @@ class TwtArtwork
         @path_list << path
     end
 end
-

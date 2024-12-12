@@ -47,7 +47,7 @@
     <%= path.gsub("%23", "#") %><br />
   <% end %> 
   ---
-  <%= artist.reverse_status %> 
+  <%= artist.reverse_status %>
   ---
   <br />
   <% list.to_a.last(1).each.with_index(1) do |(artwork_id, data), idx| %>
@@ -56,11 +56,14 @@
     <%= list.size %>.
     (<%= link_to_ex artwork_id, url %>)
     <%= path.gsub("%23", "#") %><br />
-    <% if @path_list[-1] =~ /(\d\d-\d\d-\d\d)/ %>
+    <% if list[-1] =~ /(\d\d-\d\d-\d\d)/ #@path_list[-1] =~ /(\d\d-\d\d-\d\d)/ %>
       <% pub_date = Date.parse($1) %>
       <% if artist.earliest_ul_date.to_date < pub_date %>
-        <b>↑最古のファイルでない可能性があります(<%= %!#{pub_date}!%>)</b> > <%= %!#{artist.earliest_ul_date.to_date}! %>
-        <br />
+        <% if artist.reverse_status != "さかのぼり済" %>
+          <b>↑最古のファイルでない可能性があります(<%= %!#{pub_date}!%>)</b> > <%= %!#{artist.earliest_ul_date.to_date}! %>
+          <% puts %!path:"#{list[-1]}"! %>
+          <br />
+        <% end %>
       <% end %>
     <% end %>
   <% end %>

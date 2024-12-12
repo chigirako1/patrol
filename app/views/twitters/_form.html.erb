@@ -247,35 +247,6 @@
   </div>
 
   <div>
-    <%= form.label :別ID, style: "display: block" %>
-    @<%= form.text_field :alt_twtid %>
-    <%=  %>
-    <%= link_to_ex "@#{@twitter.alt_twtid}", Twt::twt_user_url(@twitter.alt_twtid) if @twitter.alt_twtid.presence %>
-    <% alt_twt = Twitter.find_by_twtid_ignore_case(@twitter.alt_twtid) %>
-    <% if alt_twt.presence %>
-      <%= alt_twt.twtname %>
-      【<%= alt_twt.rating %>|<%= alt_twt.drawing_method %>|<%= alt_twt.status %>】
-      [<%= link_to_ex "■twt■", alt_twt %>]
-      |<%= alt_twt.last_access_datetime_disp %>|
-      <%= %!|PXVID:#{alt_twt.pxvid}! if alt_twt.pxvid.presence %>
-    <% end %>
-  </div>
-
-  <div>
-    <%= form.label :旧ID, style: "display: block" %>
-    @<%= form.text_field :old_twtid %>
-    <%= link_to_ex "@#{@twitter.old_twtid}", Twt::twt_user_url(@twitter.old_twtid) if @twitter.old_twtid.presence %>
-    <% old_twt = Twitter.find_by_twtid_ignore_case(@twitter.old_twtid) %>
-    <% if old_twt.presence %>
-      <%= old_twt.twtname %>
-      【<%= old_twt.rating %>|<%= old_twt.status %>】
-      [<%= link_to_ex "■twt■", old_twt %>]
-      |<%= old_twt.last_access_datetime_disp %>|
-      <%= %!|PXVID:#{old_twt.pxvid}! if old_twt.pxvid.presence %>
-    <% end %>
-  </div>
-
-  <div>
     <%= form.label :主ID, style: "display: block" %>
     @<%= form.text_field :main_twtid %>
     <%= link_to_ex "@#{@twitter.main_twtid}", Twt::twt_user_url(@twitter.main_twtid) if @twitter.main_twtid.presence %>
@@ -304,8 +275,37 @@
   </div>
 
   <div>
+    <%= form.label :別ID, style: "display: block" %>
+    @<%= form.text_field :alt_twtid %>
+    <%=  %>
+    <%= link_to_ex "@#{@twitter.alt_twtid}", Twt::twt_user_url(@twitter.alt_twtid) if @twitter.alt_twtid.presence %>
+    <% alt_twt = Twitter.find_by_twtid_ignore_case(@twitter.alt_twtid) %>
+    <% if alt_twt.presence %>
+      <%= alt_twt.twtname %>
+      【<%= alt_twt.rating %>|<%= alt_twt.drawing_method %>|<%= alt_twt.status %>】
+      [<%= link_to_ex "■twt■", alt_twt %>]
+      |<%= alt_twt.last_access_datetime_disp %>|
+      <%= %!|PXVID:#{alt_twt.pxvid}! if alt_twt.pxvid.presence %>
+    <% end %>
+  </div>
+
+  <div>
     <%= form.label :新ID, style: "display: block" %>
     @<%= form.text_field :new_twtid %>
+  </div>
+
+  <div>
+    <%= form.label :旧ID, style: "display: block" %>
+    @<%= form.text_field :old_twtid %>
+    <%= link_to_ex "@#{@twitter.old_twtid}", Twt::twt_user_url(@twitter.old_twtid) if @twitter.old_twtid.presence %>
+    <% old_twt = Twitter.find_by_twtid_ignore_case(@twitter.old_twtid) %>
+    <% if old_twt.presence %>
+      <%= old_twt.twtname %>
+      【<%= old_twt.rating %>|<%= old_twt.status %>】
+      [<%= link_to_ex "■twt■", old_twt %>]
+      |<%= old_twt.last_access_datetime_disp %>|
+      <%= %!|PXVID:#{old_twt.pxvid}! if old_twt.pxvid.presence %>
+    <% end %>
   </div>
 
   <div>

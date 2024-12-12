@@ -1,0 +1,62 @@
+<% provide(:title, @djn_artist.djn_name) %>
+
+<h3 id="djn_xxx">
+    <%= %!#{@djn_artist.djn_name}! %>
+</h3>
+
+<%= @djn_artist.path %>
+<br />
+
+
+<table border="1" rules="all">
+    <tr>
+        <th>#</th>
+        <th>a date</th>
+        <th>表紙</th>
+        <th>title</th>
+        <th>p date</th>
+        <th>c</th>
+        <th>event</th>
+        <th>o</th>
+        <th>p</th>
+        <th>作者</th>
+    </tr>
+    <% @djn_artist.artworks.each.with_index(1) do |x, idx| %>
+        <tr>
+            <td><%= idx %></td>
+            <td>
+                <%= x.archive_date.strftime("%y-%m") if x.archive_date %>
+            </td>
+            <td>
+                <% ratio = '20%' %>
+                <% path = x.cover_path %>
+                <%= link_to image_tag(path, width: ratio, height: ratio, :alt => path) if path %>
+            </td>
+            <td>
+                <b>「<%= x.artwork_title %>」</b>
+            </td>
+            <td>
+                <% if x.publish_date.class == Date %>
+                    <%= x.publish_date.strftime("%y-%m") %>
+                <% else %>
+                    <%= x.publish_date %>
+                <% end %>
+            </td>
+            <td>
+                <%= x.chara %>
+            </td>
+            <td>
+                <%= x.event_name %>
+            </td>
+            <td>
+                <%= x.orig_work_name %>
+            </td>
+            <td>
+                <%= %!#{File.basename x.path}! %>
+            </td>
+            <td>
+                <%= x.author_name %>
+            </td>
+        </tr>
+    <% end %>
+</table>

@@ -183,7 +183,12 @@ module Pxv
             date_str = $1
             artwork_id = $2.to_i
             artwork_title = $3
-        elsif artwork_str =~ /(\d\d-\d\d-\d\d)\s+(\d{8})_p\d/
+        elsif artwork_str =~ /(\d\d-\d\d-\d\d)\s+.*(\d+)_p\d+_master/
+            date_str = $1
+            artwork_id = $2.to_i
+            artwork_title = "(*不明*)"
+        # 22-08-05 100x3x4x5_p0.png
+        elsif artwork_str =~ /(\d\d-\d\d-\d\d)\s+(\d{8,9})_p\d/
             #https://www.pixiv.net/artworks/8235311x
             #                               8083357x
             date_str = $1

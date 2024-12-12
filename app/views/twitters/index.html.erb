@@ -8,6 +8,21 @@
 
 <h1>Twitters <%= "#{page_title}" %></h1>
 
+
+<% search_word = params[:search_word] %>
+<% if search_word.presence %>
+  検索ワード：「<b><%= search_word %></b>」
+<% end %>
+
+<% if @twitters_group.size == 0 and params[:mode] == "search" %>
+  <% user_exist = Twt::user_exist?(search_word) %>
+  <% if user_exist %>
+    <h3>DB未登録だが、フォルダあり:"@<%= search_word %>"</h3>
+  <% else %>
+    <h3>twt:"<%= search_word %>" not found</h3>
+  <% end %>
+<% end %>
+
 <div id="twitters">
   <% @twitters_group.each do |key, twitters| %>
   <% rem = twitters.size - @num_of_disp %>
@@ -60,35 +75,43 @@
         </td>
         <!-- pxv -->
         <% pxv = Artist.find_by(pxvid: twitter.pxvid) %>
+        <% if twitter.artist_pxvid.presence %>
+          <% pxv2 = Artist.find_by(id: twitter.artist_id) %>
+        <% end %>
         <td bgcolor="pink">
-          <% if pxv.presence %>
-            <%= %!【#{pxv.rating}】! %>
+          <% if pxv2.presence %>
+            <%= %!【#{pxv2.rating}】#{pxv2.feature}! %>
+            <%= twitter.pxvname if twitter.twtname != twitter.pxvname %>
+            (<%= link_to_ex pxv2.pxvid, pxv2.pxv_user_url %>)
+          <% elsif pxv.presence %>
+            <%= %!【#{pxv.rating}】#{pxv.feature}! %>
             <%= twitter.pxvname if twitter.twtname != twitter.pxvname %>
             (<%= link_to_ex pxv.pxvid, pxv.pxv_user_url %>)
-          <% elsif twitter.artist_pxvid.presence %>
-            <% pxv_url = Pxv::pxv_user_url(twitter.artist_pxvid) %>
-            (<%= link_to_ex twitter.artist_pxvid, pxv_url %>)
           <% end %>
         </td>
         <td bgcolor="pink">
           <% if pxv.presence %>
-            <% if pxv.twtid != twitter.twtid %>
-              @<%= pxv.twtid %> != <%= twitter.twtid %><br />
-            <% end %>
             <%= pxv.prediction_up_cnt(true) %>
             <br />
-            <% if twitter.artist_id.presence %>
-              [<%= link_to_ex("■pxv■", artist_path(twitter.artist_id, access_dt_update: "yes")) %>]
+            <% if pxv2.presence %>
+              [<%= link_to_ex("■pxv■(#{pxv2.id})", artist_path(pxv2, access_dt_update: "yes")) %>]
+              (@<%= pxv2.twtid %>)
             <% else %>
-              [<%= link_to_ex("■pxv■", artist_path(pxv, access_dt_update: "yes")) %>]
-              (@<%= twitter.twtid %>)
+              [<%= link_to_ex("■pxv■(#{pxv.id})", artist_path(pxv, access_dt_update: "yes")) %>]
+              <%= twitter.artist_id %>
+              (@<%= pxv.twtid %>)
             <% end %>
             <br />
             <% if twitter.artists_last_access_datetime.presence %>
               <%= %!(#{twitter.get_date_info(twitter.artists_last_access_datetime)})! %>
             <% end %>
-            <br />
             <%= pxv.filenum %>(<%= pxv.recent_filenum %>)
+            <% if pxv.twtid != twitter.twtid %>
+              <hr />
+              @<%= pxv.twtid %><br />
+              [<%= link_to_ex("■pxv■(#{pxv.id})", artist_path(pxv, access_dt_update: "yes")) %>]
+            <% else %>
+            <% end %>
           <% end %>
         </td>
         <td bgcolor="pink">
@@ -99,6 +122,7 @@
             <br />
             <%= %!(#{twitter.get_date_info(d)})! %>
             <% if twitter.artist_status.presence %>
+              <%= %!#{twitter.artist_pxvid}! %>
               <br />
               <b><%= %!※#{twitter.artist_status}! %></b>
             <% end %>
@@ -109,8 +133,10 @@
           <% end %>
         </td>
         <% if twitter.last_post_datetime %>
-          <% bgcolor = "beige" %>
-          <td bgcolor="<%= bgcolor %>">
+          <% ul_delta = twitter.get_date_delta(twitter.last_post_datetime) %>
+          <% ul_bg_color = "beige" %>
+          <% ul_bg_color = td_date_bg_color(ul_delta) %>
+          <td bgcolor="<%= ul_bg_color %>">
             <%= Util.get_date_info(twitter.last_post_datetime) %>
           </td>
         <% else %>

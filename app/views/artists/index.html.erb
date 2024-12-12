@@ -86,7 +86,7 @@
           <% if artist.twtid.presence and artist.twtid != "-" %>
             @<%= artist.twtid %>
             <% if twt %>
-              【<%= twt.rating %>】<%= twt.r18 %>
+              【<%= twt.rating %>】<%= twt.r18 %>|<%= twt.drawing_method %>
               <br />
               <%= twt.prediction %>[<%= link_to_ex "■twt■", twt %>]
               <% if artist.twtid != twt.twtid %>
@@ -202,6 +202,7 @@
           ['未登録pxv user id'],#in TWT table
           ['DB未登録pxv user id local dir'],
           [ArtistsController::MethodEnum::REGIST_UL_DIFF],
+          [ArtistsController::MethodEnum::ACCESS_UL_DIFF_FAR],
           [ArtistsController::MethodEnum::REGIST_UL_DIFF_NEAR],
           [ArtistsController::MethodEnum::TWTID_CASE_DIFF],
           [ArtistsController::MethodEnum::TABLE_UPDATE_NEW_USER],

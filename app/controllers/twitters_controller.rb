@@ -93,6 +93,7 @@ class TwittersController < ApplicationController
             artists.status AS artist_status,
             artists.rating AS artist_rating,
             artists.last_access_datetime AS artists_last_access_datetime,
+            artists.last_ul_datetime AS artists_last_ul_datetime,
             artists.*, twitters.*")
     end
 
@@ -257,8 +258,42 @@ class TwittersController < ApplicationController
         twitters = twitters.select {|x| x.rating != nil and x.rating >= rating_gt }
       end
       #twitter.artist_status
+      #twitters = twitters.select {|x| x.drawing_method != nil and (x.drawing_method == "手描き")}
+
+=begin
+      #twitters = twitters.select {|x| !(x.pxvid.presence) or (x.last_ul_datetime.presence and Util::get_date_delta(x.last_ul_datetime) > 60)}
+      #twitters = twitters.select {|x| !(x.pxvid.presence)}
+      twitters = twitters.select {|x|
+        puts %!#{x.artists_last_ul_datetime}!
+        puts %!#{x.artists_last_ul_datetime.class}!
+        puts %!#{x.artists_last_ul_datetime.to_date}!
+        puts %!#{Date.parse x.artists_last_ul_datetime}!
+        puts %!#{(Time.zone.now.to_date - x.artists_last_ul_datetime.to_date).to_i}!
+        puts %!@#{x.twtid}:#{x.pxvid}:#{Util::get_date_delta(x.artists_last_ul_datetime)}! if x.artists_last_ul_datetime.presence
+        (x.artists_last_ul_datetime.presence and Util::get_date_delta(x.artists_last_ul_datetime) > 60)
+      }
+=end
+      twitters = twitters.select {|x|
+        !(x.pxvid.presence) or
+        (x.last_ul_datetime.presence and Util::get_date_delta(Date.parse(x.last_ul_datetime).to_s) > 60)
+      }
+
+      twitters = twitters.sort_by {|x| [-x.prediction, x.last_access_datetime, (x.last_dl_datetime)]}
+    when "no_pxv"
+      twitters = twitters.select {|x| !x.last_access_datetime_p(@hide_within_days)}
+      twitters = twitters.select {|x| x.status == "TWT巡回"}
+      twitters = twitters.select {|x| x.drawing_method != nil and (x.drawing_method == "手描き")}
+      if rating_gt != 0
+        twitters = twitters.select {|x| x.rating != nil and x.rating >= rating_gt }
+      end
       twitters = twitters.select {|x| x.drawing_method != nil and (x.drawing_method == "手描き")}
 
+      twitters = twitters.select {|x|
+        x.artists_last_ul_datetime != nil and
+        Util::get_date_delta(x.artists_last_ul_datetime) > 60 and
+        Util::get_date_delta(x.artists_last_access_datetime) > 30
+      }
+      
       twitters = twitters.sort_by {|x| [-x.prediction, x.last_access_datetime, (x.last_dl_datetime)]}
     when "未設定"
       twitters = twitters.select {|x| !x.last_access_datetime_p(@hide_within_days)}

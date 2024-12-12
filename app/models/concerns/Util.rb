@@ -1,8 +1,14 @@
 # coding: utf-8
 
+require 'digest'
+
 module Util
     extend ActiveSupport::Concern
 
+    # よくわからないが、
+    # ・"24-09-22".to_date => 0024-09-22
+    # ・Date.parse("24-09-22") => 2024-09-22
+    # になる
     def self.get_date_delta(date)
         if date == nil
             puts "date==nil"
@@ -10,7 +16,12 @@ module Util
         end
         now = Time.zone.now
         days = (now.to_date - date.to_date).to_i
+        #puts %!#{now.to_date}|#{date.to_date}!
         days
+    end
+
+    def self.get_days_date_delta(date_from, date_to)
+        (date_to.to_date - date_from.to_date).to_i
     end
 
     def self.get_date_info(date)
@@ -82,5 +93,9 @@ module Util
                 head = head.next_month
             end
         end
+    end
+
+    def self.file_hash(path)
+        Digest::SHA256.file(path).hexdigest
     end
 end

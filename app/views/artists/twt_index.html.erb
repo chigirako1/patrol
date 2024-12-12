@@ -1,5 +1,7 @@
 <% provide(:title, %!url 一覧  #{params[:title]}/file:#{params[:filename]}/dir:#{params[:dir]}!) %>
 
+<% thumb_disp = false %>
+
 <% pic_mag_pxv = '28%' %>
 <% pic_mag_twt = '23%' %>
 <% pic_mag_twt_a = '5%' %>
@@ -14,33 +16,43 @@
 
 <% hide_day_short = 7 %>
 
-
 <% pxv_group = Hash.new { |h, k| h[k] = [] } %>
 <% recent_pxv_list = [] %>
 
-<% key_pxv_list_no_update_long  = "01.#{ArtistsController::Status::LONG_TERM_NO_UPDATS}" %>
-<% key_pxv_list_no_update_6m    = "02.#{ArtistsController::Status::SIX_MONTH_NO_UPDATS}" %>
-<% key_pxv_list_no_access_1y    = "06.1年以上アクセスしてない" %>
-<% key_pxv_list_no_access_6m    = "07.半年以上アクセスしてない" %>
-<% key_pxv_list_no_access_3m    = "08.3ヶ月以上アクセスしてない" %>
-<% key_pxv_list_high            = "09.評価高" %>
-<% key_pxv_list_set_m           = "11.設定済み(多) > #{@pred * 2}" %>
-<% key_pxv_list_set             = "12.設定済み(普)" %>
-<% key_pxv_list_unset_many      = "21.未設定(多) > #{@pred * 2}" %>
-<% key_pxv_list_unset_few       = "22.未設定(少) < #{@pred * 2}" %>
-<% key_pxv_list_pred_few_pred_n = "31.予測少( > n)" %>
-<% key_pxv_list_pred_few        = "32.予測少" %>
-<% key_pxv_list_pred_few_access = "33.予測少(最近アクセス)" %>
-<% key_pxv_list_from_twt_list_a = "41.twt url list a" %>
-<% key_pxv_list_from_twt_list_a2= "42.twt url list a2" %>
-<% key_pxv_list_from_twt_list_b = "43.twt url list b" %>
-<% key_pxv_list_from_twt_list_z = "49.twt url list 最近アクセス" %>
-<% key_pxv_list_ai              = "81.AI" %>
-<% key_pxv_list_low             = "83.評価低" %>
-<% key_pxv_list_low_ltxx        = "84.評価低#{rating_thre2}未満" %>
-<% key_pxv_list_recent          = "91.最近アクセス" %>
+<% key_pxv_list_no_update_long  = "001.#{ArtistsController::Status::LONG_TERM_NO_UPDATS}" %>
+<% key_pxv_list_no_update_6m    = "002.#{ArtistsController::Status::SIX_MONTH_NO_UPDATS}" %>
 
-<% hide_day_b = @hide_day * 2 %>
+<% key_pxv_list_no_access_1y    = "011.1年以上アクセスしてない" %>
+<% key_pxv_list_no_access_6m    = "012.半年以上アクセスしてない" %>
+<% key_pxv_list_no_access_5m    = "013.5ヶ月以上アクセスしてない" %>
+<% key_pxv_list_no_access_4m    = "014.4ヶ月以上アクセスしてない" %>
+<% key_pxv_list_no_access_3m    = "015.3ヶ月以上アクセスしてない" %>
+<% key_pxv_list_no_access_2m    = "016.2ヶ月以上アクセスしてない" %>
+
+<% key_pxv_list_high            = "111.評価高" %>
+<% key_pxv_list_set_m           = "111.設定済み(多) > #{@pred * 2}" %>
+<% key_pxv_list_set             = "112.設定済み(普)" %>
+
+<% key_pxv_list_unset_many      = "121.未設定(多) > #{@pred * 2}" %>
+<% key_pxv_list_unset_few       = "122.未設定(少) < #{@pred * 2}" %>
+
+<% key_pxv_list_pred_few_pred_n = "131.予測少( > n)" %>
+<% key_pxv_list_pred_few        = "132.予測少" %>
+<% key_pxv_list_pred_few_access = "133.予測少(最近アクセス)" %>
+
+<% key_pxv_list_from_twt_list_a = "141.twt url list a" %>
+<% key_pxv_list_from_twt_list_a2= "142.twt url list a2" %>
+<% key_pxv_list_from_twt_list_b = "143.twt url list b" %>
+<% key_pxv_list_from_twt_list_z = "149.twt url list 最近アクセス" %>
+
+<% key_pxv_list_ai              = "181.AI" %>
+
+<% key_pxv_list_low             = "183.評価低" %>
+<% key_pxv_list_low_ltxx        = "184.評価低#{rating_thre2}未満" %>
+
+<% key_pxv_list_recent          = "901.最近アクセス" %>
+
+<% hide_day_b = @hide_day * 1.5 %>
 <% key_name_pred_2      = %!01:予測 >= #{@pred * 2}! %>
 <% key_name_pred_1      = %!02:予測 >= #{@pred}! %>
 <% key_name_etc         = "03:etc" %>
@@ -181,7 +193,7 @@
                         <%= Util.get_date_info(twt_account.last_post_datetime) %>
                     </td>
                     <td>
-                        <% if pred >= @pred %>
+                        <% if thumb_disp and pred >= @pred %>
                             <% tlist = twt_account.get_pic_filelist_ex %>
                             <% tlist.first(3).each do |filepath| %>
                                 <%= link_to image_tag(filepath, width: '13%', height: '13%'), filepath, target: :_blank, rel: "noopener noreferrer" if filepath.presence %>
@@ -214,7 +226,7 @@
                             <%= p.get_date_info(p.last_ul_datetime) %>
                         </td>
                         <td>
-                            <% if p_pred > @pred %>
+                            <% if thumb_disp and p_pred > @pred %>
                                 <%= pic_path_tag(p.pxvid, 3, pic_mag_pxv) %>
                             <% end %>
                             <%= p.filenum %>
@@ -261,13 +273,13 @@
 
         <% exist = twt_dirs.user_exist?(key) %>
         <% if exist %>
-            !ローカルファイルにあり!
+            !ローカルファイルにあり!(<%= key %>)
         <% end %>
         <% twt_account = Twitter.find_by_twtid_ignore_case(key) %>
         <% if twt_account %>
-            <%= idx %>:*<%= key %>*（大文字・小文字チェック）
+            <%= idx %>:*<%= key %>*（大文字・小文字チェック）|<%= twt_account.twtid %>|
             <% known_twt_account_list[key] = [url_list, twt_account] %>
-            <% puts %!known=#{key}! %>
+            <% #puts %!known=#{key}! %>
             <br />
             <% next %>
         <% else %>
@@ -379,8 +391,14 @@
             <% pxv_group[key_pxv_list_no_access_1y] << elem %>
         <% elsif !(p.last_access_datetime_p(180)) %>
             <% pxv_group[key_pxv_list_no_access_6m] << elem %>
+        <% elsif !(p.last_access_datetime_p(150)) %>
+            <% pxv_group[key_pxv_list_no_access_5m] << elem %>
+        <% elsif !(p.last_access_datetime_p(120)) %>
+            <% pxv_group[key_pxv_list_no_access_4m] << elem %>
         <% elsif !(p.last_access_datetime_p(90)) %>
             <% pxv_group[key_pxv_list_no_access_3m] << elem %>
+        <% elsif !(p.last_access_datetime_p(60)) %>
+            <% pxv_group[key_pxv_list_no_access_2m] << elem %>
         <% elsif pred >= @pred %>
             <% if p.rating.presence and pred >= @pred * 2 %>
                 <% pxv_group[key_pxv_list_set_m] << elem %>
@@ -474,11 +492,17 @@
                     <% ul_bg_color = date_bg_color(ul_delta) %>
                     <td bgcolor="<%= ul_bg_color %>">
                         <%= p.get_date_info(p.last_ul_datetime) %>
+
+                        <% a_u_days = Util::get_days_date_delta(p.last_ul_datetime, p.last_access_datetime) %>
+                        <% if a_u_days > 60 %>
+                            <br />
+                            [※アクセス日と公開日の差が大きい(<%= a_u_days %>日)]
+                        <% end %>
                         <br />
                         <b><%= p.status_disp %></b>
                     </td>
                     <td>
-                        <% if pred > @pred %>
+                        <% if thumb_disp and pred > @pred %>
                             <%= pic_path_tag(elem.pxvid, 3, pic_mag_pxv) %>
                         <% end %>
                         <%= p.filenum %>
@@ -499,7 +523,7 @@
                             <%= link_to_ex "■twt■", twt %>
                         </td>
                         <td>
-                            <% if twt_pred > @pred * 7 %>
+                            <% if thumb_disp and twt_pred > @pred * 7 %>
                                 <% tlist = twt.get_pic_filelist_ex %>
                                 <% tlist.first(3).each do |filepath| %>
                                     <%= link_to_ex image_tag(filepath, width: pic_mag_twt, height: pic_mag_twt), filepath if filepath.presence %>
@@ -531,13 +555,14 @@
             <th>status</th>
             <th>rating</th>
             <th>name</th>
-            <th>最新投稿日</th>
-            <th>予測</th>
-            <th>pxv</th>
             <th>アクセス日</th>
-            <th>twt 予測</th>
-            <th>twt</th>
+            <th>最新投稿日</th>
+            <th>pxv</th>
+            <th>予測</th>
             <th>twt access</th>
+            <th>twt post</th>
+            <th>twt</th>
+            <th>twt 予測</th>
             <th>twt</th>
         </tr>
         <% recent_pxv_list = recent_pxv_list.sort_by {|z|
@@ -545,6 +570,7 @@
                 [
                     x.status||"", 
                     x.feature||"",
+                    x.last_ul_datetime,
                     -(x.prediction_up_cnt(true)), 
                     x.rating||0, 
                     x.last_access_datetime
@@ -560,38 +586,57 @@
                     <%= idx %>
                 </td>
                 <td><%= p.status %></td>
-                <td>【<%= p.rating %>】<%= p.r18 %></td>
+
+                <% if p.rating == 0 %>
+                    <% rt_bg_color = 'grey' %>
+                <% else %>
+                    <% rt_bg_color = 'beige' %>
+                <% end %>
+                <td bgcolor="<%= rt_bg_color %>">
+                    【<%= p.rating %>】<%= p.r18 %>
+                </td>
                 <td><%= p.pxvname %></td>
+
+                <td>
+                    <%= p.last_access_datetime_disp %>
+                </td>
+
+                <!-- 公開日 -->
                 <% ul_delta = p.get_date_delta(p.last_ul_datetime) %>
                 <% ul_bg_color = date_bg_color(ul_delta) %>
                 <td bgcolor="<%= ul_bg_color %>">
                     <%= p.last_ul_datetime_disp %>
                 </td>
-                <!--  -->
+
+                <td>
+                    <%= link_to_ex("■pxv■", artist_path(p, access_dt_update: "yes")) %>
+                </td>
+
+                <!-- 予測 -->
                 <% pred_cnt = p.prediction_up_cnt(true) %>
                 <% bgc = pre_bgcolor(pred_cnt, @pred * 2, @pred) %>
                 <td align="right" bgcolor="<%= bgc %>">
                     <%= pred_cnt %>
                 </td>
-                <td>
-                    <%= link_to_ex("■pxv■", artist_path(p, access_dt_update: "yes")) %>
-                </td>
-                <td>
-                    <%= p.last_access_datetime_disp %>
-                </td>
                 <% twt = Twitter.find_by_twtid_ignore_case(p.twtid) %>
                 <% if twt %>
-                    <td align="right"><%= twt.prediction %></td>
-                    <td><%= link_to_ex "■twt■", twt %></td>
                     <td>
                         <%= twt.last_access_datetime_disp %>
                     </td>
+                    <% post_delta = twt.get_date_delta(twt.last_post_datetime) %>
+                    <% post_bg_color = date_bg_color(post_delta) %>
+                    <td bgcolor="<%= post_bg_color %>">
+                        <%= Util.get_date_info(twt.last_post_datetime) %>
+                    </td>
+                    <td><%= link_to_ex "■twt■", twt %></td>
+                    <td align="right"><%= twt.prediction %></td>
                     <td></td>
                 <% else %>
                     <td></td>
                     <td></td>
                     <td></td>
-                    <td><%= link_to_ex("@#{p.twtid}", Twt.twt_user_url(p.twtid)) %></td>
+                    <td></td>
+                    <td><%= link_to_ex("@#{p.twtid}", Twt.twt_user_url(p.twtid)) if p.twtid.presence %></td>
                 <% end %>
             </tr>
         <% end %>

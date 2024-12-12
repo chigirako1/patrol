@@ -226,9 +226,10 @@ class ArtistsController < ApplicationController
 
   module MethodEnum
     REGIST_UL_DIFF = '新規登録日と最新投稿日の日数差'
+    ACCESS_UL_DIFF_FAR = 'アクセス日と最新投稿日の日数差大きい'
     REGIST_UL_DIFF_NEAR = '新規登録日と昔の投稿日の日数差近い'
     TWTID_CASE_DIFF = 'twt screen name大文字・小文字違い'
-    TABLE_UPDATE_NEW_USER = '新規ユーザーDB登録'
+    TABLE_UPDATE_NEW_USER = '新規ユーザーDB登録(PXV DB更新)'
   end
 
   module ApiEnum
@@ -413,6 +414,8 @@ class ArtistsController < ApplicationController
       @unknown_id_list = Artist::get_unregisterd_pxv_user_id_list_from_local()
     elsif prms.param_file == ArtistsController::MethodEnum::REGIST_UL_DIFF
       artists = artists.select {|x| (x.created_at.to_date - x.last_ul_datetime.to_date).to_i > 365}
+    elsif prms.param_file == ArtistsController::MethodEnum::ACCESS_UL_DIFF_FAR
+      artists = artists.select {|x| (x.last_access_datetime.to_date - x.last_ul_datetime.to_date).to_i > 60}
     elsif prms.param_file == ArtistsController::MethodEnum::REGIST_UL_DIFF_NEAR
       artists = artists.select {|x| (x.created_at.to_date - x.earliest_ul_date.to_date).to_i < 30}
     elsif prms.param_file == ArtistsController::MethodEnum::TWTID_CASE_DIFF
@@ -558,6 +561,8 @@ class ArtistsController < ApplicationController
         puts %!@known_twt_url_list.size=#{@known_twt_url_list.size}!
       elsif dir == "update"
         Twt::db_update_by_newdir()
+      elsif dir == "register_dup_files"
+        Twt::db_update_dup_files()
       elsif dir == "new-list"
         @twt_user_infos = Twt::twt_user_infos()
       end
@@ -652,6 +657,18 @@ class ArtistsController < ApplicationController
     @nje_artist = Nje::nje_user(njeid)
   end
 
+  # GET /artists/djn
+  def djn_index
+    @djn_artist_list = Djn::djn_artist_list
+  end
+
+  # GET /artists/djn/1
+  def djn_show
+    djnid = params[:djnid]
+    #puts %!"#{params[:djnid]}" => "#{djnid}"!
+    @djn_artist = Djn::djn_artist(djnid)
+  end
+  
   # GET /artists/new
   def new
     @artist = Artist.new

@@ -1,0 +1,30 @@
+<% provide(:title, "djn一覧") %>
+
+<h1>djn</h1>
+
+<table border="1" rules="all">
+    <tr>
+        <th>#</th>
+        <th>show</th>
+        <th>作者名</th>
+        <th>出版日</th>
+        <th>チェック日</th>
+    </tr>
+    <% @djn_artist_list.each.with_index(1) do |(key, artist), idx| %>
+        <tr>
+            <td><%= idx %></td>
+            <td>
+                <%= link_to_ex("■djn■", artist.djn_name) %>
+            </td>
+            <td>
+                <%= %!#{artist.djn_name}! %>
+            </td>
+            <td>
+            </td>
+            <td>
+            </td>
+            <td>
+            </td>
+        </tr>
+    <% end %>
+</table>
