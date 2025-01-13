@@ -1,0 +1,12 @@
+<% content_for :title, "Editing pxv artwork" %>
+
+<h1>Editing pxv artwork</h1>
+
+<%= render "form", pxv_artwork: @pxv_artwork %>
+
+<br>
+
+<div>
+  <%= link_to "Show this pxv artwork", @pxv_artwork %> |
+  <%= link_to "Back to pxv artworks", pxv_artworks_path %>
+</div>

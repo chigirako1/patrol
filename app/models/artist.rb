@@ -392,24 +392,26 @@ class Artist < ApplicationRecord
         path_list.reverse.each do |path|
 
             artwork_id, date_str, artwork_title = Pxv::get_pxv_artwork_info_from_path(path)
+            #p artwork_id
 
             begin
                 date = Date.parse(date_str)
             rescue Date::Error => ex
-                puts %!#{ex}:#{path}!
+                STDERR.puts %!#{ex}:#{path}!
                 next
             end
 
             if artwork_id != 0
                 if artworks.has_key?(artwork_id)
                     artworks[artwork_id][3] += 1
+                    artworks[artwork_id][4] << path
                 else
                     #puts artwork_id
                     #puts artwork_title
                     if artwork_id < 10
                         STDERR.puts %!warning:artwork id=#{artwork_id}, #{artwork_title}, #{date}!
                     end
-                    artworks[artwork_id] = [path, %!#{artwork_title}!, date, 1]
+                    artworks[artwork_id] = [path, %!#{artwork_title}!, date, 1, []]
                 end
             else
                 #puts %!regex no hit:"#{path}"!

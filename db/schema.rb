@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.0].define(version: 2024_08_13_063522) do
+ActiveRecord::Schema[8.0].define(version: 2025_01_12_023555) do
   create_table "artists", force: :cascade do |t|
     t.string "pxvname"
     t.integer "pxvid"
@@ -56,6 +56,9 @@ ActiveRecord::Schema[7.0].define(version: 2024_08_13_063522) do
     t.datetime "nje_checked_date"
     t.integer "show_count"
     t.string "reverse_status"
+    t.integer "latest_artwork_id"
+    t.integer "oldest_artwork_id"
+    t.datetime "zipped_at"
   end
 
   create_table "books", force: :cascade do |t|
@@ -72,6 +75,20 @@ ActiveRecord::Schema[7.0].define(version: 2024_08_13_063522) do
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
     t.index ["book_id"], name: "index_comments_on_book_id"
+  end
+
+  create_table "pxv_artworks", force: :cascade do |t|
+    t.integer "artwork_id", null: false
+    t.integer "user_id"
+    t.string "title"
+    t.string "state"
+    t.integer "rating"
+    t.datetime "release_date"
+    t.integer "number_of_pic"
+    t.string "remarks"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["artwork_id"], name: "index_pxv_artworks_on_artwork_id", unique: true
   end
 
   create_table "tweets", force: :cascade do |t|

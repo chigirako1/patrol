@@ -17,7 +17,8 @@
 <% if @twitters_group.size == 0 and params[:mode] == "search" %>
   <% user_exist = Twt::user_exist?(search_word) %>
   <% if user_exist %>
-    <h3>DB未登録だが、フォルダあり:"@<%= search_word %>"</h3>
+    <h3>DB未登録だがフォルダあり:"@<%= search_word %>"</h3>
+    <%= link_to_ex %!☆twt☆:@#{search_word}!, artist_twt_path(search_word) %>
   <% else %>
     <h3>twt:"<%= search_word %>" not found</h3>
   <% end %>
@@ -38,10 +39,10 @@
       <th>
         予測/最終アクセス日
       </th>
+      <th>Twt post date</th>
       <th>pxvid</th>
       <th>PXV最終アクセス日</th>
       <th>PXV最終UL日</th>
-      <th>Twt post date</th>
       <th>サムネイル</th>
     </tr>
     <% twitters.first(@num_of_disp).each.with_index(1) do |twitter, idx| %>
@@ -73,6 +74,18 @@
           <br />
           [頻度：<%= twitter.update_frequency %>]
         </td>
+
+        <% if twitter.last_post_datetime %>
+          <% ul_delta = twitter.get_date_delta(twitter.last_post_datetime) %>
+          <% ul_bg_color = "beige" %>
+          <% ul_bg_color = td_date_bg_color(ul_delta) %>
+          <td bgcolor="<%= ul_bg_color %>">
+            <%= Util.get_date_info(twitter.last_post_datetime) %>
+          </td>
+        <% else %>
+          <td></td>
+        <% end %>
+
         <!-- pxv -->
         <% pxv = Artist.find_by(pxvid: twitter.pxvid) %>
         <% if twitter.artist_pxvid.presence %>
@@ -110,10 +123,13 @@
               <hr />
               @<%= pxv.twtid %><br />
               [<%= link_to_ex("■pxv■(#{pxv.id})", artist_path(pxv, access_dt_update: "yes")) %>]
+              <br />
+              <%= %!(#{pxv.last_access_datetime_disp})! %>
             <% else %>
             <% end %>
           <% end %>
         </td>
+
         <td bgcolor="pink">
           <% if twitter.last_ul_datetime.presence %>
             <% d = Date.parse(twitter.last_ul_datetime) %><!-- なぜかわからないがstring"22-11-31"になってる -->
@@ -122,26 +138,18 @@
             <br />
             <%= %!(#{twitter.get_date_info(d)})! %>
             <% if twitter.artist_status.presence %>
-              <%= %!#{twitter.artist_pxvid}! %>
+              PXVID:<%= %!#{twitter.artist_pxvid}! %>
               <br />
               <b><%= %!※#{twitter.artist_status}! %></b>
             <% end %>
-            <% if pxv.presence and pxv.reverse_status.presence %>
+            <% if pxv2.presence and pxv2.reverse_status.presence %>
               <br />
-              <%= %![#{pxv.reverse_status}]! %>
+              <%= %![#{pxv2.reverse_status}]! %>
             <% end %>
           <% end %>
         </td>
-        <% if twitter.last_post_datetime %>
-          <% ul_delta = twitter.get_date_delta(twitter.last_post_datetime) %>
-          <% ul_bg_color = "beige" %>
-          <% ul_bg_color = td_date_bg_color(ul_delta) %>
-          <td bgcolor="<%= ul_bg_color %>">
-            <%= Util.get_date_info(twitter.last_post_datetime) %>
-          </td>
-        <% else %>
-          <td></td>
-        <% end %>
+
+        <!-- サムネイル -->
         <td>
           <% if @thumbnail %>
             <% list = twitter.get_pic_filelist() %>

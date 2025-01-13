@@ -10,6 +10,7 @@
     <% end %>
     <%= txt %>
   </textarea>
+  
   <script>
     function copy_to_clipboard() {
       let textarea = document.getElementById("dirpath");
@@ -77,6 +78,19 @@
 
   <% if artist.filenum > 1000 %>
     <h3>一部のみ表示？</h3>
+    <% if @artist.latest_artwork_id.presence %>
+      <% url = artist.pxv_artwork_url(@artist.latest_artwork_id) %>
+      最新：(<%= link_to_ex(@artist.latest_artwork_id, url) %>)
+      <%= l @artist.last_ul_datetime %>
+      <br />
+    <% end %>
+    <% if @artist.oldest_artwork_id.presence %>
+      <% url = artist.pxv_artwork_url(@artist.oldest_artwork_id) %>
+      最古：(<%= link_to_ex(@artist.oldest_artwork_id, url) %>)
+      <%= l @artist.earliest_ul_date %>
+      <br />
+    <% end %>
+    
   <% end %>
   <br />
   

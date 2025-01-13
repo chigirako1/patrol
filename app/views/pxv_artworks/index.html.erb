@@ -1,0 +1,16 @@
+<p style="color: green"><%= notice %></p>
+
+<% content_for :title, "Pxv artworks" %>
+
+<h1>Pxv artworks</h1>
+
+<div id="pxv_artworks">
+  <% @pxv_artworks.each do |pxv_artwork| %>
+    <%= render pxv_artwork %>
+    <p>
+      <%= link_to "Show this pxv artwork", pxv_artwork %>
+    </p>
+  <% end %>
+</div>
+
+<%= link_to "New pxv artwork", new_pxv_artwork_path %>

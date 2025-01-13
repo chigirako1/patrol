@@ -157,6 +157,10 @@ module Pxv
     end
 
     def self.get_pxv_artwork_info_from_path(path)
+        if path == nil
+            STDERR.puts %!get_pxv_artwork_info_from_path:path is nil"!
+            return [nil, nil, nil]
+        end
         artwork_id = 0
         artwork_str = get_date_title_id_str_from_path(path)
         
@@ -188,7 +192,7 @@ module Pxv
             artwork_id = $2.to_i
             artwork_title = "(*不明*)"
         # 22-08-05 100x3x4x5_p0.png
-        elsif artwork_str =~ /(\d\d-\d\d-\d\d)\s+(\d{8,9})_p\d/
+        elsif artwork_str =~ /(\d\d-\d\d-\d\d)\s+.*(\d{8,9})_p\d/
             #https://www.pixiv.net/artworks/8235311x
             #                               8083357x
             date_str = $1
@@ -263,7 +267,7 @@ module Pxv
         pxv_params[:pxvname] = pxv_artist.pxv_name
         pxv_params[:pxvid] = pxv_artist.pxv_user_id
         pxv_params[:filenum] = pxv_artist.path_list.size
-        pxv_params[:last_dl_datetime] = pxv_artist.last_dl_datetime
+        pxv_params[:last_dl_datetime] = pxv_artist.last_dl_datetime #???
         pxv_params[:last_ul_datetime] = pxv_artist.last_ul_datetime
         pxv_params[:last_access_datetime] = pxv_artist.last_access_datetime
         pxv_params[:priority] = 0
@@ -307,7 +311,10 @@ module Pxv
         pxv_params[:nje_checked_date] = ""
         pxv_params[:show_count] = 0#""
         pxv_params[:reverse_status] = ""
-
+        pxv_params[:latest_artwork_id] = pxv_artist.latest_artwork_id
+        pxv_params[:oldest_artwork_id] = pxv_artist.oldest_artwork_id
+        pxv_params[:zipped_at] = nil
+    
         STDERR.puts %!#{pxv_params}!
         #pxv_artist.path_list.each do |path|
         #    btime = File.birthtime(Util::get_public_path(path))
@@ -376,7 +383,8 @@ end
 class PxvArtist
     attr_accessor :pxv_user_id, :pxv_name, :path_list,
                 :last_dl_datetime, :last_ul_datetime, 
-                :earliest_ul_date, :last_access_datetime
+                :earliest_ul_date, :last_access_datetime,
+                :oldest_artwork_id, :latest_artwork_id
 
     def initialize(id, path)
         @pxv_user_id = id
@@ -395,13 +403,17 @@ class PxvArtist
         @last_access_datetime = @last_dl_datetime
 
 
-        _, date_str, _ = Pxv::get_pxv_artwork_info_from_path(@path_list[0])
+        @latest_artwork_id, date_str, _ = Pxv::get_pxv_artwork_info_from_path(@path_list[0])
         @last_ul_datetime = Time.parse(date_str)
-        _, date_str, _ = Pxv::get_pxv_artwork_info_from_path(@path_list[-1])
+        @oldest_artwork_id, date_str, _ = Pxv::get_pxv_artwork_info_from_path(@path_list[-1])
         @earliest_ul_date = Time.parse(date_str)
 
         if @last_ul_datetime < @earliest_ul_date
             STDERR.puts %!????#{@last_ul_datetime}|#{@earliest_ul_date}!
+        end
+
+        if @latest_artwork_id < @oldest_artwork_id
+            STDERR.puts %!????#{@latest_artwork_id}|#{@oldest_artwork_id}!
         end
     end
 
@@ -410,6 +422,7 @@ class PxvArtist
     end
 end
 
+=begin
 class PxvArtwork
     attr_accessor :art_id, :publish_date, :title, :path_list
 
@@ -425,4 +438,4 @@ class PxvArtwork
         @path_list << path
     end
 end
-
+=end

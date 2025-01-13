@@ -107,9 +107,20 @@
 
   <h2>項目</h2>
   <div>
+    <% twt = nil %>
     <%= form.label :twtid, style: "display: block" %>
     <% twtid_val = artist.twtid %>
-    <% if twtid_val == "" %>
+    <% if twtid_val.presence %>
+      <% twt = Twitter.find_by_twtid_ignore_case(artist.twtid) %>
+      <% if twt.presence %>
+        <% if artist.twtid != twt.twtid %>
+          <% twtid_val = twt.twtid %>
+          登録されているスクリーンネームが異なります<br />
+          ・@<%= artist.twtid %>(pxv)<br />
+          ・@<%= twt.twtid %>(twt)<br />
+        <% end %>
+      <% end %>
+    <% else %>
       <% twt_pxv = Twitter.find_by(pxvid: artist.pxvid) %>
       <% if twt_pxv.presence %>
         "<%= twt_pxv.twtid %>"
@@ -120,25 +131,17 @@
 
     <% if artist.twtid.presence %>
       <%= link_to_ex "@#{artist.twtid}", artist.twt_user_url %>
-      <% twt = Twitter.find_by_twtid_ignore_case(artist.twtid) %>
       <% if twt.presence %>
         (@<%= twt.twtid %>)
-        <% if artist.twtid != twt.twtid %>
-          <br />
-          登録されているscreen nameが異なります<br />
-          ・@<%= artist.twtid %><br />
-          ・@<%= twt.twtid %><br />
-        <% end %>
-        <br />
-        PXVID:<%= twt.pxvid %>
         <br />
         <%= twt.twtname %>
         [<%= twt.drawing_method %>]【<%= twt.rating %>|<%= twt.r18 %>】
-        UL:<%= twt.get_date_info(twt.last_post_datetime) if twt.last_post_datetime.presence %>(<%= twt.status %>)
         [<%= link_to "■twt■", twitter_path(twt) %>]
         ACCS:(<%= twt.get_date_info(twt.last_access_datetime) if twt.last_access_datetime.presence %>)
-        
+        UL:<%= twt.get_date_info(twt.last_post_datetime) if twt.last_post_datetime.presence %>(<%= twt.status %>)
         予測：<%= twt.prediction %>
+        <br />
+        PXVID:<%= twt.pxvid %>
         <hr />
       <% elsif artist.twtid != "" %>
         <%#= link_to "New Twt", new_twitter_path(twtid: artist.twtid, pxvid: artist.pxvid, status: "TWT巡回", twtname: artist.pxvname) %>
@@ -159,6 +162,9 @@
     <%= form.number_field :rating %>
     <input type="button" value="+5" onclick="plus_rate('rating', 5);" class="btn" />
     <input type="button" value="-5" onclick="plus_rate('rating', -5);" class="btn" />
+    <input type="button" value="+4" onclick="plus_rate('rating', 4);" class="btn" />
+    <input type="button" value="+1" onclick="plus_rate('rating', 1);" class="btn" />
+    <input type="button" value="-1" onclick="plus_rate('rating', -1);" class="btn" />
     <br />
     <input type="button" value="優(100)" onclick="set_rate('rating', 100);" class="btn" />
     <input type="button" value="良+(90)" onclick="set_rate('rating', 90);" class="btn" />
@@ -263,7 +269,7 @@
   </div>
 
   <div>
-    <%= form.label "コメント/etc...", style: "display: block" %>
+    <%= form.label "コメント", style: "display: block" %>
     <%= form.select :comment, [
       ["体がでかい（太い）", "体がでかい（太い）"], ["宣伝が多すぎる(ぼかし/モザイク)", "宣伝が多すぎる"], 
       ["頭身が低すぎる", "頭身が低すぎる"], ["パクリ", "パクリ"], ["BL専", "BL専"]], include_blank: "選択して下さい" %>
@@ -297,26 +303,6 @@
   </div>
   
   <div>
-    <%= form.label :pxv_fav_artwork_id, style: "display: block" %>
-    <%= form.number_field :pxv_fav_artwork_id %>
-  </div>
-
-  <div>
-    <%= form.label :よみ, style: "display: block" %>
-    <%= form.text_field :furigana %>
-  </div>
-
-  <div>
-    <%= form.label :pxvname, style: "display: block" %>
-    <%= form.text_field :pxvname %>
-  </div>
-
-  <div>
-    <%= form.label :pxvid, style: "display: block" %>
-    <%= form.number_field :pxvid %>
-  </div>
-
-  <div>
     <%= form.label :njeid, style: "display: block" %>
     <%= form.text_field :njeid %>
 
@@ -336,11 +322,6 @@
   <div>
     <%= form.label :別名, style: "display: block" %>
     <%= form.text_field :altname %>
-  </div>
-
-  <div>
-    <%= form.label :旧名, style: "display: block" %>
-    <%= form.text_field :oldname %>
   </div>
 
   <div>
@@ -365,30 +346,13 @@
     <%= form.label :last_dl_datetime, style: "display: block" %>
     <%= form.datetime_field :last_dl_datetime %>
   </div>
-
-  <div>
-    <%= form.label :last_ul_datetime, style: "display: block" %>
-    <% if @path_list[0] =~ /(\d\d-\d\d-\d\d)/ %>  
-      <% upl_date = Date.parse($1).beginning_of_day.strftime('%Y-%m-%dT%T') %>
-      <%= @artist.last_ul_datetime %>↓
-      <br />
-      <%= form.datetime_field :last_ul_datetime, :value => upl_date %>
-    <% else %>
-      <%= form.datetime_field :last_ul_datetime %>
-    <% end %>
-  </div>
-
+ 
   <div>
     <%= form.label :last_access_datetime, style: "display: block" %>
     <%= form.datetime_field :last_access_datetime %>
     <!--<input type="button" value="現在時刻に設定" onclick="set_time('artist_last_access_datetime', -5);" />-->
   </div>
 
-  <div>
-    <%= form.label :earliest_ul_date, style: "display: block" %>
-    <%= form.datetime_field :earliest_ul_date %>
-  </div>
-  
   <div>
     <%= form.label :nje_checked_date, style: "display: block" %>
     <%= form.datetime_field :nje_checked_date %>
@@ -398,5 +362,102 @@
     <%= form.label :show_count, style: "display: block" %>
     <%= form.number_field :show_count %>
   </div>
+
+  <div>
+    <%= form.label :zipped_at, style: "display: block" %>
+    <%= form.datetime_field :zipped_at %>
+  </div>
   
+  <h2>pxv</h2>
+
+  <div>
+    <%= form.label :pxvid, style: "display: block" %>
+    <%= form.number_field :pxvid %>
+  </div>
+
+  <div>
+    <%= form.label :pxvname, style: "display: block" %>
+    <%= form.text_field :pxvname %>
+  </div>
+
+  <div>
+    <%= form.label :よみ, style: "display: block" %>
+    <%= form.text_field :furigana %>
+  </div>
+
+  <div>
+    <%= form.label :旧名, style: "display: block" %>
+    <%= form.text_field :oldname %>
+  </div>
+
+  <div>
+    <%= form.label :pxv_fav_artwork_id, style: "display: block" %>
+    <%= form.number_field :pxv_fav_artwork_id %>
+  </div>
+
+  <!-- artwork id -->
+  <div>
+    <%= form.label :最新PXVアートワークID, style: "display: block" %>
+    <% latest_artwork_id = @artist.latest_artwork_id %>
+    <% artwork_id, _, _ = Pxv::get_pxv_artwork_info_from_path(@path_list[0]) %>
+    <% if (latest_artwork_id == nil and artwork_id.presence) or (artwork_id.presence and latest_artwork_id > artwork_id) %>
+      "<%= latest_artwork_id %>"↓<font color='red'>更新あり</font><br />
+      <% latest_artwork_id = artwork_id %>
+    <% else %>
+    <% end %>
+    <%= form.number_field :latest_artwork_id, :value => latest_artwork_id %>
+  </div>
+  
+  <div>
+    <%= form.label :最古PXVアートワークID, style: "display: block" %>
+    <% oldest_artwork_id = @artist.oldest_artwork_id %>
+    <% artwork_id, _, _ = Pxv::get_pxv_artwork_info_from_path(@path_list[-1]) %>
+    <% if (oldest_artwork_id == nil and artwork_id.presence) or (artwork_id.presence and oldest_artwork_id > artwork_id) %>
+      "<%= oldest_artwork_id %>"↓<font color='red'>更新あり</font><br />
+      <% oldest_artwork_id = artwork_id %>
+    <% else %>
+    <% end %>
+    <%= form.number_field :oldest_artwork_id, :value => oldest_artwork_id %>
+  </div>
+  
+  <!-- artwork date -->
+  <div>
+    <%= form.label :last_ul_datetime, style: "display: block" %>
+    <% if @path_list[0] =~ /(\d\d-\d\d-\d\d)/ %>
+      <% #upl_date = Date.parse($1).beginning_of_day.strftime('%Y-%m-%dT%T %z') %>
+      <% #upl_date = Date.parse($1).strftime('%Y-%m-%dT%T') %>
+      <% upl_date = Time.parse($1).in_time_zone("Asia/Tokyo") %>
+      <% #upl_date = Date.parse($1).strftime('%Y-%m-%dT%T') %>
+      <% #STDERR.puts %!["#{$1}"=>"#{upl_date}"] >< "#{@artist.last_ul_datetime}"! %>
+      <% #STDERR.puts %!#{upl_date.class}/#{@artist.last_ul_datetime.class}! %>
+      <% if upl_date > @artist.last_ul_datetime %>
+        <%= l @artist.last_ul_datetime %>↓<font color='red'>更新あり</font>
+        <br />
+        <%= form.datetime_field :last_ul_datetime, :value => upl_date %>
+      <% else %>
+        <%= form.datetime_field :last_ul_datetime %>
+      <% end %>
+    <% else %>
+      <%= form.datetime_field :last_ul_datetime %>
+    <% end %>
+  </div>
+
+  <div>
+    <%= form.label :earliest_ul_date, style: "display: block" %>
+    <% if @path_list[-1] =~ /(\d\d-\d\d-\d\d)/ %>
+      <% e_upl_date = Date.parse($1).beginning_of_day.strftime('%Y-%m-%dT%T') %>
+      <% #STDERR.puts %![$1=#{$1}|e_upl_date=#{e_upl_date}] >=< @artist.earliest_ul_date=#{@artist.earliest_ul_date}}! %>
+      <% #e_upl_date = Date.parse($1).strftime('%Y-%m-%dT%T') %>
+      <% if e_upl_date >= @artist.earliest_ul_date %>
+        <%= form.datetime_field :earliest_ul_date %>
+      <% else %>
+        <%= l @artist.earliest_ul_date %>↓<font color='red'>更新あり</font>
+        <br />
+        <%= form.datetime_field :earliest_ul_date, :value => e_upl_date %>
+      <% end %>
+    <% else %>
+      <%= form.datetime_field :earliest_ul_date %>
+    <% end %>
+  </div>
+
 <% end %>

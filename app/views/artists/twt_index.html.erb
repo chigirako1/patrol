@@ -53,14 +53,16 @@
 <% key_pxv_list_recent          = "901.最近アクセス" %>
 
 <% hide_day_b = @hide_day * 1.5 %>
+<% hide_day_c = hide_day_short * 2 %>
 <% key_name_pred_2      = %!01:予測 >= #{@pred * 2}! %>
 <% key_name_pred_1      = %!02:予測 >= #{@pred}! %>
 <% key_name_etc         = "03:etc" %>
 <% key_name_rating_low  = "07:rating < #{rating_thre}" %>
 <% key_name_ai          = "08:AI" %>
 <% key_name_recent_b    = %!94:最近アクセス #{hide_day_b}日以内! %>
+<% key_name_recent_c    = %!96:最近アクセス #{hide_day_c}日以内! %>
 <% key_name_recent_a    = %!95:最近アクセス #{@hide_day}日以内! %>
-<% key_name_recent_short= %!96:最近アクセス #{hide_day_short}日以内! %>
+<% key_name_recent_short= %!97:最近アクセス #{hide_day_short}日以内! %>
 
 <% pxv_artist_id_list = [] %>
 <% twt_group = Hash.new { |h, k| h[k] = [] } %>
@@ -82,6 +84,8 @@
         <% twt_account = Twitter.find_by_twtid_ignore_case(key) %>
         <% if twt_account.last_access_datetime_p(hide_day_short) %>
             <% twt_group[key_name_recent_short] << [twt_account, url_list] %>
+        <% elsif twt_account.last_access_datetime_p(hide_day_c) %>
+            <% twt_group[key_name_recent_c] << [twt_account, url_list] %>
         <% elsif twt_account.last_access_datetime_p(@hide_day) %>
             <% twt_group[key_name_recent_a] << [twt_account, url_list] %>
         <% elsif twt_account.last_access_datetime_p(hide_day_b) %>
@@ -557,13 +561,13 @@
             <th>name</th>
             <th>アクセス日</th>
             <th>最新投稿日</th>
-            <th>pxv</th>
             <th>予測</th>
+            <th>pxv</th>
             <th>twt access</th>
             <th>twt post</th>
+            <th>予測</th>
             <th>twt</th>
-            <th>twt 予測</th>
-            <th>twt</th>
+            <th>@</th>
         </tr>
         <% recent_pxv_list = recent_pxv_list.sort_by {|z|
                 x = z.p;
@@ -597,7 +601,9 @@
                 </td>
                 <td><%= p.pxvname %></td>
 
-                <td>
+                <% acs_delta = p.get_date_delta(p.last_access_datetime) %>
+                <% acs_bg_color = date_bg_color(acs_delta) %>
+                <td bgcolor="<%= acs_bg_color %>">
                     <%= p.last_access_datetime_disp %>
                 </td>
 
@@ -608,16 +614,17 @@
                     <%= p.last_ul_datetime_disp %>
                 </td>
 
-                <td>
-                    <%= link_to_ex("■pxv■", artist_path(p, access_dt_update: "yes")) %>
-                </td>
-
                 <!-- 予測 -->
                 <% pred_cnt = p.prediction_up_cnt(true) %>
                 <% bgc = pre_bgcolor(pred_cnt, @pred * 2, @pred) %>
                 <td align="right" bgcolor="<%= bgc %>">
                     <%= pred_cnt %>
                 </td>
+
+                <td>
+                    <%= link_to_ex("■pxv■", artist_path(p, access_dt_update: "yes")) %>
+                </td>
+
                 <% twt = Twitter.find_by_twtid_ignore_case(p.twtid) %>
                 <% if twt %>
                     <td>
@@ -628,8 +635,8 @@
                     <td bgcolor="<%= post_bg_color %>">
                         <%= Util.get_date_info(twt.last_post_datetime) %>
                     </td>
-                    <td><%= link_to_ex "■twt■", twt %></td>
                     <td align="right"><%= twt.prediction %></td>
+                    <td><%= link_to_ex "■twt■", twt %></td>
                     <td></td>
                 <% else %>
                     <td></td>
@@ -668,9 +675,19 @@
     <% end %>
 <% end %>
 
+<!-- pxv artwork list -->
 <% if @pxv_artwork_id_list.presence %>
     <% @pxv_artwork_id_list.sort.each.with_index(1) do |artwork_id, idx| %>
-        <%= idx %>.<%= link_to_ex(artwork_id, Pxv::pxv_artwork_url(artwork_id)) %><br />
+        <%= idx %>.
+        (<%= link_to_ex(artwork_id, Pxv::pxv_artwork_url(artwork_id)) %>)
+        <% pa = PxvArtwork.find_by(artwork_id: artwork_id) %>
+        <% if pa %>
+            <%= pa.state %>/<%= pa.release_date %>/<%= pa.user_id %>/<%= pa.title %>
+            [<%= link_to_ex("Edit", edit_pxv_artwork_path(pa)) %>]
+        <% else %>
+            [<%= link_to_ex("New", new_pxv_artwork_path(artwork_id: artwork_id)) %>]
+        <% end %>
+        <br />
     <% end %>
 <% end %>
 

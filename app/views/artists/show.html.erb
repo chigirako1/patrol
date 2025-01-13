@@ -19,8 +19,9 @@
 <script>
   let pic_idx = 0;
   window.onload = (event) => {
-    pic_idx = path_ary.length;
-    next_pic();
+    //pic_idx = path_ary.length;
+    console.log(`onload:${pic_idx}`);
+    //next_pic();
   };
 
   window.addEventListener('keypress', keypress_event);
@@ -37,10 +38,12 @@
   ];
 
   function next_pic() {
+    console.log(`next_pic:${pic_idx}`);
     pic_idx++;
     if (pic_idx >= path_ary.length) {
       pic_idx = 0;
     }
+    //console.log({pic_idx});
     set_pic(path_ary[pic_idx]);
   }
 
@@ -53,6 +56,7 @@
   }
 
   function set_pic(path) {
+    //console.log({path});
     let img_elem = document.getElementById("imagexx")
     img_elem.src = path;
 
@@ -62,7 +66,7 @@
     }*/
 
     let txt_elem = document.getElementById("pic_path")
-    txt_elem.innerHTML = path;
+    txt_elem.innerHTML = `[${pic_idx}]"${path}"`;
     
     //txt_elem.innerHTML +=  ":" + width + "x" + height;
   }
@@ -96,8 +100,10 @@
   }
 </script>
 
-<% if @show_mode == "viewer" %>
+<% if @show_mode == ArtistsController::ShowMode::SHOW_VIEWER %>
   <%= render "viewer", artist: @artist %>
+<% elsif @show_mode == ArtistsController::ShowMode::SHOW_LIST_VIEW %>
+  <%= render "list_view", artist: @artist %>
 <% else %>
   <%= render @artist %>
 
@@ -105,7 +111,6 @@
 
   <%= render "pics", artist: @artist %>
 
-  <%= link_to "viewer", "../artists/#{@artist.id}?mode=viewer" %>
   <% if @show_mode == "twt_pic_list" %>
     <%= render "twt_pic_list", artist: @artist %>
   <% end %>
@@ -124,4 +129,6 @@
   <% end %>
 
   <%= render "stat", artist: @artist %>
+  <%= link_to_ex("個別表示", "../artists/#{@artist.id}?mode=#{ArtistsController::ShowMode::SHOW_VIEWER}") %>
+  <%= link_to_ex("リスト表示", artist_path(@artist, mode: ArtistsController::ShowMode::SHOW_LIST_VIEW, thumbnail: "yes")) %>
 <% end %>

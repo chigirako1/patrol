@@ -152,8 +152,10 @@
       <% user_name = Pxv::user_name(dirlist, pxv_user_id) %>
       <% if user_name.presence %>
         <h3>DB未登録だが、フォルダあり："<%= user_name %>"(<%= pxv_user_id %>)</h3>
+        <%= link_to_ex %!☆pxv☆:@#{pxv_user_id}!, artist_pxv_path(pxv_user_id) %>
       <% else %>
         <h3>pxv:"<%= pxv_user_id %>" not found</h3>
+        <%= link_to "New Artist(#{pxv_user_id})", new_artist_path(pxvid: pxv_user_id) %>
       <% end %>
     <% end %>
   <% end %>

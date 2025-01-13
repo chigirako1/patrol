@@ -250,6 +250,12 @@ class ArtistsController < ApplicationController
     SIX_MONTH_NO_UPDATS = "半年以上更新なし"
   end
 
+  module ShowMode
+    SHOW_NORAML = "normal"
+    SHOW_VIEWER = "viewer"
+    SHOW_LIST_VIEW = "list_view"
+  end
+
   def api_hoge
     puts %!api=#{params[:api]}!
     case params[:api].to_i
@@ -764,7 +770,8 @@ class ArtistsController < ApplicationController
         :r18, :remarks, :rating, :furigana, :altname, :oldname, :chara, :work,
         :warnings, :feature, :twt_check, :earliest_ul_date, :circle_name,
         :fetish, :pxv_fav_artwork_id, :web_url, :append_info,
-        :twt_checked_date, :nje_checked_date, :show_count, :reverse_status
+        :twt_checked_date, :nje_checked_date, :show_count, :reverse_status,
+        :latest_artwork_id, :oldest_artwork_id, :zipped_at
       )
     end
 

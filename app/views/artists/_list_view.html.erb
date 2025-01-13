@@ -1,0 +1,68 @@
+
+<!-- ######################## -->
+<script type="text/javascript">
+    document.body.style.backgroundColor = 'beige';
+    document.body.style.color = 'black';
+</script>
+
+
+<!-- ######################## -->
+<div id="<%= dom_id artist %>">
+    <h2>
+        <%= artist.pxvname %>
+        (<%= artist.pxvid %>)
+    </h2>
+
+    <% start_idx = params['start_idx'] %>
+    <% if start_idx %>
+        <% start_idx = start_idx.to_i %>
+    <% else %>
+        <% start_idx = 0 %>
+    <% end %>
+    <% num_elem = params['num_elem'] %>
+    <% if num_elem %>
+        <% num_elem = num_elem.to_i %>
+    <% else %>
+        <% num_elem = 100 %>
+    <% end %>
+
+    <% prev_start_idx = start_idx - num_elem %>
+    <% next_start_idx = start_idx + num_elem %>
+    <% if prev_start_idx >= 0 %>
+        <%= link_to("前", artist_path(@artist, mode: ArtistsController::ShowMode::SHOW_LIST_VIEW, start_idx: prev_start_idx, num_elem: num_elem, thumbnail: "yes")) %>
+    <% else %>
+    <% end %>
+    <% if next_start_idx < @path_list.size %>
+        <%= link_to("次", artist_path(@artist, mode: ArtistsController::ShowMode::SHOW_LIST_VIEW, start_idx: next_start_idx, num_elem: num_elem, thumbnail: "yes")) %>
+    <% else %>
+    <% end %>
+    <hr />
+
+    <% ratio = '5%' %>
+    <% list = Artist.artwork_list(@path_list) %>
+    <% #STDERR.puts %!"#{@path_list[0]}"/#{@path_list.size}/sidx=#{start_idx}/num=#{num_elem}/#{list[0]}/#{list.size}! %>
+    <% if start_idx >= list.size %>
+        <% start_idx = list.size - 1%>
+    <% end %>
+
+    <% list.to_a.slice(start_idx, num_elem).each.with_index(start_idx + 1) do |(artwork_id, data), idx| %>
+        <% path = data[0] %>
+        <% art_title = data[1] %>
+        <% date = data[2] %>
+        <% pic_cnt = data[3] %>
+        <% pic_path_list = data[4] %>
+        <% url = artist.pxv_artwork_url(artwork_id) %>
+        <%= idx %>.
+        (<%= link_to_ex artwork_id, url %>)
+        <%= l date %>
+        <%#= path.gsub("%23", "#") %>
+        「<%= art_title %>」
+        <%= %!(#{pic_cnt} pics)! if pic_cnt > 1 %>
+        <br />
+        <%= link_to_ex(image_tag(path, width: ratio, height: ratio), path) %>
+        <% pic_path_list.each do |x| %>
+            <%= link_to_ex(image_tag(x, width: ratio, height: ratio), x) %>
+        <% end %>
+        <br />
+    <% end %>
+</div>

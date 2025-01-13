@@ -46,29 +46,11 @@
 
   <div>
     <%= form.label :評価, style: "display: block" %>
-    <%= form.select :rating,
-      [
-        ["100", "100"],
-        ["95", "95"], 
-        ["90", "90"], 
-        ["85", "85"], 
-        ["80", "80"], 
-        ["75", "75"], 
-        ["70", "70"], 
-        ["65", "65"], 
-        ["60", "60"], 
-        ["55", "55"], 
-        ["50", "50"], 
-        ["45", "45"], 
-        ["40", "40"], 
-        ["35", "35"], 
-        ["30", "30"], 
-        ["25", "25"], 
-        ["20", "20"], 
-        ["15", "15"], 
-        ["10", "10"], 
-      ],
-      include_blank: "選択して下さい" %>
+    <%= form.number_field :rating %>
+    <input type="button" value="+5" onclick="plus_rate('rating', 5);" class="btn" />
+    <input type="button" value="-5" onclick="plus_rate('rating', -5);" class="btn" />
+    <br />
+    <input type="button" value="80" onclick="set_rate('rating', 80);" class="btn" />
   </div>
 
   <div>
@@ -214,11 +196,11 @@
           類似名あり：<br />
           <% pxv3.each do |pxv_n| %>
             <%= pxv_n.feature %>【<%= pxv_n.pxvname %>(<%= pxv_n.pxvid %>)】
-            [@<%= pxv_n.twtid %>
+            ["@<%= pxv_n.twtid %>"
             <% if pxv_n.twtid == @twitter.twtid %>
               TWT ID一致
             <% else %>
-              != <%= @twitter.twtid %> TWT ID不一致
+              != "<%= @twitter.twtid %>" TWT ID不一致
             <% end %>
             ]
             <%= link_to_ex("■pxv■", artist_path(pxv_n.id, access_dt_update: "yes")) %>
@@ -229,6 +211,7 @@
           <% dirlist = Pxv::stock_dir_list %>
           <% user_name = Pxv::user_name(dirlist, twitter.pxvid) %>
           <%= user_name %>(DB未登録)
+          <%= link_to_ex %!☆pxv☆:@#{user_name}!, artist_pxv_path(twitter.pxvid) %>
         <% end %>
       <% end %>
     <% end %>
@@ -318,12 +301,46 @@
   </div>
 
   <hr />
+
+  <div>
+    <%= form.label :最新投稿日時, style: "display: block" %>
+    <% if @twt_pic_path_list %>
+      <% twt_pic_list = @twt_pic_path_list.map {|x| [Twt::twt_path_str(x), x]}.sort.reverse %>
+      <% if twt_pic_list and twt_pic_list[0] != nil %>
+        <% ul_date = Twt::get_time_from_path(twt_pic_list[0][1]).round #in_time_zone("Asia/Tokyo") %>
+      <% end %>
+    <% else %>
+      <% ul_date = nil %>
+    <% end %>
+    <% if ul_date and ul_date > @twitter.last_post_datetime %>
+      <!-- 
+      2025-01-12 21:55:36 +0900       (Time)
+      2025-01-12 21:55:36 +0900       ActiveSupport::TimeWithZone
+      ↑なんかイコールにならない。なんで？ 
+
+      ↑msが違った。
+      2025-01-12 21:55:36.496000051 JST +09:00
+      2025-01-12 21:55:36.000000000 JST +09:00
+
+      roundでms丸められるぽい
+      -->
+      <% STDERR.puts %!#{ul_date}\t(#{ul_date.class})! %>
+      <% STDERR.puts %!#{@twitter.last_post_datetime}\t(#{@twitter.last_post_datetime.class})! %>
+      <% p ul_date %>
+      <% p @twitter.last_post_datetime %>
+      "<%= l @twitter.last_post_datetime %>"↓<font color='red'>更新あり</font>
+      <br />
+      <%= form.datetime_field :last_post_datetime, value: ul_date.strftime("%Y-%m-%d %H:%M:%S") %>
+    <% else %>
+      <%= form.datetime_field :last_post_datetime %>
+    <% end %>
+  </div>
   
   <div>
     <%= form.label :総ファイル数, style: "display: block" %>
-    現在の設定値：<%= @twitter.filenum %>↓<br />
-    
-    <% if @twt_pic_path_list %>
+    <% if @twt_pic_path_list and @twt_pic_path_list.size > @twitter.filenum %>
+      "<%= @twitter.filenum %>"↓<font color='red'>更新あり</font>
+      <br />
       <%= form.number_field :filenum, value: @twt_pic_path_list.size %>
     <% else %>
       <%= form.number_field :filenum %>
@@ -340,21 +357,7 @@
     <%= form.datetime_field :last_dl_datetime %>
   </div>
 
-  <div>
-    <%= form.label :最新投稿日時, style: "display: block" %>
-    <% if @twt_pic_path_list %>
-      <% twt_pic_list = @twt_pic_path_list.map {|x| [Twt::twt_path_str(x), x]}.sort.reverse %>
-    <% else %>
-      <% twt_pic_list = nil %>
-    <% end %>
-    <% if twt_pic_list and twt_pic_list[0] != nil %>
-      <% ul_date = Twt::get_time_from_path(twt_pic_list[0][1]) %>
-      <%= @twitter.last_post_datetime %>↓<br />
-      <%= form.datetime_field :last_post_datetime, value: ul_date.strftime("%Y-%m-%d %H:%M:%S") %>
-    <% else %>
-      <%= form.datetime_field :last_post_datetime %>
-    <% end %>
-  </div>
+  <hr />
 
   <div>
     <%= form.label :最新アクセス日時, style: "display: block" %>
@@ -377,5 +380,16 @@
     let val = isostr.slice(0, -5);
     //let val = isostr.slice(0, -8);
     elem.value = val;
+  }
+
+  function set_rate(elem_id, point) {
+    let elem = document.getElementById("twitter_" + elem_id);
+    elem.value = point;
+  }
+
+  function plus_rate(elem_id, point) {
+    let elem = document.getElementById("twitter_" + elem_id);
+    let prio_val = parseInt(elem.value);
+    elem.value = prio_val + point;
   }
 </script>

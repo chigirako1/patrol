@@ -39,4 +39,7 @@ function hoge_u() {
 }
 
 let elem = document.getElementById("artist_feature_up");
-elem.onclick = hoge_u;
+if (elem)
+{
+    elem.onclick = hoge_u;
+}

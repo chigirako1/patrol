@@ -1,6 +1,4 @@
 Rails.application.routes.draw do
-  resources :pxv_artworks
-  resources :tweets
   resources :twitters
   resources :artists
   resources :users
@@ -19,8 +17,6 @@ Rails.application.routes.draw do
   get '/artists/twt/:twtid', to: 'artists#twt_show', as: 'artist_twt'
   get '/artists/nje/index', to: 'artists#nje_index'
   get '/artists/nje/:njeid', to: 'artists#nje_show'
-  get '/artists/djn/index', to: 'artists#djn_index'
-  get '/artists/djn/:djnid', to: 'artists#djn_show'
 =begin
   get '/books', to: 'books#index'
   get '/books/new', to: 'books#new', as: :new_book

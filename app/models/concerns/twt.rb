@@ -169,6 +169,11 @@ module Twt
             if twt == nil
                 # 新規追加
                 pic_path_list = val.twt_pic_path_list
+                if pic_path_list.size == 0
+                    STDERR.puts %!ファイルなし: @#{key}!
+                    next
+                end
+
                 twt_params = {}
                 twt_params[:twtid] = val.twt_id
                 twt_params[:last_dl_datetime] = val.ctime
@@ -352,11 +357,15 @@ module Twt
     end
 
     def self.get_time_from_path(filepath)
+        if filepath == nil
+            STDERR.puts %!"err:#{filepath}"! #nilがでるだけ...
+            return nil
+        end
         filename = File.basename(filepath)
         tweet_id, _  = get_tweet_info(filename)
         time = get_timestamp(tweet_id)
         if tweet_id == 0
-            STDERR.puts %!#{tweet_id}=#{time}!
+            STDERR.puts %!#{tweet_id}:#{time}!
         end
         time
     end
@@ -424,8 +433,14 @@ class TwtArtist
 
     def ctime
         if @ctime == nil
-            path = Util::get_public_path(twt_pic_path_list[0])
-            @ctime = File.birthtime(path)
+            wpath = twt_pic_path_list[0]
+            if wpath
+                path = Util::get_public_path(wpath)
+                @ctime = File.birthtime(path)
+            else
+                STDERR.puts %!#{twt_name} @#{twt_id}!
+                @ctime = Time.now
+            end
         end
         @ctime
     end

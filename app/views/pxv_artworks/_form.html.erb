@@ -1,0 +1,65 @@
+<%= form_with(model: pxv_artwork) do |form| %>
+  <% if pxv_artwork.errors.any? %>
+    <div style="color: red">
+      <h2><%= pluralize(pxv_artwork.errors.count, "error") %> prohibited this pxv_artwork from being saved:</h2>
+
+      <ul>
+        <% pxv_artwork.errors.each do |error| %>
+          <li><%= error.full_message %></li>
+        <% end %>
+      </ul>
+    </div>
+  <% end %>
+
+  <div>
+    <%= form.label "アートワークID", style: "display: block" %>
+
+    <% if params[:artwork_id].presence %>
+      <% artwork_id = params[:artwork_id] %>
+    <% else %>
+      <% artwork_id = pxv_artwork.artwork_id %>
+    <% end %>
+    <%= form.number_field :artwork_id, value: artwork_id %>
+  </div>
+
+  <div>
+    <%= form.label "PXVユーザーID", style: "display: block" %>
+    <%= form.number_field :user_id %>
+  </div>
+
+  <div>
+    <%= form.label :タイトル, style: "display: block" %>
+    <%= form.text_field :title %>
+  </div>
+
+  <div>
+    <%= form.label :状態, style: "display: block" %>
+    <%= form.select :state,
+      PxvArtwork.state_list
+    %>
+  </div>
+
+  <div>
+    <%= form.label :評価, style: "display: block" %>
+    <%= form.number_field :rating %>
+  </div>
+
+  <div>
+    <%= form.label :公開日, style: "display: block" %>
+    <%= form.datetime_field :release_date %>
+  </div>
+
+  <div>
+    <%= form.label :画像数, style: "display: block" %>
+    <%= form.number_field :number_of_pic %>
+  </div>
+
+  <div>
+    <%= form.label :remarks, style: "display: block" %>
+    <%= form.text_field :remarks %>
+  </div>
+
+  <div>
+    <%= form.submit %>
+  </div>
+<% end %>

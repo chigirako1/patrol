@@ -5,17 +5,23 @@
     top: auto;
     width: auto; 
     min-width: auto; 
-    height: 100%;
-    xheight: auto;
+    height: auto;
     min-height: auto;
     z-index: -1;
     
 }
 #background img {
     position: center;
-    width: 100%;
-    xwidth: auto;
+    xwidth: 100%;
+    width: auto;
     height: auto;
+}
+
+.image {
+  width: 100%;
+  height: 100vh;
+  background-size: cover;
+  background-position: center;
 }
 
 a:link {
@@ -25,32 +31,40 @@ a:link {
 </style>
 
 <script type="text/javascript">
+      //xheight: 50%;
+
     document.body.style.backgroundColor = 'black';
     document.body.style.color = 'white';
 
     //set_fullscreen();
-    next_pic();
+    set_pic(path_ary[0]);//next_pic();
 
   function mouse_over(evnt) {
-    
   }
 </script>
 
+<!-- ######################## -->
 <div id="<%= dom_id artist %>">
  
   <a href="javascript:void(0);" onclick="prev_pic();" align="left">前の画像</a>
   |<a href="javascript:void(0);" onclick="next_pic();" align="right">次の画像</a>
   |<a href="javascript:void(0);" onclick="set_fullscreen();">フルスクリーン</a>
   |<a href="javascript:void(0);" onclick="unset_fullscreen();">フルスクリーン解除</a>
-  |<a href="javascript:void(0);" onclick="page_close();">■close■</a>
-  |<a href="javascript:void(0);" onclick="history.back();">戻る</a>
+  |<a href="javascript:void(0);" onclick="page_close();">■閉じる■</a>
+  <!-- 
+  |<a href="javascript:void(0);" onclick="pic_idx = 0; history.back();">戻る</a>
+  -->
   
   <div id="background">
     <div id="pic_path">_</div>
-    <img id="imagexx" src="<% @path_list[0] %>" />
+    <!--
+    <img id="imagexx" src="<% @path_list[0] %>" /> 
+    -->
+    <img id="imagexx" src="" /> 
   </div>
 </div>
 
+<!-- ######################## -->
 <script type="text/javascript">
   let elm = document.getElementById("imagexx");
   elm.onmouseover = function() {
