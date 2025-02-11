@@ -113,6 +113,8 @@ textarea {
     計算結果"<%= avg %>"
     (<%= freq_90d %>/<%= freq_30d %>/<%= freq_15d %>)
     ファイルサイズ平均：<%= (fsize_sum / show_pic_num) / 1024 %> KB
+     合計：<%= (fsize_sum) / 1024 / 1024 %> MB
+    (<%= show_pic_num %> files)
     <% if twt_pic_list[0] != nil %>
     <% end %>
     <br />
@@ -130,6 +132,9 @@ textarea {
         <% dt = Twt::get_time_from_path(twt_pic_list[0][1]) %>
         【以降の投稿数予測】<%= twitter.prediction(dt) %>
         <br />
+        <% if @twitter.status == Twitter::STATUS_NOT_EXIST %>
+            <%= link_to_ex tweet_id, Twt::twt_tweet_url("TwitterDev", tweet_id) %>
+        <% end %>
     <% end %>
 
     <!-- URLのテキストファイルに含まれる画像が存在するかチェック -->

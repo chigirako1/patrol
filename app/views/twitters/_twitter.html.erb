@@ -1,22 +1,40 @@
 <div id="<%= dom_id twitter %>">
+    <p>
+        <%= twitter.drawing_method %>
+        (<%= twitter.filenum %>)
 
-  <p>
-    
-    <%= twitter.comment %>
-    |<%= twitter.remarks %>
-    <strong>Pxvid:</strong>
-    <%= twitter.pxvid %>
-    <strong>main:</strong>
-    <%= twitter.main_twtid %>
-    <strong>sub:</strong>
-    <%= twitter.sub_twtid %>
-    <strong>alt:</strong>
-    <%= twitter.alt_twtid %>
-    <strong>new:</strong>
-    <%= twitter.new_twtid %>
-    <strong>old:</strong>
-    <%= twitter.old_twtid %>
-    |<%= twitter.filenum %>
-  </p>
+        <%= %!「#{twitter.comment}」! if twitter.comment.presence %>
+        <%= %!|「#{twitter.remarks}」! if twitter.remarks.presence %>
 
+        <% if twitter.pxvid.presence %>
+            <strong>Pxvid:</strong>
+            <%= twitter.pxvid %>
+        <% end %>
+
+        <% if twitter.main_twtid.presence %>
+            <strong>main:</strong>
+            @<%= twitter.main_twtid %>
+        <% end %>
+
+        <% if twitter.sub_twtid.presence %>
+            <strong>sub:</strong>
+            @<%= twitter.sub_twtid %>
+        <% end %>
+
+        <% if twitter.alt_twtid.presence %>
+            <strong>alt:</strong>
+            @<%= twitter.alt_twtid %>
+        <% end %>
+
+        <% if twitter.new_twtid.presence %>
+            <strong>new:</strong>
+            @<%= twitter.new_twtid %>
+        <% end %>
+
+        <% if twitter.old_twtid.presence %>
+            <strong>old:</strong>
+            @<%= twitter.old_twtid %>
+        <% end %>
+
+    </p>
 </div>

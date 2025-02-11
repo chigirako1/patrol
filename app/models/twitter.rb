@@ -4,6 +4,7 @@ class Twitter < ApplicationRecord
     belongs_to :artists, :class_name => 'Artist', optional: true
 
     STATUS_PATROL = "TWT巡回"
+    STATUS_NOT_EXIST = "存在しない"
 
     def self.find_by_twtid_ignore_case(twtid, ignore=true)
         if twtid == nil
@@ -80,10 +81,45 @@ class Twitter < ApplicationRecord
             p = Artist.find_by(pxvid: pxvid)
             if p
             else
+                puts %!PXV DB未登録:"#{pxvid}"!
                 unregisterd_pxv_user_id_list << pxvid
             end
         end
         unregisterd_pxv_user_id_list
+    end
+
+    def self.unassociated_pxv_uids()
+        unassociated_pxv_uids = []
+        
+        pxvids_in_twt_table = Twitter.select('pxvid').map {|x| x.pxvid}.compact.sort.uniq
+        pxvids_in_twt_table.each do |pxvid|
+            p = Artist.find_by(pxvid: pxvid)
+            if p
+                if p.twtid.presence
+                else
+                    unassociated_pxv_uids << pxvid
+                end
+            else
+            end
+        end
+        unassociated_pxv_uids
+    end
+
+    def self.unassociated_twt_screen_names()
+        unassociated_twt_screen_names = []
+        
+        twtids_in_pxv_table = Artist.select('twtid').map {|x| x.twtid}.compact.sort.uniq
+        twtids_in_pxv_table.each do |twtid|
+            t = Twitter.find_by(twtid: twtid)
+            if t
+                if t.pxvid.presence
+                else
+                    unassociated_twt_screen_names << twtid
+                end
+            else
+            end
+        end
+        unassociated_twt_screen_names
     end
 
     def self.twt_user_classify(twt_url_infos, pxv_chk=true)

@@ -187,7 +187,12 @@ module Pxv
             date_str = $1
             artwork_id = $2.to_i
             artwork_title = $3
-        elsif artwork_str =~ /(\d\d-\d\d-\d\d)\s+.*(\d+)_p\d+_master/
+        elsif artwork_str =~ /(\d\d-\d\d-\d\d)\s+.*?(\d+)_p\d+_master/
+            date_str = $1
+            artwork_id = $2.to_i
+            artwork_title = "(*不明*)"
+        elsif artwork_str =~ /(\d\d-\d\d-\d\d)\s+.*?(\d+)_p\d+/
+            STDERR.puts %!"#{artwork_str}"/#{$1}/#{$2}!
             date_str = $1
             artwork_id = $2.to_i
             artwork_title = "(*不明*)"
@@ -274,7 +279,10 @@ module Pxv
         pxv_params[:furigana] = ""
         pxv_params[:circle_name] = ""
         pxv_params[:comment] = ""
-        pxv_params[:recent_filenum] = pxv_artist.path_list.size
+
+        alist = Artist.artwork_list(pxv_artist.path_list)
+        recent_filenum = Artist.artwork_list_recent_file_num(alist)
+        pxv_params[:recent_filenum] = recent_filenum
         pxv_params[:status] = ""
         twt = Twitter.find_by(pxvid: pxv_user_id)
         if twt
@@ -315,15 +323,15 @@ module Pxv
         pxv_params[:oldest_artwork_id] = pxv_artist.oldest_artwork_id
         pxv_params[:zipped_at] = nil
     
+=begin
         STDERR.puts %!#{pxv_params}!
         #pxv_artist.path_list.each do |path|
         #    btime = File.birthtime(Util::get_public_path(path))
         #    STDERR.puts %!#{btime}"#{path}":!
         #end
-#=begin
+=end
         pxv = Artist.new(pxv_params)
         pxv.save
-#=end
     end
 
     def self.update_table(pxv, path)
@@ -354,6 +362,22 @@ module Pxv
             #print " 更新"
         end
         puts
+
+        if pxv.latest_artwork_id
+            if pxv_artist.latest_artwork_id > pxv.latest_artwork_id
+                pxv_params[:latest_artwork_id] = pxv_artist.latest_artwork_id
+            end
+        else
+            pxv_params[:latest_artwork_id] = pxv_artist.latest_artwork_id
+        end
+
+        if pxv.oldest_artwork_id
+            if pxv_artist.oldest_artwork_id != 0 and pxv_artist.oldest_artwork_id < pxv.oldest_artwork_id
+                pxv_params[:oldest_artwork_id] = pxv_artist.oldest_artwork_id
+            end
+        else
+            pxv_params[:oldest_artwork_id] = pxv_artist.oldest_artwork_id
+        end
 
         #if pxv_artist.last_access_datetime < pxv.last_access_datetime
         #    pxv_params[:last_access_datetime] = pxv_artist.last_access_datetime

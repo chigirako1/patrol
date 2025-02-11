@@ -1,4 +1,15 @@
-<% page_title = "#{params[:page_title]} - TWT一覧" %>
+<% if @twitters_total_count.presence %>
+  <% twitters_total_count = @twitters_total_count %>
+<% else %>
+  <% twitters_total_count = 0 %>
+<% end %>
+
+<% rem = twitters_total_count - @num_of_disp %>
+<% if rem > 0 %>
+  <% rem_str = %!/残り#{rem}件! %>
+<% end %>
+
+<% page_title = "#{params[:page_title]} (全#{twitters_total_count}件#{rem_str}) - TWT一覧" %>
 <% provide(:title, page_title) %>
 <p style="color: green"><%= notice %></p>
 
@@ -7,7 +18,6 @@
 <%= link_to "Return", root_path %>
 
 <h1>Twitters <%= "#{page_title}" %></h1>
-
 
 <% search_word = params[:search_word] %>
 <% if search_word.presence %>
@@ -26,11 +36,10 @@
 
 <div id="twitters">
   <% @twitters_group.each do |key, twitters| %>
-  <% rem = twitters.size - @num_of_disp %>
-  <% if rem > 0 %>
-    <% rem_str = %!残り#{rem}件! %>
-  <% end %>
-  <h2><%= key %>(全<%= twitters.size %>件)<%= rem_str %></h2>
+  <h2>
+
+    <%= key %>(<%= twitters.size %>件)
+  </h2>
   <table border="1" rules="all">
     <tr>
       <th>#</th>
@@ -62,7 +71,7 @@
           <br />
           <%= twitter.filenum %>(<%= twitter.recent_filenum %>) 
           <br />
-          <%= %!※#{twitter.comment}! if twitter.comment != "" %>
+          <%= %!※#{twitter.comment}! if twitter.comment.presence %>
           <%= twitter.remarks %>
         </td>
         <td>
@@ -86,22 +95,27 @@
           <td></td>
         <% end %>
 
-        <!-- pxv -->
         <% pxv = Artist.find_by(pxvid: twitter.pxvid) %>
         <% if twitter.artist_pxvid.presence %>
           <% pxv2 = Artist.find_by(id: twitter.artist_id) %>
         <% end %>
+
+        <!-- pxv id -->
         <td bgcolor="pink">
           <% if pxv2.presence %>
             <%= %!【#{pxv2.rating}】#{pxv2.feature}! %>
             <%= twitter.pxvname if twitter.twtname != twitter.pxvname %>
             (<%= link_to_ex pxv2.pxvid, pxv2.pxv_user_url %>)
+            [<%= link_to_ex("■pxv■x", artist_path(pxv2, access_dt_update: "yes")) %>]
           <% elsif pxv.presence %>
             <%= %!【#{pxv.rating}】#{pxv.feature}! %>
             <%= twitter.pxvname if twitter.twtname != twitter.pxvname %>
             (<%= link_to_ex pxv.pxvid, pxv.pxv_user_url %>)
+            [<%= link_to_ex("■pxv■", artist_path(pxv, access_dt_update: "yes")) %>]
           <% end %>
         </td>
+
+        <!-- pxv access -->
         <td bgcolor="pink">
           <% if pxv.presence %>
             <%= pxv.prediction_up_cnt(true) %>
@@ -127,9 +141,12 @@
               <%= %!(#{pxv.last_access_datetime_disp})! %>
             <% else %>
             <% end %>
+          <% elsif pxv2.presence %>
+            <%= %!(#{pxv2.last_access_datetime_disp})! %>
           <% end %>
         </td>
 
+        <!-- pxv ul -->
         <td bgcolor="pink">
           <% if twitter.last_ul_datetime.presence %>
             <% d = Date.parse(twitter.last_ul_datetime) %><!-- なぜかわからないがstring"22-11-31"になってる -->
@@ -140,7 +157,9 @@
             <% if twitter.artist_status.presence %>
               PXVID:<%= %!#{twitter.artist_pxvid}! %>
               <br />
+              <font color="red">
               <b><%= %!※#{twitter.artist_status}! %></b>
+              </font>
             <% end %>
             <% if pxv2.presence and pxv2.reverse_status.presence %>
               <br />

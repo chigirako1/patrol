@@ -2,14 +2,13 @@
 <p style="color: green"><%= notice %></p>
 
 <h1>
-  <%= %!#{@twitter.twtname}! %>
-  <% twt_url = @twitter.twt_user_url() %>
-  (<%= link_to_ex "@#{@twitter.twtid}", twt_url %>)
-  [<%= @twitter.rating %>]
+    [<%= @twitter.rating %>]
+    <%= %!#{@twitter.twtname}! %>
+    (@<%= @twitter.twtid %>)
 </h1>
 
 <% if @twitter.status.presence and @twitter.status != Twitter::STATUS_PATROL %>
-  <h3><%= @twitter.status %></h3>
+    <h3><%= @twitter.status %></h3>
 <% end %>
 
 <%= render @twitter %>
@@ -22,7 +21,6 @@
 <hr />
 
 <div>
-  <%= link_to "Back to twitters", twitters_path %>
-
-  <%= button_to "Destroy this twitter", @twitter, method: :delete %>
+    <%= link_to "Back to twitters", twitters_path %>
+    <%= button_to "Destroy this twitter", @twitter, method: :delete %>
 </div>

@@ -322,6 +322,14 @@ class Artist < ApplicationRecord
         njeid != nil and njeid != ""
     end
 
+    def created_at_day_num
+        get_date_delta(created_at)
+    end
+
+    def last_access_datetime_num
+        delta_d = get_date_delta(last_access_datetime)
+    end
+
     def last_dl_datetime_disp
         get_date_info(last_dl_datetime)
     end
@@ -427,6 +435,22 @@ class Artist < ApplicationRecord
             sum += val[3]
         end
         sum
+    end
+
+    def self.artwork_list_recent_file_num(alist, nday = 60)
+        cnt = 0
+        alist.each do |key,val|
+            date = val[2]
+            delta_d = Util::get_date_delta(date)
+            if delta_d < nday
+                cnt += val[3]
+                #STDERR.puts %![dbg] date=#{date}/delta_d=#{delta_d}/nday=#{nday}!
+            else
+                STDERR.puts %![dbg] date=#{date}/delta_d=#{delta_d}/nday=#{nday}!
+                break
+            end
+        end
+        cnt
     end
 
     def status_disp(txt="※")

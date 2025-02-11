@@ -98,4 +98,9 @@ module Util
     def self.file_hash(path)
         Digest::SHA256.file(path).hexdigest
     end
+
+    def self.get_host_name_from_uri(url)
+        uri = URI.parse(url)
+        uri.host
+    end
 end

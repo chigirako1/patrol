@@ -1,6 +1,10 @@
 class TwittersController < ApplicationController
   before_action :set_twitter, only: %i[ show edit update destroy ]
 
+  module ModeEnum
+    UNASSOCIATED_TWT_ACNT = '未紐づけTWTアカウント' #PXV DBにはTWT IDが登録されているがTWT DBにはPXV IDが登録されていない
+  end
+
   # GET /twitters or /twitters.json
   def index
 
@@ -102,6 +106,12 @@ class TwittersController < ApplicationController
     end
 
     case mode
+    when TwittersController::ModeEnum::UNASSOCIATED_TWT_ACNT
+      unassociated_twt_screen_names = Twitter::unassociated_twt_screen_names()
+      twitters = twitters.select {|x| unassociated_twt_screen_names.include?(x.twtid)}
+      @twitters_group = {}
+      @twitters_group[""] = twitters
+      return
     when "同一"
       dup_ids = []
       twtids = Twitter.select('twtid')
@@ -125,7 +135,7 @@ class TwittersController < ApplicationController
       if sort_by == "id"
         twitters = twitters.sort_by {|x| [x.id]}.reverse
       elsif  sort_by == "pred"
-        twitters = twitters.sort_by {|x| [-x.prediction, x.last_access_datetime, (x.last_dl_datetime)]}
+        twitters = twitters.sort_by {|x| [-x.prediction, x.last_access_datetime]}
       end
 
       if pred_cond_gt != 0
@@ -175,7 +185,7 @@ class TwittersController < ApplicationController
         #x.status == "長期更新なし" or
         #x.status == "最近更新してない？" or
         x.status == "削除" or
-        x.status == "存在しない" or
+        x.status == Twitter::STATUS_NOT_EXIST or
         x.status == "凍結" or
         x.status == "別アカウントに移行" or
         x.status == "アカウントID変更"
@@ -200,9 +210,9 @@ class TwittersController < ApplicationController
 
       case sort_by
       when "access"
-        twitters = twitters.sort_by {|x| [x.last_access_datetime, (x.last_dl_datetime)]}#.reverse
+        twitters = twitters.sort_by {|x| [x.last_access_datetime]}
       else
-        twitters = twitters.sort_by {|x| [-x.prediction, x.last_access_datetime, (x.last_dl_datetime)]}
+        twitters = twitters.sort_by {|x| [-x.prediction, x.last_access_datetime]}
       end
       @twitters_group = twitters.group_by {|x| x.status}
       #@twitters_group = @twitters_group.sort_by {|k, v| k || 0}.reverse.to_h
@@ -246,10 +256,14 @@ class TwittersController < ApplicationController
 
       case sort_by
       when "access"
-        twitters = twitters.sort_by {|x| [x.last_access_datetime, (x.last_dl_datetime)]}#.reverse
+        twitters = twitters.sort_by {|x| [-x.rating, x.last_access_datetime, (x.last_dl_datetime)]}#.reverse
       else
-        twitters = twitters.sort_by {|x| [-x.prediction, x.last_access_datetime, (x.last_dl_datetime)]}
+        #twitters = twitters.sort_by {|x| [-x.rating, -x.prediction, x.last_access_datetime]}
+        twitters = twitters.sort_by {|x| [-x.prediction, x.last_access_datetime]}
       end
+
+      @twitters_total_count = twitters.size
+      twitters = twitters.first(@num_of_disp)#limit(@num_of_disp)#offset(3)
     when "hand"
       twitters = twitters.select {|x| !x.last_access_datetime_p(@hide_within_days)}
       twitters = twitters.select {|x| x.status == "TWT巡回"}
@@ -278,7 +292,7 @@ class TwittersController < ApplicationController
         (x.last_ul_datetime.presence and Util::get_date_delta(Date.parse(x.last_ul_datetime).to_s) > 60)
       }
 
-      twitters = twitters.sort_by {|x| [-x.prediction, x.last_access_datetime, (x.last_dl_datetime)]}
+      twitters = twitters.sort_by {|x| [-x.prediction, x.last_access_datetime]}
     when "no_pxv"
       twitters = twitters.select {|x| !x.last_access_datetime_p(@hide_within_days)}
       twitters = twitters.select {|x| x.status == "TWT巡回"}
@@ -294,7 +308,7 @@ class TwittersController < ApplicationController
         Util::get_date_delta(x.artists_last_access_datetime) > 30
       }
       
-      twitters = twitters.sort_by {|x| [-x.prediction, x.last_access_datetime, (x.last_dl_datetime)]}
+      twitters = twitters.sort_by {|x| [-x.prediction, x.last_access_datetime]}
     when "未設定"
       twitters = twitters.select {|x| !x.last_access_datetime_p(@hide_within_days)}
       twitters = twitters.select {|x| !(x.drawing_method.presence) }
@@ -316,6 +330,13 @@ class TwittersController < ApplicationController
       twitters = twitters.select {|x| known_ids.include?(x.twtid) }
       twitters = twitters.sort_by {|x| [-x.prediction, x.last_access_datetime]}
       @twitters_group = twitters.group_by {|x| [x.rating, x.r18]}
+      return
+    when "存在しない"
+      twitters = twitters.select {|x| !x.last_access_datetime_p(@hide_within_days)}
+      twitters = twitters.select {|x| x.status == Twitter::STATUS_NOT_EXIST}
+      twitters = twitters.first(@num_of_disp)
+      #@twitters_group = twitters.group_by {|x| [x.status, x.r18]}
+      @twitters_group = twitters.group_by {|x| [x.rating]}.sort_by {|k, v| k || 0}.reverse.to_h
       return
     when "更新不可"
       twitters = twitters.select {|x| !x.last_access_datetime_p(@hide_within_days)}

@@ -230,6 +230,14 @@ class ArtistsController < ApplicationController
     REGIST_UL_DIFF_NEAR = '新規登録日と昔の投稿日の日数差近い'
     TWTID_CASE_DIFF = 'twt screen name大文字・小文字違い'
     TABLE_UPDATE_NEW_USER = '新規ユーザーDB登録(PXV DB更新)'
+    SEARCH = '検索'
+    DB_UNREGISTERED_USER = 'ファイル0件未登録'
+    TWT_DB_UNREGISTERED_TWT_ID = 'twt未登録twt id' #PXV DBに登録されているがTWT DBに登録がないTWT ID
+    TWT_DB_UNREGISTERED_PXV_USER_ID = '未登録pxv user id' # TWTテーブルに登録されているがPXVテーブルに登録されていないPXV ID
+    TWT_DB_UNREGISTERED_PXV_USER_ID_LOCAL_DIR = 'DB未登録pxv user id local dir'
+    UNASSOCIATED_PXV_USER = '未紐づけPXVユーザー' #TWT ID未設定PXV（TWT DBにはPXV ID登録済み）
+    UNASSOCIATED_TWT_ACNT = '未紐づけTWTアカウント' #PXV DBにはTWT IDが登録されているがTWT DBにはPXV IDが登録されていない
+    TWT_DUP_TWTID = 'same_twtid'
   end
 
   module ApiEnum
@@ -254,6 +262,10 @@ class ArtistsController < ApplicationController
     SHOW_NORAML = "normal"
     SHOW_VIEWER = "viewer"
     SHOW_LIST_VIEW = "list_view"
+  end
+
+  module SORT_TYPE
+    SORT_RATING = "RATING"
   end
 
   def api_hoge
@@ -290,7 +302,7 @@ class ArtistsController < ApplicationController
     @artists_group = {}
 
     case params[:file]
-    when "検索"
+    when ArtistsController::MethodEnum::SEARCH
       artists = Artist.looks(params[:target_col], params[:search_word], params[:match_method])
       @artists_group = index_group_by(artists, prms)
       return
@@ -399,25 +411,32 @@ class ArtistsController < ApplicationController
       dup_pxvnames = UrlTxtReader::same_name(artists)
       puts "dup name=#{dup_pxvnames}"
       artists = artists.select {|x| dup_pxvnames.include?(x[:pxvname])}
-    elsif prms.param_file == "same_twtid"
+    elsif prms.param_file == ArtistsController::MethodEnum::TWT_DUP_TWTID #"same_twtid"
       artists = artists.select {|x| x.twtid != ""}
       dup_twtids = UrlTxtReader::same_twtid(artists)
       puts "dup id=#{dup_twtids}"
       artists = artists.select {|x| dup_twtids.include?(x[:twtid])}
-    elsif prms.param_file == "ファイル0件未登録"
+    elsif prms.param_file == ArtistsController::MethodEnum::DB_UNREGISTERED_USER
       archive_dir_id_list = Pxv::archive_dir_id_list()
       @unknown_id_list = Artist::get_unknown_id_list(archive_dir_id_list)
-    elsif prms.param_file == "twt未登録twt id"
+    elsif prms.param_file == ArtistsController::MethodEnum::TWT_DB_UNREGISTERED_TWT_ID
       #artists = artists.select {|x| x.twtid != ""}
       twt_id_list = Twitter.all_twt_id_list
       #puts "twt_id_list = #{twt_id_list.size} // #{twt_id_list[0..3]}"
       #puts "artists = #{artists.size}"
       artists = artists.select {|x| x.twtid.presence and twt_id_list.include?(x.twtid) == false}
       #artists = artists.select {|x| x.twtid.presence}
-    elsif prms.param_file == "未登録pxv user id"
+    elsif prms.param_file == ArtistsController::MethodEnum::TWT_DB_UNREGISTERED_PXV_USER_ID#"未登録pxv user id"
       @unknown_id_list = Twitter::get_unregisterd_pxv_user_id_list()
-    elsif prms.param_file == "DB未登録pxv user id local dir"
+    elsif prms.param_file == ArtistsController::MethodEnum::TWT_DB_UNREGISTERED_PXV_USER_ID_LOCAL_DIR#"DB未登録pxv user id local dir"
       @unknown_id_list = Artist::get_unregisterd_pxv_user_id_list_from_local()
+    elsif prms.param_file == ArtistsController::MethodEnum::UNASSOCIATED_PXV_USER
+      unassociated_pxv_uids = Twitter::unassociated_pxv_uids()
+      artists = artists.select {|x| unassociated_pxv_uids.include?(x[:pxvid])}
+    elsif prms.param_file == ArtistsController::MethodEnum::UNASSOCIATED_TWT_ACNT
+      unassociated_twt_screen_names = Twitter::unassociated_twt_screen_names()
+      artists = artists.select {|x| unassociated_twt_screen_names.include?(x.twtid)}
+      #@unassociated_twt_screen_names = unassociated_twt_screen_names
     elsif prms.param_file == ArtistsController::MethodEnum::REGIST_UL_DIFF
       artists = artists.select {|x| (x.created_at.to_date - x.last_ul_datetime.to_date).to_i > 365}
     elsif prms.param_file == ArtistsController::MethodEnum::ACCESS_UL_DIFF_FAR
@@ -771,7 +790,7 @@ class ArtistsController < ApplicationController
         :warnings, :feature, :twt_check, :earliest_ul_date, :circle_name,
         :fetish, :pxv_fav_artwork_id, :web_url, :append_info,
         :twt_checked_date, :nje_checked_date, :show_count, :reverse_status,
-        :latest_artwork_id, :oldest_artwork_id, :zipped_at
+        :latest_artwork_id, :oldest_artwork_id, :zipped_at, :recent_filenum
       )
     end
 
@@ -924,7 +943,7 @@ class ArtistsController < ApplicationController
       when "access_date_X_recent_filenum"
         artists = artists.sort_by {|x| [x[:last_access_datetime], -x[:recent_filenum], -x[:filenum]]}
       when "access_date_X_recent_filenum_X_ul"
-        artists = artists.sort_by {|x| [-x.get_date_delta(x[:last_access_datetime]), -x.priority, -x.point, -x[:recent_filenum], -x[:filenum], x[:last_ul_datetime]]}
+        artists = artists.sort_by {|x| [-x.get_date_delta(x[:last_access_datetime]), -x.point, -x[:recent_filenum], -x[:filenum], x[:last_ul_datetime]]}
       when "access_date_X_pxvname_X_recent_filenum"
         artists = artists.sort_by {|x| [x[:last_access_datetime], x[:pxvname].downcase, -x[:recent_filenum], -x[:filenum]]}
       when "pxvname"
@@ -951,6 +970,8 @@ class ArtistsController < ApplicationController
         artists = artists.sort_by {|x| [-x.id]}
       when "pxv-user-id"
         artists = artists.sort_by {|x| [-x.pxvid]}
+      when SORT_TYPE::SORT_RATING
+        artists = artists.sort_by {|x| [-x.rating]}
       else
         # デフォルト？
         artists = artists.sort_by {|x| [-x.point, -x.priority, -x[:recent_filenum], -x[:filenum], x[:last_ul_datetime]]}
@@ -982,6 +1003,8 @@ class ArtistsController < ApplicationController
         artists_group = artists.group_by {|x| x.judge_number(x[:filenum]) + ":" + x[:last_ul_datetime].strftime("%Y")}.sort.reverse.to_h
       when "last_ul_datetime_ym"
         artists_group = artists.group_by {|x| x[:last_ul_datetime].strftime("%Y-%m")}.sort.reverse.to_h
+      when "last_ul_datetime_ym旧→新"
+        artists_group = artists.group_by {|x| x[:last_ul_datetime].strftime("%Y-%m")}.sort.to_h
       when "last_ul_datetime_y"
         artists_group = artists.group_by {|x| x[:last_ul_datetime].strftime("%Y")}.sort.reverse.to_h
       when "filenum"

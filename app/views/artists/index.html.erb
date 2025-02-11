@@ -25,7 +25,6 @@
       <th>ID</th>
       <th>評価</th>
       <th>pxvname</th>
-      <th>最終DL日</th>
       <th>予測/最新アクセス日</th>
       <th>コメント/特徴</th>
       <th>最新投稿日</th>
@@ -52,9 +51,6 @@
         <%= priority_tag(artist) %>
         <td>
           <%= pxvname_tag(artist) %>
-        </td>
-        <td>
-          <%= artist.last_dl_datetime_disp %>
         </td>
         <% pred = artist.prediction_up_cnt(true) %>
         <% ac_delta = artist.get_date_delta(artist.last_access_datetime) %>
@@ -161,7 +157,7 @@
   <% end %>
 <% end %>
 
-<% if @authors_list.size != 0 %>
+<% if @authors_list.size > 0 %>
   <h2>author name list</h2>
   <% @authors_list.each do |elem| %>
     <% name = elem[0] %>
@@ -172,6 +168,41 @@
       <li><%= "#{x.pxvname}(#{x.pxvid})" %><%= link_to_ex "[show]", x %></ li>
     <% end %>  
     </ul>
+  <% end %>
+<% end %>
+
+<% if @unknown_id_list.size > 0 %>
+  <h2>TWT DBに登録されているがPXV DBにないPXV IDの一覧</h2>
+  <% @unknown_id_list.each do |pxv_uid| %>
+    <% url = Pxv::pxv_user_url(pxv_uid) %>
+    <% host_name = Util::get_host_name_from_uri(url) %>
+    <%= pxv_uid %>(<%= link_to_ex(%!→#{host_name}!, url) %>)
+    <% twt = Twitter.find_by(pxvid: pxv_uid) %>
+    <% if twt %>
+      <%= twt.twtname %>(@<%= twt.twtid %>)
+      [<%= link_to_ex(%!■twt■!, twt) %>]
+    <% end %>
+    <br />
+  <% end %>
+<% end %>
+
+
+<% if @unassociated_twt_screen_names and @unassociated_twt_screen_names.size > 0 %>
+  <h2>PXV DBにはTWT IDが登録されているがTWT DBにはPXV IDが登録されていない</h2>
+  <% @unassociated_twt_screen_names.each do |twt_uid| %>
+    <%= twt_uid %>
+    <% twt = Twitter.find_by(twtid: twt_uid) %>
+    <% if twt %>
+      <%= twt.twtname %>(@<%= twt.twtid %>)
+      [<%= link_to_ex(%!■twt■!, twt) %>]
+    <% end %>
+
+    <% pxv = Artist.find_by(twtid: twt_uid) %>
+    <% if pxv %>
+      <%= pxv.pxvname %>(@<%= pxv.twtid %>)
+      [<%= link_to_ex(%!■pxv■!, pxv) %>]
+    <% end %>
+    <br />
   <% end %>
 <% end %>
 
@@ -198,17 +229,19 @@
           ['namelist_djn'],
           ['namelist_mag'],
           ['same_name'],
-          ['same_twtid'],
-          ['ファイル0件未登録'],
-          ['twt未登録twt id'],
-          ['未登録pxv user id'],#in TWT table
-          ['DB未登録pxv user id local dir'],
+          [ArtistsController::MethodEnum::TWT_DUP_TWTID],
+          [ArtistsController::MethodEnum::DB_UNREGISTERED_USER],
+          [ArtistsController::MethodEnum::TWT_DB_UNREGISTERED_TWT_ID],#['twt未登録twt id'],
+          [ArtistsController::MethodEnum::TWT_DB_UNREGISTERED_PXV_USER_ID],#['未登録pxv user id'],#in TWT table
+          [ArtistsController::MethodEnum::TWT_DB_UNREGISTERED_PXV_USER_ID_LOCAL_DIR],#['DB未登録pxv user id local dir'],
+          [ArtistsController::MethodEnum::UNASSOCIATED_PXV_USER],
+          [ArtistsController::MethodEnum::UNASSOCIATED_TWT_ACNT],
           [ArtistsController::MethodEnum::REGIST_UL_DIFF],
           [ArtistsController::MethodEnum::ACCESS_UL_DIFF_FAR],
           [ArtistsController::MethodEnum::REGIST_UL_DIFF_NEAR],
           [ArtistsController::MethodEnum::TWTID_CASE_DIFF],
           [ArtistsController::MethodEnum::TABLE_UPDATE_NEW_USER],
-          ['検索'],
+          [ArtistsController::MethodEnum::SEARCH],
         ],
         selected: params[:file] 
       ) %>
@@ -233,6 +266,7 @@
         [
           ['id'], 
           ['pxv-user-id'], 
+          [ArtistsController::SORT_TYPE::SORT_RATING],
           ['point'], 
           ['-point'], 
           ['priority'], 
@@ -243,6 +277,7 @@
           ['twtid'],
           ['予測▽'],
           ['予測△'],
+          [ArtistsController::SORT_TYPE::SORT_RATING],
           ['access_date_X_last_ul_datetime'], 
           ['access_date_X_recent_filenum'], 
           ['access_date_X_recent_filenum_X_ul'], 
@@ -260,7 +295,8 @@
           ['filenum'], 
           ['last_ul_datetime'], 
           ['last_ul_datetime_X_filenum'], 
-          ['last_ul_datetime_ym'], 
+          ['last_ul_datetime_ym'],
+          ['last_ul_datetime_ym旧→新'],
           ['last_ul_datetime_y'], 
           ['recent_filenum'],
           ['pxvname_fl'],
@@ -292,6 +328,7 @@
           ['最新から取得し直し中'], 
           ["最新追っかけ中", "最新追っかけ中"], 
           ['彼岸'], 
+          ['更新頻度低'], 
         ],
         selected: params[:status] 
       ) %>

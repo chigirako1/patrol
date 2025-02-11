@@ -5,6 +5,12 @@
   height: 2em;
   width: 100px;
 }
+.btn2 {
+  padding-left: 1em;
+  padding-right: 1em;
+  height: 2em;
+  width: 200px;
+}
 </style>
 
 <script>
@@ -118,6 +124,7 @@
           登録されているスクリーンネームが異なります<br />
           ・@<%= artist.twtid %>(pxv)<br />
           ・@<%= twt.twtid %>(twt)<br />
+          <font color='red'>twtに合わせて更新↓</font><br />
         <% end %>
       <% end %>
     <% else %>
@@ -161,17 +168,16 @@
     <%= form.label :rating, style: "display: block" %>
     <%= form.number_field :rating %>
     <input type="button" value="+5" onclick="plus_rate('rating', 5);" class="btn" />
-    <input type="button" value="-5" onclick="plus_rate('rating', -5);" class="btn" />
     <input type="button" value="+4" onclick="plus_rate('rating', 4);" class="btn" />
     <input type="button" value="+1" onclick="plus_rate('rating', 1);" class="btn" />
+    <input type="button" value="-5" onclick="plus_rate('rating', -5);" class="btn" />
     <input type="button" value="-1" onclick="plus_rate('rating', -1);" class="btn" />
     <br />
-    <input type="button" value="優(100)" onclick="set_rate('rating', 100);" class="btn" />
-    <input type="button" value="良+(90)" onclick="set_rate('rating', 90);" class="btn" />
-    <input type="button" value="良(80)" onclick="set_rate('rating', 80);" class="btn" />
-    <input type="button" value="良-(75)" onclick="set_rate('rating', 75);" class="btn" />
-    <input type="button" value="良-(70)" onclick="set_rate('rating', 70);" class="btn" />
-    <input type="button" value="可(60)" onclick="set_rate('rating', 60);" class="btn" />
+    <input type="button" value="100" onclick="set_rate('rating', 100);" class="btn" />
+    <input type="button" value="90" onclick="set_rate('rating', 90);" class="btn" />
+    <input type="button" value="85" onclick="set_rate('rating', 85);" class="btn" />
+    <input type="button" value="80" onclick="set_rate('rating', 80);" class="btn" />
+    <input type="button" value="75" onclick="set_rate('rating', 75);" class="btn" />
   </div>
 
   <div>
@@ -229,25 +235,29 @@
   <div>
     <%= form.label :status, style: "display: block" %>
     <%= form.select :status,
-      [["退会", "退会"],
-      ["停止", "停止"],
-      #["長期更新なし★", "長期更新なし"], 
-      ["長期更新なし★", ArtistsController::Status::LONG_TERM_NO_UPDATS],
-      ["半年以上更新なし", ArtistsController::Status::SIX_MONTH_NO_UPDATS], 
-      ["3ヶ月以上更新なし", "3ヶ月以上更新なし"], 
-      ["1ヶ月以上更新なし", "1ヶ月以上更新なし"], 
-      ["別アカウントに移行", "別アカウントに移行"],
-      ["作品ゼロ", "作品ゼロ"], 
-      ["一部消えた", "一部消えた"], 
-      ["ほぼ消えた", "ほぼ消えた"], 
-      ["取得途中", "取得途中"], 
-      ["最新から取得し直し中", "最新から取得し直し中"], 
-      ["最新追っかけ中", "最新追っかけ中"], 
-      ["彼岸", "彼岸"]],
+      [
+        ["退会", "退会"],
+        ["停止", "停止"],
+        #["長期更新なし★", "長期更新なし"], 
+        ["長期更新なし★", ArtistsController::Status::LONG_TERM_NO_UPDATS],
+        ["半年以上更新なし", ArtistsController::Status::SIX_MONTH_NO_UPDATS], 
+        ["3ヶ月以上更新なし", "3ヶ月以上更新なし"], 
+        ["1ヶ月以上更新なし", "1ヶ月以上更新なし"], 
+        ["別アカウントに移行", "別アカウントに移行"],
+        ["作品ゼロ", "作品ゼロ"], 
+        ["一部消えた", "一部消えた"], 
+        ["ほぼ消えた", "ほぼ消えた"], 
+        ["取得途中", "取得途中"], 
+        ["最新から取得し直し中", "最新から取得し直し中"], 
+        ["最新追っかけ中", "最新追っかけ中"], 
+        ["彼岸", "彼岸"],
+        ["更新頻度低", "更新頻度低"],
+      ],
       include_blank: "選択して下さい" %>
-    <input type="button" value="'長期更新なし'に変更" onclick="set_option('status', 3);" />
-    <input type="button" value="'半年以上更新なし'に変更" onclick="set_option('status', 4);" />
-    <input type="button" value="空白に変更" onclick="set_option('status', 0);"  class="btn" />
+    <input type="button" value="'長期更新なし'に変更" onclick="set_option('status', 3);" class="btn2" />
+    <input type="button" value="'半年以上更新なし'に変更" onclick="set_option('status', 4);" class="btn2" />
+    <input type="button" value="'最新追っかけ中'に変更" onclick="set_option('status', 13);" class="btn2" />
+    <input type="button" value="空白に変更" onclick="set_option('status', 0);" class="btn" />
   </div>
  
   <div>
@@ -308,7 +318,7 @@
 
     <% if artist.nje_p %>
       nijieを開く
-      <%= link_to artist.njeid, artist.nje_member_url, target: :_blank, rel: "noopener noreferrer" %>
+      <%= link_to_ex artist.njeid, artist.nje_member_url %>
     <% end %>
   </div>
 
@@ -333,13 +343,46 @@
   <div>
     <%= form.label :ウェブURL, style: "display: block" %>
     <%= form.text_field :web_url %>
+
+    <% if artist.web_url %>
+      <%= link_to_ex artist.web_url, artist.web_url %>
+    <% end %>
   </div>
 
   <hr />
 
   <div>
-    <%= form.label :filenum, style: "display: block" %>
-    <%= form.number_field :filenum %>
+    <%= form.label :ファイル数, style: "display: block" %>
+
+    <% if artist.filenum.presence %>
+      <% if artist.filenum < @path_list.size %>
+        <% filenum = @path_list.size %>
+      <% end %>
+    <% else %>
+      <% filenum = @path_list.size %>
+    <% end %>
+
+    <% if filenum %>
+      "<%= artist.filenum %>"↓<font color='red'>更新あり</font><br />
+      <%= form.number_field :filenum, :value => filenum %>
+    <% else %>
+      <%= form.number_field :filenum %>
+    <% end %>
+  </div>
+
+  <div>
+    <% if (artist.filenum == nil) or (artist.filenum and artist.filenum < @path_list.size) %>
+      <% list = Artist.artwork_list(@path_list) %>
+      <% recent_filenum = Artist.artwork_list_recent_file_num(list) %>
+    <% end %>
+
+    <%= form.label :最近のファイル数, style: "display: block" %>
+    <% if recent_filenum %>
+      "<%= artist.recent_filenum %>"↓<font color='red'>更新あり</font><br />
+      <%= form.number_field :recent_filenum, :value => recent_filenum %>
+    <% else %>
+      <%= form.number_field :recent_filenum %>
+    <% end %>
   </div>
 
   <div>
@@ -400,7 +443,7 @@
     <%= form.label :最新PXVアートワークID, style: "display: block" %>
     <% latest_artwork_id = @artist.latest_artwork_id %>
     <% artwork_id, _, _ = Pxv::get_pxv_artwork_info_from_path(@path_list[0]) %>
-    <% if (latest_artwork_id == nil and artwork_id.presence) or (artwork_id.presence and latest_artwork_id > artwork_id) %>
+    <% if (latest_artwork_id == nil and artwork_id.presence) or (artwork_id.presence and latest_artwork_id < artwork_id) %>
       "<%= latest_artwork_id %>"↓<font color='red'>更新あり</font><br />
       <% latest_artwork_id = artwork_id %>
     <% else %>
@@ -412,7 +455,7 @@
     <%= form.label :最古PXVアートワークID, style: "display: block" %>
     <% oldest_artwork_id = @artist.oldest_artwork_id %>
     <% artwork_id, _, _ = Pxv::get_pxv_artwork_info_from_path(@path_list[-1]) %>
-    <% if (oldest_artwork_id == nil and artwork_id.presence) or (artwork_id.presence and oldest_artwork_id > artwork_id) %>
+    <% if artwork_id.presence and artwork_id != 0 and ((oldest_artwork_id == nil and artwork_id.presence) or (oldest_artwork_id > artwork_id)) %>
       "<%= oldest_artwork_id %>"↓<font color='red'>更新あり</font><br />
       <% oldest_artwork_id = artwork_id %>
     <% else %>
