@@ -78,7 +78,10 @@ textarea {
                 <br />
                 <% i = idx - 3 %>
                 <% 3.times do |x| %>
-                    <%= i + 1 %>.<%= twt_pic_list[i][0] %>
+                    <%= i + 1 %>.
+                    <%= twt_pic_list[i][0] %>
+                    <% tweetid = twt_pic_list[i][2][0] %>
+                    (<%= link_to_ex(tweetid, Twt::twt_tweet_url_dev(tweetid)) %>)
                     <br />
                     <% i += 1 %>
                 <% end %>
@@ -133,7 +136,7 @@ textarea {
         【以降の投稿数予測】<%= twitter.prediction(dt) %>
         <br />
         <% if @twitter.status == Twitter::STATUS_NOT_EXIST %>
-            <%= link_to_ex tweet_id, Twt::twt_tweet_url("TwitterDev", tweet_id) %>
+            <%= link_to_ex tweet_id, Twt::twt_tweet_url_dev(tweet_id) %>
         <% end %>
     <% end %>
 
@@ -166,7 +169,7 @@ textarea {
             <% if hit %>
             <% else %>
                 <br />
-                <%= %!#{tweet_id}(#{Twt::timestamp_str tweet_id}))! %> not hit...
+                <%= %!#{Twt::timestamp_str tweet_id}(#{tweet_id}))! %> no hit...
                 <%= link_to_ex tweet_id, Twt::twt_tweet_url(@twitter.twtid, tweet_id) %>
                 <% if tweet.presence %>
                     <% if tweet.status == Tweet::StatusEnum::UNACCESSIBLE %>

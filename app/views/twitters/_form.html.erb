@@ -86,6 +86,7 @@
       { selected: status_value },
       include_blank: "選択して下さい" %>
     <input type="button" value="TWT巡回に変更" onclick="set_noupdate(0);" />
+    <input type="button" value="最近更新してない？" onclick="set_noupdate(4);" />
     <input type="button" value="長期更新なしに変更" onclick="set_noupdate(2);" />
     <script>
       function set_noupdate(idx) {
@@ -185,7 +186,7 @@
         [<%= link_to_ex("■pxv■", artist_path(pxv2.id, access_dt_update: "yes")) %>]
         A:<%= pxv2.last_access_datetime_disp %>
         <br />
-        <% if pxv2.filenum < 1000 %>
+        <% if pxv2.filenum < 500 %>
           <%= pic_path_tag(@twitter.pxvid, 5, '10%', true) %>
           <br />
         <% end %>
@@ -240,6 +241,8 @@
       [<%= link_to_ex "■twt■", main_twtid %>]
       |<%= main_twtid.last_access_datetime_disp %>|
       <%= %!|PXVID:#{main_twtid.pxvid}! if main_twtid.pxvid.presence %>
+    <% elsif @twitter.main_twtid.presence %>
+      <%= link_to_ex %!☆twt☆:@#{@twitter.main_twtid}!, artist_twt_path(@twitter.main_twtid) %>
     <% end %>
   </div>
 
@@ -276,6 +279,14 @@
     <%= form.label :新ID, style: "display: block" %>
     @<%= form.text_field :new_twtid %>
     <%= link_to_ex "@#{@twitter.new_twtid}", Twt::twt_user_url(@twitter.new_twtid) if @twitter.new_twtid.presence %>
+    <% new_twt = Twitter.find_by_twtid_ignore_case(@twitter.new_twtid) %>
+    <% if new_twt.presence %>
+      <%= new_twt.twtname %>
+      【<%= new_twt.rating %>|<%= new_twt.drawing_method %>|<%= new_twt.status %>】
+      [<%= link_to_ex "■twt■", new_twt %>]
+      |<%= new_twt.last_access_datetime_disp %>|
+      <%= %!|PXVID:#{new_twt.pxvid}! if new_twt.pxvid.presence %>
+    <% end %>
   </div>
 
   <div>

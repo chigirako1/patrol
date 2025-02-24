@@ -267,7 +267,8 @@ module UrlTxtReader
             line.chomp!
             next if line =~ /^$/
     
-            if line =~ %r!https?://www\.pixiv\.net/users/(\d+)!
+            #138163
+            if line =~ %r!https?://www\.pixiv\.net/users/(\d+)! or %r!https?://www\.pixiv\.net/request/plans/(\d+)!
                 user_id = $1.to_i
                 id_list.push user_id
             #elsif line =~ %r!((https?://twitter\.com/(\w+)))$! or line =~ %r!((https?://twitter\.com/(\w+))/.*)!

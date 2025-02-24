@@ -198,4 +198,12 @@ class Twitter < ApplicationRecord
             pred = 33
         end
     end
+
+    def sort_val
+        if artist_pxvid.presence
+            1
+        else
+            0
+        end
+    end
 end

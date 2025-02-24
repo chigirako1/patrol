@@ -221,7 +221,7 @@ class Artist < ApplicationRecord
         known_pxv_user_id_list.sort_by! {|x|
             [
                 x.p.feature,
-                -(x.cnt), 
+                #-(x.cnt), 
                 x.p.status, 
                 x.p.rating==0 ? -11 : -x.p.rating, 
                 x.p.r18, 
@@ -438,12 +438,22 @@ class Artist < ApplicationRecord
     end
 
     def self.artwork_list_recent_file_num(alist, nday = 60)
+        date_to = nil
         cnt = 0
         alist.each do |key,val|
             date = val[2]
-            delta_d = Util::get_date_delta(date)
+            #delta_d = Util::get_date_delta(date)
+            if date_to
+                delta_d = Util::get_days_date_delta(date, date_to)
+            else
+                date_to = date
+                cnt += 1
+                next
+            end
+
             if delta_d < nday
-                cnt += val[3]
+                #cnt += val[3]
+                cnt += 1
                 #STDERR.puts %![dbg] date=#{date}/delta_d=#{delta_d}/nday=#{nday}!
             else
                 STDERR.puts %![dbg] date=#{date}/delta_d=#{delta_d}/nday=#{nday}!

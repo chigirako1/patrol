@@ -16,17 +16,16 @@
 
 <% hide_day_short = 7 %>
 
+<% key_pxv_list_high            = "001.高評価" %>
 
-<% key_pxv_list_no_update_long  = "001.#{ArtistsController::Status::LONG_TERM_NO_UPDATS}" %>
-<% key_pxv_list_no_update_6m    = "002.#{ArtistsController::Status::SIX_MONTH_NO_UPDATS}" %>
-<% key_pxv_list_high            = "003.評価高" %>
 
-<% key_pxv_list_no_access_1y    = "011.1年以上アクセスしてない" %>
-<% key_pxv_list_no_access_6m    = "012.半年以上アクセスしてない" %>
-<% key_pxv_list_no_access_5m    = "013.5ヶ月以上アクセスしてない" %>
-<% key_pxv_list_no_access_4m    = "014.4ヶ月以上アクセスしてない" %>
-<% key_pxv_list_no_access_3m    = "015.3ヶ月以上アクセスしてない" %>
-<% key_pxv_list_no_access_2m    = "016.2ヶ月以上アクセスしてない" %>
+<% key_pxv_list_no_access_CMN   = "アクセスしてない" %>
+<% key_pxv_list_no_access_1y    = "011.1年以上" %>
+<% key_pxv_list_no_access_6m    = "012.半年以上" %>
+<% key_pxv_list_no_access_5m    = "013.5ヶ月以上" %>
+<% key_pxv_list_no_access_4m    = "014.4ヶ月以上" %>
+<% key_pxv_list_no_access_3m    = "015.3ヶ月以上" %>
+<% key_pxv_list_no_access_2m    = "016.2ヶ月以上" %>
 
 <% key_pxv_list_set_m           = "111.設定済み(多) > #{@pred * 2}" %>
 <% key_pxv_list_set             = "112.設定済み(普)" %>
@@ -48,19 +47,25 @@
 <% key_pxv_list_low             = "183.評価低" %>
 <% key_pxv_list_low_ltxx        = "184.評価低#{rating_thre2}未満" %>
 
-<% key_pxv_list_recent          = "901.最近アクセス" %>
+<% key_pxv_list_no_update_6m    = "902.#{ArtistsController::Status::SIX_MONTH_NO_UPDATS}" %>
+<% key_pxv_list_no_update_long  = "903.#{ArtistsController::Status::LONG_TERM_NO_UPDATS}" %>
+<% key_pxv_list_recent          = "999.最近アクセス" %>
 
 <% hide_day_b = @hide_day * 1.5 %>
 <% hide_day_c = hide_day_short * 2 %>
+
+<!-- twt -->
 <% key_name_pred_2      = %!01:予測 >= #{@pred * 2}! %>
 <% key_name_pred_1      = %!02:予測 >= #{@pred}! %>
 <% key_name_etc         = "03:etc" %>
 <% key_name_rating_low  = "07:rating < #{rating_thre}" %>
 <% key_name_ai          = "08:AI" %>
+<% key_name_paku        = "09:paku" %>
 <% key_name_recent_b    = %!94:最近アクセス #{hide_day_b}日以内! %>
 <% key_name_recent_c    = %!96:最近アクセス #{hide_day_c}日以内! %>
 <% key_name_recent_a    = %!95:最近アクセス #{@hide_day}日以内! %>
 <% key_name_recent_short= %!97:最近アクセス #{hide_day_short}日以内! %>
+<% key_name_no_exist    = "99:存在しない" %>
 
 <% pxv_artist_id_list = [] %>
 <% twt_group = Hash.new { |h, k| h[k] = [] } %>
@@ -80,7 +85,9 @@
     <% idx = 0 %>
     <% @known_twt_url_list.each do |key, url_list| %>
         <% twt_account = Twitter.find_by_twtid_ignore_case(key) %>
-        <% if twt_account.last_access_datetime_p(hide_day_short) %>
+        <% if twt_account.status == Twitter::STATUS_NOT_EXIST %>
+            <% twt_group[key_name_no_exist] << [twt_account, url_list] %>
+        <% elsif twt_account.last_access_datetime_p(hide_day_short) %>
             <% twt_group[key_name_recent_short] << [twt_account, url_list] %>
         <% elsif twt_account.last_access_datetime_p(hide_day_c) %>
             <% twt_group[key_name_recent_c] << [twt_account, url_list] %>
@@ -90,6 +97,8 @@
             <% twt_group[key_name_recent_b] << [twt_account, url_list] %>
         <% elsif twt_account.drawing_method == "AI" %>
             <% twt_group[key_name_ai] << [twt_account, url_list] %>
+        <% elsif twt_account.drawing_method == "パクリ" %>
+            <% twt_group[key_name_paku] << [twt_account, url_list] %>
         <% elsif twt_account.rating.presence and twt_account.rating != 0 and twt_account.rating < rating_thre %>
             <% twt_group[key_name_rating_low] << [twt_account, url_list] %>
         <% elsif @pred > 0 and twt_account.prediction >= @pred * 2 %>
@@ -153,9 +162,9 @@
                 [
                     x.drawing_method||"", 
                     x.status||"", 
-                    -(z[1].size), 
                     -(x.prediction), 
                     x.rating||0, 
+                    -(z[1].size), 
                     x.last_access_datetime
                 ]
                 }
@@ -394,17 +403,23 @@
         <% elsif p.status == ArtistsController::Status::SIX_MONTH_NO_UPDATS %>
             <% pxv_group[key_pxv_list_no_update_6m] << elem %>
         <% elsif !(p.last_access_datetime_p(365)) %>
-            <% pxv_group[key_pxv_list_no_access_1y] << elem %>
+            <% key_str = %!0#{100 - p.rating}:#{key_pxv_list_no_access_1y}#{key_pxv_list_no_access_CMN}! %>
+            <% pxv_group[key_str] << elem %>
         <% elsif !(p.last_access_datetime_p(180)) %>
-            <% pxv_group[key_pxv_list_no_access_6m] << elem %>
+            <% key_str = %!0#{100 - p.rating}:#{key_pxv_list_no_access_6m}#{key_pxv_list_no_access_CMN}! %>
+            <% pxv_group[key_str] << elem %>
         <% elsif !(p.last_access_datetime_p(150)) %>
-            <% pxv_group[key_pxv_list_no_access_5m] << elem %>
+            <% key_str = %!0#{100 - p.rating}:#{key_pxv_list_no_access_5m}#{key_pxv_list_no_access_CMN}! %>
+            <% pxv_group[key_str] << elem %>
         <% elsif !(p.last_access_datetime_p(120)) %>
-            <% pxv_group[key_pxv_list_no_access_4m] << elem %>
+            <% key_str = %!0#{100 - p.rating}:#{key_pxv_list_no_access_4m}#{key_pxv_list_no_access_CMN}! %>
+            <% pxv_group[key_str] << elem %>
         <% elsif !(p.last_access_datetime_p(90)) %>
-            <% pxv_group[key_pxv_list_no_access_3m] << elem %>
+            <% key_str = %!0#{100 - p.rating}:#{key_pxv_list_no_access_3m}#{key_pxv_list_no_access_CMN}! %>
+            <% pxv_group[key_str] << elem %>
         <% elsif !(p.last_access_datetime_p(60)) %>
-            <% pxv_group[key_pxv_list_no_access_2m] << elem %>
+            <% key_str = %!0#{100 - p.rating}:#{key_pxv_list_no_access_2m}#{key_pxv_list_no_access_CMN}! %>
+            <% pxv_group[key_str] << elem %>
         <% elsif pred >= @pred %>
             <% if p.rating.presence and pred >= @pred * 2 %>
                 <% pxv_group[key_pxv_list_set_m] << elem %>
@@ -518,7 +533,8 @@
                     <% if twt %>
                         <% twt_pred = twt.prediction %>
                         <td>
-                            <%= twt.drawing_method if twt.drawing_method.presence %>
+                            <%= %!#{twt.drawing_method}! if twt.drawing_method.presence %>
+                            <%= %!【#{twt.rating}】! if twt.rating.presence %>
                             <%= twt.twtname %>
                         </td>
                         <td>@<%= twt.twtid %></td>
@@ -656,7 +672,10 @@
                             <%= Util.get_date_info(twt.last_post_datetime) %>
                         </td>
                         <td align="right"><%= twt.prediction %></td>
-                        <td><%= link_to_ex "■twt■", twt %></td>
+                        <td>
+                            【<%= twt.rating %>】
+                            <%= link_to_ex "■twt■", twt %>
+                        </td>
                         <td></td>
                     <% else %>
                         <td></td>
@@ -722,7 +741,10 @@
         <% url_tu = artists_twt_index_path(filename: file, hide_day: 30, pred: 5, target: ArtistsController::FileTarget::TWT_UNKNOWN_ONLY) %>
         <% url_p_u = artists_twt_index_path(filename: file, hide_day: 30, pred: 5, target: ArtistsController::FileTarget::PXV_UNKNOWN_ONLY) %>
         <% url_p_k = artists_twt_index_path(filename: file, hide_day: 30, pred: 5, target:"known_pxv", force_disp_day: 90) %>
+
         <%= file %>
+        (<%= FileTest.size(filename) / 1024  %> KB)
+        <%#= Util::formatFileSize(FileTest.size(filename)) %>
         | <%= link_to_ex("all", url_a) %>
         | <%= link_to_ex("twt", url_t) %>
         | <%= link_to_ex("twt既知", url_tk) %>

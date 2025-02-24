@@ -26,6 +26,7 @@ class Params
     :prediction,
     :force_disp_day,
     :rating,
+    :rating_upper_limit,
     :twt_chk,
     :thumbnail,
     :begin_no,
@@ -41,6 +42,7 @@ class Params
     @prediction = params[:prediction]
     @force_disp_day = params[:force_disp_day]
     @rating = params[:rating]
+    @rating_upper_limit = params[:rating_upper_limit]
     @twt_chk = params[:twt_chk]
     puts %!group_by="#{@group_by}"/sort_by="#{@sort_by}"/!
 
@@ -71,6 +73,13 @@ class Params
       @rating = @rating.to_i
     end
     puts "rating=#{@rating}"
+
+    if @rating_upper_limit.presence
+      @rating_upper_limit = @rating_upper_limit.to_i
+    else
+      @rating_upper_limit = -1
+    end
+    puts "rating_upper_limit=#{@rating_upper_limit}"
 
     if @status == nil
       @status = ""
@@ -225,11 +234,13 @@ class ArtistsController < ApplicationController
   before_action :set_artist, only: %i[show edit update destroy edit_no_update]
 
   module MethodEnum
+    SAME_FILENUM = '全ファイル数と最近のファイル数が同じレコード'
     REGIST_UL_DIFF = '新規登録日と最新投稿日の日数差'
     ACCESS_UL_DIFF_FAR = 'アクセス日と最新投稿日の日数差大きい'
     REGIST_UL_DIFF_NEAR = '新規登録日と昔の投稿日の日数差近い'
     TWTID_CASE_DIFF = 'twt screen name大文字・小文字違い'
     TABLE_UPDATE_NEW_USER = '新規ユーザーDB登録(PXV DB更新)'
+    UPDATE_RECORD = 'pxvレコード更新(PXV id 指定)'
     SEARCH = '検索'
     DB_UNREGISTERED_USER = 'ファイル0件未登録'
     TWT_DB_UNREGISTERED_TWT_ID = 'twt未登録twt id' #PXV DBに登録されているがTWT DBに登録がないTWT ID
@@ -238,6 +249,7 @@ class ArtistsController < ApplicationController
     UNASSOCIATED_PXV_USER = '未紐づけPXVユーザー' #TWT ID未設定PXV（TWT DBにはPXV ID登録済み）
     UNASSOCIATED_TWT_ACNT = '未紐づけTWTアカウント' #PXV DBにはTWT IDが登録されているがTWT DBにはPXV IDが登録されていない
     TWT_DUP_TWTID = 'same_twtid'
+    ALL_IN_ONE = 'all in one'
   end
 
   module ApiEnum
@@ -266,6 +278,10 @@ class ArtistsController < ApplicationController
 
   module SORT_TYPE
     SORT_RATING = "RATING"
+  end
+
+  module GROUP_TYPE
+    GROUP_ACCESS_OLD_TO_NEW = "ACCESS旧→新"
   end
 
   def api_hoge
@@ -299,21 +315,37 @@ class ArtistsController < ApplicationController
     @begin_no = prms.begin_no
     @thumbnail = prms.thumbnail
 
-    @artists_group = {}
-
     case params[:file]
     when ArtistsController::MethodEnum::SEARCH
       artists = Artist.looks(params[:target_col], params[:search_word], params[:match_method])
       @artists_group = index_group_by(artists, prms)
+      return
+    when MethodEnum::ALL_IN_ONE
+      ag1 = index_all_in_one(prms, %!#{prms.rating}:!, prms.last_access_datetime)
+
+      ### 
+      prms.rating_upper_limit = prms.rating
+      prms.rating = prms.rating_upper_limit - 5
+      ag2 = index_all_in_one(prms, %!#{prms.rating}:!, prms.last_access_datetime * 2)
+      
+      @artists_group = ag1.merge(ag2)
       return
     when MethodEnum::TABLE_UPDATE_NEW_USER
       Pxv::db_update_by_newdir()
       artists = Artist.select {|x| (x.created_at.to_date - Date.today.to_date).to_i == 0}
       @artists_group[""] = artists
       return
+    when MethodEnum::UPDATE_RECORD
+      #Pxv::update_record_by_dir()
+      Pxv::db_update_by_newdir(false)
+      artists = Artist.select {|x| (x.created_at.to_date - Date.today.to_date).to_i == 0}
+      @artists_group[""] = artists
+      return
     else
       artists = Artist.all
     end
+
+    @artists_group = {}
 
     if prms.param_file == "urllist" or
       prms.param_file == "urllist-pxv-only" or
@@ -441,6 +473,8 @@ class ArtistsController < ApplicationController
       artists = artists.select {|x| (x.created_at.to_date - x.last_ul_datetime.to_date).to_i > 365}
     elsif prms.param_file == ArtistsController::MethodEnum::ACCESS_UL_DIFF_FAR
       artists = artists.select {|x| (x.last_access_datetime.to_date - x.last_ul_datetime.to_date).to_i > 60}
+    elsif prms.param_file == ArtistsController::MethodEnum::SAME_FILENUM
+      artists = artists.select {|x| x.filenum == x.recent_filenum}
     elsif prms.param_file == ArtistsController::MethodEnum::REGIST_UL_DIFF_NEAR
       artists = artists.select {|x| (x.created_at.to_date - x.earliest_ul_date.to_date).to_i < 30}
     elsif prms.param_file == ArtistsController::MethodEnum::TWTID_CASE_DIFF
@@ -465,6 +499,10 @@ class ArtistsController < ApplicationController
     artists = index_select(artists, prms)
     puts %!artists.size=#{artists.size}!
     artists = index_sort(artists, prms)
+
+    @artists_total_count = artists.size
+    artists = artists.first(prms.display_number)
+
     if artists.size > 5
       @artists_group = index_group_by(artists, prms)
     else
@@ -795,7 +833,7 @@ class ArtistsController < ApplicationController
     end
 
     # select
-    def index_select(artists, prms)
+    def index_select(artists, prms, use_pred=true)
 
       if prms.point > 0
         artists = artists.select {|x| x.point >= prms.point}
@@ -803,15 +841,17 @@ class ArtistsController < ApplicationController
         artists = artists.select {|x| x.point < 0}
       end
 
-      if prms.prediction > 0
-        artists = artists.select {
-          |x| x.prediction_up_cnt(true) >= prms.prediction or
-          (prms.force_disp_day != 0 and !x.last_access_datetime_p(prms.force_disp_day))
-        }
-      elsif prms.prediction < 0
-        artists = artists.select {|x| x.prediction_up_cnt(true) <= -(prms.prediction)}
+      if use_pred
+        if prms.prediction > 0
+          artists = artists.select {
+            |x| x.prediction_up_cnt(true) >= prms.prediction or
+            (prms.force_disp_day != 0 and !x.last_access_datetime_p(prms.force_disp_day))
+          }
+        elsif prms.prediction < 0
+          artists = artists.select {|x| x.prediction_up_cnt(true) <= -(prms.prediction)}
+        end
+        #puts %!artists.size=#{artists.size}!
       end
-      #puts %!artists.size=#{artists.size}!
       
       if prms.rating < 0
       elsif prms.rating == 0
@@ -821,6 +861,10 @@ class ArtistsController < ApplicationController
         artists = artists.select {|x| x.rating >= prms.rating}
       end
       #puts %!artists.size=#{artists.size}!
+
+      if prms.rating_upper_limit >= 0
+        artists = artists.select {|x| x.rating < prms.rating_upper_limit}
+      end
 
       if prms.twt
         artists = artists.select {|x| x[:twtid] != "" and x[:twtid] != "-"}
@@ -852,23 +896,9 @@ class ArtistsController < ApplicationController
 
       if prms.status == "(全て)"
       elsif prms.status == "「長期更新なし」を除外"
-        excl_list = [
-          "長期更新なし",
-          "半年以上更新なし",
-          "退会",
-          "停止",
-          "作品ゼロ",
-        ]
-        artists = artists.select {|x| excl_list.include?(x.status) == false}
+        artists = index_select_status_exclude(artists)
       elsif prms.status == "長期更新なし"
-        excl_list = [
-          "長期更新なし",
-          "半年以上更新なし",
-          "3ヶ月以上更新なし",
-          "1ヶ月以上更新なし",
-          "作品ゼロ",
-        ]
-        artists = artists.select {|x| excl_list.include?(x.status)}
+        artists = index_select_status_include(artists)
       else
         artists = artists.select {|x| x.status == prms.status}
         puts %!status="#{prms.status}"!
@@ -932,6 +962,30 @@ class ArtistsController < ApplicationController
       end
       puts %!artists.size=#{artists.size}!
 
+      artists
+    end
+
+    def index_select_status_exclude(artists)
+      excl_list = [
+        "長期更新なし",
+        "半年以上更新なし",
+        "退会",
+        "停止",
+        "作品ゼロ",
+      ]
+      artists = artists.select {|x| excl_list.include?(x.status) == false}
+      artists
+    end
+
+    def index_select_status_include(artists)
+      excl_list = [
+        "長期更新なし",
+        "半年以上更新なし",
+        "3ヶ月以上更新なし",
+        "1ヶ月以上更新なし",
+        "作品ゼロ",
+      ]
+      artists = artists.select {|x| excl_list.include?(x.status)}
       artists
     end
 
@@ -1039,6 +1093,9 @@ class ArtistsController < ApplicationController
         }.sort.to_h
       when "none"
         artists_group["none"] = artists
+      when GROUP_TYPE::GROUP_ACCESS_OLD_TO_NEW
+        puts %![DBG] index_group_by::#{prms.group_by}!
+        artists_group = artists.group_by {|x| x[:last_access_datetime].strftime("%Y-%m")}.sort.to_h
       else
         #artists_group = set_artist_group_pxv(artists)
         artists_group["all"] = artists
@@ -1073,4 +1130,53 @@ class ArtistsController < ApplicationController
       artists_group
     end
 
+    def index_all_in_one(prms, prefix, interval=30)
+      artists_group = {}
+
+      # ---
+      prms.last_access_datetime = 0
+      artists = index_select(Artist.all, prms)
+      artists = index_select_status_exclude(artists)
+
+      artists_sort_pred = artists.sort_by {|x| [-x.prediction_up_cnt(true), x[:recent_filenum], -x[:filenum], x[:last_ul_datetime]]}
+      artists_group[prefix + "予測順"] = artists_sort_pred#.first(prms.display_number)
+
+      @artists_total_count = artists.size
+
+      
+      artists = artists.select {|x| !x.last_access_datetime_p(interval)}
+      artists_sort_high = artists.sort_by {|x| [-x.rating, -x.prediction_up_cnt(true), x.last_access_datetime]}
+      artists_group[prefix + "評価順"] = artists_sort_high#.first(prms.display_number)
+      
+      # ---
+      artists = index_select(Artist.all, prms, false)
+      artists = index_select_status_exclude(artists)
+      artists = artists.select {|x| !x.last_access_datetime_p(interval)}
+
+      artists_sort_access = artists.sort_by {|x| [x.last_access_datetime, -x.recent_filenum, -x.filenum]}
+      artists_group[prefix + "アクセス日順"] = artists_sort_access#.first(prms.display_number)
+
+      artists_sort_ul = artists.sort_by {|x| [x.last_ul_datetime]}
+      artists_group[prefix + "公開日順"] = artists_sort_ul#.first(prms.display_number)
+
+
+      # ---
+      artists = index_select(Artist.all, prms, false)
+      #artists = artists.select {|x| x.status == "長期更新なし"}
+      artists = index_select_status_include(artists)
+      artists = artists.select {|x| !x.last_access_datetime_p(interval)}
+
+      artists_no_updated = artists.sort_by {|x| [x.last_access_datetime]}
+      artists_group[prefix + "更新なし"] = artists_no_updated#.first(prms.display_number)
+
+      # ---
+      artists = index_select(Artist.all, prms, false)
+      artists = artists.select {|x| (x.status == "退会" or x.status == "停止")}
+      artists = artists.select {|x| !x.last_access_datetime_p(interval)}
+
+      artists_vanish = artists.sort_by {|x| [x.twtid, x.last_access_datetime]}.reverse
+      artists_group[prefix + "消滅"] = artists_vanish#.first(prms.display_number)
+      
+      artists_group
+    end
 end

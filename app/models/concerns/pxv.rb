@@ -242,7 +242,7 @@ module Pxv
         id_list.sort.uniq
     end
 
-    def self.db_update_by_newdir
+    def self.db_update_by_newdir(update_record=true)
         new_list = []
         dir_list = stock_dir_list()
         dir_list.each do |path|
@@ -250,9 +250,10 @@ module Pxv
             if pxv_user_id != ""
                 p = Artist.find_by(pxvid: pxv_user_id)
                 if p
-                    STDERR.puts %!user:#{p.pxvname}(#{p.pxvid})!
-                    update_table(p, path)
-                    #break
+                    if update_record
+                        STDERR.puts %!user:#{p.pxvname}(#{p.pxvid})!
+                        update_table(p, path)
+                    end
                 else
                     new_list << [pxv_user_id, path]
                 end
@@ -265,6 +266,25 @@ module Pxv
             #break
         end
     end
+
+    def self.update_record_by_dir(pxv_user_id_arg)
+        dir_list = stock_dir_list()
+        dir_list.each do |path|
+            pxv_user_id = get_pxv_user_id(path)
+            if pxv_user_id == pxv_user_id_arg
+                p = Artist.find_by(pxvid: pxv_user_id)
+                if p
+                    STDERR.puts %!user:#{p.pxvname}(#{p.pxvid})!
+                    update_table(p, path)
+                else
+                    STDERR.puts %!new user:#{pxv_user_id}|#{path}!
+                    register_to_table(pxv_user_id, path)
+                end
+                break
+            end
+        end
+    end
+    
     def self.register_to_table(pxv_user_id, path)
         pxv_params = {}
 
@@ -342,26 +362,30 @@ module Pxv
             return
         end
 
+        if pxv_artist.filenum > pxv.filenum
+            #pxv_params[:filenum] = pxv_artist.path_list.size
+            STDERR.print %![DBG] filenum:#{pxv_params[:filenum]} <= #{pxv_artist.path_list.size}!
+            
+            alist = Artist.artwork_list(pxv_artist.path_list)
+            recent_filenum = Artist.artwork_list_recent_file_num(alist)
+            #pxv_params[:recent_filenum] = recent_filenum
+            STDERR.print %![DBG] recent_filenum:#{pxv_params[:recent_filenum]} <= #{recent_filenum}!
+        end
+
         #STDERR.print %!最古UL日:\t#{pxv.earliest_ul_date.strftime("%Y-%m-%d")} => #{pxv_artist.earliest_ul_date.strftime("%Y-%m-%d")}!
         if pxv_artist.earliest_ul_date < pxv.earliest_ul_date
             pxv_params[:earliest_ul_date] = pxv_artist.earliest_ul_date
-            #print " 更新"
         end
-        puts
 
         #STDERR.print %!最終UL日:\t#{pxv.last_ul_datetime.strftime("%Y-%m-%d")} => #{pxv_artist.last_ul_datetime.strftime("%Y-%m-%d")}!
         if pxv_artist.last_ul_datetime > pxv.last_ul_datetime
             pxv_params[:last_ul_datetime] = pxv_artist.last_ul_datetime
-            #print " 更新"
         end
-        puts
 
         #STDERR.print %!最新DL日:\t#{pxv.last_dl_datetime.strftime("%Y-%m-%d")} => #{pxv_artist.last_dl_datetime.strftime("%Y-%m-%d")}!
         if pxv_artist.last_dl_datetime > pxv.last_dl_datetime
             pxv_params[:last_dl_datetime] = pxv_artist.last_dl_datetime
-            #print " 更新"
         end
-        puts
 
         if pxv.latest_artwork_id
             if pxv_artist.latest_artwork_id > pxv.latest_artwork_id

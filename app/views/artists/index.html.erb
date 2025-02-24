@@ -4,7 +4,7 @@
 
 <%= link_to "Return", root_path %>
 
-<h1>Artists [<%= page_title %>]</h1>
+<h1>Artists [<%= page_title %>]<%= %!(全#{@artists_total_count}件)!%></h1>
 
 <% if @twt_urls.size > 0 %>
   <a href="#twt_url_list">twt_url_list</a>
@@ -15,11 +15,15 @@
   検索ワード：「<b><%= search_word %></b>」
 <% end %>
 
+<% disp_id_list = [] %>
 <% @artists_group.each do |key, artists| %>
   <% if artists.size < @begin_no %>
     <% next %> 
   <% end %>
-  <h2><%= "#{key}(全#{artists.size}件)[#{@begin_no + 1}..#{[(@begin_no.to_i + @size_per_table), artists.size].min }]" %></h2>
+  <h2>
+    <%#= "#{key}(全#{artists.size}件)[#{@begin_no + 1}..#{[(@begin_no.to_i + @size_per_table), artists.size].min }]" %>
+    <%= "#{key}(#{artists.size}件)[#{@begin_no + 1}..#{[(@begin_no.to_i + @size_per_table), artists.size].min }]" %>
+  </h2>
   <table border="1" rules="all">
     <tr>
       <th>ID</th>
@@ -39,6 +43,12 @@
       <th>nje</th>
     </tr>
     <% artists[(@begin_no)..(@begin_no + @size_per_table - 1)].each do |artist| %>
+      <% if disp_id_list.include?(artist.pxvid) %>
+        <% next %>
+      <% else %>
+        <% disp_id_list << artist.pxvid %>
+      <% end %>
+
       <% if true#@twt %>
         <% twt = Twitter.find_by_twtid_ignore_case(artist["twtid"]) %>
       <% else %>
@@ -82,9 +92,9 @@
           <% if artist.twtid.presence and artist.twtid != "-" %>
             @<%= artist.twtid %>
             <% if twt %>
-              【<%= twt.rating %>】<%= twt.r18 %>|<%= twt.drawing_method %>
+              <%= twt.r18 %>|<%= twt.drawing_method %>
               <br />
-              <%= twt.prediction %>[<%= link_to_ex "■twt■", twt %>]
+              【<%= twt.rating %>】<%= twt.prediction %>[<%= link_to_ex "■twt■", twt %>]
               <% if artist.twtid != twt.twtid %>
                 <%= link_to_ex "@#{twt.twtid}", artist.twt_user_url %>
               <% end %>
@@ -238,9 +248,12 @@
           [ArtistsController::MethodEnum::UNASSOCIATED_TWT_ACNT],
           [ArtistsController::MethodEnum::REGIST_UL_DIFF],
           [ArtistsController::MethodEnum::ACCESS_UL_DIFF_FAR],
+          [ArtistsController::MethodEnum::SAME_FILENUM],
           [ArtistsController::MethodEnum::REGIST_UL_DIFF_NEAR],
           [ArtistsController::MethodEnum::TWTID_CASE_DIFF],
           [ArtistsController::MethodEnum::TABLE_UPDATE_NEW_USER],
+          [ArtistsController::MethodEnum::UPDATE_RECORD],
+          [ArtistsController::MethodEnum::ALL_IN_ONE],
           [ArtistsController::MethodEnum::SEARCH],
         ],
         selected: params[:file] 
@@ -308,6 +321,7 @@
           ['rating'],
           ['評価+年齢制限'],
           ['さかのぼり'],
+          [ArtistsController::GROUP_TYPE::GROUP_ACCESS_OLD_TO_NEW],
         ],
         selected: params[:group_by] 
       ) %>
@@ -354,6 +368,8 @@
     <br />
     <%= f.label :評価 %>
     <%= f.number_field :rating, :value => params[:rating] %>以上
+    <br />
+    <%= f.number_field :rating_upper_limit, :value => params[:rating_upper_limit] %>未満
     <br />
     <%= f.label :直近のファイル数 %>
     <%= f.number_field :recent_filenum, :value => params[:recent_filenum] %>以上

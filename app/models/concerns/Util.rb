@@ -103,4 +103,23 @@ module Util
         uri = URI.parse(url)
         uri.host
     end
+
+    def self.formatFileSize(bytes)
+        unit = 1024
+        if bytes < unit
+            return %!#{bytes} Bi!
+        end
+    
+        bytes_log = Math.log(bytes)
+        unit_log = Math.log(unit)
+        exp = bytes_log / unit_log
+        #puts %!#{exp} = #{bytes_log} / #{unit_log}a!
+        p = unit.pow(exp)
+        b = bytes / p
+        u = "KMGTPE"[exp - 1]
+        #puts %!#{b} = #{bytes} / #{p}!
+    
+        %!#{b.to_i} #{u}!
+    end
+   
 end

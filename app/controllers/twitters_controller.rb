@@ -3,6 +3,7 @@ class TwittersController < ApplicationController
 
   module ModeEnum
     UNASSOCIATED_TWT_ACNT = '未紐づけTWTアカウント' #PXV DBにはTWT IDが登録されているがTWT DBにはPXV IDが登録されていない
+    ALL_IN_ONE = 'all in one'
   end
 
   # GET /twitters or /twitters.json
@@ -50,6 +51,13 @@ class TwittersController < ApplicationController
     end
     puts %!rating_gt="#{rating_gt}"!
 
+    if params[:rating_lt] == ""
+      rating_lt = 0
+    else
+      rating_lt = params[:rating_lt].to_i
+    end
+    puts %!rating_lt="#{rating_lt}"!
+
     if params[:thumbnail].presence
       @thumbnail = true
     else
@@ -70,6 +78,13 @@ class TwittersController < ApplicationController
       no_pxv = false
     end
     puts %!no_pxv="#{no_pxv}"!
+
+    if params[:step].presence
+      step = params[:step].to_i
+    else
+      step = 3
+    end
+    puts %!step="#{step}"!
 
     if true
       sql_query = "LEFT OUTER JOIN artists ON twitters.twtid = artists.twtid"
@@ -111,6 +126,37 @@ class TwittersController < ApplicationController
       twitters = twitters.select {|x| unassociated_twt_screen_names.include?(x.twtid)}
       @twitters_group = {}
       @twitters_group[""] = twitters
+      return
+    when TwittersController::ModeEnum::ALL_IN_ONE
+      @twitters_group = {}
+
+      group_list = []
+
+      num_of_times = 3
+
+      if params[:ex_pxv]
+        tmp = twitters.select {|x|
+          !x.artists_last_ul_datetime.presence or
+          (Util::get_date_delta(x.artists_last_ul_datetime) > 90 and
+          Util::get_date_delta(x.artists_last_access_datetime) > 90) or
+          Util::get_date_delta(x.artists_last_access_datetime) > 60
+        }
+      else
+        tmp = twitters
+      end
+
+      num_of_times.times do |cnt|
+
+        group, @twitters_total_count = index_all_in_one(tmp, params, rating_gt, rating_lt)
+        if group
+          group_list << group
+        end
+      
+        rating_lt = rating_gt
+        rating_gt -= step
+      end
+
+      @twitters_group = group_list[0].merge(*group_list)
       return
     when "同一"
       dup_ids = []
@@ -256,14 +302,26 @@ class TwittersController < ApplicationController
 
       case sort_by
       when "access"
-        twitters = twitters.sort_by {|x| [-x.rating, x.last_access_datetime, (x.last_dl_datetime)]}#.reverse
-      else
-        #twitters = twitters.sort_by {|x| [-x.rating, -x.prediction, x.last_access_datetime]}
+        #twitters = twitters.sort_by {|x| [-x.rating, x.last_access_datetime, (x.last_dl_datetime)]}#.reverse
+        twitters = twitters.sort_by {|x| [x.last_access_datetime, (x.last_dl_datetime)]}#.reverse
+      when "pred"
         twitters = twitters.sort_by {|x| [-x.prediction, x.last_access_datetime]}
+      else
+        twitters = twitters.sort_by {|x| [-x.rating, -x.prediction, x.last_access_datetime]}
       end
 
       @twitters_total_count = twitters.size
       twitters = twitters.first(@num_of_disp)#limit(@num_of_disp)#offset(3)
+
+=begin
+      case sort_by
+      when "access"
+      when "pred"
+        @twitters_group[""] = twitters
+        return
+      else
+      end
+=end
     when "hand"
       twitters = twitters.select {|x| !x.last_access_datetime_p(@hide_within_days)}
       twitters = twitters.select {|x| x.status == "TWT巡回"}
@@ -289,7 +347,7 @@ class TwittersController < ApplicationController
 =end
       twitters = twitters.select {|x|
         !(x.pxvid.presence) or
-        (x.last_ul_datetime.presence and Util::get_date_delta(Date.parse(x.last_ul_datetime).to_s) > 60)
+        (x.last_ul_datetime.presence and Util::get_date_delta(Date.parse(x.last_ul_datetime).to_s) > 60)#last_post_datetime???
       }
 
       twitters = twitters.sort_by {|x| [-x.prediction, x.last_access_datetime]}
@@ -358,7 +416,7 @@ class TwittersController < ApplicationController
 =end
 
     when "all"
-      twitters = twitters.sort_by {|x| [-x.prediction, x.last_access_datetime, (x.last_ul_datetime || "2000-01-01")]}
+      twitters = twitters.sort_by {|x| [-x.prediction, x.last_access_datetime, (x.last_post_datetime || "2000-01-01")]}
     else
       #twitters = twitters.select {|x| x.last_dl_datetime.year >= 2023}
       #twitters = twitters.select {|x| x.last_dl_datetime.month >= 11}
@@ -458,5 +516,48 @@ class TwittersController < ApplicationController
         :sub_twtid,
         :main_twtid,
         )
+    end
+
+    def index_all_in_one(twitters, params, rating_gt, rating_lt)
+      access_date_intvl = 30
+
+      twitters = twitters.select {|x| x.rating == nil or x.rating >= rating_gt }
+      if rating_lt > 0
+        twitters = twitters.select {|x| x.rating == nil or x.rating < rating_lt }
+      end
+      twitters = twitters.select {|x| x.drawing_method == params[:target]}
+
+
+
+      #### !!! こっちを先にやらないとだめ !!! ####
+      STDERR.puts %!twitters=#{twitters.size}!
+      twitters2 = twitters.select {|x| x.status == "長期更新なし" or x.status == "最近更新してない？"}
+      STDERR.puts %!twitters2=#{twitters2.size}!
+
+      twitters = twitters.select {|x| x.status == "TWT巡回"}
+
+
+
+      twitters_group = {}
+
+      #twitters = twitters.select {|x| x.prediction >= pred_cond_gt}
+      #twitters = twitters.sort_by {|x| [x.sort_val, -x.prediction, -(x.rating||0), x.last_access_datetime]}
+      twitters = twitters.sort_by {|x| [-x.prediction, -(x.rating||0), x.last_access_datetime]}
+      twitters_group["#{rating_gt}:予測順"] = twitters
+
+      twitters = twitters.sort_by {|x| [x.last_access_datetime, -(x.rating||0), -x.prediction]}
+      twitters_group["#{rating_gt}:アクセス日順"] = twitters
+
+      twitters_total_count = twitters.size
+
+      twitters = twitters.select {|x| !x.last_access_datetime_p(7)}
+      twitters = twitters.sort_by {|x| [(x.last_post_datetime || "2000-01-01"), -(x.rating||0), x.prediction]}
+      twitters_group["#{rating_gt}:投稿日順"] = twitters
+
+      twitters2 = twitters2.select {|x| !x.last_access_datetime_p(access_date_intvl)}
+      twitters2 = twitters2.sort_by {|x| [x.last_access_datetime, -(x.rating||0), -x.prediction]}
+      twitters_group["#{rating_gt}:更新なし"] = twitters2 if twitters2.size > 0
+
+      [twitters_group, twitters_total_count]
     end
 end

@@ -35,6 +35,7 @@
 <% end %>
 
 <div id="twitters">
+  <% done_id_hash = {} %>
   <% @twitters_group.each do |key, twitters| %>
   <h2>
 
@@ -54,8 +55,20 @@
       <th>PXV最終UL日</th>
       <th>サムネイル</th>
     </tr>
-    <% twitters.first(@num_of_disp).each.with_index(1) do |twitter, idx| %>
-      
+    <% cnt = 0 %>
+    <%# twitters.first(@num_of_disp).each.with_index(1) do |twitter, idx| %>
+    <% twitters.each.with_index(1) do |twitter, idx| %>
+      <% if cnt >= @num_of_disp %>
+        <% break %>
+      <% end %>
+
+      <% if done_id_hash.has_key?(twitter.id) %>
+        <% next %>
+      <% end %>
+
+      <% done_id_hash[twitter.id] = true %>
+      <% cnt += 1 %>
+
       <% twt_url = Twt::twt_user_url(twitter.twtid) %>
 
       <tr>
@@ -69,8 +82,7 @@
           <br />
           [<%= twitter.status %>]
           <br />
-          <%= twitter.filenum %>(<%= twitter.recent_filenum %>) 
-          <br />
+         
           <%= %!※#{twitter.comment}! if twitter.comment.presence %>
           <%= twitter.remarks %>
         </td>
@@ -172,13 +184,18 @@
         <td>
           <% if @thumbnail %>
             <% list = twitter.get_pic_filelist() %>
-            <% twt_pic_list = list.map {|x| [Twt::twt_path_str(x), x]}.sort.reverse %>
-            <% list = twt_pic_list.map {|x| x[1]}.first(3) %>
-            <% list.each do |filepath| %>
-              <%= link_to image_tag(filepath, width: pic_disp_mag, height: pic_disp_mag), filepath, target: :_blank, rel: "noopener noreferrer" if filepath.presence %>
+            <% if list.size < 500 %>
+              <% twt_pic_list = list.map {|x| [Twt::twt_path_str(x), x]}.sort.reverse %>
+              <% list = twt_pic_list.map {|x| x[1]}.first(3) %>
+              <% list.each do |filepath| %>
+                <%= link_to image_tag(filepath, width: pic_disp_mag, height: pic_disp_mag), filepath, target: :_blank, rel: "noopener noreferrer" if filepath.presence %>
+              <% end %>
+              <%= twt_pic_list.size %>
+            <% else %>
+              <%= twitter.filenum %>(<%= twitter.recent_filenum %>) 
             <% end %>
-            <%= twt_pic_list.size %>
           <% else %>
+            <%= twitter.filenum %>(<%= twitter.recent_filenum %>) 
           <% end %>
         </td>
       </tr>

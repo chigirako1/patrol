@@ -162,6 +162,10 @@ module Twt
         %!http://x.com/#{screen_name}/status/#{tweet_id}!
     end
 
+    def self.twt_tweet_url_dev(tweet_id)
+        twt_tweet_url("TwitterDev", tweet_id)
+    end
+
     def self.db_update_by_newdir()
         twt_id_list = twt_user_list("new")
         twt_id_list.each do |key, val|
