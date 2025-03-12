@@ -216,19 +216,29 @@ class Artist < ApplicationRecord
             end
         end
 
-        #known_pxv_user_id_list.sort_by! {|x| [x.p.status, x.p.rating, x.p.r18, -(x.cnt), x.p.last_access_datetime]}
-        #known_pxv_user_id_list.sort_by! {|x| [x.p.status, x.p.rating==0 ? -11 : -x.p.rating, x.p.r18, -(x.cnt), x.p.last_access_datetime]}
-        known_pxv_user_id_list.sort_by! {|x|
-            [
-                x.p.feature,
-                #-(x.cnt), 
-                x.p.status, 
-                x.p.rating==0 ? -11 : -x.p.rating, 
-                x.p.r18, 
-                x.p.last_access_datetime
-            ]
-        } if known_pxv_user_id_list
-
+        begin
+            #tmp = nil
+            #known_pxv_user_id_list.sort_by! {|x| [x.p.status, x.p.rating, x.p.r18, -(x.cnt), x.p.last_access_datetime]}
+            #known_pxv_user_id_list.sort_by! {|x| [x.p.status, x.p.rating==0 ? -11 : -x.p.rating, x.p.r18, -(x.cnt), x.p.last_access_datetime]}
+            known_pxv_user_id_list.sort_by! {|x|
+                #tmp = x;
+                [
+                    x.p.feature||"",
+                    #-(x.cnt), 
+                    x.p.status||"", 
+                    #x.p.rating==0 ? -11 : -x.p.rating, 
+                    x.p.rating==nil ? x.p.sort_rating_dsc : 0,
+                    x.p.r18||"", 
+                    x.p.last_access_datetime||""
+                ]
+            } if known_pxv_user_id_list
+        rescue ArgumentError => e
+            #puts tmp.p.feature
+            #puts tmp.p.status 
+            #puts tmp.p.rating
+            #puts tmp.p.r18
+            #puts tmp.p.last_access_datetime
+        end
 
         #puts %!dbg:#{unknown_pxv_user_id_list.size}!
         #puts %!dbg:#{unknown_pxv_user_id_list[0]}!
@@ -240,6 +250,14 @@ class Artist < ApplicationRecord
     #--------------------------------------------------------------------------
     # インスタンスメソッド
     #--------------------------------------------------------------------------
+    def sort_rating_dsc
+        if rating == 0
+            -11
+        else
+            -rating
+        end
+    end
+
     def point
 
         pred_cnt = prediction_up_cnt(true)

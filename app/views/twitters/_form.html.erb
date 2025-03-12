@@ -147,6 +147,7 @@
 
   <div>
     <%= form.label :pxvid, style: "display: block" %>
+    <%= image_tag 'favicon20250122.ico', size: '30x30' %>
     <% if @twitter.pxvid.presence %>
       <%= link_to_ex "#{@twitter.pxvid}", Pxv::pxv_user_url(@twitter.pxvid) %>
       <br />
@@ -184,7 +185,7 @@
         <br />
         予測：<%= pxv2.prediction_up_cnt(true) %>
         [<%= link_to_ex("■pxv■", artist_path(pxv2.id, access_dt_update: "yes")) %>]
-        A:<%= pxv2.last_access_datetime_disp %>
+        A:<%= pxv2.last_access_datetime_disp %>(最新UL:<%= pxv2.last_ul_datetime_disp %>)
         <br />
         <% if pxv2.filenum < 500 %>
           <%= pic_path_tag(@twitter.pxvid, 5, '10%', true) %>
@@ -354,7 +355,19 @@
   
   <div>
     <%= form.label :総ファイル数, style: "display: block" %>
-    <% if @twt_pic_path_list and @twitter.filenum and @twt_pic_path_list.size > @twitter.filenum %>
+    <% if @twitter.filenum %>
+      <% old_filenum = @twitter.filenum %>
+    <% else %>
+      <% old_filenum = 0 %>
+    <% end %>
+
+    <% if @twt_pic_path_list %>
+      <% new_filenum = @twt_pic_path_list.size %>
+    <% else %>
+      <% new_filenum = 0 %>
+    <% end %>
+
+    <% if old_filenum < new_filenum %>
       "<%= @twitter.filenum %>"↓<font color='red'>更新あり</font>
       <br />
       <%= form.number_field :filenum, value: @twt_pic_path_list.size %>

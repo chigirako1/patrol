@@ -41,19 +41,16 @@ module Twt
         UrlTxtReader::get_path_list(dirpath)
     end
 
-    def self.get_pic_filelist(twtid)
+    def self.get_pic_filelist(twtid, read_archive=true)
         path_list = []
 
-        tpath = get_twt_path_from_dirlist(twtid)
-        puts %!archive dir path=#{tpath}!
+        if read_archive
+            tpath = get_twt_path_from_dirlist(twtid)
+            puts %!archive dir path=#{tpath}!
 
-        path_list << UrlTxtReader::get_path_list(tpath)
+            path_list << UrlTxtReader::get_path_list(tpath)
+        end
 
-=begin
-        twt_root = Rails.root.join(TWT_CURRENT_DIR_PATH).to_s + "*/"
-        dirpath = Util::get_dir_path_by_twtid(twt_root, twtid)
-        path_list << UrlTxtReader::get_path_list(dirpath)
-=end
         path_list << get_twt_user_path_list(TWT_CURRENT_DIR_PATH, "*/", twtid)
 
         if Dir.exist?(TWT_TMP_DIR_PATH_A)

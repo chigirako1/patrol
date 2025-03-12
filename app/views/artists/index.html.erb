@@ -18,7 +18,7 @@
 <% disp_id_list = [] %>
 <% @artists_group.each do |key, artists| %>
   <% if artists.size < @begin_no %>
-    <% next %> 
+    <%# next %> 
   <% end %>
   <h2>
     <%#= "#{key}(全#{artists.size}件)[#{@begin_no + 1}..#{[(@begin_no.to_i + @size_per_table), artists.size].min }]" %>
@@ -56,7 +56,8 @@
       <% end %>
       <tr>
         <td>
-          <%= link_to_ex(artist.id, artist_path(artist, access_dt_update: "no")) %>
+          <%#= link_to_ex(artist.id, artist_path(artist, access_dt_update: "no")) %>
+          <%= artist.id %>
         </td>
         <%= priority_tag(artist) %>
         <td>
@@ -71,6 +72,10 @@
           <%= link_to_ex("■pxv■", artist_path(artist, access_dt_update: "yes")) %>
           <br />
           <%= artist.last_access_datetime_disp %>
+          <% if artist.reverse_status.presence %>
+            <br />
+            [<%= artist.reverse_status %>]
+          <% end%>
         </td>
         <td><%= artist.warnings %><br /><%= artist.comment %></td>
         <% ul_delta = artist.get_date_delta(artist.last_ul_datetime) %>
@@ -80,10 +85,6 @@
           <% if artist.status.presence %>
             <br />
             <font color="pink"><b>(※<%= artist.status %>)</b></font>
-          <% end%>
-          <% if artist.reverse_status.presence %>
-            <br />
-            [<%= artist.reverse_status %>]
           <% end%>
         </td>
 
@@ -161,7 +162,7 @@
         <%= link_to_ex %!☆pxv☆:@#{pxv_user_id}!, artist_pxv_path(pxv_user_id) %>
       <% else %>
         <h3>pxv:"<%= pxv_user_id %>" not found</h3>
-        <%= link_to "New Artist(#{pxv_user_id})", new_artist_path(pxvid: pxv_user_id) %>
+        <%= link_to_ex "New Artist(#{pxv_user_id})", new_artist_path(pxvid: pxv_user_id) %>
       <% end %>
     <% end %>
   <% end %>
@@ -258,6 +259,7 @@
         ],
         selected: params[:file] 
       ) %>
+      <%= f.text_field :filename, :value => params[:filename] %>
       <br />
     <hr />
     
@@ -290,7 +292,8 @@
           ['twtid'],
           ['予測▽'],
           ['予測△'],
-          [ArtistsController::SORT_TYPE::SORT_RATING],
+          [ArtistsController::SORT_TYPE::SORT_ACCESS_OLD_TO_NEW],
+          [ArtistsController::SORT_TYPE::SORT_ACCESS_NEW_TO_OLD],
           ['access_date_X_last_ul_datetime'], 
           ['access_date_X_recent_filenum'], 
           ['access_date_X_recent_filenum_X_ul'], 
@@ -319,6 +322,7 @@
           ['priority'],
           ['予測'],
           ['rating'],
+          ['status/rating'],
           ['評価+年齢制限'],
           ['さかのぼり'],
           [ArtistsController::GROUP_TYPE::GROUP_ACCESS_OLD_TO_NEW],

@@ -132,14 +132,22 @@ class TwittersController < ApplicationController
 
       group_list = []
 
-      num_of_times = 3
+      if params[:num_of_times].presence
+        num_of_times = params[:num_of_times].to_i
+      else
+        num_of_times = 3
+      end
+      puts %!num_of_times="#{num_of_times}"!
 
-      if params[:ex_pxv]
+      if params[:ex_pxv].presence and params[:ex_pxv] == "true"
+        
         tmp = twitters.select {|x|
+          artists_last_access_dayn = Util::get_date_delta(x.artists_last_access_datetime);
           !x.artists_last_ul_datetime.presence or
           (Util::get_date_delta(x.artists_last_ul_datetime) > 90 and
-          Util::get_date_delta(x.artists_last_access_datetime) > 90) or
-          Util::get_date_delta(x.artists_last_access_datetime) > 60
+          artists_last_access_dayn > 90 )#and
+          #artists_last_access_dayn - Util::get_date_delta(x.last_access_datetime) > 30) #or
+          #artists_last_access_dayn > 60
         }
       else
         tmp = twitters
@@ -155,6 +163,7 @@ class TwittersController < ApplicationController
         rating_lt = rating_gt
         rating_gt -= step
       end
+      @rating_min = rating_gt
 
       @twitters_group = group_list[0].merge(*group_list)
       return
@@ -329,6 +338,14 @@ class TwittersController < ApplicationController
       if rating_gt != 0
         twitters = twitters.select {|x| x.rating != nil and x.rating >= rating_gt }
       end
+      if params[:ex_pxv].presence and params[:ex_pxv] == "true"
+        twitters = twitters.select {|x|
+          artists_last_access_dayn = Util::get_date_delta(x.artists_last_access_datetime);
+          !x.artists_last_ul_datetime.presence or
+          (Util::get_date_delta(x.artists_last_ul_datetime) > 90 and
+          artists_last_access_dayn > 90 )
+        }
+      end
       #twitter.artist_status
       #twitters = twitters.select {|x| x.drawing_method != nil and (x.drawing_method == "手描き")}
 
@@ -435,11 +452,14 @@ class TwittersController < ApplicationController
         @twt_ids = [@twt_ids, old_twt_ids].flatten
       end
 =end
-    elsif params[:refresh].presence and params[:refresh] == "y"
+      read_all = true
+    elsif (params[:refresh].presence and params[:refresh] == "y")
+      read_all = true
     else
+      read_all = false
       @twitter.update(last_access_datetime: Time.now)
     end
-    @twt_pic_path_list = @twitter.get_pic_filelist
+    @twt_pic_path_list = @twitter.get_pic_filelist(read_all)
   end
 
   # GET /twitters/new
@@ -468,6 +488,21 @@ class TwittersController < ApplicationController
 
   # PATCH/PUT /twitters/1 or /twitters/1.json
   def update
+=begin
+    params[:twitter][:twtname].gsub!(/\//, )
+    puts %![LOG] main_twtid=#{params["twitter"]["main_twtid"]}!
+
+        :alt_twtid,
+        :old_twtid,
+        :new_twtid,
+        :sub_twtid,
+        :main_twtid,
+=end
+    if params[:twitter][:main_twtid] =~ /(\w+)/
+      puts %![LOG] main_twtid="#{$1}" <= "#{params["twitter"]["main_twtid"]}"!
+      params[:twitter][:main_twtid] = $1
+    end
+
     respond_to do |format|
       if @twitter.update(twitter_params)
         format.html { redirect_to twitter_url(@twitter), notice: "Twitter was successfully updated." }
@@ -534,10 +569,8 @@ class TwittersController < ApplicationController
       twitters2 = twitters.select {|x| x.status == "長期更新なし" or x.status == "最近更新してない？"}
       STDERR.puts %!twitters2=#{twitters2.size}!
 
+      ####
       twitters = twitters.select {|x| x.status == "TWT巡回"}
-
-
-
       twitters_group = {}
 
       #twitters = twitters.select {|x| x.prediction >= pred_cond_gt}
@@ -550,7 +583,11 @@ class TwittersController < ApplicationController
 
       twitters_total_count = twitters.size
 
-      twitters = twitters.select {|x| !x.last_access_datetime_p(7)}
+      ### ###
+      twitters = twitters.select {|x|
+        #!x.last_access_datetime_p(14)
+        x.select_cond_post_date()
+      }
       twitters = twitters.sort_by {|x| [(x.last_post_datetime || "2000-01-01"), -(x.rating||0), x.prediction]}
       twitters_group["#{rating_gt}:投稿日順"] = twitters
 

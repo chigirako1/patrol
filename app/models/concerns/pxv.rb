@@ -22,12 +22,12 @@ module Pxv
     end
 
     def self.get_path_from_dirlist(pxvid)
-        rpath = []
         txtpath = Rails.root.join(PXV_DIRLIST_PATH).to_s
         unless File.exist? txtpath
-            return rpath
+            return []
         end
 
+        rpath = []
         File.open(txtpath) { |file|
             while line  = file.gets
                 #if line.include?(search_str)
@@ -302,6 +302,7 @@ module Pxv
 
         alist = Artist.artwork_list(pxv_artist.path_list)
         recent_filenum = Artist.artwork_list_recent_file_num(alist)
+        STDERR.puts %!recent_filenum=#{recent_filenum}!
         pxv_params[:recent_filenum] = recent_filenum
         pxv_params[:status] = ""
         twt = Twitter.find_by(pxvid: pxv_user_id)
@@ -362,7 +363,7 @@ module Pxv
             return
         end
 
-        if pxv_artist.filenum > pxv.filenum
+        if pxv_artist.path_list.size > pxv.filenum
             #pxv_params[:filenum] = pxv_artist.path_list.size
             STDERR.print %![DBG] filenum:#{pxv_params[:filenum]} <= #{pxv_artist.path_list.size}!
             

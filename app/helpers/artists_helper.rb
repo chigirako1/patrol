@@ -36,10 +36,12 @@ module ArtistsHelper
         tag = ""
         if artist.rating == 0
             bgcolor = "orange"
+=begin
         elsif artist.priority > 0
             bgcolor = "yellow"
         elsif artist.priority < 0
             bgcolor = "gray"
+=end
         elsif artist.rating < 75
             bgcolor = "lightgray"
         else

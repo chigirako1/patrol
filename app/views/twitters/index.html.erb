@@ -38,7 +38,6 @@
   <% done_id_hash = {} %>
   <% @twitters_group.each do |key, twitters| %>
   <h2>
-
     <%= key %>(<%= twitters.size %>件)
   </h2>
   <table border="1" rules="all">
@@ -73,7 +72,10 @@
 
       <tr>
         <td><%= idx %></td>
-        <td><%= link_to twitter["id"], twitter %></td>
+        <td>
+          <%#= link_to twitter["id"], twitter %>
+          <%= twitter.id %>
+        </td>
         <td>
           <%= twitter.drawing_method %>【<%= twitter.rating %>】<%= twitter.r18 %>
           <br />
@@ -86,8 +88,11 @@
           <%= %!※#{twitter.comment}! if twitter.comment.presence %>
           <%= twitter.remarks %>
         </td>
-        <td>
-          <%= twitter.prediction %>
+
+        <% pred = twitter.prediction %>
+        <% pred_bg_color = pred_bg_color(pred) %>
+        <td bgcolor="<%= pred_bg_color %>">
+          <%= pred %>
           <br />
           [<%= link_to_ex "■twt■", twitter %>]
           <br />
@@ -98,7 +103,7 @@
 
         <% if twitter.last_post_datetime %>
           <% ul_delta = twitter.get_date_delta(twitter.last_post_datetime) %>
-          <% ul_bg_color = "beige" %>
+          <% # ul_bg_color = "beige" %>
           <% ul_bg_color = td_date_bg_color(ul_delta) %>
           <td bgcolor="<%= ul_bg_color %>">
             <%= Util.get_date_info(twitter.last_post_datetime) %>
@@ -131,7 +136,15 @@
         <td bgcolor="pink">
           <% if pxv.presence %>
             <%= pxv.prediction_up_cnt(true) %>
+            <% if twitter.artist_status.presence %>
+              PXVID:<%= %!#{twitter.artist_pxvid}! %>
+              <br />
+              <font color="red">
+              <b><%= %!※#{twitter.artist_status}! %></b>
+              </font>
+            <% end %>
             <br />
+
             <% if pxv2.presence %>
               [<%= link_to_ex("■pxv■(#{pxv2.id})", artist_path(pxv2, access_dt_update: "yes")) %>]
               (@<%= pxv2.twtid %>)
@@ -141,6 +154,7 @@
               (@<%= pxv.twtid %>)
             <% end %>
             <br />
+
             <% if twitter.artists_last_access_datetime.presence %>
               <%= %!(#{twitter.get_date_info(twitter.artists_last_access_datetime)})! %>
             <% end %>
@@ -166,13 +180,6 @@
             <%#= twitter.get_datetime_string(d, true) %>
             <br />
             <%= %!(#{twitter.get_date_info(d)})! %>
-            <% if twitter.artist_status.presence %>
-              PXVID:<%= %!#{twitter.artist_pxvid}! %>
-              <br />
-              <font color="red">
-              <b><%= %!※#{twitter.artist_status}! %></b>
-              </font>
-            <% end %>
             <% if pxv2.presence and pxv2.reverse_status.presence %>
               <br />
               <%= %![#{pxv2.reverse_status}]! %>
@@ -206,3 +213,8 @@
 
 <hr />
 <%= link_to "New twitter", new_twitter_path %>
+
+<% if @rating_min.presence %>
+  <% rating_lt = @rating_min %>
+  <%= link_to "raring -", url_for(params.permit!.to_h.merge(rating: rating_lt)) %>
+<% end %>

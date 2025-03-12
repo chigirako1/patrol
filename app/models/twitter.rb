@@ -173,8 +173,13 @@ class Twitter < ApplicationRecord
         Twt::twt_user_url(twtid)
     end
 
-    def get_pic_filelist
-        Twt::get_pic_filelist(twtid)
+    def get_pic_filelist(read_all=true)
+        if filenum == nil or filenum < 500 or read_all
+            read_archive = true
+        else
+            read_archive = false
+        end
+        Twt::get_pic_filelist(twtid, read_archive)
     end
 
     def get_pic_filelist_ex()
@@ -204,6 +209,17 @@ class Twitter < ApplicationRecord
             1
         else
             0
+        end
+    end
+
+    def select_cond_post_date
+        num_of_days_elapased = get_date_delta(last_post_datetime)
+        cond_day = 30
+        if last_access_datetime_p(cond_day)
+            #指定日以内にアクセスしているので対象外
+            false
+        else
+            true
         end
     end
 end

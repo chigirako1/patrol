@@ -255,6 +255,7 @@ class ArtistsController < ApplicationController
   module ApiEnum
     ARTIST_INFO = 0
     UPDATE_ACCESS_DATE = 1
+    ARTIST_RECENT_FILENUM = 2
   end
 
   module FileTarget
@@ -278,6 +279,8 @@ class ArtistsController < ApplicationController
 
   module SORT_TYPE
     SORT_RATING = "RATING"
+    SORT_ACCESS_OLD_TO_NEW = "ACCESS旧→新"
+    SORT_ACCESS_NEW_TO_OLD = "ACCESS新→旧"
   end
 
   module GROUP_TYPE
@@ -297,6 +300,10 @@ class ArtistsController < ApplicationController
       when ApiEnum::UPDATE_ACCESS_DATE
         puts %!update ad!
         @artist.update(last_access_datetime: Time.now)
+      when ApiEnum::ARTIST_RECENT_FILENUM
+        puts %!recent filenum!
+        xxx = {xxx: 333}
+        render json: xxx
       else
         puts "else"
       end
@@ -314,6 +321,7 @@ class ArtistsController < ApplicationController
     @size_per_table = prms.display_number
     @begin_no = prms.begin_no
     @thumbnail = prms.thumbnail
+    @artists_group = {}
 
     case params[:file]
     when ArtistsController::MethodEnum::SEARCH
@@ -321,14 +329,22 @@ class ArtistsController < ApplicationController
       @artists_group = index_group_by(artists, prms)
       return
     when MethodEnum::ALL_IN_ONE
-      ag1 = index_all_in_one(prms, %!#{prms.rating}:!, prms.last_access_datetime)
+      group_list = []
+      interval = prms.last_access_datetime
 
-      ### 
-      prms.rating_upper_limit = prms.rating
-      prms.rating = prms.rating_upper_limit - 5
-      ag2 = index_all_in_one(prms, %!#{prms.rating}:!, prms.last_access_datetime * 2)
+      step = 3
+      num_of_times = 4
+      num_of_times.times do |i|
+        interval_wk = interval * (i + 1)
+        group_list << index_all_in_one(prms, %!#{prms.rating}:!, interval_wk)
+
+        ### 
+        prms.rating_upper_limit = prms.rating
+        prms.rating = prms.rating_upper_limit - step
+        #puts "prms.last_access_datetime=#{prms.last_access_datetime}"
+      end
       
-      @artists_group = ag1.merge(ag2)
+      @artists_group = group_list[0].merge(*group_list)
       return
     when MethodEnum::TABLE_UPDATE_NEW_USER
       Pxv::db_update_by_newdir()
@@ -344,8 +360,6 @@ class ArtistsController < ApplicationController
     else
       artists = Artist.all
     end
-
-    @artists_group = {}
 
     if prms.param_file == "urllist" or
       prms.param_file == "urllist-pxv-only" or
@@ -364,7 +378,7 @@ class ArtistsController < ApplicationController
         elsif datestr == ""
           path = ""
         else
-          path = "public/get illust url_#{datestr}.txt"
+          path = ["public/get illust url_#{datestr}.txt"]
         end
         puts "path='#{path}'"
         id_list, @twt_urls, @misc_urls = Artist.get_url_list(path)
@@ -734,6 +748,7 @@ class ArtistsController < ApplicationController
   
   # GET /artists/new
   def new
+    @path_list = []
     @artist = Artist.new
   end
 
@@ -985,6 +1000,10 @@ class ArtistsController < ApplicationController
         "1ヶ月以上更新なし",
         "作品ゼロ",
       ]
+      index_select_status_include_arg(artists, excl_list)
+    end
+
+    def index_select_status_include_arg(artists, excl_list)
       artists = artists.select {|x| excl_list.include?(x.status)}
       artists
     end
@@ -1025,10 +1044,14 @@ class ArtistsController < ApplicationController
       when "pxv-user-id"
         artists = artists.sort_by {|x| [-x.pxvid]}
       when SORT_TYPE::SORT_RATING
-        artists = artists.sort_by {|x| [-x.rating]}
+        artists = artists.sort_by {|x| [-x.rating, x.last_access_datetime, x.last_ul_datetime]}
+      when SORT_TYPE::SORT_ACCESS_OLD_TO_NEW
+        artists = artists.sort_by {|x| [x.last_access_datetime]}
+      when SORT_TYPE::SORT_ACCESS_NEW_TO_OLD
+        artists = artists.sort_by {|x| [x.last_access_datetime]}.reverse
       else
         # デフォルト？
-        artists = artists.sort_by {|x| [-x.point, -x.priority, -x[:recent_filenum], -x[:filenum], x[:last_ul_datetime]]}
+        artists = artists.sort_by {|x| [-x.point, -(x.priority||0), -(x.recent_filenum||0), -(x.filenum||0), x.last_ul_datetime]}
       end
       artists
     end
@@ -1079,6 +1102,8 @@ class ArtistsController < ApplicationController
         artists_group = artists.group_by {|x| x.prediction_up_cnt(true) / 10 * 10 }.sort.to_h
       when "rating"
         artists_group = artists.group_by {|x| -x.rating}.sort.to_h
+      when "status/rating"
+        artists_group = artists.group_by {|x| [x.status, -x.rating]}.sort.to_h
       when "評価+年齢制限"
         #artists_group = artists.group_by {|x| [-x.rating, x.r18]}.sort.to_h
         artists_group = artists.group_by {|x| [x.rating, x.r18]}.sort.reverse.to_h
@@ -1130,7 +1155,9 @@ class ArtistsController < ApplicationController
       artists_group
     end
 
-    def index_all_in_one(prms, prefix, interval=30)
+    def index_all_in_one(prms, prefix, interval)
+      #puts "interval=#{interval}"
+
       artists_group = {}
 
       # ---
@@ -1143,7 +1170,7 @@ class ArtistsController < ApplicationController
 
       @artists_total_count = artists.size
 
-      
+      prms.last_access_datetime = interval
       artists = artists.select {|x| !x.last_access_datetime_p(interval)}
       artists_sort_high = artists.sort_by {|x| [-x.rating, -x.prediction_up_cnt(true), x.last_access_datetime]}
       artists_group[prefix + "評価順"] = artists_sort_high#.first(prms.display_number)
@@ -1151,20 +1178,20 @@ class ArtistsController < ApplicationController
       # ---
       artists = index_select(Artist.all, prms, false)
       artists = index_select_status_exclude(artists)
-      artists = artists.select {|x| !x.last_access_datetime_p(interval)}
+      #artists = artists.select {|x| !x.last_access_datetime_p(interval)}
 
       artists_sort_access = artists.sort_by {|x| [x.last_access_datetime, -x.recent_filenum, -x.filenum]}
       artists_group[prefix + "アクセス日順"] = artists_sort_access#.first(prms.display_number)
 
+      #artists = artists.select {|x| !x.last_access_datetime_p(interval)}
       artists_sort_ul = artists.sort_by {|x| [x.last_ul_datetime]}
       artists_group[prefix + "公開日順"] = artists_sort_ul#.first(prms.display_number)
-
 
       # ---
       artists = index_select(Artist.all, prms, false)
       #artists = artists.select {|x| x.status == "長期更新なし"}
       artists = index_select_status_include(artists)
-      artists = artists.select {|x| !x.last_access_datetime_p(interval)}
+      #artists = artists.select {|x| !x.last_access_datetime_p(interval)}
 
       artists_no_updated = artists.sort_by {|x| [x.last_access_datetime]}
       artists_group[prefix + "更新なし"] = artists_no_updated#.first(prms.display_number)
@@ -1172,7 +1199,7 @@ class ArtistsController < ApplicationController
       # ---
       artists = index_select(Artist.all, prms, false)
       artists = artists.select {|x| (x.status == "退会" or x.status == "停止")}
-      artists = artists.select {|x| !x.last_access_datetime_p(interval)}
+      #artists = artists.select {|x| !x.last_access_datetime_p(interval)}
 
       artists_vanish = artists.sort_by {|x| [x.twtid, x.last_access_datetime]}.reverse
       artists_group[prefix + "消滅"] = artists_vanish#.first(prms.display_number)

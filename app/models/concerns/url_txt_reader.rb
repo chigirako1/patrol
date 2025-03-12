@@ -35,6 +35,10 @@ module UrlTxtReader
         #if datetime.class.name == "String"
         #    return "string"
         #end
+        if datetime == nil
+            return "(未設定)"
+        end
+
         now = Time.zone.now
         if datetime.year == now.year
           ym_format = "%m月%d日"

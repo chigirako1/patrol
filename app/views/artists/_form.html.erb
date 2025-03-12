@@ -59,7 +59,13 @@
   }
 
   function getJson() {
-    var url = '<%= artist_api_hoge_path(artist.id, api: ArtistsController::ApiEnum::ARTIST_INFO) %>';
+    <% if artist and artist.id %>
+      <% pxv_user_id = artist.id %>
+      var url = '<%= artist_api_hoge_path(pxv_user_id, api: ArtistsController::ApiEnum::ARTIST_INFO) %>';
+    <% else %>
+      <% pxv_user_id = 0 %>
+      var url = '';
+    <% end %>
     fetch(url)
     .then(function (data) {
       return data.json();
@@ -67,6 +73,23 @@
     .then(function (json) {
       let data = json.pxvname;
       let elem = document.getElementById('artist_circle_name');
+      elem.value = data;
+    });
+  }
+
+  function getRecentFilenum() {
+    <% if artist and artist.id %>
+      var url = '<%= artist_api_hoge_path(artist.id, api: ArtistsController::ApiEnum::ARTIST_RECENT_FILENUM) %>';
+    <% else %>
+      var url = '';
+    <% end %>
+    fetch(url)
+    .then(function (data) {
+      return data.json();
+    })
+    .then(function (json) {
+      let data = json.xxx;
+      let elem = document.getElementById('artist_recent_filenum');
       elem.value = data;
     });
   }
@@ -102,12 +125,14 @@
   <% end %>
 
   <hr />
-  <%= link_to "表示リフレッシュ", artist_path(artist, access_dt_update: "no", thumbnail: :yes) %>
+  <% if artist and artist.id %>
+    <%= link_to "表示リフレッシュ", artist_path(artist, access_dt_update: "no", thumbnail: :yes) %>
 
-  <h3>Pixivを開く =>
-    <% url = artist.pxv_user_url %>
-    <%= link_to_ex artist.pxvid, url %>
-  </h3>
+    <h3>Pixivを開く =>
+      <% url = artist.pxv_user_url %>
+      <%= link_to_ex artist.pxvid, url %>
+    </h3>
+  <% end %>
 
   <h1>編集</h1>
 
@@ -128,7 +153,9 @@
         <% end %>
       <% end %>
     <% else %>
-      <% twt_pxv = Twitter.find_by(pxvid: artist.pxvid) %>
+      <% if artist.pxvid.presence %>
+        <% twt_pxv = Twitter.find_by(pxvid: artist.pxvid) %>
+      <% end %>
       <% if twt_pxv.presence %>
         "<%= twt_pxv.twtid %>"
         <% twtid_val = twt_pxv.twtid %>
@@ -156,7 +183,11 @@
     <% else %>
       <font color="red">twt未設定
       </font>
-        <% twt_pxv = Twitter.find_by(pxvid: artist.pxvid) %>
+        <% if artist.pxvid.presence %>
+          <% twt_pxv = Twitter.find_by(pxvid: artist.pxvid) %>
+        <% else %>
+          <% twt_pxv = nil %>
+        <% end %>
         <% if twt_pxv.presence %>
           "@<%= twt_pxv.twtid %>"
         <% end %>
@@ -166,7 +197,12 @@
 
   <div>
     <%= form.label :rating, style: "display: block" %>
-    <%= form.number_field :rating %>
+    <% if artist.rating %>
+      <% rating_val = artist.rating %>
+    <% else %>
+      <% rating_val = 0 %>
+    <% end %>
+    <%= form.number_field :rating, :value => rating_val %>
     <input type="button" value="+5" onclick="plus_rate('rating', 5);" class="btn" />
     <input type="button" value="+4" onclick="plus_rate('rating', 4);" class="btn" />
     <input type="button" value="+1" onclick="plus_rate('rating', 1);" class="btn" />
@@ -383,6 +419,7 @@
     <% else %>
       <%= form.number_field :recent_filenum %>
     <% end %>
+    <input type="button" value="ファイル情報取得" onclick="getRecentFilenum();" />
   </div>
 
   <div>
@@ -415,7 +452,12 @@
 
   <div>
     <%= form.label :pxvid, style: "display: block" %>
-    <%= form.number_field :pxvid %>
+    <% if params[:pxvid].presence %>
+      <% param_pxvid = params[:pxvid] %>
+      <%= form.number_field :pxvid, value: param_pxvid %>
+    <% else %>
+      <%= form.number_field :pxvid %>
+    <% end %>
   </div>
 
   <div>

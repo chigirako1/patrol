@@ -11,7 +11,7 @@ module Util
     # になる
     def self.get_date_delta(date)
         if date == nil
-            puts "date==nil"
+            #puts "date==nil"
             return 0
         end
         now = Time.zone.now

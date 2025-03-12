@@ -4,7 +4,7 @@
 
  PXV:<%= link_to "#{@pxvid}", Pxv::pxv_user_url(@pxvid) %><br />
 
-<%= link_to "New Artist", new_artist_path %>
+<%= link_to_ex "New Artist", new_artist_path %>
 
 <% pxv_artist = Artist.find_by(pxvid: @pxvid) %>
 <% if pxv_artist != nil %>

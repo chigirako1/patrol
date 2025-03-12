@@ -18,7 +18,6 @@
 
 <% key_pxv_list_high            = "001.高評価" %>
 
-
 <% key_pxv_list_no_access_CMN   = "アクセスしてない" %>
 <% key_pxv_list_no_access_1y    = "011.1年以上" %>
 <% key_pxv_list_no_access_6m    = "012.半年以上" %>
@@ -204,7 +203,7 @@
                         <%= Util.get_date_info(twt_account.last_post_datetime) %>
                     </td>
                     <td>
-                        <% if thumb_disp and pred >= @pred %>
+                        <% if (thumb_disp and pred >= @pred) or (x.rating == 0) %>
                             <% tlist = twt_account.get_pic_filelist_ex %>
                             <% tlist.first(3).each do |filepath| %>
                                 <%= link_to image_tag(filepath, width: '13%', height: '13%'), filepath, target: :_blank, rel: "noopener noreferrer" if filepath.presence %>
@@ -284,7 +283,7 @@
 
         <% exist = twt_dirs.user_exist?(key) %>
         <% if exist %>
-            !ローカルファイルにあり!(<%= key %>)
+            !ローカルファイルにあり!(<%= key %>)<br />
         <% end %>
         <% twt_account = Twitter.find_by_twtid_ignore_case(key) %>
         <% if twt_account %>
@@ -313,6 +312,15 @@
         (<%= link_to_ex "show", key %>)
 
         <br />
+    <% end %>
+
+    <% if params[:url_list].presence %>
+        <h2>未登録twt url list (<%= @unknown_twt_url_list.size %>)</h2>
+        <% @unknown_twt_url_list.each do |(key, url_list)| %>
+            <% url_list.each do |u| %>
+                <%= u %><br />
+            <% end %>
+        <% end %>
     <% end %>
 <% end %>
 
@@ -384,14 +392,14 @@
             <% recent_pxv_list << elem %>
         <% elsif p.feature == "AI" %>
             <% pxv_group[key_pxv_list_ai] << elem %>
-        <% elsif p.rating.presence and p.rating > 90 %>
-            <% pxv_group[key_pxv_list_high] << elem %>
-        <% elsif p.rating.presence and p.rating > 0 and p.rating < rating_thre %>
-            <% if p.rating < rating_thre2 %>
-                <% pxv_group[key_pxv_list_low_ltxx] << elem %>
-            <% else %>
-                <% pxv_group[key_pxv_list_low] << elem %>
-            <% end %>
+        <%# elsif p.rating.presence and p.rating > 90 %>
+            <%# pxv_group[key_pxv_list_high] << elem %>
+        <%# elsif p.rating.presence and p.rating > 0 and p.rating < rating_thre %>
+            <%# if p.rating < rating_thre2 %>
+                <%# pxv_group[key_pxv_list_low_ltxx] << elem %>
+            <%# else %>
+                <%# pxv_group[key_pxv_list_low] << elem %>
+            <%# end %>
         <% elsif p.rating.presence and p.rating == 0 %>
             <% if pred > @pred * 2 %>
                 <% pxv_group[key_pxv_list_unset_many] << elem %>
@@ -514,7 +522,7 @@
                     <td bgcolor="<%= ul_bg_color %>">
                         <%= p.get_date_info(p.last_ul_datetime) %>
 
-                        <% a_u_days = Util::get_days_date_delta(p.last_ul_datetime, p.last_access_datetime) %>
+                        <% a_u_days = Util::get_days_date_delta(p.last_ul_datetime||Time.new(2001,1,1), p.last_access_datetime||Time.new(2001,1,1)) %>
                         <% if a_u_days > 60 %>
                             <br />
                             [※アクセス日と公開日の差が大きい(<%= a_u_days %>日)]
@@ -523,7 +531,7 @@
                         <b><%= p.status_disp %></b>
                     </td>
                     <td>
-                        <% if thumb_disp and pred > @pred %>
+                        <% if (thumb_disp and pred > @pred) or (p.rating == 0) %>
                             <%= pic_path_tag(elem.pxvid, 3, pic_mag_pxv) %>
                         <% end %>
                         <%= p.filenum %>
@@ -574,9 +582,12 @@
 <% if recent_pxv_list.size > 0 %>
     <h2>既知pxv 最近アクセス分 [<%= @hide_day %>日以内] (<%= recent_pxv_list.size %>)</h2>
 
-    <% #recent_pxv_group = Hash.new { |h, k| h[k] = [] } %>
     <% h = recent_pxv_list.group_by {|x| x.p.created_at_day_num < 30} %>
-    <% recent_pxv_group = h[false].group_by {|x| x.p.last_access_datetime_num / 7} %>
+    <% if h[false] %>
+        <% recent_pxv_group = h[false].group_by {|x| x.p.last_access_datetime_num / 7} %>
+    <% else %>
+        <% recent_pxv_group = Hash.new { |h, k| h[k] = [] } %>
+    <% end %>
     <% recent_pxv_group[-1] = h[true] if h[true] %>
     <% #p recent_pxv_group %>
     <% recent_pxv_group = recent_pxv_group.sort.reverse.to_h %>
@@ -691,10 +702,15 @@
 <% end %>
 
 <% if @unknown_pxv_user_id_list.presence %>
-<%# if @target.include?("unknown_pxv") and @unknown_pxv_user_id_list.presence %>
+    <% cnt_bak = 0 %>
     <h2>未登録pxv id list (<%= @unknown_pxv_user_id_list.size %>)</h2>
     <% dirlist = Pxv::stock_dir_list %>
     <% @unknown_pxv_user_id_list.each.with_index(1) do |elem, idx| %>
+        <% if cnt_bak != elem.cnt %>
+            <h3><%= elem.cnt %></h3>
+            <% cnt_bak = elem.cnt %>
+        <% end %>
+
         <% user_name = Pxv::user_name(dirlist, elem.pxvid) %>
         <%= idx %>.
         <% if user_name.presence %>
@@ -705,13 +721,22 @@
             [<%= elem.cnt %>]
             <% pxvurl = Pxv::pxv_user_url(elem.pxvid) %>
             <%= link_to_ex(elem.pxvid, pxvurl) %>
-            [<%#= link_to_ex "show", artist_pxv_path(elem.pxvid) %>]
+            <%#= link_to_ex "show", artist_pxv_path(elem.pxvid) %>
+            [<%= link_to_ex "新規作成", new_artist_path(pxvid: elem.pxvid) %>]
         <% end %>
+
         <% t = Twitter.find_by(pxvid: elem.pxvid) %>
         <% if t %>
             [<%= link_to_ex "■twt■", t %>(<%= t.twtname %>)【<%= t.rating %>|<%= t.r18 %>|<%= t.last_access_datetime_disp %>]
         <% end %>
         <br />
+    <% end %>
+
+    <% if params[:url_list].presence %>
+        <h2>未登録pxv url list (<%= @unknown_pxv_user_id_list.size %>)</h2>
+        <% @unknown_pxv_user_id_list.each do |elem| %>
+            <%= Pxv::pxv_user_url(elem.pxvid) %><br />
+        <% end %>
     <% end %>
 <% end %>
 
