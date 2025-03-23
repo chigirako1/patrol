@@ -482,10 +482,31 @@ class Artist < ApplicationRecord
     end
 
     def status_disp(txt="※")
+        tag = ""
         if status.presence
-            txt + status
+            tag += txt + status
+        end
+
+        if reverse_status.presence
+            tag += %!(#{reverse_status})!
+        end
+
+        tag
+    end
+
+    def select_cond_post_date
+        num_of_days_elapased = get_date_delta(last_ul_datetime)
+        if num_of_days_elapased > 365
+            cond_day = 365
         else
-            ""
+            cond_day = num_of_days_elapased / 3
+        end
+        
+        if last_access_datetime_p(cond_day)
+            #指定日以内にアクセスしているので対象外
+            false
+        else
+            true
         end
     end
 end

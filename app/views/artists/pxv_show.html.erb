@@ -2,7 +2,7 @@
 
 <h3 id="pxv_pic_list"><%= @pxvid %></h3>
 
- PXV:<%= link_to "#{@pxvid}", Pxv::pxv_user_url(@pxvid) %><br />
+ PXV:<%= link_to_ex "#{@pxvid}", Pxv::pxv_user_url(@pxvid) %><br />
 
 <%= link_to_ex "New Artist", new_artist_path %>
 
@@ -15,7 +15,7 @@
 <br />
 
 <% @pxv_pic_list.first(3).each do |path| %>
-    <%= link_to image_tag(path, width: '10%', height: '10%', :alt => path), path, target: :_blank, rel: "noopener noreferrer" %>
+    <%= link_to_ex(image_tag(path, width: '10%', height: '10%', :alt => path), path) %>
     <%= path %>
     <br />
 <% end %>

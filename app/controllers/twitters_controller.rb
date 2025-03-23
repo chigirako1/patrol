@@ -142,12 +142,15 @@ class TwittersController < ApplicationController
       if params[:ex_pxv].presence and params[:ex_pxv] == "true"
         
         tmp = twitters.select {|x|
+          x.select_cond_no_pxv
+=begin
           artists_last_access_dayn = Util::get_date_delta(x.artists_last_access_datetime);
           !x.artists_last_ul_datetime.presence or
           (Util::get_date_delta(x.artists_last_ul_datetime) > 90 and
           artists_last_access_dayn > 90 )#and
           #artists_last_access_dayn - Util::get_date_delta(x.last_access_datetime) > 30) #or
           #artists_last_access_dayn > 60
+=end
         }
       else
         tmp = twitters
@@ -164,6 +167,15 @@ class TwittersController < ApplicationController
         rating_gt -= step
       end
       @rating_min = rating_gt
+
+      #tmp = tmp.select {|x| x.select_cond_no_pxv}
+      twitters = twitters.select {|x| !(x.pxvid.presence) and x.artist_pxvid == nil or x.artist_status == "長期更新なし" or x.artist_status == "半年以上更新なし"}
+      twitters = twitters.select {|x| x.rating == nil or x.rating == 0}
+      twitters = twitters.select {|x| x.last_access_datetime_p(-30)}
+      twitters = twitters.sort_by {|x| [-x.prediction, x.last_access_datetime]}
+      group = {}
+      group["未設定"] = twitters
+      group_list << group
 
       @twitters_group = group_list[0].merge(*group_list)
       return
@@ -446,20 +458,25 @@ class TwittersController < ApplicationController
   def show
     if params[:file_check].presence
       @twt_ids = Twt::get_twt_tweet_ids_from_txts(@twitter.twtid)
-=begin
-      if @twitter.old_twtid.presence
-        old_twt_ids = Twt::get_twt_tweet_ids_from_txts(@twitter.old_twtid)
-        @twt_ids = [@twt_ids, old_twt_ids].flatten
+      if false
+        if @twitter.old_twtid.presence
+          old_twt_ids = Twt::get_twt_tweet_ids_from_txts(@twitter.old_twtid)
+          @twt_ids = [@twt_ids, old_twt_ids].flatten
+        end
       end
-=end
-      read_all = true
+      force_read_all = true
     elsif (params[:refresh].presence and params[:refresh] == "y")
-      read_all = true
+      force_read_all = true
     else
-      read_all = false
-      @twitter.update(last_access_datetime: Time.now)
+      force_read_all = false
+      dn = Util::get_date_delta(@twitter.last_access_datetime)
+      if dn > 0 or @twitter.last_access_datetime == nil
+        @twitter.update(last_access_datetime: Time.now)
+      else
+        STDERR.puts "更新不要:#{dn}"
+      end
     end
-    @twt_pic_path_list = @twitter.get_pic_filelist(read_all)
+    @twt_pic_path_list = @twitter.get_pic_filelist(force_read_all)
   end
 
   # GET /twitters/new

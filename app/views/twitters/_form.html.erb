@@ -212,8 +212,12 @@
           <br />
           <% dirlist = Pxv::stock_dir_list %>
           <% user_name = Pxv::user_name(dirlist, twitter.pxvid) %>
-          <%= user_name %>(DB未登録)
-          <%= link_to_ex %!☆pxv☆:@#{user_name}!, artist_pxv_path(twitter.pxvid) %>
+          <% if user_name.presence %>
+            "<%= user_name %>"(DB未登録。フォルダはあり。)
+            <%= link_to_ex %!☆pxv☆:@#{user_name}!, artist_pxv_path(twitter.pxvid) %>
+          <% else %>
+            ※フォルダなし？
+          <% end %>
         <% end %>
       <% end %>
     <% end %>

@@ -72,20 +72,21 @@
           <%= link_to_ex("■pxv■", artist_path(artist, access_dt_update: "yes")) %>
           <br />
           <%= artist.last_access_datetime_disp %>
+          <% if artist.status.presence %>
+            <br />
+            <font color="tomato"><b>(※<%= artist.status %>)</b></font>
+          <% end%>
           <% if artist.reverse_status.presence %>
             <br />
             [<%= artist.reverse_status %>]
           <% end%>
         </td>
+
         <td><%= artist.warnings %><br /><%= artist.comment %></td>
         <% ul_delta = artist.get_date_delta(artist.last_ul_datetime) %>
         <% ul_bg_color = date_bg_color(ul_delta) %>
         <td bgcolor="<%= ul_bg_color %>">
           <%= artist.get_date_info(artist.last_ul_datetime) %>
-          <% if artist.status.presence %>
-            <br />
-            <font color="pink"><b>(※<%= artist.status %>)</b></font>
-          <% end%>
         </td>
 
         <!-- twt -->

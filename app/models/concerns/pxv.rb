@@ -245,6 +245,34 @@ module Pxv
     def self.db_update_by_newdir(update_record=true)
         new_list = []
         dir_list = stock_dir_list()
+
+        # pxv user id重複チェック
+        hash = {}
+        dir_list.each do |path|
+            pxv_user_id = get_pxv_user_id(path)
+            if hash.has_key?(pxv_user_id)
+            else
+                hash[pxv_user_id] = []
+            end
+            hash[pxv_user_id] << path
+        end
+
+        dup = false
+        hash.each do |k, paths|
+            if paths.size > 1
+                dup = true
+                STDERR.puts %!重複するIDがあります:key=#{k}("#{paths}")!
+                paths.each do |path|
+                    STDERR.puts %!"#{path}"!
+                end
+            end
+        end
+
+        if dup
+            STDERR.puts %!重複するIDがあるので処理を中止しました。!
+        end
+
+        # ディレクトリごとの処理
         dir_list.each do |path|
             pxv_user_id = get_pxv_user_id(path)
             if pxv_user_id != ""
@@ -302,7 +330,7 @@ module Pxv
 
         alist = Artist.artwork_list(pxv_artist.path_list)
         recent_filenum = Artist.artwork_list_recent_file_num(alist)
-        STDERR.puts %!recent_filenum=#{recent_filenum}!
+        STDERR.puts %!recent_filenum=#{recent_filenum}(filenum=#{pxv_artist.path_list.size})!
         pxv_params[:recent_filenum] = recent_filenum
         pxv_params[:status] = ""
         twt = Twitter.find_by(pxvid: pxv_user_id)
@@ -437,6 +465,9 @@ class PxvArtist
 
     def initialize(id, path)
         @pxv_user_id = id
+
+        # TODO:余計な文字の削除。p.g. ＠以降とか
+
         @pxv_name = Pxv::get_user_name_from_path(path)
         @path_list = []
         filepath_list = UrlTxtReader::get_path_list(path)

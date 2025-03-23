@@ -13,6 +13,12 @@
         (<%= artist.pxvid %>)
     </h2>
 
+    <% if params['no_pic'].presence %>
+        <% no_pics = true %>
+    <% else %>
+        <% no_pics = false %>
+    <% end %>
+
     <% start_idx = params['start_idx'] %>
     <% if start_idx %>
         <% start_idx = start_idx.to_i %>
@@ -42,15 +48,23 @@
     <% list = Artist.artwork_list(@path_list) %>
     <% #STDERR.puts %!"#{@path_list[0]}"/#{@path_list.size}/sidx=#{start_idx}/num=#{num_elem}/#{list[0]}/#{list.size}! %>
     <% if start_idx >= list.size %>
-        <% start_idx = list.size - 1%>
+        <% start_idx = list.size - 1 %>
     <% end %>
 
+    <% date_tmp = Date.today %>
     <% list.to_a.slice(start_idx, num_elem).each.with_index(start_idx + 1) do |(artwork_id, data), idx| %>
         <% path = data[0] %>
         <% art_title = data[1] %>
         <% date = data[2] %>
         <% pic_cnt = data[3] %>
         <% pic_path_list = data[4] %>
+
+        <% dayn = (date_tmp - date).to_i %>
+        <% if dayn > 30 %>
+            <h3>間隔が空いている(<%= dayn %>日)</h3>
+        <% end %>
+        <% date_tmp = date %>
+
         <% url = artist.pxv_artwork_url(artwork_id) %>
         <%= idx %>.
         (<%= link_to_ex artwork_id, url %>)
@@ -60,8 +74,12 @@
         <%= %!(#{pic_cnt} pics)! if pic_cnt > 1 %>
         <br />
         <%= link_to_ex(image_tag(path, width: ratio, height: ratio), path) %>
-        <% pic_path_list.each do |x| %>
-            <%= link_to_ex(image_tag(x, width: ratio, height: ratio), x) %>
+
+        <% if no_pics %>
+        <% else %>
+            <% pic_path_list.each do |x| %>
+                <%= link_to_ex(image_tag(x, width: ratio, height: ratio), x) %>
+            <% end %>
         <% end %>
         <br />
     <% end %>

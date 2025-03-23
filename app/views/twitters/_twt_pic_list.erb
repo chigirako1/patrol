@@ -3,6 +3,20 @@ textarea {
 	width: 900px;
 	height: 80px;
 }
+
+.button {
+  display: inline-block;
+  padding: 8px 16px;
+  color: #fff;
+  background-color: #007bff;
+  border-radius: 5px;
+  text-decoration: none;
+  text-align: center;
+}
+
+.button:hover {
+  background-color: #0056b3;
+}
 </style>
 
 <div id="<%= dom_id twitter %>">
@@ -70,7 +84,7 @@ textarea {
             <% filesize = FileTest.size(phys_path) %>
             <% fsize_sum += filesize %>
 
-            <%= link_to image_tag(path, width: d_ratio, height: d_ratio, :alt => path), path, target: :_blank, rel: "noopener noreferrer" %>
+            <%= link_to_ex(image_tag(path, width: d_ratio, height: d_ratio, :alt => path), path) %>
             <% if corr != 0 and corr == idx %>
                 <br />
             <% end %>
@@ -94,6 +108,7 @@ textarea {
     <% end %>
     <%= link_to "url txtチェック", twitter_path(file_check: 't', picn: 'all', pic_lf: '', corr: '0') %>
     全画像数：<%= twitter.filenum %>
+    <%= link_to("重複チェック", twitter_path(dup_chk: 't', refresh: "y"), class: 'button') %>
     <% if twitter.filenum != twt_pic_list.size %>
         (読み込み:<%= twt_pic_list.size %>)
     <% end %>
@@ -148,7 +163,7 @@ textarea {
     <% end %>
 
     <!-- URLのテキストファイルに含まれる画像が存在するかチェック -->
-    <% if @twt_ids != nil %>
+    <% if @twt_ids.presence %>
         <h2>チェック</h2>
         <% if @twt_ids.size == 0 %>
             対象なし
@@ -177,6 +192,7 @@ textarea {
             <% else %>
                 <br />
                 <%= %!#{Twt::timestamp_str tweet_id}(#{tweet_id}))! %> no hit...
+                <%= link_to_ex(tweet_id, Twt::twt_tweet_url(@twitter.twtid, tweet_id)) %>
                 <% if tweet.presence %>
                     <% if tweet.status == Tweet::StatusEnum::UNACCESSIBLE %>
                         <b><%= Tweet::StatusEnum::UNACCESSIBLE %></b>
@@ -196,15 +212,28 @@ textarea {
                         'アクセス不可'として更新しました。
                     <% else %>
                         <% url = twitter_path(file_check: 't', picn: 'all', pic_lf: '', corr: '0', show_pic: 't', tweet_st: Tweet::StatusEnum::UNACCESSIBLE, tweet_id: tweet_id) %>
-                        <%= link_to("'アクセス不可'として更新", url) %>
+                        <%= link_to("'アクセス不可'として更新", url, class: 'button') %>
                     <% end %>
                 <% end %>
-                <%= link_to_ex tweet_id, Twt::twt_tweet_url(@twitter.twtid, tweet_id) %>
                 <br />
                 <br />
             <% end %>
         <% end %>
     <% end %>
 
-    <% #tweet_ids = Twt::get_twt_tweet_ids_from_txts(@twitter.old_twtid) %>
+    <% if (params[:dup_chk].presence and params[:dup_chk] == "t") %>
+        <h3>重複チェック結果</h3>
+        <% pic_list = @twt_pic_path_list.map {|x| Util::get_public_path(x)} %>
+        <% dup_path_list = Twt::db_update_dup_files(pic_list, @twitter.twtid, false) %>
+        <% if dup_path_list.size > 0 %>
+            <% base_path = UrlTxtReader::public_path %>
+            <% d_ratio = '5%' %>
+            <% dup_path_list.each do |path| %>
+                <% ppath = Util::convert_path(base_path, path) %>
+                <%= link_to_ex(image_tag(ppath, width: d_ratio, height: d_ratio, :alt => ppath), ppath) %>
+            <% end %>
+        <% else %>
+            重複なし
+        <% end %>
+    <% end %>
 </div>

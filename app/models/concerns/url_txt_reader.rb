@@ -124,7 +124,8 @@ module UrlTxtReader
             #puts path
             if [".jpg", ".png", ".jpeg"].include?(File.extname(path))
                 #ファイル名に"#"が含まれるとだめ。マシな方法ないの？
-                tmp_list << path.gsub(base_path, "").gsub("#", "%23")
+                #tmp_list << path.gsub(base_path, "").gsub("#", "%23")
+                tmp_list << Util::escape_path(path.gsub(base_path, ""))
             end
         end
         tmp_list

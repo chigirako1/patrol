@@ -407,7 +407,9 @@
   </div>
 
   <div>
-    <% if (artist.filenum == nil) or (artist.filenum and artist.filenum < @path_list.size) %>
+    <% if (artist.filenum == nil or artist.recent_filenum == nil) or
+          (artist.filenum == artist.recent_filenum) or
+          (artist.filenum and artist.filenum < @path_list.size) %>
       <% list = Artist.artwork_list(@path_list) %>
       <% recent_filenum = Artist.artwork_list_recent_file_num(list) %>
     <% end %>

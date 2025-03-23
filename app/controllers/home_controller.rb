@@ -8,18 +8,18 @@ class HomeController < ApplicationController
     @menus = [
       # ----------------------------
       { :label => "unified", :path => "" },
-      { :label => "Twitter [AI] 95",
+      { :label => "Twitter [AI] 97",
         :path => twitters_path(
           target: "AI",
-          page_title: "AI 95",
-          rating: 95,
+          page_title: "AI 97",
+          rating: 97,
           #hide_within_days: 0, 
           num_of_disp: 4,
           #pred: 5,
           #force_disp_day: 10,
           mode: TwittersController::ModeEnum::ALL_IN_ONE,
-          step: 2,
-          num_of_times: 4,
+          step: 1,
+          num_of_times: 12,
           ex_pxv: false,
           thumbnail: ""
         ) 
@@ -35,7 +35,23 @@ class HomeController < ApplicationController
           #force_disp_day: 10,
           mode: TwittersController::ModeEnum::ALL_IN_ONE,
           step: 2,
-          num_of_times: 3,
+          num_of_times: 4,
+          ex_pxv: false,
+          thumbnail: ""
+        ) 
+      },
+      { :label => "Twitter [AI] 85",
+        :path => twitters_path(
+          target: "AI",
+          page_title: "AI 85",
+          rating: 85,
+          #hide_within_days: 0, 
+          num_of_disp: 5,
+          #pred: 5,
+          #force_disp_day: 10,
+          mode: TwittersController::ModeEnum::ALL_IN_ONE,
+          step: 1,
+          num_of_times: 5,
           ex_pxv: false,
           thumbnail: ""
         ) 
@@ -84,7 +100,7 @@ class HomeController < ApplicationController
             status: "「長期更新なし」を除外",
             #prediction: 6,
             rating: 100,#90,
-            display_number: 3,
+            display_number: 4,
             last_access_datetime: 3,
             thumbnail: false,
           )
@@ -98,8 +114,10 @@ class HomeController < ApplicationController
             status: "「長期更新なし」を除外",
             #prediction: 6,
             rating: 95,
-            display_number: 3,
+            display_number: 5,
             last_access_datetime: 7,
+            step: 5,
+            num_of_times: 5,
             thumbnail: false,
           )
       },
@@ -172,30 +190,6 @@ class HomeController < ApplicationController
       },
       # ----------------------------
       { :label => "twitter AI", :path => "" },
-      { :label => "Twitter[AI] 96", :path => twitters_path(
-          target: "AI",
-          page_title: "AI 96",
-          rating: 96,
-          hide_within_days: 0, 
-          num_of_disp: NUM_OF_DISP,
-          pred: 5,
-          force_disp_day: 10,
-          mode: "patrol",
-          thumbnail: "t"
-        ) 
-      },
-      { :label => "Twitter[AI] 95", :path => twitters_path(
-          target: "AI",
-          page_title: "AI 95",
-          rating: 95,
-          hide_within_days: 1,
-          num_of_disp: NUM_OF_DISP,
-          pred: 9,
-          force_disp_day: 10,
-          mode: "patrol",
-          thumbnail: "t"
-        )
-      },
       { :label => "Twitter[AI] 90", :path => twitters_path(
           target: "AI", page_title: "AI 90", rating: 90, 
           hide_within_days: 2,

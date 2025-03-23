@@ -173,8 +173,8 @@ class Twitter < ApplicationRecord
         Twt::twt_user_url(twtid)
     end
 
-    def get_pic_filelist(read_all=true)
-        if filenum == nil or filenum < 500 or read_all
+    def get_pic_filelist(force_read_all=true)
+        if filenum == nil or filenum < 500 or force_read_all
             read_archive = true
         else
             read_archive = false
@@ -221,5 +221,21 @@ class Twitter < ApplicationRecord
         else
             true
         end
+    end
+
+    def select_cond_no_pxv
+        if artists_last_ul_datetime.presence
+        else
+            return true
+        end
+
+        artists_last_access_dayn = Util::get_date_delta(artists_last_access_datetime)
+
+        if (Util::get_date_delta(artists_last_ul_datetime) > 90 and
+            artists_last_access_dayn > 90)
+            return true
+        end
+
+        false
     end
 end

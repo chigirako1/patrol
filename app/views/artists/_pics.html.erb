@@ -83,13 +83,13 @@
     <% if @artist.latest_artwork_id.presence %>
       <% url = artist.pxv_artwork_url(@artist.latest_artwork_id) %>
       最新：(<%= link_to_ex(@artist.latest_artwork_id, url) %>)
-      <%= l @artist.last_ul_datetime %>
+      <%= l @artist.last_ul_datetime, format: :date %>
       <br />
     <% end %>
     <% if @artist.oldest_artwork_id.presence %>
       <% url = artist.pxv_artwork_url(@artist.oldest_artwork_id) %>
       最古：(<%= link_to_ex(@artist.oldest_artwork_id, url) %>)
-      <%= l @artist.earliest_ul_date %>
+      <%= l @artist.earliest_ul_date, format: :date %>
       <br />
     <% end %>
     

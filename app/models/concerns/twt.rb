@@ -163,83 +163,97 @@ module Twt
         twt_tweet_url("TwitterDev", tweet_id)
     end
 
+    def self.db_update_by_newdir_new(key, val)
+        pic_path_list = val.twt_pic_path_list
+        if pic_path_list.size == 0
+            STDERR.puts %!ファイルなし: @#{key}!
+            return
+        end
+
+        twt_params = {}
+        twt_params[:twtid] = val.twt_id
+        twt_params[:last_dl_datetime] = val.ctime
+        twt_params[:last_access_datetime] = val.ctime
+        twt_params[:last_post_datetime] = val.last_post_datetime(pic_path_list)
+        twt_params[:filenum] = val.num_of_files
+        twt_params[:recent_filenum] = val.num_of_files
+        twt_params[:update_frequency] = val.calc_freq(pic_path_list)
+        pxv = Artist.find_by_twtid_ignore_case(val.twt_id)
+        if pxv
+            twt_params[:pxvid] = pxv.pxvid
+        end
+        puts %!new. "#{key}"!
+        twt = Twitter.new(twt_params)
+        twt.save
+    end
+
+    def self.db_update_by_newdir_update(key, val, twt)
+        pic_path_list = val.twt_pic_path_list
+        twt_params = {}
+        last_post_datetime = Time.at(val.last_post_datetime(pic_path_list).to_i)
+        if twt.last_post_datetime.presence
+            #p twt.last_post_datetime
+            #p last_post_datetime
+            #puts %!i=#{twt.last_post_datetime.to_i}, class=#{twt.last_post_datetime.class}!
+            #puts %!i=#{last_post_datetime.to_i}, class=#{last_post_datetime.class}!
+            if last_post_datetime.after? (twt.last_post_datetime)
+                puts %!update:"#{pic_path_list[0]}"\told="#{twt.last_post_datetime}",new="#{last_post_datetime}"!
+                twt_params[:last_post_datetime] = last_post_datetime
+            else
+                #更新しない
+                #puts %![no update] "#{key}":"#{twt.last_post_datetime}":"#{last_post_datetime}"!
+                return
+            end
+        else
+            puts %!update(new):"#{pic_path_list[0]}"\t=>"#{last_post_datetime}"!
+            twt_params[:last_post_datetime] = last_post_datetime
+        end
+
+        if twt.last_dl_datetime.presence
+            if twt.last_dl_datetime < val.ctime
+                twt_params[:last_dl_datetime] = val.ctime
+            end
+        else
+            twt_params[:last_dl_datetime] = val.ctime
+        end
+
+        if twt.filenum == nil
+            twt_params[:filenum] = val.num_of_files
+        else
+            #あほかtwt_params[:filenum] = 
+        end
+
+        if twt.recent_filenum == nil
+            twt_params[:recent_filenum] = val.num_of_files
+        end
+        twt.update(twt_params)
+    end
+
     def self.db_update_by_newdir()
         twt_id_list = twt_user_list("new")
         twt_id_list.each do |key, val|
             twt = Twitter.find_by_twtid_ignore_case(key)
             if twt == nil
                 # 新規追加
-                pic_path_list = val.twt_pic_path_list
-                if pic_path_list.size == 0
-                    STDERR.puts %!ファイルなし: @#{key}!
-                    next
-                end
-
-                twt_params = {}
-                twt_params[:twtid] = val.twt_id
-                twt_params[:last_dl_datetime] = val.ctime
-                twt_params[:last_access_datetime] = val.ctime
-                twt_params[:last_post_datetime] = val.last_post_datetime(pic_path_list)
-                twt_params[:filenum] = val.num_of_files
-                twt_params[:recent_filenum] = val.num_of_files
-                twt_params[:update_frequency] = val.calc_freq(pic_path_list)
-                pxv = Artist.find_by_twtid_ignore_case(val.twt_id)
-                if pxv
-                    twt_params[:pxvid] = pxv.pxvid
-                end
-                puts %!new. "#{key}"!
-                twt = Twitter.new(twt_params)
-                twt.save
+                db_update_by_newdir_new(key, val)
             else
-                pic_path_list = val.twt_pic_path_list
-                twt_params = {}
-                last_post_datetime = Time.at(val.last_post_datetime(pic_path_list).to_i)
-                if twt.last_post_datetime.presence
-                    #p twt.last_post_datetime
-                    #p last_post_datetime
-                    #puts %!i=#{twt.last_post_datetime.to_i}, class=#{twt.last_post_datetime.class}!
-                    #puts %!i=#{last_post_datetime.to_i}, class=#{last_post_datetime.class}!
-                    if last_post_datetime.after? (twt.last_post_datetime)
-                        puts %!update:"#{pic_path_list[0]}"\told="#{twt.last_post_datetime}",new="#{last_post_datetime}"!
-                        twt_params[:last_post_datetime] = last_post_datetime
-                    else
-                        #更新しない
-                        #puts %![no update] "#{key}":"#{twt.last_post_datetime}":"#{last_post_datetime}"!
-                        next
-                    end
-                else
-                    puts %!update(new):"#{pic_path_list[0]}"\t=>"#{last_post_datetime}"!
-                    twt_params[:last_post_datetime] = last_post_datetime
-                end
-
-                if twt.last_dl_datetime.presence
-                    if twt.last_dl_datetime < val.ctime
-                        twt_params[:last_dl_datetime] = val.ctime
-                    end
-                else
-                    twt_params[:last_dl_datetime] = val.ctime
-                end
-
-                if twt.filenum == nil
-                    twt_params[:filenum] = val.num_of_files
-                else
-                    #あほかtwt_params[:filenum] = 
-                end
-
-                if twt.recent_filenum == nil
-                    twt_params[:recent_filenum] = val.num_of_files
-                end
-                twt.update(twt_params)
+                db_update_by_newdir_update(key, val, twt)
             end
         end
     end
 
-    def self.db_update_dup_files()
-        hash_hash = Hash.new { |h, k| h[k] = [] }
-        i = 0
+    def self.db_update_dup_files_current_all()
         dir_path = TWT_CURRENT_DIR_PATH
         pic_list = UrlTxtReader::get_path_list(dir_path)
+    end
+
+    def self.get_hash_val_hash(pic_list)
+        hash_hash = Hash.new { |h, k| h[k] = [] }
+        i = 0
         pic_list.each do |path|
+            #unless db_update
+                #STDERR.puts %!(#{pic_list.size})"#{path}"!
+            #end
             hash_val = Util::file_hash path
             filesize = FileTest.size(path)
             hash_hash[[hash_val, filesize]] << path
@@ -254,10 +268,62 @@ module Twt
         end
         puts ""
 
+        hash_hash
+    end
+
+    def self.get_dup_tweet_list(v, screen_name_arg)
+        dup_tweet_list = []
+        tweet_id_hash = {}
+
+        v.each do |path|
+            tweet_id, pic_no = get_tweet_info_from_filepath(path)
+            if tweet_id_hash.has_key? tweet_id
+                # 同一のTweet idの場合は単純に同じツイートを多重で保存しただけとして記録しない
+                puts %!DLミス(重複):"#{path}"!
+                next
+            end
+            tweet_id_hash[tweet_id] = true
+
+            if screen_name_arg.presence
+                dirname = screen_name_arg
+            else
+                dirname = File.basename(File.dirname path)
+            end
+
+            puts %!@#{dirname}:#{tweet_id}:#{pic_no} "#{path}"!
+            dup_tweet_list << [dirname, tweet_id, pic_no]
+        end
+
+        dup_tweet_list
+    end
+
+    def self.create_tweet_record(dup_tweet_list, db_update)
+        dup_tweet_list2 = dup_tweet_list.sort_by {|x| x[1]}[1..-1]
+        dup_tweet_list2.each do |x|
+            twt_screen_name, tweet_id, pic_no = x
+            tweet_rcd = Tweet.find_by(tweet_id: tweet_id)
+            if tweet_rcd == nil
+                if db_update
+                    Tweet::create_record(twt_screen_name, tweet_id, Tweet::StatusEnum::DUPLICATE, pic_no)
+                else
+                    puts %!同一のファイルです:#{tweet_id}-#{pic_no}(@#{twt_screen_name})!
+                end
+            else
+                puts %!すでに登録済みです:@#{twt_screen_name}:#{tweet_id}:#{pic_no}"!
+            end
+        end
+    end
+
+    def self.db_update_dup_files(pic_list, screen_name_arg="", db_update=true)
+        dup_path_list = []
+        hash_hash = get_hash_val_hash(pic_list)
         hash_hash.each do |k, v|
             if v.size < 2
                 next
             end
+
+            dup_path_list << v
+
             hash_val = k[0]
             filesize = k[1]
 
@@ -266,21 +332,7 @@ module Twt
             puts "key=#{hash_val}/filesize=#{filesize}"
             puts "#" * 100
 
-            dup_tweet_list = []
-            tweet_id_hash = {}
-           
-            v.each do |path|
-                tweet_id, pic_no = get_tweet_info_from_filepath(path)
-                if tweet_id_hash.has_key? tweet_id
-                    # 同一のTweet idの場合は単純に同じツイートを多重で保存しただけとして記録しない
-                    puts %!DLミス(重複):"#{path}"!
-                    next
-                end
-                tweet_id_hash[tweet_id] = true
-                dirname = File.basename(File.dirname path)
-                puts %!@#{dirname}:#{tweet_id}:#{pic_no} "#{path}"!
-                dup_tweet_list << [dirname, tweet_id, pic_no]
-            end
+            dup_tweet_list = get_dup_tweet_list(v, screen_name_arg)
             puts ""
 
             scrn_names = dup_tweet_list.map {|x| x[0]}
@@ -288,21 +340,9 @@ module Twt
                 puts %!異なるスクリーンネームに保存されているファイルがあります:#{scrn_names.uniq}!
             end
 
-            dup_tweet_list = dup_tweet_list.sort_by {|x| x[1]}[1..-1]
-            dup_tweet_list.each do |x|
-                #twt_screen_name = x[0]
-                #tweet_id = x[1]
-                #pic_no = x[2]
-                twt_screen_name, tweet_id, pic_no = x
-                tweet = Tweet.find_by(tweet_id: tweet_id)
-                if tweet == nil
-                    Tweet::create_record(twt_screen_name, tweet_id, Tweet::StatusEnum::DUPLICATE, pic_no)
-                    #puts %!同一のファイルです:#{tweet_id}-#{pic_no}(@#{twt_screen_name})!
-                else
-                    puts "すでに登録済みです:#{tweet_id}"
-                end
-            end
+            create_tweet_record(dup_tweet_list, db_update)
         end
+        dup_path_list.flatten
     end
 
     def self.get_tweet_info_from_filepath(filepath)

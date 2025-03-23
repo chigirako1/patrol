@@ -332,8 +332,20 @@ class ArtistsController < ApplicationController
       group_list = []
       interval = prms.last_access_datetime
 
-      step = 3
-      num_of_times = 4
+      if params[:step].presence
+        step = params[:step].to_i
+      else
+        step = 3
+      end
+      puts %!step="#{step}"!
+
+      if params[:num_of_times].presence
+        num_of_times = params[:num_of_times].to_i
+      else
+        num_of_times = 4
+      end
+      puts %!num_of_times="#{num_of_times}"!
+
       num_of_times.times do |i|
         interval_wk = interval * (i + 1)
         group_list << index_all_in_one(prms, %!#{prms.rating}:!, interval_wk)
@@ -343,6 +355,36 @@ class ArtistsController < ApplicationController
         prms.rating = prms.rating_upper_limit - step
         #puts "prms.last_access_datetime=#{prms.last_access_datetime}"
       end
+
+      # 
+      artists = Artist.all
+      artists = artists.select {|x| x.rating == nil or x.rating == 0}
+      artists = artists.select {|x| x.filenum == x.recent_filenum}
+      artists = index_select_status_exclude(artists)
+      artists = artists.sort_by {|x| [-x.prediction_up_cnt(true)]}
+      group = {}
+      group["ファイル数同じ"] = artists
+      group_list << group
+
+      # 未設定gr
+      artists = Artist.all
+      artists = artists.select {|x| x.rating == nil or x.rating == 0}
+      artists = artists.select {|x| x.last_access_datetime_p(-60)}
+      #artists = artists.sort_by {|x| [-x.prediction_up_cnt(true), x.last_access_datetime]}
+      artists = artists.sort_by {|x| [-x.prediction_up_cnt(true)]}
+      group = {}
+      group["未設定"] = artists
+      group_list << group
+
+      # 
+      artists = Artist.all
+      artists = artists.select {|x| !x.last_access_datetime_p(30)}
+      artists = artists.select {|x| x.last_ul_datetime != nil}
+      artists = artists.sort_by {|x| [-((x.created_at.to_date - x.last_ul_datetime.to_date).to_i)]}
+      artists = index_select_status_exclude(artists)
+      group = {}
+      group["レコード登録日と最新公開日が離れている"] = artists
+      group_list << group
       
       @artists_group = group_list[0].merge(*group_list)
       return
@@ -528,7 +570,12 @@ class ArtistsController < ApplicationController
   def show
     @last_access_datetime = @artist.last_access_datetime
     if params[:access_dt_update].presence and params[:access_dt_update] == "yes"
-      @artist.update(last_access_datetime: Time.now)
+      dn = Util::get_date_delta(@artist.last_access_datetime)
+      if dn == 0
+        STDERR.puts "更新不要:#{dn}"
+      else
+        @artist.update(last_access_datetime: Time.now)
+      end
     end
 
     if params[:mode] != nil
@@ -639,7 +686,7 @@ class ArtistsController < ApplicationController
       elsif dir == "update"
         Twt::db_update_by_newdir()
       elsif dir == "register_dup_files"
-        Twt::db_update_dup_files()
+        Twt::db_update_dup_files_current_all()
       elsif dir == "new-list"
         @twt_user_infos = Twt::twt_user_infos()
       end
@@ -987,6 +1034,7 @@ class ArtistsController < ApplicationController
         "退会",
         "停止",
         "作品ゼロ",
+        "別アカウントに移行",
       ]
       artists = artists.select {|x| excl_list.include?(x.status) == false}
       artists
@@ -1166,14 +1214,14 @@ class ArtistsController < ApplicationController
       artists = index_select_status_exclude(artists)
 
       artists_sort_pred = artists.sort_by {|x| [-x.prediction_up_cnt(true), x[:recent_filenum], -x[:filenum], x[:last_ul_datetime]]}
-      artists_group[prefix + "予測順"] = artists_sort_pred#.first(prms.display_number)
+      artists_group[prefix + "予測順"] = artists_sort_pred
 
       @artists_total_count = artists.size
 
       prms.last_access_datetime = interval
       artists = artists.select {|x| !x.last_access_datetime_p(interval)}
       artists_sort_high = artists.sort_by {|x| [-x.rating, -x.prediction_up_cnt(true), x.last_access_datetime]}
-      artists_group[prefix + "評価順"] = artists_sort_high#.first(prms.display_number)
+      artists_group[prefix + "評価順"] = artists_sort_high
       
       # ---
       artists = index_select(Artist.all, prms, false)
@@ -1181,11 +1229,12 @@ class ArtistsController < ApplicationController
       #artists = artists.select {|x| !x.last_access_datetime_p(interval)}
 
       artists_sort_access = artists.sort_by {|x| [x.last_access_datetime, -x.recent_filenum, -x.filenum]}
-      artists_group[prefix + "アクセス日順"] = artists_sort_access#.first(prms.display_number)
+      artists_group[prefix + "アクセス日順"] = artists_sort_access
 
-      #artists = artists.select {|x| !x.last_access_datetime_p(interval)}
-      artists_sort_ul = artists.sort_by {|x| [x.last_ul_datetime]}
-      artists_group[prefix + "公開日順"] = artists_sort_ul#.first(prms.display_number)
+      #artists2 = artists.select {|x| !x.last_access_datetime_p(interval)}
+      artists2 = artists.select {|x| x.select_cond_post_date()}
+      artists_sort_ul = artists2.sort_by {|x| [x.last_ul_datetime]}
+      artists_group[prefix + "公開日順"] = artists_sort_ul
 
       # ---
       artists = index_select(Artist.all, prms, false)
@@ -1194,7 +1243,23 @@ class ArtistsController < ApplicationController
       #artists = artists.select {|x| !x.last_access_datetime_p(interval)}
 
       artists_no_updated = artists.sort_by {|x| [x.last_access_datetime]}
-      artists_group[prefix + "更新なし"] = artists_no_updated#.first(prms.display_number)
+      #artists_group[prefix + "更新なし"] = artists_no_updated
+
+      tmp_group = artists_no_updated.group_by {|x| [
+          if x.reverse_status
+            x.reverse_status
+          else
+            ""
+          end
+        ]
+      }
+
+      #p tmp_group
+      tmp_group.each do |key, g|
+        p key
+        p g
+        artists_group[prefix + "更新なし:" + key.to_s] = g
+      end
 
       # ---
       artists = index_select(Artist.all, prms, false)
@@ -1202,7 +1267,7 @@ class ArtistsController < ApplicationController
       #artists = artists.select {|x| !x.last_access_datetime_p(interval)}
 
       artists_vanish = artists.sort_by {|x| [x.twtid, x.last_access_datetime]}.reverse
-      artists_group[prefix + "消滅"] = artists_vanish#.first(prms.display_number)
+      artists_group[prefix + "消滅"] = artists_vanish
       
       artists_group
     end

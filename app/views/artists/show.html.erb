@@ -130,5 +130,6 @@
 
   <%= render "stat", artist: @artist %>
   <%= link_to_ex("個別表示", "../artists/#{@artist.id}?mode=#{ArtistsController::ShowMode::SHOW_VIEWER}") %>
-  <%= link_to_ex("リスト表示", artist_path(@artist, mode: ArtistsController::ShowMode::SHOW_LIST_VIEW, thumbnail: "yes")) %>
+  <%= link_to_ex("リスト表示(全画像)", artist_path(@artist, mode: ArtistsController::ShowMode::SHOW_LIST_VIEW, thumbnail: "yes")) %>
+  <%= link_to_ex("リスト表示", artist_path(@artist, mode: ArtistsController::ShowMode::SHOW_LIST_VIEW, thumbnail: "yes", no_pic: "t")) %>
 <% end %>

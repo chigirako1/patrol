@@ -55,6 +55,14 @@ module Util
         Rails.root.join("public" + path).to_s
     end
 
+    def self.escape_path(path)
+        path.gsub("#", "%23")
+    end
+
+    def self.convert_path(base_path, path)
+        Util::escape_path(path.gsub(base_path, ""))
+    end
+
     def self.glob(ipath, glob_param="*/")
         path_list = []
 
@@ -91,6 +99,16 @@ module Util
             while head <= tail
                 yielder << head
                 head = head.next_month
+            end
+        end
+    end
+
+    def self.year_enumrator(head, tail)
+        e = Enumerator.new do |yielder|
+      
+            while head <= tail
+                yielder << head
+                head = head.next_year
             end
         end
     end

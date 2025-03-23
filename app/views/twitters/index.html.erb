@@ -120,12 +120,12 @@
         <!-- pxv id -->
         <td bgcolor="pink">
           <% if pxv2.presence %>
-            <%= %!【#{pxv2.rating}】#{pxv2.feature}! %>
+            <%= %!#{pxv2.feature}【#{pxv2.rating}】! %>
             <%= twitter.pxvname if twitter.twtname != twitter.pxvname %>
             (<%= link_to_ex pxv2.pxvid, pxv2.pxv_user_url %>)
             [<%= link_to_ex("■pxv■x", artist_path(pxv2, access_dt_update: "yes")) %>]
           <% elsif pxv.presence %>
-            <%= %!【#{pxv.rating}】#{pxv.feature}! %>
+            <%= %!#{pxv.feature}【#{pxv.rating}】! %>
             <%= twitter.pxvname if twitter.twtname != twitter.pxvname %>
             (<%= link_to_ex pxv.pxvid, pxv.pxv_user_url %>)
             [<%= link_to_ex("■pxv■", artist_path(pxv, access_dt_update: "yes")) %>]
