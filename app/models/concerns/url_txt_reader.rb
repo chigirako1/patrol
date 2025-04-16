@@ -15,10 +15,12 @@ module UrlTxtReader
     end
 
     def last_access_datetime_p(day = 13)
+        delta = Util::get_date_delta(last_access_datetime)
         if day < 0
-            Util::get_date_delta(last_access_datetime) < -day
+            #delta < -day
+            delta > -day
         else
-            Util::get_date_delta(last_access_datetime) < day
+            delta < day
         end
     end
 

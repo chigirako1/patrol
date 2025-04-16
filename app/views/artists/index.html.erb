@@ -37,9 +37,9 @@
       <th>twt DL</th>
       <th>twt UL</th>
       <th>ファイル数(最近)</th>
-      <% if @thumbnail %>
+      <%# if @thumbnail %>
         <th>pic</th>
-      <% end %>
+      <%# end %>
       <th>nje</th>
     </tr>
     <% artists[(@begin_no)..(@begin_no + @size_per_table - 1)].each do |artist| %>
@@ -127,15 +127,21 @@
           <%= artist.filenum %>
           (<%= artist.recent_filenum %>)
         </td>
-        <% if @thumbnail %>
+        <%# if @thumbnail %>
           <td>
-            <% if artist.filenum < 1000 %>
+            <% if @thumbnail %>
+              <% if artist.filenum < 1000 %>
+                <%= pic_path_tag(artist.pxvid, 3) %>
+              <% else %>
+                ファイル数が多いので割愛
+              <% end %>
+            <% elsif artist.rating == 0 %>
               <%= pic_path_tag(artist.pxvid, 3) %>
             <% else %>
-              ファイル数が多いので割愛
+              
             <% end %>
           </td>
-        <% end %>
+        <%# end %>
         <td bgcolor="pink">
           <br />
           <% if artist.njeid.presence %>
@@ -173,7 +179,7 @@
   <h2>author name list</h2>
   <% @authors_list.each do |elem| %>
     <% name = elem[0] %>
-    <% url = %!https://www.google.com/search?q=#{name}! %>
+    <% url = Util::google_search_url(name)#%!https://www.google.com/search?q=#{name}! %>
     「<%= link_to_ex name, url %>」<%= ":#{elem[1]}" %><br />
     <ul>
     <% elem[2].each do |x| %>
@@ -254,6 +260,7 @@
           [ArtistsController::MethodEnum::REGIST_UL_DIFF_NEAR],
           [ArtistsController::MethodEnum::TWTID_CASE_DIFF],
           [ArtistsController::MethodEnum::TABLE_UPDATE_NEW_USER],
+          [ArtistsController::MethodEnum::NAME_TEST],
           [ArtistsController::MethodEnum::UPDATE_RECORD],
           [ArtistsController::MethodEnum::ALL_IN_ONE],
           [ArtistsController::MethodEnum::SEARCH],
@@ -266,8 +273,20 @@
     
     <%= f.submit("検索", name: nil, class: 'subtmi-btn') %>
     <hr />
-    
-    検索：<%= f.text_field :search_word, :value => params[:search_word] %>
+
+<script>
+    function select_text() {
+        let text_field = document.getElementById("search_word");
+        text_field.select();
+        //document.execCommand("copy");
+    }
+</script>
+
+    検索ワード：
+    <%= f.text_field :search_word, :value => params[:search_word] %>
+    <br />
+    <input type="button" value="select" onclick="select_text();" />
+    <br />
     <%= f.select :match_method, options_for_select([["(自動判断)","auto"], ["を含む","partial_match"], ["完全一致","perfect_match"], ["から始まる","begin_match"],  ["で終わる","end_match"]]) %>
     <%= f.select :target_col, options_for_select([['(自動判断)'], ['pxvname'], ['pxvid']]) %>
     <br />
@@ -390,6 +409,9 @@
     <br />
     <%= f.label :最終投稿（公開）日 %>
     <%= f.number_field :last_ul_datetime, :value => params[:last_ul_datetime] %>日以上経過
+    <br />
+    <%= f.label :DB登録日 %>
+    <%= f.number_field :created_at, :value => params[:created_at] %>日以内
     <br />
     <%= f.label :最終アクセス日がn日以上経過した場合は強制表示 %>
     <%= f.number_field :force_disp_day, :value => params[:force_disp_day] %>

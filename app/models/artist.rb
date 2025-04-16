@@ -340,12 +340,30 @@ class Artist < ApplicationRecord
         njeid != nil and njeid != ""
     end
 
+    def days_elapsed(from, to)
+        Util.get_days_date_delta(from, to)
+    end
+
     def created_at_day_num
         get_date_delta(created_at)
     end
 
+    def days_within?()
+    end
+
+    def days_elapsed_since_created()
+        days_elapsed(created_at, Date.today)
+    end
+
     def last_access_datetime_num
         delta_d = get_date_delta(last_access_datetime)
+    end
+
+    # 指定した日数以内の場合は
+    def last_access_datetime_chk(nday)
+        result = last_access_datetime_p(nday)
+        #puts %!#{result}/#{nday}/#{last_access_datetime_num} ! if result == false
+        !result
     end
 
     def last_dl_datetime_disp

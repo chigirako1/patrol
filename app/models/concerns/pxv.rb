@@ -108,7 +108,7 @@ module Pxv
         dir_list = stock_dir_list()
         dir_list.each do |path|
             if pxvid_exist?(path, pxvid)
-                puts %![get_pathlist]path=#{path}!
+                puts %![get_pathlist] path="#{path}"!
                 path_list << UrlTxtReader::get_path_list(path)
                 #break
             end
@@ -117,7 +117,7 @@ module Pxv
         if archive_dir
             rpath_list = get_path_from_dirlist(pxvid)
             rpath_list.each do |rpath|
-                puts %![get_pathlist]rpath="#{rpath}"!
+                puts %![get_pathlist] rpath="#{rpath}"!
                 path_list << UrlTxtReader::get_path_list(rpath)
             end
         end
@@ -125,7 +125,32 @@ module Pxv
         #path_list.flatten.sort.reverse
 
         #path_list = path_list.flatten.map {|x| [get_pxv_art_id(x), File::basename(x), x]}.sort.reverse.map {|x| x[2]}
-        sort_pathlist(path_list.flatten)
+        pathlist = sort_pathlist(path_list.flatten)
+        puts %![get_pathlist] pathlist size=#{pathlist.size}/pxvid=(#{pxvid}!
+        pathlist
+    end
+
+    def self.get_artwork_info(pxv_user_id, pxv_artwork_id)
+        artwork_info = nil
+        path_list = get_pathlist(pxv_user_id)
+        path_list.each do |path|
+            artwork_id, date_str, artwork_title = get_pxv_artwork_info_from_path(path)
+            if get_pxv_art_id(path) == pxv_artwork_id
+                if artwork_info
+                    artwork_info.append_path(path)
+                else
+                    begin
+                        date = Date.parse(date_str)
+                    rescue Date::Error => ex
+                        STDERR.puts %!get_artwork_info("#{date_str}"):#{ex}!
+                        date = nil
+                    end
+
+                    artwork_info = PxvArtworkInfo.new(artwork_id, artwork_title, date, path)
+                end
+            end
+        end
+        artwork_info
     end
 
     def self.sort_pathlist(path_list)
@@ -242,6 +267,14 @@ module Pxv
         id_list.sort.uniq
     end
 
+    def self.name_test
+        dir_list = stock_dir_list()
+        dir_list.each do |path|
+            pxv_user_id = get_pxv_user_id(path)
+            pxv_artist = PxvArtist.new(pxv_user_id, path)
+        end
+    end
+
     def self.db_update_by_newdir(update_record=true)
         new_list = []
         dir_list = stock_dir_list()
@@ -270,6 +303,7 @@ module Pxv
 
         if dup
             STDERR.puts %!重複するIDがあるので処理を中止しました。!
+            raise "dup"
         end
 
         # ディレクトリごとの処理
@@ -455,6 +489,81 @@ module Pxv
         pxv.update(pxv_params)
 #=end
     end
+
+    def self.get_key(rating, str)
+        point = sprintf("%03d", 100 - (rating||0))
+        key_str = %!\!#{point}(#{rating}):#{str}アクセスしてない!
+        key_str
+    end
+
+    def self.hash_group(known_pxv_user_id_list, pxv_group, hide_day)
+        key_pxv_list_no_access_1y    = "011.1年以上"
+        key_pxv_list_no_access_6m    = "012.半年以上"
+        key_pxv_list_no_access_5m    = "013.5ヶ月以上"
+        key_pxv_list_no_access_4m    = "014.4ヶ月以上"
+        key_pxv_list_no_access_3m    = "015.3ヶ月以上"
+        key_pxv_list_no_access_2m    = "016.2ヶ月以上"
+        key_pxv_list_pred            = "099."
+    
+        key_pxv_list_unset           = "121.未設定"
+    
+   
+        key_pxv_list_no_update_6m    = "902.#{ArtistsController::Status::SIX_MONTH_NO_UPDATS}"
+        key_pxv_list_no_update_long  = "903.#{ArtistsController::Status::LONG_TERM_NO_UPDATS}"
+        key_pxv_list_no_artworks     = "904.#{ArtistsController::Status::NO_ARTWORKS}"
+    
+        recent_pxv_list = []
+
+        known_pxv_user_id_list.each do |elem|
+            p = elem.p
+            pred = p.prediction_up_cnt(true)
+
+            if p.last_access_datetime_p(hide_day)
+                recent_pxv_list << elem
+                next
+            end
+
+            if p.rating.presence and p.rating == 0
+                pxv_group[key_pxv_list_unset] << elem
+                next
+            end
+
+            if p.status == ArtistsController::Status::LONG_TERM_NO_UPDATS
+                pxv_group[key_pxv_list_no_update_long] << elem
+                next
+            elsif p.status == ArtistsController::Status::SIX_MONTH_NO_UPDATS
+                pxv_group[key_pxv_list_no_update_6m] << elem
+                next
+            elsif p.status == ArtistsController::Status::NO_ARTWORKS
+                pxv_group[key_pxv_list_no_artworks] << elem
+                next
+            end
+
+            if !(p.last_access_datetime_p(365))
+                key_str = get_key(p.rating, key_pxv_list_no_access_1y)
+                pxv_group[key_str] << elem
+            elsif !(p.last_access_datetime_p(180))
+                key_str = get_key(p.rating, key_pxv_list_no_access_6m)
+                pxv_group[key_str] << elem
+            elsif !(p.last_access_datetime_p(150))
+                key_str = get_key(p.rating, key_pxv_list_no_access_5m)
+                pxv_group[key_str] << elem
+            elsif !(p.last_access_datetime_p(120))
+                key_str = get_key(p.rating, key_pxv_list_no_access_4m)
+                pxv_group[key_str] << elem
+            elsif !(p.last_access_datetime_p(90))
+                key_str = get_key(p.rating, key_pxv_list_no_access_3m)
+                pxv_group[key_str] << elem
+            elsif !(p.last_access_datetime_p(60))
+                key_str = get_key(p.rating, key_pxv_list_no_access_2m)
+                pxv_group[key_str] << elem
+            else
+                pxv_group[key_pxv_list_pred] << elem
+            end
+        end
+
+        recent_pxv_list
+    end
 end
 
 class PxvArtist
@@ -466,9 +575,9 @@ class PxvArtist
     def initialize(id, path)
         @pxv_user_id = id
 
-        # TODO:余計な文字の削除。p.g. ＠以降とか
-
-        @pxv_name = Pxv::get_user_name_from_path(path)
+        user_name = Pxv::get_user_name_from_path(path)
+        @pxv_name = Util::get_name_part_only(user_name)
+        @pxv_name = user_name #### TODO:
         @path_list = []
         filepath_list = UrlTxtReader::get_path_list(path)
         @path_list = Pxv::sort_pathlist(filepath_list)
@@ -502,20 +611,18 @@ class PxvArtist
     end
 end
 
-=begin
-class PxvArtwork
-    attr_accessor :art_id, :publish_date, :title, :path_list
+class PxvArtworkInfo
+    attr_accessor :art_id, :publication_date, :title, :path_list
 
     def initialize(id, title, date, path)
         @art_id = id
         @title = title
-        @publish_date = date
+        @publication_date = date
         @path_list = []
         @path_list << path
     end
 
-    def append(path)
+    def append_path(path)
         @path_list << path
     end
 end
-=end

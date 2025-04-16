@@ -1,9 +1,13 @@
 <p style="color: green"><%= notice %></p>
 
-<%= render @pxv_artwork %>
+<%#= render @pxv_artwork %>
+
+
+<h1>Editing pxv artwork</h1>
+<%= render "form", pxv_artwork: @pxv_artwork %>
 
 <div>
-  <%= link_to "Edit this pxv artwork", edit_pxv_artwork_path(@pxv_artwork) %> |
+  <%#= link_to "Edit this pxv artwork", edit_pxv_artwork_path(@pxv_artwork) %> |
   <%= link_to "Back to pxv artworks", pxv_artworks_path %>
 
   <%= button_to "Destroy this pxv artwork", @pxv_artwork, method: :delete %>

@@ -140,4 +140,78 @@ module Util
         %!#{b.to_i} #{u}!
     end
    
+    def self.google_search_url(phrase)
+        %!https://www.google.com/search?q=#{phrase}!
+    end
+
+REMOVE_WORDS = %w(
+原稿中
+)
+
+    def remove_spec_str(name)
+        rmv_word_list = REMOVE_WORDS.map {|w| Regexp.escape(w)}
+        rmv_str = "(" + rmv_word_list.join("|") + ")"
+        rgx = Regexp.new(rmv_str)
+        name.sub!(rgx, "")
+        name.strip!
+    
+        name
+    end
+
+    def substitute_name(name)
+        subs_name = {
+            #"" => "",
+        }
+        if subs_name.has_key? name
+            subs_name[name]
+        else
+            name
+        end
+    end
+    
+
+SEPA_STRS = %w(
+＠
+@
+：
+｜
+／
+)
+
+# 区切り文字を削除しない対象
+EXCEPT_WORDS = %w(
+)
+
+    # TODO:余計な文字の削除。p.g. ＠以降とか
+    def self.get_name_part_only(name_word)
+        name = name_word
+
+        # 区切り文字以降の削除
+        if name.size < 2
+            #puts %!対象外"#{name}"(文字数少ない)!
+        elsif EXCEPT_WORDS.include? name
+            puts %!対象外"#{name}"()!
+        else
+            sepa_char_list = SEPA_STRS.map {|w| Regexp.escape(w)}
+            sepa_char = "(.*)" + "(" + sepa_char_list.join("|") + ")" + "(.*)"
+            sepa_rgx = Regexp.new(sepa_char)
+
+            # /(.*)(土曜|日曜|歌姫庭園|コミケ|コミティア|金曜|C\d\d\d|２日目|2日目|1日目|夏コミ)(.*)/i
+
+            #p sepa_rgx
+
+            if name_word =~ sepa_rgx
+                name = $1
+                #STDERR.puts %!"#{name_word}" => "#{name}"!
+            end
+        end
+
+        if name_word != name
+            rest = name_word.gsub(name, "")
+            STDERR.puts %!"#{name_word}"\t"#{name}"\t"#{rest}"!
+            #raise "[DBG] owari"
+        end
+
+        name
+    end
 end

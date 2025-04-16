@@ -2,12 +2,12 @@
 <p style="color: green"><%= notice %></p>
 
 <h1>
-    [<%= @twitter.rating %>]
+    [<%= @twitter.rating %>/<%= @twitter.r18 %>]
     <%= %!#{@twitter.twtname}! %>
     (@<%= @twitter.twtid %>)
 </h1>
 
-<% if @twitter.status.presence and @twitter.status != Twitter::STATUS_PATROL %>
+<% if @twitter.status.presence and @twitter.status != Twitter::TWT_STATUS::STATUS_PATROL %>
     <h3><%= @twitter.status %></h3>
 <% end %>
 

@@ -3,8 +3,22 @@ class Twitter < ApplicationRecord
 
     belongs_to :artists, :class_name => 'Artist', optional: true
 
-    STATUS_PATROL = "TWT巡回"
-    STATUS_NOT_EXIST = "存在しない"
+    #STATUS_PATROL = "TWT巡回"
+    #STATUS_NOT_EXIST = "存在しない"
+
+    module TWT_STATUS
+        STATUS_PATROL = "TWT巡回"
+        STATUS_NO_PATROL = "TWT巡回不要"
+        STATUS_NO_UPDATE_LT = "長期更新なし"
+        STATUS_NO_PATROL_PXV_CHECK = "TWT巡回不要(PXVチェック)"
+        STATUS_NO_UPDATE_IM = "最近更新してない？"
+        STATUS_DELETED = "削除"
+        STATUS_NOT_EXIST = "存在しない"
+        STATUS_FROZEN = "凍結"
+        STATUS_PRIVATE = "非公開アカウント"
+        STATUS_ANOTHER = "別アカウントに移行"
+        STATUS_SCREEN_NAME_CHANGED = "アカウントID変更"
+    end
 
     def self.find_by_twtid_ignore_case(twtid, ignore=true)
         if twtid == nil
@@ -214,7 +228,9 @@ class Twitter < ApplicationRecord
 
     def select_cond_post_date
         num_of_days_elapased = get_date_delta(last_post_datetime)
-        cond_day = 30
+
+        cond_day = num_of_days_elapased / 3
+        #cond_day = 30
         if last_access_datetime_p(cond_day)
             #指定日以内にアクセスしているので対象外
             false

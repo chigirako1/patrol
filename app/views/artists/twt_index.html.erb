@@ -52,7 +52,7 @@
 
 <% key_pxv_list_no_update_6m    = "902.#{ArtistsController::Status::SIX_MONTH_NO_UPDATS}" %>
 <% key_pxv_list_no_update_long  = "903.#{ArtistsController::Status::LONG_TERM_NO_UPDATS}" %>
-<% key_pxv_list_recent          = "999.最近アクセス" %>
+<% key_pxv_list_no_artworks     = "904.#{ArtistsController::Status::NO_ARTWORKS}" %>
 
 <% hide_day_b = @hide_day * 1.5 %>
 <% hide_day_c = hide_day_short * 2 %>
@@ -88,7 +88,7 @@
     <% idx = 0 %>
     <% @known_twt_url_list.each do |key, url_list| %>
         <% twt_account = Twitter.find_by_twtid_ignore_case(key) %>
-        <% if twt_account.status == Twitter::STATUS_NOT_EXIST %>
+        <% if twt_account.status == Twitter::TWT_STATUS::STATUS_NOT_EXIST %>
             <% twt_group[key_name_no_exist] << [twt_account, url_list] %>
         <% elsif twt_account.last_access_datetime_p(hide_day_short) %>
             <% twt_group[key_name_recent_short] << [twt_account, url_list] %>
@@ -144,7 +144,6 @@
                 <th>rating</th>
                 <th>st</th>
                 <th>name</th>
-                <th>up freq</th>
                 <th>予測</th>
                 <th>-</th>
                 <th>access</th>
@@ -165,8 +164,8 @@
                 [
                     x.drawing_method||"", 
                     x.status||"", 
-                    -(x.prediction), 
                     x.rating||0, 
+                    -(x.prediction), 
                     -(z[1].size), 
                     x.last_access_datetime
                 ]
@@ -189,9 +188,7 @@
                         <%= twt_account.status %>
                     </td>
                     <td><%= twt_account.twt_screen_name %>(@<%= twt_account.twtid %>)</td>
-                    <td align="right"><%= twt_account.update_frequency %></td>
                     <% pred = twt_account.prediction %>
-                    <% #bgcolor = pre_bgcolor(pred, @pred, @pred / 2) %>
                     <% bgcolor = pre_bgcolor_ex(pred) %>
                     <td align="right" bgcolor="<%= bgcolor %>">
                         <%= pred %>
@@ -214,6 +211,7 @@
                             <% end %>
                         <% end %>
                         <%= twt_account.filenum %>
+                        (<%= twt_account.update_frequency %>)
                     </td>
                     <!-- pxv -->
                     <td>
@@ -287,7 +285,7 @@
 
         <% exist = twt_dirs.user_exist?(key) %>
         <% if exist %>
-            !ローカルファイルにあり!(<%= key %>)
+            !ローカルファイルにあり!(<%= key %>)→
         <% end %>
         <% twt_account = Twitter.find_by_twtid_ignore_case(key) %>
         <% if twt_account %>
@@ -377,7 +375,8 @@
         <% if !(p.last_access_datetime_p(@hide_day)) %>
             <% pred = p.prediction_up_cnt(true) %>
             <% if pred > @pred and p.r18 == "R18" and (p.rating > 75 or p.rating == 0 or p.rating == nil) %>
-                <% pxv_group[elem.cnt.to_s] << elem %>
+                <% grp_key = sprintf("%03d:%03d", 100 - (p.rating||0), 100 - elem.cnt) %>
+                <% pxv_group[grp_key] << elem %>
             <% end %>
         <% end %>
     <% end %>
@@ -385,65 +384,71 @@
     <% #p pxv_group %>
 <% end %>
 
-<% recent_pxv_list = [] %>
 
+<% recent_pxv_list = [] %>
 <% if @known_pxv_user_id_list.size > 0 %>
     <h2>登録済み pxv list (<%= @known_pxv_user_id_list.size %>)</h2>
-    <% @known_pxv_user_id_list.each do |elem| %>
-        <% p = elem.p %>
-        <% pred = p.prediction_up_cnt(true) %>
-        <% if p.last_access_datetime_p(@hide_day) %>
-            <% recent_pxv_list << elem %>
-        <% elsif p.feature == "AI" %>
-            <% pxv_group[key_pxv_list_ai] << elem %>
-        <%# elsif p.rating.presence and p.rating > 90 %>
-            <%# pxv_group[key_pxv_list_high] << elem %>
-        <%# elsif p.rating.presence and p.rating > 0 and p.rating < rating_thre %>
-            <%# if p.rating < rating_thre2 %>
-                <%# pxv_group[key_pxv_list_low_ltxx] << elem %>
-            <%# else %>
-                <%# pxv_group[key_pxv_list_low] << elem %>
-            <%# end %>
-        <% elsif p.rating.presence and p.rating == 0 %>
-            <% if pred > @pred * 2 %>
-                <% pxv_group[key_pxv_list_unset_many] << elem %>
+    <% if true %>
+        <% recent_pxv_list = Pxv::hash_group(@known_pxv_user_id_list, pxv_group, @hide_day) %>
+    <% else %>
+        <% @known_pxv_user_id_list.each do |elem| %>
+            <% p = elem.p %>
+            <% pred = p.prediction_up_cnt(true) %>
+            <% if p.last_access_datetime_p(@hide_day) %>
+                <% recent_pxv_list << elem %>
+            <% elsif p.feature == "AI" %>
+                <% pxv_group[key_pxv_list_ai] << elem %>
+            <%# elsif p.rating.presence and p.rating > 90 %>
+                <%# pxv_group[key_pxv_list_high] << elem %>
+            <%# elsif p.rating.presence and p.rating > 0 and p.rating < rating_thre %>
+                <%# if p.rating < rating_thre2 %>
+                    <%# pxv_group[key_pxv_list_low_ltxx] << elem %>
+                <%# else %>
+                    <%# pxv_group[key_pxv_list_low] << elem %>
+                <%# end %>
+            <% elsif p.rating.presence and p.rating == 0 %>
+                <% if pred > @pred * 2 %>
+                    <% pxv_group[key_pxv_list_unset_many] << elem %>
+                <% else %>
+                    <% pxv_group[key_pxv_list_unset_few] << elem %>
+                <% end %>
+            <% elsif p.status == ArtistsController::Status::LONG_TERM_NO_UPDATS %>
+                <% pxv_group[key_pxv_list_no_update_long] << elem %>
+            <% elsif p.status == ArtistsController::Status::SIX_MONTH_NO_UPDATS %>
+                <% pxv_group[key_pxv_list_no_update_6m] << elem %>
+            <% elsif p.status == ArtistsController::Status::NO_ARTWORKS %>
+                <% pxv_group[key_pxv_list_no_artworks] << elem %>
+            <% elsif !(p.last_access_datetime_p(365)) %>
+                <% key_str = %!0#{100 - p.rating}(#{p.rating}):#{key_pxv_list_no_access_1y}#{key_pxv_list_no_access_CMN}! %>
+                <% pxv_group[key_str] << elem %>
+            <% elsif !(p.last_access_datetime_p(180)) %>
+                <% key_str = %!0#{100 - p.rating}(#{p.rating}):#{key_pxv_list_no_access_6m}#{key_pxv_list_no_access_CMN}! %>
+                <% pxv_group[key_str] << elem %>
+            <% elsif !(p.last_access_datetime_p(150)) %>
+                <% key_str = %!0#{100 - p.rating}(#{p.rating}):#{key_pxv_list_no_access_5m}#{key_pxv_list_no_access_CMN}! %>
+                <% pxv_group[key_str] << elem %>
+            <% elsif !(p.last_access_datetime_p(120)) %>
+                <% key_str = %!0#{100 - p.rating}(#{p.rating}):#{key_pxv_list_no_access_4m}#{key_pxv_list_no_access_CMN}! %>
+                <% pxv_group[key_str] << elem %>
+            <% elsif !(p.last_access_datetime_p(90)) %>
+                <% key_str = %!0#{100 - p.rating}(#{p.rating}):#{key_pxv_list_no_access_3m}#{key_pxv_list_no_access_CMN}! %>
+                <% pxv_group[key_str] << elem %>
+            <% elsif !(p.last_access_datetime_p(60)) %>
+                <% key_str = %!0#{100 - p.rating}(#{p.rating}):#{key_pxv_list_no_access_2m}#{key_pxv_list_no_access_CMN}! %>
+                <% pxv_group[key_str] << elem %>
+            <%# elsif pred >= @pred %>
+                <%# if p.rating.presence and pred >= @pred * 2 %>
+                    <%# pxv_group[key_pxv_list_set_m] << elem %>
+                <%# else %>
+                    <%# pxv_group[key_pxv_list_set] << elem %>
+                <%# end %>
+            <%# elsif p.last_access_datetime_p(-60) %>
+                <%# pxv_group[key_pxv_list_pred_few_access] << elem %>
+            <%# elsif pred >= 3 %>
+                <%# pxv_group[key_pxv_list_pred_few_pred_n] << elem %>
             <% else %>
-                <% pxv_group[key_pxv_list_unset_few] << elem %>
+                <% pxv_group[key_pxv_list_pred_few] << elem %>
             <% end %>
-        <% elsif p.status == ArtistsController::Status::LONG_TERM_NO_UPDATS %>
-            <% pxv_group[key_pxv_list_no_update_long] << elem %>
-        <% elsif p.status == ArtistsController::Status::SIX_MONTH_NO_UPDATS %>
-            <% pxv_group[key_pxv_list_no_update_6m] << elem %>
-        <% elsif !(p.last_access_datetime_p(365)) %>
-            <% key_str = %!0#{100 - p.rating}(#{p.rating}):#{key_pxv_list_no_access_1y}#{key_pxv_list_no_access_CMN}! %>
-            <% pxv_group[key_str] << elem %>
-        <% elsif !(p.last_access_datetime_p(180)) %>
-            <% key_str = %!0#{100 - p.rating}(#{p.rating}):#{key_pxv_list_no_access_6m}#{key_pxv_list_no_access_CMN}! %>
-            <% pxv_group[key_str] << elem %>
-        <% elsif !(p.last_access_datetime_p(150)) %>
-            <% key_str = %!0#{100 - p.rating}(#{p.rating}):#{key_pxv_list_no_access_5m}#{key_pxv_list_no_access_CMN}! %>
-            <% pxv_group[key_str] << elem %>
-        <% elsif !(p.last_access_datetime_p(120)) %>
-            <% key_str = %!0#{100 - p.rating}(#{p.rating}):#{key_pxv_list_no_access_4m}#{key_pxv_list_no_access_CMN}! %>
-            <% pxv_group[key_str] << elem %>
-        <% elsif !(p.last_access_datetime_p(90)) %>
-            <% key_str = %!0#{100 - p.rating}(#{p.rating}):#{key_pxv_list_no_access_3m}#{key_pxv_list_no_access_CMN}! %>
-            <% pxv_group[key_str] << elem %>
-        <% elsif !(p.last_access_datetime_p(60)) %>
-            <% key_str = %!0#{100 - p.rating}(#{p.rating}):#{key_pxv_list_no_access_2m}#{key_pxv_list_no_access_CMN}! %>
-            <% pxv_group[key_str] << elem %>
-        <%# elsif pred >= @pred %>
-            <%# if p.rating.presence and pred >= @pred * 2 %>
-                <%# pxv_group[key_pxv_list_set_m] << elem %>
-            <%# else %>
-                <%# pxv_group[key_pxv_list_set] << elem %>
-            <%# end %>
-        <% elsif p.last_access_datetime_p(-60) %>
-            <% pxv_group[key_pxv_list_pred_few_access] << elem %>
-        <% elsif pred >= 3 %>
-            <% pxv_group[key_pxv_list_pred_few_pred_n] << elem %>
-        <% else %>
-            <% pxv_group[key_pxv_list_pred_few] << elem %>
         <% end %>
     <% end %>
 <% end %>
@@ -510,7 +515,7 @@
                     </td>
                     <td>
                         [<%= elem.cnt %>]<%= p.feature %>【<%= p.rating %>】<%= p.r18 %><br />
-                        <b><%= p.pxvname %></b>(<%= link_to_ex elem.pxvid, pxvurl %>)
+                        <b><%= p.pxvname %></b>(<%= elem.pxvid %><%#= link_to_ex elem.pxvid, pxvurl %>)
                     </td>
                     <% bgc = pre_bgcolor(pred, @pred * 2, @pred) %>
                     <td align="right" bgcolor="<%= bgc %>">
@@ -586,7 +591,7 @@
 <% if recent_pxv_list.size > 0 %>
     <h2>既知pxv 最近アクセス分 [<%= @hide_day %>日以内] (<%= recent_pxv_list.size %>)</h2>
 
-    <% h = recent_pxv_list.group_by {|x| x.p.created_at_day_num < 30} %>
+    <% h = recent_pxv_list.group_by {|x| x.p.created_at_day_num < 60} %>
     <% if h[false] %>
         <% recent_pxv_group = h[false].group_by {|x| x.p.last_access_datetime_num / 7} %>
     <% else %>
@@ -746,12 +751,14 @@
 
 <!-- pxv artwork list -->
 <% if @pxv_artwork_id_list.presence %>
-    <% @pxv_artwork_id_list.sort.each.with_index(1) do |artwork_id, idx| %>
+    <h2>pxv artwork list (<%= @pxv_artwork_id_list.size %>)</h2>
+    <% @pxv_artwork_id_list.sort.uniq.each.with_index(1) do |artwork_id, idx| %>
         <%= idx %>.
         (<%= link_to_ex(artwork_id, Pxv::pxv_artwork_url(artwork_id)) %>)
         <% pa = PxvArtwork.find_by(artwork_id: artwork_id) %>
         <% if pa %>
-            <%= pa.state %>/<%= pa.release_date %>/<%= pa.user_id %>/<%= pa.title %>
+            <!-- <%= pa.state %>/<%= pa.release_date %>/user_id:<%= pa.user_id %>/「<%= pa.title %>」 -->
+            <%= pa.info_txt %>
             [<%= link_to_ex("Edit", edit_pxv_artwork_path(pa)) %>]
         <% else %>
             [<%= link_to_ex("New", new_pxv_artwork_path(artwork_id: artwork_id)) %>]
@@ -841,7 +848,7 @@
 
 <% if @misc_urls and @misc_urls.size != 0 %>
     <h2>misc url list(<%= @misc_urls.size %>)</h2>
-    <% @misc_urls.each do |url| %>
+    <% @misc_urls.sort.uniq.each do |url| %>
         <%= link_to_ex url, url %>
         <br />
     <% end %>

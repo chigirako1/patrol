@@ -21,6 +21,7 @@ class Params
     :filename,
     :last_access_datetime,
     :last_ul_datetime,
+    :created_at,
     :r18,
     :point,
     :prediction,
@@ -44,6 +45,8 @@ class Params
     @rating = params[:rating]
     @rating_upper_limit = params[:rating_upper_limit]
     @twt_chk = params[:twt_chk]
+    @created_at = params[:created_at]
+    
     puts %!group_by="#{@group_by}"/sort_by="#{@sort_by}"/!
 
     if @point == nil
@@ -162,6 +165,10 @@ class Params
     end
     puts "last_ul_datetime=#{@last_ul_datetime}"
 
+    if @created_at
+      @created_at = @created_at.to_i
+    end
+
     display_number = params[:display_number]
     if display_number == nil
       @display_number = 3
@@ -242,6 +249,7 @@ class ArtistsController < ApplicationController
     TABLE_UPDATE_NEW_USER = '新規ユーザーDB登録(PXV DB更新)'
     UPDATE_RECORD = 'pxvレコード更新(PXV id 指定)'
     SEARCH = '検索'
+    NAME_TEST = '名前テスト'
     DB_UNREGISTERED_USER = 'ファイル0件未登録'
     TWT_DB_UNREGISTERED_TWT_ID = 'twt未登録twt id' #PXV DBに登録されているがTWT DBに登録がないTWT ID
     TWT_DB_UNREGISTERED_PXV_USER_ID = '未登録pxv user id' # TWTテーブルに登録されているがPXVテーブルに登録されていないPXV ID
@@ -269,6 +277,7 @@ class ArtistsController < ApplicationController
   module Status
     LONG_TERM_NO_UPDATS = "長期更新なし"
     SIX_MONTH_NO_UPDATS = "半年以上更新なし"
+    NO_ARTWORKS = "作品ゼロ"
   end
 
   module ShowMode
@@ -324,6 +333,10 @@ class ArtistsController < ApplicationController
     @artists_group = {}
 
     case params[:file]
+    when ArtistsController::MethodEnum::NAME_TEST
+      artists = Artist.all
+      Pxv::name_test()
+      #return
     when ArtistsController::MethodEnum::SEARCH
       artists = Artist.looks(params[:target_col], params[:search_word], params[:match_method])
       @artists_group = index_group_by(artists, prms)
@@ -369,7 +382,7 @@ class ArtistsController < ApplicationController
       # 未設定gr
       artists = Artist.all
       artists = artists.select {|x| x.rating == nil or x.rating == 0}
-      artists = artists.select {|x| x.last_access_datetime_p(-60)}
+      artists = artists.select {|x| x.last_access_datetime_num < 90}
       #artists = artists.sort_by {|x| [-x.prediction_up_cnt(true), x.last_access_datetime]}
       artists = artists.sort_by {|x| [-x.prediction_up_cnt(true)]}
       group = {}
@@ -378,10 +391,20 @@ class ArtistsController < ApplicationController
 
       # 
       artists = Artist.all
-      artists = artists.select {|x| !x.last_access_datetime_p(30)}
-      artists = artists.select {|x| x.last_ul_datetime != nil}
-      artists = artists.sort_by {|x| [-((x.created_at.to_date - x.last_ul_datetime.to_date).to_i)]}
-      artists = index_select_status_exclude(artists)
+      if false
+        artists = artists.select {|x| x.days_elapsed_since_created < 60}
+        artists = artists.select {|x| x.last_access_datetime_num > 30 and x.last_access_datetime_num < 360}
+        artists = artists.select {|x| x.last_ul_datetime != nil}
+        #artists = artists.sort_by {|x| [-((x.created_at.to_date - x.last_ul_datetime.to_date).to_i)]}
+        artists = artists.sort_by {|x| [-(x.days_elapsed(x.last_ul_datetime, x.created_at))]}
+        artists = index_select_status_exclude(artists)
+      else
+        artists = artists.select {|x| x.last_access_datetime_num > 30 and x.last_access_datetime_num < 90}
+        artists = artists.select {|x| x.last_ul_datetime != nil}
+        artists = artists.select {|x| x.days_elapsed(x.last_ul_datetime, x.created_at) > 180}
+        artists = artists.sort_by {|x| x.last_access_datetime}
+        artists = index_select_status_exclude(artists)
+      end
       group = {}
       group["レコード登録日と最新公開日が離れている"] = artists
       group_list << group
@@ -390,13 +413,15 @@ class ArtistsController < ApplicationController
       return
     when MethodEnum::TABLE_UPDATE_NEW_USER
       Pxv::db_update_by_newdir()
-      artists = Artist.select {|x| (x.created_at.to_date - Date.today.to_date).to_i == 0}
+      #artists = Artist.select {|x| (x.created_at.to_date - Date.today.to_date).to_i == 0}
+      artists = Artist.select {|x| x.days_elapsed_since_created == 0}
       @artists_group[""] = artists
       return
     when MethodEnum::UPDATE_RECORD
       #Pxv::update_record_by_dir()
       Pxv::db_update_by_newdir(false)
-      artists = Artist.select {|x| (x.created_at.to_date - Date.today.to_date).to_i == 0}
+      #artists = Artist.select {|x| (x.created_at.to_date - Date.today.to_date).to_i == 0}
+      artists = Artist.select {|x| x.days_elapsed_since_created == 0}
       @artists_group[""] = artists
       return
     else
@@ -553,7 +578,7 @@ class ArtistsController < ApplicationController
     end
 
     artists = index_select(artists, prms)
-    puts %!artists.size=#{artists.size}!
+    #puts %!artists.size=#{artists.size}!
     artists = index_sort(artists, prms)
 
     @artists_total_count = artists.size
@@ -1006,11 +1031,16 @@ class ArtistsController < ApplicationController
         artists = artists.select {|x| y = x[:last_ul_datetime].strftime("%Y").to_i; y >= prms.year_since and y <= prms.year_until}
       end
   
-      if prms.last_access_datetime > 0
-        artists = artists.select {|x| !x.last_access_datetime_p(prms.last_access_datetime)}
-      elsif prms.last_access_datetime < 0
-        # 負の値の場合は最近アクセスしたものを選択
-        artists = artists.select {|x| x.last_access_datetime_p(prms.last_access_datetime)}
+      if prms.last_access_datetime != 0
+        #artists = artists.select {|x| !x.last_access_datetime_p(prms.last_access_datetime)}
+        artists = artists.select {|x| x.last_access_datetime_chk(prms.last_access_datetime)}
+      end
+
+      if prms.created_at
+        artists = artists.select {|x|
+          delta = Util::get_date_delta(x.created_at);
+          delta <= prms.created_at
+        }
       end
 
       if prms.last_ul_datetime > 0
@@ -1022,7 +1052,7 @@ class ArtistsController < ApplicationController
         # 負の値の場合は最近アクセスしたものを選択
         #artists = artists.select {|x| x.last_ul_datetime_p(prms.last_ul_datetime)}
       end
-      puts %!artists.size=#{artists.size}!
+      #puts %!artists.size=#{artists.size}!
 
       artists
     end
@@ -1256,8 +1286,8 @@ class ArtistsController < ApplicationController
 
       #p tmp_group
       tmp_group.each do |key, g|
-        p key
-        p g
+        #p key
+        #p g
         artists_group[prefix + "更新なし:" + key.to_s] = g
       end
 

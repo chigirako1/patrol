@@ -1,7 +1,7 @@
 <% if @twitters_total_count.presence %>
   <% twitters_total_count = @twitters_total_count %>
 <% else %>
-  <% twitters_total_count = 0 %>
+  <% twitters_total_count = -1 %>
 <% end %>
 
 <% rem = twitters_total_count - @num_of_disp %>
@@ -9,7 +9,12 @@
   <% rem_str = %!/残り#{rem}件! %>
 <% end %>
 
-<% page_title = "#{params[:page_title]} (全#{twitters_total_count}件#{rem_str}) - TWT一覧" %>
+<% if twitters_total_count < 0 %>
+  <% page_title = "#{params[:page_title]} - TWT一覧" %>
+<% else %>
+  <% page_title = "#{params[:page_title]} (全#{twitters_total_count}件#{rem_str}) - TWT一覧" %>
+<% end %>
+
 <% provide(:title, page_title) %>
 <p style="color: green"><%= notice %></p>
 
@@ -89,7 +94,10 @@
           <%= twitter.remarks %>
         </td>
 
-        <% pred = twitter.prediction %>
+        <% prediction = twitter.prediction %>
+        <% pred_2 = (twitter.update_frequency||0) / 100 %>
+        <% pred = prediction + pred_2 %>
+        <% #puts %!*** #{pred} = #{prediction} + #{pred_2}! %>
         <% pred_bg_color = pred_bg_color(pred) %>
         <td bgcolor="<%= pred_bg_color %>">
           <%= pred %>
@@ -189,20 +197,22 @@
 
         <!-- サムネイル -->
         <td>
-          <% if @thumbnail %>
+          <% if @thumbnail or !twitter.status.presence %>
             <% list = twitter.get_pic_filelist() %>
             <% if list.size < 500 %>
+              <% thumbnail = true %>
+            <% end %>
+          <% end %>
+
+          <% if thumbnail %>
               <% twt_pic_list = list.map {|x| [Twt::twt_path_str(x), x]}.sort.reverse %>
               <% list = twt_pic_list.map {|x| x[1]}.first(3) %>
               <% list.each do |filepath| %>
                 <%= link_to image_tag(filepath, width: pic_disp_mag, height: pic_disp_mag), filepath, target: :_blank, rel: "noopener noreferrer" if filepath.presence %>
               <% end %>
               <%= twt_pic_list.size %>
-            <% else %>
-              <%= twitter.filenum %>(<%= twitter.recent_filenum %>) 
-            <% end %>
           <% else %>
-            <%= twitter.filenum %>(<%= twitter.recent_filenum %>) 
+            <%= twitter.filenum %>
           <% end %>
         </td>
       </tr>
@@ -210,6 +220,41 @@
   </table>
   <% end %>
 </div>
+
+<hr />
+
+<style>
+button.horizontal {
+  padding-left: 1em;
+  padding-right: 1em;
+  height: 3em;
+}
+</style>
+
+<script>
+    function select_text() {
+        let text_field = document.getElementById("search_word");
+        text_field.select();
+        //document.execCommand("copy");
+    }
+</script>
+
+<div class="view_form">
+  <%= form_with url: twitters_path, local: true, method: :get do |f| %>
+   
+    検索：<%= f.text_field :search_word, :value => params[:search_word] %>
+    <br />
+    <input type="button" value="select" onclick="select_text();" />
+    <br />
+    モード：<%= f.text_field :mode, :value => params[:mode] %>
+    <br />
+    <%= f.label :page_title %>
+    <%= f.text_field :page_title, :value => params[:page_title] %>
+    <br />
+    <%= f.submit("検索", name: nil, class: 'subtmi-btn') %>
+  <% end %>
+</div>
+
 
 <hr />
 <%= link_to "New twitter", new_twitter_path %>

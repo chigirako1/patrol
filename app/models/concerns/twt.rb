@@ -2,6 +2,9 @@
 
 #require "active_support/core_ext/numeric/conversions"
 
+# =============================================================================
+# 
+# =============================================================================
 module Twt
     extend ActiveSupport::Concern
 
@@ -279,7 +282,7 @@ module Twt
             tweet_id, pic_no = get_tweet_info_from_filepath(path)
             if tweet_id_hash.has_key? tweet_id
                 # 同一のTweet idの場合は単純に同じツイートを多重で保存しただけとして記録しない
-                puts %!DLミス(重複):"#{path}"!
+                puts %!重複DL(DLミス):"#{path}"!
                 next
             end
             tweet_id_hash[tweet_id] = true
@@ -309,12 +312,17 @@ module Twt
                     puts %!同一のファイルです:#{tweet_id}-#{pic_no}(@#{twt_screen_name})!
                 end
             else
-                puts %!すでに登録済みです:@#{twt_screen_name}:#{tweet_id}:#{pic_no}"!
+                puts %!すでに登録済みです:@#{twt_screen_name}:#{tweet_id}:#{pic_no}/#{tweet_rcd}"!
+                if db_update
+                    #Tweet::update_tweet_record(tweet_rcd, tweet_id, status: Tweet::StatusEnum::DUPLICATE, rating: nil, remarks: nil)
+                end
             end
         end
     end
 
     def self.db_update_dup_files(pic_list, screen_name_arg="", db_update=true)
+        puts %!(#{__FILE__}:#{__LINE__}) #{__method__}():n=#{pic_list.size}!
+
         dup_path_list = []
         hash_hash = get_hash_val_hash(pic_list)
         hash_hash.each do |k, v|
@@ -444,6 +452,20 @@ module Twt
         point
     end
 
+    def self.get_screen_name(str)
+        if str =~ /(\w+)/
+            result = $1
+            if result != str
+                puts %![LOG] "#{$1}" <= "#{str}"!
+                return result
+            end
+        end
+        return str
+    end
+
+    # =========================================================================
+    # 
+    # =========================================================================
     class TwtDirs
         def initialize
             path_list = Util::glob(TWT_CURRENT_DIR_PATH)
@@ -457,6 +479,9 @@ module Twt
     end
 end
 
+# =============================================================================
+# 
+# =============================================================================
 class TwtArtist
     #attr_accessor :twt_id, :twt_name, :path_list, :ctime, :num_of_files
     attr_accessor :twt_id, :twt_name, :path_list, :num_of_files
@@ -556,6 +581,9 @@ class TwtArtist
     end
 end
 
+# =============================================================================
+# 
+# =============================================================================
 class TwtArtwork
     attr_accessor :art_id, :date, :title, :path_list
 

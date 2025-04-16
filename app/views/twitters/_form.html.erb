@@ -1,3 +1,12 @@
+<style>
+.btn_s {
+  padding-left: 1em;
+  padding-right: 1em;
+  height: 2em;
+  width: 50px;
+}
+</style>
+
 <%= form_with(model: twitter) do |form| %>
   <% pxv = Artist.find_by_twtid_ignore_case(@twitter.twtid) %>
   <% if twitter.errors.any? %>
@@ -47,10 +56,13 @@
   <div>
     <%= form.label :評価, style: "display: block" %>
     <%= form.number_field :rating %>
-    <input type="button" value="+5" onclick="plus_rate('rating', 5);" class="btn" />
-    <input type="button" value="-5" onclick="plus_rate('rating', -5);" class="btn" />
+    <input type="button" value="+5" onclick="plus_rate('rating', 5);" class="btn_s" />
+    <input type="button" value="-5" onclick="plus_rate('rating', -5);" class="btn_s" />
+    <input type="button" value="+1" onclick="plus_rate('rating', 1);" class="btn_s" />
+    <input type="button" value="-1" onclick="plus_rate('rating', -1);" class="btn_s" />
     <br />
-    <input type="button" value="80" onclick="set_rate('rating', 80);" class="btn" />
+    <input type="button" value="85" onclick="set_rate('rating', 85);" class="btn_s" />
+    <input type="button" value="80" onclick="set_rate('rating', 80);" class="btn_s" />
   </div>
 
   <div>
@@ -81,7 +93,7 @@
         ["凍結", "凍結"],
         ["非公開アカウント", "非公開アカウント"],
         ["別アカウントに移行（存在はするが更新していない？）", "別アカウントに移行"],
-        ["アカウントID変更", "アカウントID変更"],
+        ["アカウントID(スクリーンネーム)変更", "アカウントID変更"],
       ],
       { selected: status_value },
       include_blank: "選択して下さい" %>
@@ -198,11 +210,11 @@
           類似名あり：<br />
           <% pxv3.each do |pxv_n| %>
             <%= pxv_n.feature %>【<%= pxv_n.pxvname %>(<%= pxv_n.pxvid %>)】
-            ["@<%= pxv_n.twtid %>"
+            ["@<%= pxv_n.twtid %>"(pxv)
             <% if pxv_n.twtid == @twitter.twtid %>
               TWT ID一致
             <% else %>
-              != "<%= @twitter.twtid %>" TWT ID不一致
+              != "<%= @twitter.twtid %>"(twt) TWT ID不一致
             <% end %>
             ]
             <%= link_to_ex("■pxv■", artist_path(pxv_n.id, access_dt_update: "yes")) %>
@@ -218,6 +230,11 @@
           <% else %>
             ※フォルダなし？
           <% end %>
+        <% elsif @twitter.twtname.presence %>
+          google検索→
+          <% url = Util::google_search_url(@twitter.twtname) %>
+          「<%= link_to_ex(@twitter.twtname, url) %>」
+          <br />
         <% end %>
       <% end %>
     <% end %>
@@ -281,7 +298,7 @@
   </div>
 
   <div>
-    <%= form.label :新ID, style: "display: block" %>
+    <%= form.label "新ID(screen name)", style: "display: block" %>
     @<%= form.text_field :new_twtid %>
     <%= link_to_ex "@#{@twitter.new_twtid}", Twt::twt_user_url(@twitter.new_twtid) if @twitter.new_twtid.presence %>
     <% new_twt = Twitter.find_by_twtid_ignore_case(@twitter.new_twtid) %>
@@ -295,7 +312,7 @@
   </div>
 
   <div>
-    <%= form.label :旧ID, style: "display: block" %>
+    <%= form.label "旧ID(screen name)", style: "display: block" %>
     @<%= form.text_field :old_twtid %>
     <%= link_to_ex "@#{@twitter.old_twtid}", Twt::twt_user_url(@twitter.old_twtid) if @twitter.old_twtid.presence %>
     <% old_twt = Twitter.find_by_twtid_ignore_case(@twitter.old_twtid) %>

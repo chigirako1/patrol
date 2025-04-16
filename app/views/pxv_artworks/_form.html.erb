@@ -1,3 +1,5 @@
+<% provide(:title, "pxv artwork") %>
+
 <%= form_with(model: pxv_artwork) do |form| %>
   <% if pxv_artwork.errors.any? %>
     <div style="color: red">
@@ -11,6 +13,27 @@
     </div>
   <% end %>
 
+  <% pxv_artist = pxv_artwork.find_artist %>
+  <% if pxv_artist %>
+    <% if pxv_artwork.artwork_id %>
+      <% artwork_info = Pxv::get_artwork_info(pxv_artist.pxvid, pxv_artwork.artwork_id) %>
+    <% end %>
+
+    <br />
+    <%= pxv_artist.pxvname %>
+    <%= link_to_ex("■pxv■", pxv_artist) %>
+    アクセス日:<%= pxv_artist.last_access_datetime_disp %>
+    <br />
+  <% end %>
+
+  <% if artwork_info %>
+    <% artwork_path = artwork_info.path_list[0] %>
+    <% artwork_date = artwork_info.publication_date %>
+    <% ratio = '15%' %>
+    <%= link_to_ex(image_tag(artwork_path, width: ratio, height: ratio), artwork_path) %>
+    <%= artwork_path %>
+  <% end %>
+
   <div>
     <%= form.label "アートワークID", style: "display: block" %>
 
@@ -20,16 +43,22 @@
       <% artwork_id = pxv_artwork.artwork_id %>
     <% end %>
     <%= form.number_field :artwork_id, value: artwork_id %>
-  </div>
 
-  <div>
-    <%= form.label "PXVユーザーID", style: "display: block" %>
-    <%= form.number_field :user_id %>
+    <% url = Pxv::pxv_artwork_url(artwork_id) %>
+    <br />
+    <%= link_to_ex(url, url) %>
+    <br />
   </div>
 
   <div>
     <%= form.label :タイトル, style: "display: block" %>
-    <%= form.text_field :title %>
+
+    <% if !pxv_artwork.title.presence and artwork_info %>
+      New!
+      <%= form.text_field :title, :value => artwork_info.title %>
+    <% else %>
+      <%= form.text_field :title %>
+    <% end %>
   </div>
 
   <div>
@@ -46,20 +75,67 @@
 
   <div>
     <%= form.label :公開日, style: "display: block" %>
-    <%= form.datetime_field :release_date %>
+
+    <% if pxv_artwork.release_date == nil and artwork_date %>
+      New!
+      <%= form.datetime_field :release_date, :value => artwork_date %>
+    <% else %>
+      <%= form.datetime_field :release_date %>
+    <% end %>
   </div>
 
   <div>
     <%= form.label :画像数, style: "display: block" %>
-    <%= form.number_field :number_of_pic %>
+
+    <% if pxv_artwork.number_of_pic == nil and artwork_info %>
+      New!
+      <%= form.number_field :number_of_pic, :value => artwork_info.path_list.size %>
+    <% else %>
+      <%= form.number_field :number_of_pic %>
+    <% end %>
   </div>
 
   <div>
-    <%= form.label :remarks, style: "display: block" %>
+    <%= form.label :備考, style: "display: block" %>
     <%= form.text_field :remarks %>
   </div>
 
   <div>
+    <%= form.label "PXVユーザーID", style: "display: block" %>
+    <%= form.number_field :user_id %>
+  </div>
+
+
+  <div>
     <%= form.submit %>
   </div>
+
 <% end %>
+
+<h2>計算</h2>
+pxv url:
+<input type=”text” id="pxv_url_text" value="" />
+<input type="button" value="user id表示" onclick="get_pxv_user_id();" />
+user id:<p id="calc_result">result</p>
+
+<script>
+    function get_pxv_user_id() {
+        let text_box = document.getElementById("pxv_url_text");
+        let text = text_box.value;
+
+        let datetxt = "";
+        let regex = /pixiv\.net\/users\/(\d+)/;
+        if (regex.test(text)) {
+            let r = text.match(regex)
+            let n = Number(r[1]);
+            datetxt = n;
+        } else {
+            let r = text.match(/(\d+)/)
+            let n = Number(r[0]);
+            datetxt = n;
+        }
+
+        const result = document.querySelector('#calc_result');
+        result.textContent = datetxt;
+    }
+</script>

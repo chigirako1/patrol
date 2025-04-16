@@ -2,4 +2,4 @@
 import "@hotwired/turbo-rails"
 import "controllers"
 
-import './custom/hoge.js';
+//import './custom/hoge.js';

@@ -24,9 +24,12 @@ module ArtistsHelper
         end
 =end
         tag += "<br />"
+
         tag += "("
-        tag += link_to_ex(artist["pxvid"], artist.pxv_user_url)
+        #tag += link_to_ex(artist["pxvid"], artist.pxv_user_url)
+        tag += %!#{artist.pxvid}!
         tag += ")"
+
         tag += "<br />"
 
         tag.html_safe

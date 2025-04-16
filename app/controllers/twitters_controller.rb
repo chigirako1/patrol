@@ -104,6 +104,8 @@ class TwittersController < ApplicationController
             artists.rating AS artist_rating,
             artists.last_access_datetime AS artists_last_access_datetime,
             artists.*, twitters.*").where(col, word)
+      #@twitters_total_count = twitters.count
+      #puts twitters.size
     else
       twitters = Twitter.joins(
         sql_query
@@ -171,10 +173,16 @@ class TwittersController < ApplicationController
       #tmp = tmp.select {|x| x.select_cond_no_pxv}
       twitters = twitters.select {|x| !(x.pxvid.presence) and x.artist_pxvid == nil or x.artist_status == "長期更新なし" or x.artist_status == "半年以上更新なし"}
       twitters = twitters.select {|x| x.rating == nil or x.rating == 0}
-      twitters = twitters.select {|x| x.last_access_datetime_p(-30)}
+      twitters2 = twitters.select {|x| x.last_access_datetime_p(-30)}
+      twitters2 = twitters2.sort_by {|x| [-x.prediction, x.last_access_datetime]}
+      group = {}
+      group["未設定1"] = twitters2
+      group_list << group
+
+      twitters = twitters.select {|x| !x.last_access_datetime_p(-30)}
       twitters = twitters.sort_by {|x| [-x.prediction, x.last_access_datetime]}
       group = {}
-      group["未設定"] = twitters
+      group["未設定2"] = twitters
       group_list << group
 
       @twitters_group = group_list[0].merge(*group_list)
@@ -219,7 +227,7 @@ class TwittersController < ApplicationController
         if @hide_within_days > 0
           twitters = twitters.select {|x| !x.last_access_datetime_p(@hide_within_days)}
         else
-          twitters = twitters.select {|x| x.last_access_datetime_p(@hide_within_days)}
+          twitters = twitters.select {|x| !x.last_access_datetime_p(@hide_within_days)}
         end
         @twitters_group[""] = twitters
       else
@@ -252,7 +260,7 @@ class TwittersController < ApplicationController
         #x.status == "長期更新なし" or
         #x.status == "最近更新してない？" or
         x.status == "削除" or
-        x.status == Twitter::STATUS_NOT_EXIST or
+        x.status == Twitter::TWT_STATUS::STATUS_NOT_EXIST or
         x.status == "凍結" or
         x.status == "別アカウントに移行" or
         x.status == "アカウントID変更"
@@ -420,7 +428,7 @@ class TwittersController < ApplicationController
       return
     when "存在しない"
       twitters = twitters.select {|x| !x.last_access_datetime_p(@hide_within_days)}
-      twitters = twitters.select {|x| x.status == Twitter::STATUS_NOT_EXIST}
+      twitters = twitters.select {|x| x.status == Twitter::TWT_STATUS::STATUS_NOT_EXIST}
       twitters = twitters.first(@num_of_disp)
       #@twitters_group = twitters.group_by {|x| [x.status, x.r18]}
       @twitters_group = twitters.group_by {|x| [x.rating]}.sort_by {|k, v| k || 0}.reverse.to_h
@@ -446,6 +454,9 @@ class TwittersController < ApplicationController
 
     when "all"
       twitters = twitters.sort_by {|x| [-x.prediction, x.last_access_datetime, (x.last_post_datetime || "2000-01-01")]}
+    when "search"
+      @twitters_group = twitters.group_by {|x| x.rating}
+      @twitters_total_count = twitters.size
     else
       #twitters = twitters.select {|x| x.last_dl_datetime.year >= 2023}
       #twitters = twitters.select {|x| x.last_dl_datetime.month >= 11}
@@ -514,11 +525,17 @@ class TwittersController < ApplicationController
         :new_twtid,
         :sub_twtid,
         :main_twtid,
-=end
     if params[:twitter][:main_twtid] =~ /(\w+)/
       puts %![LOG] main_twtid="#{$1}" <= "#{params["twitter"]["main_twtid"]}"!
       params[:twitter][:main_twtid] = $1
     end
+=end
+
+    params[:twitter][:main_twtid] = Twt::get_screen_name(params[:twitter][:main_twtid])
+    params[:twitter][:sub_twtid]  = Twt::get_screen_name(params[:twitter][:sub_twtid])
+    params[:twitter][:alt_twtid]  = Twt::get_screen_name(params[:twitter][:alt_twtid])
+    params[:twitter][:new_twtid]  = Twt::get_screen_name(params[:twitter][:new_twtid])
+    params[:twitter][:old_twtid]  = Twt::get_screen_name(params[:twitter][:old_twtid])
 
     respond_to do |format|
       if @twitter.update(twitter_params)
@@ -571,7 +588,6 @@ class TwittersController < ApplicationController
     end
 
     def index_all_in_one(twitters, params, rating_gt, rating_lt)
-      access_date_intvl = 30
 
       twitters = twitters.select {|x| x.rating == nil or x.rating >= rating_gt }
       if rating_lt > 0
@@ -581,10 +597,12 @@ class TwittersController < ApplicationController
 
 
 
-      #### !!! こっちを先にやらないとだめ !!! ####
-      STDERR.puts %!twitters=#{twitters.size}!
-      twitters2 = twitters.select {|x| x.status == "長期更新なし" or x.status == "最近更新してない？"}
-      STDERR.puts %!twitters2=#{twitters2.size}!
+      #### !!! こっちを先にやらないとだめ !!! ↓####
+      #STDERR.puts %!twitters=#{twitters.size}!
+      #twitters2 = twitters.select {|x| x.status == "長期更新なし" or x.status == "最近更新してない？"}
+      twitters_check = twitters.select {|x| x.status == "最近更新してない？"}
+      #STDERR.puts %!twitters2=#{twitters2.size}!
+      ### ↑↑↑↑↑↑
 
       ####
       twitters = twitters.select {|x| x.status == "TWT巡回"}
@@ -608,9 +626,11 @@ class TwittersController < ApplicationController
       twitters = twitters.sort_by {|x| [(x.last_post_datetime || "2000-01-01"), -(x.rating||0), x.prediction]}
       twitters_group["#{rating_gt}:投稿日順"] = twitters
 
-      twitters2 = twitters2.select {|x| !x.last_access_datetime_p(access_date_intvl)}
-      twitters2 = twitters2.sort_by {|x| [x.last_access_datetime, -(x.rating||0), -x.prediction]}
-      twitters_group["#{rating_gt}:更新なし"] = twitters2 if twitters2.size > 0
+      #access_date_intvl = 30
+      #twitters_check = twitters_check.select {|x| !x.last_access_datetime_p(access_date_intvl)}
+      twitters_check = twitters_check.select {|x| x.select_cond_post_date}
+      twitters_check = twitters_check.sort_by {|x| [x.last_access_datetime, -(x.rating||0), -x.prediction]}
+      twitters_group["#{rating_gt}:更新なし"] = twitters_check if twitters_check.size > 0
 
       [twitters_group, twitters_total_count]
     end

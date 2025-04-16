@@ -114,7 +114,7 @@ textarea {
     <% end %>
 
     <% if twitter.filenum and twitter.filenum > twt_pic_list.size %>
-        <h3>すべての画像が表示されていない可能性があります</h3>
+        <h3>すべての画像が表示されていない可能性があります(<%= twt_pic_list.size %>/<%= twitter.filenum %>)</h3>
     <% end %>
     <br />
 
@@ -157,7 +157,7 @@ textarea {
         <% dt = Twt::get_time_from_path(twt_pic_list[0][1]) %>
         【以降の投稿数予測】<%= twitter.prediction(dt) %>
         <br />
-        <% if @twitter.status == Twitter::STATUS_NOT_EXIST %>
+        <% if @twitter.status == Twitter::TWT_STATUS::STATUS_NOT_EXIST %>
             <%= link_to_ex tweet_id, Twt::twt_tweet_url_dev(tweet_id) %>
         <% end %>
     <% end %>
@@ -203,7 +203,7 @@ textarea {
                         <b><%= Tweet::StatusEnum::DELETED %></b>
                     <% else %>
                         <% url = twitter_path(file_check: 't', picn: 'all', pic_lf: '', corr: '0', show_pic: 't', tweet_st: Tweet::StatusEnum::DELETED, tweet_id: tweet_id) %>
-                        <%= link_to("'削除済み'として更新", url) %>
+                        <%= link_to("'削除済み'として更新", url, class: 'button') %>
                     <% end %>
                 <% else %>
                     <% if params[:tweet_id].to_i == tweet_id and params[:tweet_st] == Tweet::StatusEnum::UNACCESSIBLE %>
@@ -222,9 +222,10 @@ textarea {
     <% end %>
 
     <% if (params[:dup_chk].presence and params[:dup_chk] == "t") %>
-        <h3>重複チェック結果</h3>
         <% pic_list = @twt_pic_path_list.map {|x| Util::get_public_path(x)} %>
-        <% dup_path_list = Twt::db_update_dup_files(pic_list, @twitter.twtid, false) %>
+        <% db_update = true %>
+        <% dup_path_list = Twt::db_update_dup_files(pic_list, @twitter.twtid, db_update) %>
+        <h3>重複チェック結果(<%= dup_path_list.size %>)</h3>
         <% if dup_path_list.size > 0 %>
             <% base_path = UrlTxtReader::public_path %>
             <% d_ratio = '5%' %>
