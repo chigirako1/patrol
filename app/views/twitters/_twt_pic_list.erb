@@ -172,7 +172,7 @@ textarea {
             <% tweet = Tweet.find_by(tweet_id: tweet_id) %>
             <% hit = false %>
             <% @twt_pic_path_list.each do |path| %>
-                <% if path.include? tweet_id.to_s %>
+                <% if path.include? tweet_id.to_s %><!-- TODO:これはだめでは？ -->
                     hit!(<%= Twt::timestamp_str(tweet_id) %>)|<%= tweet_id %> 
                     <% if params[:show_pic].presence %>
                         <%= link_to_ex image_tag(path, width: '10%', height: '10%', :alt => path), path %>
@@ -196,6 +196,7 @@ textarea {
                 <% if tweet.presence %>
                     <% if tweet.status == Tweet::StatusEnum::UNACCESSIBLE %>
                         <b><%= Tweet::StatusEnum::UNACCESSIBLE %></b>
+                        <%= link_to_ex(tweet_id, Twt::twt_tweet_url_dev(tweet_id)) %>
                     <% elsif params[:tweet_id].to_i == tweet_id and params[:tweet_st] == Tweet::StatusEnum::DELETED %>
                         <% Tweet::update_record(tweet_id, Tweet::StatusEnum::DELETED) %>
                         '削除済み'として更新しました。

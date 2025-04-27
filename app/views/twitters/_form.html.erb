@@ -22,12 +22,15 @@
   <% end %>
 
   <%= link_to %!表示リフレッシュ!, twitter_path(@twitter, refresh: "y") if @twitter.twtid %>
+
   <% if pxv.presence %>
     PXV最終投稿日:<%= pxv.get_datetime_string(pxv.last_ul_datetime) %>
   <% end %>
+
   <% if @twitter.twtid %>
     <h3>TWTを開く→<%= link_to_ex %!@#{@twitter.twtid}!, Twt::twt_user_url(@twitter.twtid) %></h3>
   <% end %>
+
   <div>
     <%= form.label :twtid, style: "display: block" %>
     <% if params[:twtid].presence %>
@@ -37,7 +40,6 @@
     <% else %>
       @<%= form.text_field :twtid %>
     <% end %>
-    
   </div>
 
   <div>
@@ -97,6 +99,8 @@
       ],
       { selected: status_value },
       include_blank: "選択して下さい" %>
+    
+    <br />
     <input type="button" value="TWT巡回に変更" onclick="set_noupdate(0);" />
     <input type="button" value="最近更新してない？" onclick="set_noupdate(4);" />
     <input type="button" value="長期更新なしに変更" onclick="set_noupdate(2);" />

@@ -159,7 +159,7 @@ module Twt
     end
 
     def self.twt_tweet_url(screen_name, tweet_id)
-        %!http://x.com/#{screen_name}/status/#{tweet_id}!
+        %!https://x.com/#{screen_name}/status/#{tweet_id}!
     end
 
     def self.twt_tweet_url_dev(tweet_id)

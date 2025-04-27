@@ -16,6 +16,7 @@ class Twitter < ApplicationRecord
         STATUS_NOT_EXIST = "存在しない"
         STATUS_FROZEN = "凍結"
         STATUS_PRIVATE = "非公開アカウント"
+        STATUS_WAITING = "フォロー許可待ち"
         STATUS_ANOTHER = "別アカウントに移行"
         STATUS_SCREEN_NAME_CHANGED = "アカウントID変更"
     end

@@ -22,6 +22,8 @@ class Params
     :last_access_datetime,
     :last_ul_datetime,
     :created_at,
+    :step,
+    :num_of_times,
     :r18,
     :point,
     :prediction,
@@ -87,7 +89,7 @@ class Params
     if @status == nil
       @status = ""
     end
-    puts "status=#{@status}"
+    puts %!status="#{@status}"!
     
     if @reverse_status == nil
       @reverse_status = ""
@@ -165,9 +167,26 @@ class Params
     end
     puts "last_ul_datetime=#{@last_ul_datetime}"
 
-    if @created_at
+    if @created_at.presence
       @created_at = @created_at.to_i
+    else
+      @created_at = nil
     end
+    puts %!created_at="#{@created_at}"!
+
+    if params[:step].presence
+      @step = params[:step].to_i
+    else
+      @step = 3
+    end
+    puts %!step="#{@step}"!
+
+    if params[:num_of_times].presence
+      @num_of_times = params[:num_of_times].to_i
+    else
+      @num_of_times = 4
+    end
+    puts %!num_of_times="#{@num_of_times}"!
 
     display_number = params[:display_number]
     if display_number == nil
@@ -258,6 +277,8 @@ class ArtistsController < ApplicationController
     UNASSOCIATED_TWT_ACNT = '未紐づけTWTアカウント' #PXV DBにはTWT IDが登録されているがTWT DBにはPXV IDが登録されていない
     TWT_DUP_TWTID = 'same_twtid'
     ALL_IN_ONE = 'all in one'
+    URL_LIST = 'urllist'
+    URL_LIST_PXV_ONLY_LATEST = "urllist-pxv-only(latest)"
   end
 
   module ApiEnum
@@ -332,7 +353,8 @@ class ArtistsController < ApplicationController
     @thumbnail = prms.thumbnail
     @artists_group = {}
 
-    case params[:file]
+    #case params[:file]
+    case prms.param_file
     when ArtistsController::MethodEnum::NAME_TEST
       artists = Artist.all
       Pxv::name_test()
@@ -345,27 +367,15 @@ class ArtistsController < ApplicationController
       group_list = []
       interval = prms.last_access_datetime
 
-      if params[:step].presence
-        step = params[:step].to_i
-      else
-        step = 3
-      end
-      puts %!step="#{step}"!
-
-      if params[:num_of_times].presence
-        num_of_times = params[:num_of_times].to_i
-      else
-        num_of_times = 4
-      end
-      puts %!num_of_times="#{num_of_times}"!
-
-      num_of_times.times do |i|
+      prms.num_of_times.times do |i|
         interval_wk = interval * (i + 1)
+        #puts %!#{prms.rating}/#{prms.rating_upper_limit}!
         group_list << index_all_in_one(prms, %!#{prms.rating}:!, interval_wk)
+        #puts "#{i}/#{interval}(#{interval_wk})/#{prms.last_access_datetime}"
 
         ### 
         prms.rating_upper_limit = prms.rating
-        prms.rating = prms.rating_upper_limit - step
+        prms.rating = prms.rating_upper_limit - prms.step
         #puts "prms.last_access_datetime=#{prms.last_access_datetime}"
       end
 
@@ -428,9 +438,9 @@ class ArtistsController < ApplicationController
       artists = Artist.all
     end
 
-    if prms.param_file == "urllist" or
+    if prms.param_file == MethodEnum::URL_LIST or
       prms.param_file == "urllist-pxv-only" or
-      prms.param_file == "urllist-pxv-only(latest)" or
+      prms.param_file == MethodEnum::URL_LIST_PXV_ONLY_LATEST or #"urllist-pxv-only(latest)" or
       prms.param_file == "urllist-unknown-only" or
       prms.param_file == "urllist-twt-only" or
       prms.param_file == "urllist-twt-only(latest)"
@@ -444,8 +454,10 @@ class ArtistsController < ApplicationController
           path = UrlTxtReader::get_latest_txt
         elsif datestr == ""
           path = ""
-        else
+        elsif datestr =~ /^\d+$/
           path = ["public/get illust url_#{datestr}.txt"]
+        else
+          path = ["public/#{datestr}.txt"]
         end
         puts "path='#{path}'"
         id_list, @twt_urls, @misc_urls = Artist.get_url_list(path)
@@ -879,6 +891,11 @@ class ArtistsController < ApplicationController
       params[:artist][:twtid] = $1
       puts %![LOG] twtid=#{params["artist"]["twtid"]}!
     end
+
+=begin
+    # TODO:rating変更の履歴登録
+=end
+
     respond_to do |format|
       if @artist.update(artist_params)
         format.html { redirect_to artist_url(@artist), notice: "Artist was successfully updated." }
@@ -1122,7 +1139,8 @@ class ArtistsController < ApplicationController
       when "pxv-user-id"
         artists = artists.sort_by {|x| [-x.pxvid]}
       when SORT_TYPE::SORT_RATING
-        artists = artists.sort_by {|x| [-x.rating, x.last_access_datetime, x.last_ul_datetime]}
+        #artists = artists.sort_by {|x| [-(x.rating||0), x.last_access_datetime||"", x.last_ul_datetime||""]}
+        artists = artists.sort_by {|x| [-(x.rating||0)]}
       when SORT_TYPE::SORT_ACCESS_OLD_TO_NEW
         artists = artists.sort_by {|x| [x.last_access_datetime]}
       when SORT_TYPE::SORT_ACCESS_NEW_TO_OLD

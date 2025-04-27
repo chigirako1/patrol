@@ -13,12 +13,15 @@
 <% @menus.each do |menu| %>
     <% if menu[:path] == "" %>
         <% if menu[:label] == "-" %>
-          <hr />
+            <hr />
         <% else %>
-          <h2><%= menu[:label] %></h2>
+            <h2><%= menu[:label] %></h2>
         <% end %>
     <% else %>
-        <li><%= link_to menu[:label], menu[:path], target: :_blank, rel: "noopener noreferrer" %></li>
+        <% label = menu[:label] %>
+        <% path = menu[:path] %>
+        <% path2 = UrlTxtReader::append_page_title_query(path, label) %>
+        <li><%= link_to_ex(label, path2) %></li>
     <% end %>
 <% end %>
 </ul>
@@ -27,28 +30,27 @@
 <h2>検索</h2>
 
 <div class="view_form">
-  <%= form_with url: artists_path, local: true, method: :get do |f| %>
-    <%= f.label :file, style: "display: block" %>
-    <%= f.select :file, 
-      options_for_select(
-        [
-          ['検索'],
-        ],
-        selected: '検索'
-      ) %>
-      <br />
-    
-    検索：<%= f.text_field :search_word %>
-    <%= f.select :match_method, options_for_select([["(自動判断)","auto"], ["を含む","partial_match"], ["完全一致","perfect_match"], ["から始まる","begin_match"],  ["で終わる","end_match"]]) %>
-    <%= f.select :target_col, options_for_select([['(自動判断)'], ['pxvname'], ['pxvid']]) %>
-    <br />
-    <%= f.submit("検索", name: nil, class: 'subtmi-btn') %>
-    <hr />
-  <% end %>
+    <%= form_with url: artists_path, local: true, method: :get do |f| %>
+            <%= f.label :file, style: "display: block" %>
+            <%= f.select :file, 
+                options_for_select(
+                        [
+                        ['検索'],
+                        ],
+                        selected: '検索'
+                ) %>
+                <br />
+            検索：<%= f.text_field :search_word %>
+            <%= f.select :match_method, options_for_select([["(自動判断)","auto"], ["を含む","partial_match"], ["完全一致","perfect_match"], ["から始まる","begin_match"],  ["で終わる","end_match"]]) %>
+            <%= f.select :target_col, options_for_select([['(自動判断)'], ['pxvname'], ['pxvid']]) %>
+            <br />
+            <%= f.submit("検索", name: nil, class: 'subtmi-btn') %>
+            <hr />
+    <% end %>
 </div>
 
-
 <h2>計算</h2>
+tweet id:
 <input type=”text” id="tweet_id_text" value="" />
 <input type="button" value="calc" onclick="get_info();" />
 <p id="calc_result">result</p>
@@ -92,3 +94,29 @@
         result.textContent = datetxt;
     }
 </script>
+
+<h2>memo</h2>
+
+<ul>
+    <li>既存チェック</li>
+    <ul>
+        <li>投稿頻度高いやつ(優先度が低いやつはチェック間隔を空ける)</li>
+        <ul>
+            <li>・1/1w</li>
+            <li>・1/2w</li>
+            <li>・1/3w</li>
+        </ul>
+        <li>投稿頻度低いやつ</li>
+        <ul>
+            <li>・1/1y</li>
+            <li>・1/6m</li>
+            <li>・1/3m</li>
+        </ul>
+    </ul>
+    <li>新規開拓</li>
+</ul>
+
+・最近更新していない場合はチェック頻度を下げる（チェック感覚を開ける）
+・最新追っかけ中
+・pxv更新なしのtwtチェック
+・最近登録したが投稿日が昔→

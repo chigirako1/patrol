@@ -5,12 +5,38 @@
 <h1>Tweets</h1>
 
 <div id="tweets">
-  <% @tweets.each do |tweet| %>
-    <%= render tweet %>
-    <p>
-      <%= link_to "Show this tweet", tweet %>
-    </p>
-  <% end %>
+    <% @tweets.each do |tweet| %>
+        <%= render tweet %>
+        <p>
+            <%= link_to "Show this tweet", tweet %>
+        </p>
+    <% end %>
+
+    <% if @tweet_ids %>
+        <% scrn_name = params[:screen_name] %>
+        <h2><%= scrn_name %></h2>
+        <% @tweet_ids.each do |x| %>
+            <% url = Twt::twt_tweet_url(scrn_name, x) %>
+            <%= link_to_ex(url, url) %><br>
+
+            <% hit = false %>
+            <% @pic_list.each do |path| %>
+                <% if path.include? x.to_s %>
+                    <%= link_to_ex image_tag(path, width: '10%', height: '10%', :alt => path), path %>
+                    <% hit = true %>
+                <% else %>
+                <% end %>
+            <% end %>
+            <% unless hit %>
+                [<%= Twt::timestamp_str(x) %>]
+                なし
+            <% end %>
+            <br />
+        <% end %>
+    <% else %>
+        0件
+    <% end %>
 </div>
 
+<hr />
 <%= link_to "New tweet", new_tweet_path %>

@@ -87,6 +87,11 @@
         <% ul_bg_color = date_bg_color(ul_delta) %>
         <td bgcolor="<%= ul_bg_color %>">
           <%= artist.get_date_info(artist.last_ul_datetime) %>
+          <% au_delta = Util::get_days_date_delta(artist.last_ul_datetime, artist.last_access_datetime) if artist.last_ul_datetime and artist.last_access_datetime %>
+          <% if au_delta and au_delta > 30 %>
+            <br />
+            アクセス日と公開日が離れています(<%= au_delta %>日)
+          <% end %>
         </td>
 
         <!-- twt -->
@@ -233,6 +238,11 @@
       options_for_select(
         [
           [''],
+          [ArtistsController::MethodEnum::TABLE_UPDATE_NEW_USER],
+          [ArtistsController::MethodEnum::UPDATE_RECORD],
+          [ArtistsController::MethodEnum::NAME_TEST],
+          [ArtistsController::MethodEnum::ALL_IN_ONE],
+          [ArtistsController::MethodEnum::SEARCH],
           ['urllist'], 
           ['urllist-pxv-only'], 
           ['urllist-pxv-only(latest)'], 
@@ -259,11 +269,6 @@
           [ArtistsController::MethodEnum::SAME_FILENUM],
           [ArtistsController::MethodEnum::REGIST_UL_DIFF_NEAR],
           [ArtistsController::MethodEnum::TWTID_CASE_DIFF],
-          [ArtistsController::MethodEnum::TABLE_UPDATE_NEW_USER],
-          [ArtistsController::MethodEnum::NAME_TEST],
-          [ArtistsController::MethodEnum::UPDATE_RECORD],
-          [ArtistsController::MethodEnum::ALL_IN_ONE],
-          [ArtistsController::MethodEnum::SEARCH],
         ],
         selected: params[:file] 
       ) %>
@@ -418,6 +423,12 @@
     <br />
     <%= f.label :表示数 %>
     <%= f.number_field :display_number, :value => params[:display_number] %>
+    <br />
+    <%= f.label :step %>
+    <%= f.number_field :step, :value => params[:step] %>
+    <br />
+    <%= f.label :num_of_times %>
+    <%= f.number_field :num_of_times, :value => params[:num_of_times] %>
     <br />
     <%= f.label :対象年 %>
     <%= f.number_field :year, :value => params[:year] %>

@@ -492,6 +492,9 @@ class TwittersController < ApplicationController
 
   # GET /twitters/new
   def new
+    if params[:twtid].presence
+      @twt_pic_path_list = Twt::get_pic_filelist(params[:twtid])
+    end
     @twitter = Twitter.new
   end
 

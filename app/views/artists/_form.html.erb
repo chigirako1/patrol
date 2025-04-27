@@ -151,6 +151,14 @@
           ・@<%= twt.twtid %>(twt)<br />
           <font color='red'>twtに合わせて更新↓</font><br />
         <% end %>
+      <% else %>
+        <% tweet_ids = Twt::get_twt_tweet_ids_from_txts(twtid_val) %>
+        <% tweet_ids.each do |x| %>
+          <% url = Twt::twt_tweet_url(twtid_val, x) %>
+          <%= link_to_ex(url, url) %>[<%= Twt::timestamp_str(x) %>]<br>
+        <% end %>
+        <%= link_to_ex("New Twt", new_twitter_path(twtid: artist.twtid, pxvid: artist.pxvid, status: Twitter::TWT_STATUS::STATUS_PATROL, twtname: artist.pxvname)) %>
+        <br />
       <% end %>
     <% else %>
       <% if artist.pxvid.presence %>
@@ -178,7 +186,7 @@
         PXVID:<%= twt.pxvid %>
         <hr />
       <% elsif artist.twtid != "" %>
-        <%#= link_to "New Twt", new_twitter_path(twtid: artist.twtid, pxvid: artist.pxvid, status: "TWT巡回", twtname: artist.pxvname) %>
+        <%#= link_to "New Twt", new_twitter_path(twtid: artist.twtid, pxvid: artist.pxvid, status: Twitter::TWT_STATUS::STATUS_PATROL, twtname: artist.pxvname) %>
       <% end %>
     <% else %>
       <font color="red">twt未設定
@@ -230,13 +238,13 @@
         ["R36(危険)", "R36"]
       ],
     include_blank: "選択して下さい" %>
-    <input type="button" value="R18" onclick="toggle_r(1);" class="btn" />
-    <input type="button" value="R15" onclick="toggle_r(2);" class="btn" />
-    <input type="button" value="R12" onclick="toggle_r(3);" class="btn" />
-    <input type="button" value="全年齢" onclick="toggle_r(5);" class="btn" />
+    <input type="button" value="R18" onclick="select_r(1);" class="btn" />
+    <input type="button" value="R15" onclick="select_r(2);" class="btn" />
+    <input type="button" value="R12" onclick="select_r(3);" class="btn" />
+    <input type="button" value="全年齢" onclick="select_r(5);" class="btn" />
+    <input type="button" value="toggle" onclick="options_up('artist_r18');" class="btn" />
     <script>
-      function toggle_r(idx) {
-        //TODO: トグルするようにする
+      function select_r(idx) {
         let r18_sel_box = document.getElementById("artist_r18");
         let options = r18_sel_box.options;
         options[idx].selected = true;

@@ -143,12 +143,38 @@ module Util
     def self.google_search_url(phrase)
         %!https://www.google.com/search?q=#{phrase}!
     end
+    
+    def self.exception_name_list
+        list = []
+        txtpath = Rails.root.join("public/exception.txt").to_s
+        File.open(txtpath) { |file|
+            while line  = file.gets
+                list << line.chomp
+                STDERR.puts line
+            end
+        }
+        list
+    end
+end
 
+module ArtistName
 REMOVE_WORDS = %w(
 原稿中
 )
+    
+# 区切り文字を削除しない対象
+EXCEPT_WORDS = %w(
+)
 
-    def remove_spec_str(name)
+SEPA_STRS = %w(
+＠
+@
+：
+｜
+／
+)
+        
+    def self.remove_spec_str(name)
         rmv_word_list = REMOVE_WORDS.map {|w| Regexp.escape(w)}
         rmv_str = "(" + rmv_word_list.join("|") + ")"
         rgx = Regexp.new(rmv_str)
@@ -158,7 +184,7 @@ REMOVE_WORDS = %w(
         name
     end
 
-    def substitute_name(name)
+    def self.substitute_name(name)
         subs_name = {
             #"" => "",
         }
@@ -168,50 +194,45 @@ REMOVE_WORDS = %w(
             name
         end
     end
-    
+           
+       
+    # "＠"など区切り文字以降の余計な文字の削除
+    def self.del_unnecessary_part(name_orig)
+        name_chg = name_orig
 
-SEPA_STRS = %w(
-＠
-@
-：
-｜
-／
-)
+        sepa_char_list = SEPA_STRS.map {|w| Regexp.escape(w)}
+        sepa_char = "(.*)" + "(" + sepa_char_list.join("|") + ")" + "(.*)"
+        sepa_rgx = Regexp.new(sepa_char)
 
-# 区切り文字を削除しない対象
-EXCEPT_WORDS = %w(
-)
+        # /(.*)(土曜|日曜|歌姫庭園|コミケ|コミティア|金曜|C\d\d\d|２日目|2日目|1日目|夏コミ)(.*)/i
 
-    # TODO:余計な文字の削除。p.g. ＠以降とか
-    def self.get_name_part_only(name_word)
-        name = name_word
+        if name_orig =~ sepa_rgx
+            name_chg = $1
+            #STDERR.puts %!"#{name_orig}" => "#{name_chg}"!
+        end
+        name_chg
+    end
+
+    # 余計な文字の削除。p.g. ＠以降とか
+    def self.get_name_part_only(name_orig, exception_names)
+        name_chg = name_orig
 
         # 区切り文字以降の削除
-        if name.size < 2
-            #puts %!対象外"#{name}"(文字数少ない)!
-        elsif EXCEPT_WORDS.include? name
-            puts %!対象外"#{name}"()!
+        if name_orig.size < 2
+            #puts %!対象外"#{name_chg}"(文字数少ない)!
+        elsif exception_names and exception_names.include? name_orig
+            #puts %!対象外"#{name_orig}"()!
         else
-            sepa_char_list = SEPA_STRS.map {|w| Regexp.escape(w)}
-            sepa_char = "(.*)" + "(" + sepa_char_list.join("|") + ")" + "(.*)"
-            sepa_rgx = Regexp.new(sepa_char)
-
-            # /(.*)(土曜|日曜|歌姫庭園|コミケ|コミティア|金曜|C\d\d\d|２日目|2日目|1日目|夏コミ)(.*)/i
-
-            #p sepa_rgx
-
-            if name_word =~ sepa_rgx
-                name = $1
-                #STDERR.puts %!"#{name_word}" => "#{name}"!
-            end
+            name_chg = del_unnecessary_part(name_orig)
         end
 
-        if name_word != name
-            rest = name_word.gsub(name, "")
-            STDERR.puts %!"#{name_word}"\t"#{name}"\t"#{rest}"!
+        if name_orig != name_chg
+            #puts %!#{name_orig}/#{name_chg}!
+            removed_str = name_orig.gsub(name_chg, "")
+            STDERR.puts %!"#{removed_str}"\t\t"#{name_orig}"\t\t"#{name_chg}"!
             #raise "[DBG] owari"
         end
 
-        name
+        name_chg.strip
     end
 end

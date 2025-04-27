@@ -410,6 +410,19 @@ module UrlTxtReader
         #[pxv_id_list, twt_infos, misc_urls]
         [pxv_id_list, twt_infos, misc_urls, pxv_artwork_id_list]
     end
+
+    def self.append_page_title_query(url, label)
+        uri = URI.parse(url)
+        current_query = URI.decode_www_form(uri.query || "")
+        if current_query.to_h.include?("page_title")
+            new_url = url
+        else
+            current_query << ["page_title", label]
+            uri.query = URI.encode_www_form(current_query)
+            new_url = uri.to_s
+        end
+        new_url
+    end
 end
 
 class TWT_URL

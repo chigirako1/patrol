@@ -52,7 +52,7 @@ module Pxv
             dir_list_tmp = []
         end
 
-        [dir_list, dir_list_tmp].flatten
+        [dir_list, dir_list_tmp].flatten.select {|path| FileTest.directory? path}
     end
 
     def self.current_dir_pxvid_list
@@ -268,6 +268,9 @@ module Pxv
     end
 
     def self.name_test
+
+        PxvArtist.init_exception_name_list
+
         dir_list = stock_dir_list()
         dir_list.each do |path|
             pxv_user_id = get_pxv_user_id(path)
@@ -279,32 +282,36 @@ module Pxv
         new_list = []
         dir_list = stock_dir_list()
 
-        # pxv user id重複チェック
-        hash = {}
-        dir_list.each do |path|
-            pxv_user_id = get_pxv_user_id(path)
-            if hash.has_key?(pxv_user_id)
-            else
-                hash[pxv_user_id] = []
+        if false
+            # pxv user id重複チェック
+            hash = {}
+            dir_list.each do |path|
+                pxv_user_id = get_pxv_user_id(path)
+                if hash.has_key?(pxv_user_id)
+                else
+                    hash[pxv_user_id] = []
+                end
+                hash[pxv_user_id] << path
             end
-            hash[pxv_user_id] << path
-        end
 
-        dup = false
-        hash.each do |k, paths|
-            if paths.size > 1
-                dup = true
-                STDERR.puts %!重複するIDがあります:key=#{k}("#{paths}")!
-                paths.each do |path|
-                    STDERR.puts %!"#{path}"!
+            dup = false
+            hash.each do |k, paths|
+                if paths.size > 1
+                    dup = true
+                    STDERR.puts %!重複するIDがあります:key=#{k}("#{paths}")!
+                    paths.each do |path|
+                        STDERR.puts %!"#{path}"!
+                    end
                 end
             end
+
+            if dup
+                STDERR.puts %!重複するIDがあるので処理を中止しました。!
+                raise "dup"
+            end
         end
 
-        if dup
-            STDERR.puts %!重複するIDがあるので処理を中止しました。!
-            raise "dup"
-        end
+        PxvArtist.init_exception_name_list
 
         # ディレクトリごとの処理
         dir_list.each do |path|
@@ -321,7 +328,7 @@ module Pxv
                 end
             end
         end
-
+        
         new_list.each do |x|
             STDERR.puts %!new user:#{x[0]}|#{x[1]}!
             register_to_table(x[0], x[1])
@@ -330,6 +337,8 @@ module Pxv
     end
 
     def self.update_record_by_dir(pxv_user_id_arg)
+        PxvArtist.init_exception_name_list
+
         dir_list = stock_dir_list()
         dir_list.each do |path|
             pxv_user_id = get_pxv_user_id(path)
@@ -423,6 +432,24 @@ module Pxv
         pxv_artist = PxvArtist.new(pxv.pxvid, path)
         if pxv_artist.path_list.size == 0
             return
+        end
+
+        if pxv.pxvname != pxv_artist.pxv_name
+            STDERR.puts %!名前変更あり「#{pxv.pxvname}」=>「#{pxv_artist.pxv_name}」!
+            #pxv_params[:pxvname] = pxv_artist.pxv_name
+            if pxv.oldname.presence
+                oldnames = pxv.oldname.split(/\//)
+                if oldnames.include?(pxv.pxvname)
+                    #すでに記録済みの名称のためなにもしない
+                else
+                    updated_oldname = pxv.oldname + "/" + pxv.pxvname
+                    #pxv_params[:oldname] = updated_oldname
+                    STDERR.puts %!oldname「#{pxv.oldname}」=>「#{updated_oldname}」!
+                end
+            else
+                #pxv_params[:oldname] = pxv.pxvname
+                #STDERR.puts %!oldname:「#{pxv.oldname}」new\!!
+            end
         end
 
         if pxv_artist.path_list.size > pxv.filenum
@@ -567,6 +594,10 @@ module Pxv
 end
 
 class PxvArtist
+    def self.init_exception_name_list()
+        @@exception_name_list = Util::exception_name_list
+    end
+
     attr_accessor :pxv_user_id, :pxv_name, :path_list,
                 :last_dl_datetime, :last_ul_datetime, 
                 :earliest_ul_date, :last_access_datetime,
@@ -576,8 +607,8 @@ class PxvArtist
         @pxv_user_id = id
 
         user_name = Pxv::get_user_name_from_path(path)
-        @pxv_name = Util::get_name_part_only(user_name)
-        @pxv_name = user_name #### TODO:
+        @pxv_name = ArtistName::get_name_part_only(user_name, @@exception_name_list)
+        #@pxv_name = user_name #### TODO:
         @path_list = []
         filepath_list = UrlTxtReader::get_path_list(path)
         @path_list = Pxv::sort_pathlist(filepath_list)

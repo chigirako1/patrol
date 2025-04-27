@@ -97,10 +97,9 @@
         <% prediction = twitter.prediction %>
         <% pred_2 = (twitter.update_frequency||0) / 100 %>
         <% pred = prediction + pred_2 %>
-        <% #puts %!*** #{pred} = #{prediction} + #{pred_2}! %>
         <% pred_bg_color = pred_bg_color(pred) %>
         <td bgcolor="<%= pred_bg_color %>">
-          <%= pred %>
+          <%= prediction %><%= %!(#{pred})! if prediction != pred %>
           <br />
           [<%= link_to_ex "■twt■", twitter %>]
           <br />

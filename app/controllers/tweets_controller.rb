@@ -3,7 +3,17 @@ class TweetsController < ApplicationController
 
   # GET /tweets or /tweets.json
   def index
-    @tweets = Tweet.all
+    if params[:screen_name].presence
+      scrn_name = params[:screen_name]
+      @tweets = Tweet.select {|x| x.screen_name == scrn_name}
+      #@tweets = []
+
+      @tweet_ids = Twt::get_twt_tweet_ids_from_txts(scrn_name)
+
+      @pic_list = Twt::get_pic_filelist(scrn_name)
+    else
+      @tweets = Tweet.all
+    end
   end
 
   # GET /tweets/1 or /tweets/1.json
