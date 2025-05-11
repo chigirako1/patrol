@@ -19,7 +19,8 @@ module Twt
     TWT_DIRLIST_TXT_PATH = "#{TWT_ARCHIVE_DIR_PATH}/dirlist.txt"
 
     def self.get_twt_tweet_ids_from_txts(twtid)
-        txt_sum = UrlTxtReader::get_url_txt_contents("")
+        #txt_sum = UrlTxtReader::get_url_txt_contents("")
+        txt_sum = UrlTxtReader::get_url_txt_contents([])
         twt_ids = get_tweet_ids(txt_sum.split(/\R/).sort_by{|s| [s.downcase, s]}.uniq, twtid)
         twt_ids
     end
@@ -321,6 +322,7 @@ module Twt
     end
 
     def self.db_update_dup_files(pic_list, screen_name_arg="", db_update=true)
+        STDERR.puts %!### 重複チェック ### ===>!
         puts %!(#{__FILE__}:#{__LINE__}) #{__method__}():n=#{pic_list.size}!
 
         dup_path_list = []

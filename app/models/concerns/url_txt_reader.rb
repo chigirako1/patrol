@@ -108,6 +108,8 @@ module UrlTxtReader
         path_list
     end
 
+
+
     def self.get_path_list(tpath)
         tmp_list = []
 
@@ -209,13 +211,18 @@ module UrlTxtReader
 
     def self.get_url_txt_contents(filepath)
         puts %!get_url_txt_contents:"#{filepath}"!
-        if filepath.size == 0
-            path_list = UrlTxtReader::txt_file_list
-        else
-            path_list = []
-            filepath.each do |path|
-                path_list << Rails.root.join(path).to_s
+        if filepath
+            if filepath.size == 0
+                path_list = UrlTxtReader::txt_file_list
+            else
+                path_list = []
+                filepath.each do |path|
+                    path_list << Rails.root.join(path).to_s
+                end
             end
+        else
+            path_list = UrlTxtReader::txt_file_list
+            path_list = [path_list.last]#最後だけにする
         end
 
         txt_sum = ""

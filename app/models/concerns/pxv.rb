@@ -126,7 +126,7 @@ module Pxv
 
         #path_list = path_list.flatten.map {|x| [get_pxv_art_id(x), File::basename(x), x]}.sort.reverse.map {|x| x[2]}
         pathlist = sort_pathlist(path_list.flatten)
-        puts %![get_pathlist] pathlist size=#{pathlist.size}/pxvid=(#{pxvid}!
+        puts %![get_pathlist] pathlist size=#{pathlist.size}/pxvid=(#{pxvid})!
         pathlist
     end
 
@@ -179,6 +179,17 @@ module Pxv
             #フォルダ名を返す
             return File.basename(File.dirname(path))
         end
+    end
+
+    def self.get_oldest_pxv_artwork_id(pathlist)
+        artwork_id = 0
+        pathlist.reverse.each do |path|
+            artwork_id, _, _ = Pxv::get_pxv_artwork_info_from_path(path)
+            if artwork_id != 0
+                break
+            end
+        end
+        artwork_id
     end
 
     def self.get_pxv_artwork_info_from_path(path)
@@ -435,7 +446,9 @@ module Pxv
         end
 
         if pxv.pxvname != pxv_artist.pxv_name
-            STDERR.puts %!名前変更あり「#{pxv.pxvname}」=>「#{pxv_artist.pxv_name}」!
+            msg = %!名前変更あり「#{pxv.pxvname}」=>「#{pxv_artist.pxv_name}」!
+            Rails.logger.debug(msg)
+
             #pxv_params[:pxvname] = pxv_artist.pxv_name
             if pxv.oldname.presence
                 oldnames = pxv.oldname.split(/\//)
@@ -444,7 +457,8 @@ module Pxv
                 else
                     updated_oldname = pxv.oldname + "/" + pxv.pxvname
                     #pxv_params[:oldname] = updated_oldname
-                    STDERR.puts %!oldname「#{pxv.oldname}」=>「#{updated_oldname}」!
+                    msg =  %!名前:oldname「#{pxv.oldname}」=>「#{updated_oldname}」!
+                    Rails.logger.debug(msg)
                 end
             else
                 #pxv_params[:oldname] = pxv.pxvname
@@ -518,23 +532,59 @@ module Pxv
     end
 
     def self.get_key(rating, str)
-        point = sprintf("%03d", 100 - (rating||0))
-        key_str = %!\!#{point}(#{rating}):#{str}アクセスしてない!
+        r = (rating||0)
+        point = sprintf("%03d:評価%03d", 100 - r, r)
+        #key_str = %!\!#{point}(#{rating}):#{str}アクセスしてない!
+        #key_str = %!\!#{point}.#{rating}:#{str}アクセスしてない!
+        key_str = %!#{point}!
         key_str
     end
 
+    def self.hash_group2(pxv_group, pxv_list_tmp)
+        key_pxv_list_from_twt_list_a = "141.twt url list high"
+        key_pxv_list_from_twt_list_a2= "142.twt url list low"
+        key_pxv_list_from_twt_list_b = "143.twt url list 状態"
+        key_pxv_list_from_twt_list_z = "149.twt url list 最近アクセス"
+
+        twt_list_z, tmp_ltns = pxv_list_tmp.partition {|x| x.p.last_access_datetime_p(60)}
+        tmp_a, tmp_st = tmp_ltns.partition {|x| x.p.status == ""}
+        tmp_high, tmp_low = tmp_a.partition {|x| x.p.rating >= 80}
+        pxv_group[key_pxv_list_from_twt_list_a] = tmp_high.sort_by {|z|
+            x = z.p;
+            [
+                x.rating||0,
+                x.last_access_datetime,
+                x.status||"", 
+                x.feature||"",
+                -(x.prediction_up_cnt(true)), 
+            ]
+        }
+       
+        pxv_group[key_pxv_list_from_twt_list_b] = tmp_st
+        pxv_group[key_pxv_list_from_twt_list_a2] = tmp_low
+        pxv_group[key_pxv_list_from_twt_list_z] = twt_list_z.sort_by {|z|
+            x = z.p;
+            [
+                x.last_access_datetime,
+                x.status||"", 
+                x.feature||"",
+                -(x.prediction_up_cnt(true)), 
+                x.rating||0, 
+            ]
+        }
+    end
+
     def self.hash_group(known_pxv_user_id_list, pxv_group, hide_day)
-        key_pxv_list_no_access_1y    = "011.1年以上"
-        key_pxv_list_no_access_6m    = "012.半年以上"
-        key_pxv_list_no_access_5m    = "013.5ヶ月以上"
-        key_pxv_list_no_access_4m    = "014.4ヶ月以上"
-        key_pxv_list_no_access_3m    = "015.3ヶ月以上"
-        key_pxv_list_no_access_2m    = "016.2ヶ月以上"
-        key_pxv_list_pred            = "099."
+        key_pxv_list_no_access_1y    = "12ヶ月(1年以上)"
+        key_pxv_list_no_access_6m    = "6ヶ月(半年以上)"
+        key_pxv_list_no_access_5m    = "5ヶ月以上"
+        key_pxv_list_no_access_4m    = "4ヶ月以上"
+        key_pxv_list_no_access_3m    = "3ヶ月以上"
+        key_pxv_list_no_access_2m    = "2ヶ月以上"
+        key_pxv_list_pred            = "100"
     
-        key_pxv_list_unset           = "121.未設定"
+        key_pxv_list_unset           = "000.未設定"
     
-   
         key_pxv_list_no_update_6m    = "902.#{ArtistsController::Status::SIX_MONTH_NO_UPDATS}"
         key_pxv_list_no_update_long  = "903.#{ArtistsController::Status::LONG_TERM_NO_UPDATS}"
         key_pxv_list_no_artworks     = "904.#{ArtistsController::Status::NO_ARTWORKS}"
@@ -551,21 +601,32 @@ module Pxv
             end
 
             if p.rating.presence and p.rating == 0
-                pxv_group[key_pxv_list_unset] << elem
+                key = key_pxv_list_unset
+                unit = 50
+                fn = (p.filenum||0) / unit
+                #key = %!#{key}(#{fn}f)!
+                key = key + sprintf("%04d", fn * unit)
+                pxv_group[key] << elem
                 next
             end
 
-            if p.status == ArtistsController::Status::LONG_TERM_NO_UPDATS
+            case p.status
+            when ArtistsController::Status::LONG_TERM_NO_UPDATS
                 pxv_group[key_pxv_list_no_update_long] << elem
                 next
-            elsif p.status == ArtistsController::Status::SIX_MONTH_NO_UPDATS
+            when ArtistsController::Status::SIX_MONTH_NO_UPDATS
                 pxv_group[key_pxv_list_no_update_6m] << elem
                 next
-            elsif p.status == ArtistsController::Status::NO_ARTWORKS
+            when ArtistsController::Status::NO_ARTWORKS
                 pxv_group[key_pxv_list_no_artworks] << elem
                 next
+            when ArtistsController::Status::SUSPEND
+                pxv_group["905.#{p.status}"] << elem
+                next
+            else
             end
 
+=begin
             if !(p.last_access_datetime_p(365))
                 key_str = get_key(p.rating, key_pxv_list_no_access_1y)
                 pxv_group[key_str] << elem
@@ -587,6 +648,8 @@ module Pxv
             else
                 pxv_group[key_pxv_list_pred] << elem
             end
+=end
+            pxv_group[get_key(p.rating, "")] << elem
         end
 
         recent_pxv_list

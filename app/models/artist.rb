@@ -359,6 +359,10 @@ class Artist < ApplicationRecord
         delta_d = get_date_delta(last_access_datetime)
     end
 
+    def last_ul_datetime_delta
+        get_date_delta(last_ul_datetime)
+    end
+
     # 指定した日数以内の場合は
     def last_access_datetime_chk(nday)
         result = last_access_datetime_p(nday)
@@ -510,6 +514,34 @@ class Artist < ApplicationRecord
         end
 
         tag
+    end
+
+    def sort_cond
+        [
+            status||"", 
+            feature||"",
+            last_ul_datetime||Time.new(2001,1,1),
+            -(prediction_up_cnt(true)), 
+            rating||0, 
+            last_access_datetime
+        ]
+    end
+
+    def key_for_group_by
+        days = last_access_datetime_num
+        if days < 1
+            "00.今日アクセス"
+        else
+            if created_at_day_num < 60
+                "01.最近登録"
+            else
+                if last_ul_datetime_delta > 60
+                    "02.公開日むかし"
+                else
+                    %!09.#{(days + 6) / 7}週間以内アクセス!
+                end
+            end
+        end
     end
 
     def select_cond_post_date

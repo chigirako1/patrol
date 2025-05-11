@@ -506,7 +506,8 @@
   <div>
     <%= form.label :最古PXVアートワークID, style: "display: block" %>
     <% oldest_artwork_id = @artist.oldest_artwork_id %>
-    <% artwork_id, _, _ = Pxv::get_pxv_artwork_info_from_path(@path_list[-1]) %>
+    <% #artwork_id, _, _ = Pxv::get_pxv_artwork_info_from_path(@path_list[-1]) %>
+    <% artwork_id = Pxv::get_oldest_pxv_artwork_id(@path_list) %>
     <% if artwork_id.presence and artwork_id != 0 and ((oldest_artwork_id == nil and artwork_id.presence) or (oldest_artwork_id > artwork_id)) %>
       "<%= oldest_artwork_id %>"↓<font color='red'>更新あり</font><br />
       <% oldest_artwork_id = artwork_id %>

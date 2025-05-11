@@ -8,6 +8,55 @@ class HomeController < ApplicationController
     @menus = [
       # ----------------------------
       { :label => "unified", :path => "" },
+      { :label => "Twitter [AI] 86 (-1 * 2)",
+        :path => twitters_path(
+          target: "AI",
+          page_title: "AI 86 (0 * 1)",
+          rating: 86,
+          #hide_within_days: 0, 
+          num_of_disp: 5,
+          #pred: 5,
+          #force_disp_day: 10,
+          mode: TwittersController::ModeEnum::ALL_IN_ONE,
+          step: 1,
+          num_of_times: 2,
+          ex_pxv: false,
+          thumbnail: ""
+        ) 
+      },
+      { :label => "Twitter [AI] 89 (-1 * 6)",
+        :path => twitters_path(
+          target: "AI",
+          page_title: "AI 89 (-1 * 6)",
+          rating: 89,
+          #hide_within_days: 0, 
+          num_of_disp: 4,
+          #pred: 5,
+          #force_disp_day: 10,
+          mode: TwittersController::ModeEnum::ALL_IN_ONE,
+          step: 1,
+          num_of_times: 6,
+          ex_pxv: false,
+          thumbnail: ""
+        ) 
+      },
+      { :label => "Twitter [AI] 86 (0 * 1)",
+        :path => twitters_path(
+          target: "AI",
+          page_title: "AI 86 (0 * 1)",
+          rating: 86,
+          #hide_within_days: 0, 
+          num_of_disp: 10,
+          #pred: 5,
+          #force_disp_day: 10,
+          mode: TwittersController::ModeEnum::ALL_IN_ONE,
+          step: 1,
+          num_of_times: 1,
+          ex_pxv: false,
+          thumbnail: ""
+        ) 
+      },
+      { :label => "-", :path => "" },
       { :label => "Twitter [AI] 95 (-5 * 5)",
         :path => twitters_path(
           target: "AI",
@@ -36,22 +85,6 @@ class HomeController < ApplicationController
           mode: TwittersController::ModeEnum::ALL_IN_ONE,
           step: 1,
           num_of_times: 10,
-          ex_pxv: false,
-          thumbnail: ""
-        ) 
-      },
-      { :label => "Twitter [AI] 89 (-1 * 6)",
-        :path => twitters_path(
-          target: "AI",
-          page_title: "AI 89 (-1 * 6)",
-          rating: 89,
-          #hide_within_days: 0, 
-          num_of_disp: 4,
-          #pred: 5,
-          #force_disp_day: 10,
-          mode: TwittersController::ModeEnum::ALL_IN_ONE,
-          step: 1,
-          num_of_times: 6,
           ex_pxv: false,
           thumbnail: ""
         ) 
@@ -139,7 +172,7 @@ class HomeController < ApplicationController
       },
       # ----------------------------
       { :label => "-", :path => "" },
-      { :label => "pxv [AI] 95, -5 * 3",
+      { :label => "pxv [AI] 95 (-5 * 3)",
           :path => artists_path(
             file: ArtistsController::MethodEnum::ALL_IN_ONE,
             page_title: "pxv [AI] all in one 95",
@@ -251,9 +284,23 @@ class HomeController < ApplicationController
           )
       },
       # ----------------------------
+      { :label => "-", :path => "" },
+      { :label => "Twitter url list",
+          :path => twitters_path(
+            #page_title: "url list 80",
+            mode: "file",
+            filename: "all",
+            rating: 75,
+            hide_within_days: 60,
+            num_of_disp: NUM_OF_DISP,
+            #pred: 4,
+            no_pxv: "t",
+            #thumbnail: "t"
+          )
+      },
       { :label => "pxv url list",
           :path => artists_path(
-            page_title: "pxv url list", 
+            page_title: "pxv url list(latest)", 
             file: ArtistsController::MethodEnum::URL_LIST_PXV_ONLY_LATEST,#"urllist-pxv-only(latest)",
             sort_by: "予測▽", 
             group_by: "status/rating",
@@ -269,9 +316,9 @@ class HomeController < ApplicationController
             thumbnail: false
           )
       },
-      { :label => "pxv url list txt",
+      { :label => "pxv url list txt(250421)",
           :path => artists_path(
-            page_title: "pxv url list tx", 
+            page_title: "pxv url list txt", 
             file: ArtistsController::MethodEnum::URL_LIST,
             filename: "250421",
             sort_by: "予測▽", 
@@ -500,54 +547,6 @@ class HomeController < ApplicationController
           )
       },
       { :label => "-", :path => "" },
-      { :label => "Twitter ファイル 95",
-          :path => twitters_path(
-            page_title: "ファイル 95",
-            mode: "file",
-            rating: 95,
-            hide_within_days: 30,
-            num_of_disp: 8,
-            pred: 2,
-            no_pxv: "t",
-            thumbnail: "t"
-          )
-      },
-      { :label => "Twitter ファイル 90",
-          :path => twitters_path(
-            page_title: "ファイル 90",
-            mode: "file",
-            rating: 90,
-            hide_within_days: 40,
-            num_of_disp: 7,
-            pred: 3,
-            no_pxv: "t",
-            thumbnail: "t"
-          )
-      },
-      { :label => "Twitter ファイル 80",
-          :path => twitters_path(
-            page_title: "ファイル 80",
-            mode: "file",
-            rating: 80,
-            hide_within_days: 45,
-            num_of_disp: NUM_OF_DISP,
-            pred: 4,
-            no_pxv: "t",
-            thumbnail: "t"
-          )
-      },
-      { :label => "Twitter ファイル 60",
-          :path => twitters_path(
-            page_title: "ファイル 60",
-            mode: "file",
-            rating: 60,
-            hide_within_days: 60,
-            num_of_disp: NUM_OF_DISP,
-            pred: 5,
-            no_pxv: "t",
-            thumbnail: "t"
-          )
-      },
       # ----------------------------
       { :label => "-", :path => "" },
       { :label => "Twitter 未設定 id",

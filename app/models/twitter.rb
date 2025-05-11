@@ -3,9 +3,6 @@ class Twitter < ApplicationRecord
 
     belongs_to :artists, :class_name => 'Artist', optional: true
 
-    #STATUS_PATROL = "TWT巡回"
-    #STATUS_NOT_EXIST = "存在しない"
-
     module TWT_STATUS
         STATUS_PATROL = "TWT巡回"
         STATUS_NO_PATROL = "TWT巡回不要"
@@ -19,6 +16,13 @@ class Twitter < ApplicationRecord
         STATUS_WAITING = "フォロー許可待ち"
         STATUS_ANOTHER = "別アカウントに移行"
         STATUS_SCREEN_NAME_CHANGED = "アカウントID変更"
+    end
+
+    module DRAWING_METHOD
+        DM_HAND = "手描き"
+        DM_AI = "AI"
+        DM_3D = "3D"
+        DM_REPRINT = "パクリ"
     end
 
     def self.find_by_twtid_ignore_case(twtid, ignore=true)
@@ -254,5 +258,58 @@ class Twitter < ApplicationRecord
         end
 
         false
+    end
+
+    def key_for_group_by
+        case status
+        when Twitter::TWT_STATUS::STATUS_PATROL
+            case drawing_method 
+            when DRAWING_METHOD::DM_REPRINT
+                %!b:#{drawing_method}!
+            else
+                %!x:#{drawing_method}-#{rating}-#{r18}!
+            end
+        when nil
+            "z"
+        else
+            %!a:#{status}!
+        end
+    end
+
+    def group_key()
+        case status
+        when Twitter::TWT_STATUS::STATUS_PATROL
+            if rating.presence
+                case drawing_method 
+                when "AI"
+                    method = "102:AI"
+                when "パクリ"
+                    method = "101:paku"
+                else
+                    method = "109:手"
+                end
+                
+                days_accs = Util::get_date_delta(last_access_datetime)
+                if days_accs < 3
+                    key = %!080:#{days_accs}日以内!
+                elsif days_accs < 30
+                    nweek = (days_accs + 6) / 7
+                    key = %!090:#{nweek}週間以内!
+                else
+                    month = sprintf("%03d", days_accs / 30)
+                    #key = "901:評価#{rating}(#{month}ヶ月)"
+                    key = "901:評価#{rating}"
+                end
+                #key = %!#{method}|#{key}!
+            else
+                key = "999.未設定(約#{(filenum||0) / 10}0ファイル)"
+            end
+        #when Twitter::TWT_STATUS::STATUS_NOT_EXIST
+        #when Twitter::TWT_STATUS::STATUS_FROZEN
+        #when Twitter::TWT_STATUS::STATUS_SCREEN_NAME_CHANGED
+        else
+            key = "000:#{status}"
+        end
+        key
     end
 end

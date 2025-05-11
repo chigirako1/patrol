@@ -4,6 +4,7 @@ class TwittersController < ApplicationController
   module ModeEnum
     UNASSOCIATED_TWT_ACNT = '未紐づけTWTアカウント' #PXV DBにはTWT IDが登録されているがTWT DBにはPXV IDが登録されていない
     ALL_IN_ONE = 'all in one'
+    URL_TXT = 'url txt'
   end
 
   # GET /twitters or /twitters.json
@@ -129,6 +130,8 @@ class TwittersController < ApplicationController
       @twitters_group = {}
       @twitters_group[""] = twitters
       return
+    when TwittersController::ModeEnum::URL_TXT
+      return
     when TwittersController::ModeEnum::ALL_IN_ONE
       @twitters_group = {}
 
@@ -145,21 +148,12 @@ class TwittersController < ApplicationController
         
         tmp = twitters.select {|x|
           x.select_cond_no_pxv
-=begin
-          artists_last_access_dayn = Util::get_date_delta(x.artists_last_access_datetime);
-          !x.artists_last_ul_datetime.presence or
-          (Util::get_date_delta(x.artists_last_ul_datetime) > 90 and
-          artists_last_access_dayn > 90 )#and
-          #artists_last_access_dayn - Util::get_date_delta(x.last_access_datetime) > 30) #or
-          #artists_last_access_dayn > 60
-=end
         }
       else
         tmp = twitters
       end
 
       num_of_times.times do |cnt|
-
         group, @twitters_total_count = index_all_in_one(tmp, params, rating_gt, rating_lt)
         if group
           group_list << group
@@ -173,11 +167,14 @@ class TwittersController < ApplicationController
       #tmp = tmp.select {|x| x.select_cond_no_pxv}
       twitters = twitters.select {|x| !(x.pxvid.presence) and x.artist_pxvid == nil or x.artist_status == "長期更新なし" or x.artist_status == "半年以上更新なし"}
       twitters = twitters.select {|x| x.rating == nil or x.rating == 0}
-      twitters2 = twitters.select {|x| x.last_access_datetime_p(-30)}
-      twitters2 = twitters2.sort_by {|x| [-x.prediction, x.last_access_datetime]}
-      group = {}
-      group["未設定1"] = twitters2
-      group_list << group
+
+      if false
+        twitters2 = twitters.select {|x| x.last_access_datetime_p(-30)}
+        twitters2 = twitters2.sort_by {|x| [-x.prediction, x.last_access_datetime]}
+        group = {}
+        group["未設定1"] = twitters2
+        group_list << group
+      end
 
       twitters = twitters.select {|x| !x.last_access_datetime_p(-30)}
       twitters = twitters.sort_by {|x| [-x.prediction, x.last_access_datetime]}
@@ -417,14 +414,30 @@ class TwittersController < ApplicationController
       if rating_gt != 0
         twitters = twitters.select {|x| x.rating == nil or x.rating == 0 or x.rating >= rating_gt }
       end
-      twitters = twitters.select {|x| x.status == "TWT巡回"}
+      #twitters = twitters.select {|x| x.status == "TWT巡回"}
 
       #pxv_id_list, twt_urls, misc_urls = UrlTxtReader::get_url_list([], false)
       #known_ids = twt_urls.keys
-      known_ids = UrlTxtReader::get_twt_id_list([])
+
+      case params[:filename]
+      when "", nil
+        filepaths = UrlTxtReader::get_latest_txt
+      when /(\d{4})/
+        filepaths = UrlTxtReader::txt_file_list($1 + "\\d+")
+      when /(\d{2})/
+        filepaths = UrlTxtReader::txt_file_list($1 + "\\d{4}")
+      when "all"
+        filepaths = []
+      else
+        filepaths = params[:filename]
+      end
+      known_ids = UrlTxtReader::get_twt_id_list(filepaths)
+      STDERR.puts %!size=#{known_ids.size}!
+      #p known_ids
       twitters = twitters.select {|x| known_ids.include?(x.twtid) }
-      twitters = twitters.sort_by {|x| [-x.prediction, x.last_access_datetime]}
-      @twitters_group = twitters.group_by {|x| [x.rating, x.r18]}
+      STDERR.puts %!size=#{twitters.size}!
+      twitters = twitters.sort_by {|x| [-(x.rating||0), -x.prediction, x.last_access_datetime]}
+      @twitters_group = twitters.group_by {|x| x.key_for_group_by()}.sort_by {|k, v| k}.reverse.to_h
       return
     when "存在しない"
       twitters = twitters.select {|x| !x.last_access_datetime_p(@hide_within_days)}
@@ -519,20 +532,6 @@ class TwittersController < ApplicationController
 
   # PATCH/PUT /twitters/1 or /twitters/1.json
   def update
-=begin
-    params[:twitter][:twtname].gsub!(/\//, )
-    puts %![LOG] main_twtid=#{params["twitter"]["main_twtid"]}!
-
-        :alt_twtid,
-        :old_twtid,
-        :new_twtid,
-        :sub_twtid,
-        :main_twtid,
-    if params[:twitter][:main_twtid] =~ /(\w+)/
-      puts %![LOG] main_twtid="#{$1}" <= "#{params["twitter"]["main_twtid"]}"!
-      params[:twitter][:main_twtid] = $1
-    end
-=end
 
     params[:twitter][:main_twtid] = Twt::get_screen_name(params[:twitter][:main_twtid])
     params[:twitter][:sub_twtid]  = Twt::get_screen_name(params[:twitter][:sub_twtid])
@@ -598,8 +597,6 @@ class TwittersController < ApplicationController
       end
       twitters = twitters.select {|x| x.drawing_method == params[:target]}
 
-
-
       #### !!! こっちを先にやらないとだめ !!! ↓####
       #STDERR.puts %!twitters=#{twitters.size}!
       #twitters2 = twitters.select {|x| x.status == "長期更新なし" or x.status == "最近更新してない？"}
@@ -609,31 +606,40 @@ class TwittersController < ApplicationController
 
       ####
       twitters = twitters.select {|x| x.status == "TWT巡回"}
+
       twitters_group = {}
 
-      #twitters = twitters.select {|x| x.prediction >= pred_cond_gt}
-      #twitters = twitters.sort_by {|x| [x.sort_val, -x.prediction, -(x.rating||0), x.last_access_datetime]}
-      twitters = twitters.sort_by {|x| [-x.prediction, -(x.rating||0), x.last_access_datetime]}
-      twitters_group["#{rating_gt}:予測順"] = twitters
+      if true
+        twitters = twitters.sort_by {|x| [x.last_access_datetime, -(x.rating||0), -x.prediction]}
+        twitters_group["#{rating_gt}:アクセス日順"] = twitters
+      end
 
-      twitters = twitters.sort_by {|x| [x.last_access_datetime, -(x.rating||0), -x.prediction]}
-      twitters_group["#{rating_gt}:アクセス日順"] = twitters
+      if true
+        twitters = twitters.sort_by {|x| [-x.prediction, -(x.rating||0), x.last_access_datetime]}
+        twitters_group["#{rating_gt}:予測順"] = twitters
+      end
 
       twitters_total_count = twitters.size
 
       ### ###
-      twitters = twitters.select {|x|
-        #!x.last_access_datetime_p(14)
-        x.select_cond_post_date()
-      }
-      twitters = twitters.sort_by {|x| [(x.last_post_datetime || "2000-01-01"), -(x.rating||0), x.prediction]}
-      twitters_group["#{rating_gt}:投稿日順"] = twitters
+      twitters = twitters.select {|x|x.select_cond_post_date()}
 
-      #access_date_intvl = 30
-      #twitters_check = twitters_check.select {|x| !x.last_access_datetime_p(access_date_intvl)}
-      twitters_check = twitters_check.select {|x| x.select_cond_post_date}
-      twitters_check = twitters_check.sort_by {|x| [x.last_access_datetime, -(x.rating||0), -x.prediction]}
-      twitters_group["#{rating_gt}:更新なし"] = twitters_check if twitters_check.size > 0
+      if true
+        twitters = twitters.sort_by {|x| [(x.last_post_datetime || "2000-01-01"), -(x.rating||0), x.prediction]}
+        twitters_group["#{rating_gt}:投稿日順"] = twitters
+      end
+
+      if true
+        twitters_check = twitters_check.select {|x| x.select_cond_post_date}
+        twitters_check = twitters_check.sort_by {|x| [x.last_access_datetime, -(x.rating||0), -x.prediction]}
+        twitters_group["#{rating_gt}:更新なし"] = twitters_check if twitters_check.size > 0
+      end
+
+      if true
+        twitters = twitters.select {|x| !x.last_access_datetime_p(3)}
+        twitters = twitters.sort_by {|x| [-(x.rating||0), x.last_access_datetime, x.prediction]}
+        twitters_group["#{rating_gt}:評価順"] = twitters
+      end
 
       [twitters_group, twitters_total_count]
     end

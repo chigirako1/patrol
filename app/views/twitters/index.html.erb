@@ -236,6 +236,13 @@ button.horizontal {
         text_field.select();
         //document.execCommand("copy");
     }
+    
+    document.addEventListener("visibilitychange", function() {
+      if (document.visibilityState === "visible")
+      {
+          select_text();
+      }
+    });
 </script>
 
 <div class="view_form">
@@ -243,8 +250,10 @@ button.horizontal {
    
     検索：<%= f.text_field :search_word, :value => params[:search_word] %>
     <br />
+    <!-- 
     <input type="button" value="select" onclick="select_text();" />
     <br />
+    -->
     モード：<%= f.text_field :mode, :value => params[:mode] %>
     <br />
     <%= f.label :page_title %>
@@ -260,5 +269,5 @@ button.horizontal {
 
 <% if @rating_min.presence %>
   <% rating_lt = @rating_min %>
-  <%= link_to "raring -", url_for(params.permit!.to_h.merge(rating: rating_lt)) %>
+  <%= link_to "rating -", url_for(params.permit!.to_h.merge(rating: rating_lt)) %>
 <% end %>

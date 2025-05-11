@@ -213,14 +213,13 @@
           <br />
           類似名あり：<br />
           <% pxv3.each do |pxv_n| %>
-            <%= pxv_n.feature %>【<%= pxv_n.pxvname %>(<%= pxv_n.pxvid %>)】
-            ["@<%= pxv_n.twtid %>"(pxv)
+            <%= pxv_n.feature %>【<%= pxv_n.pxvname %>(<%= pxv_n.pxvid %>)|<%= pxv_n.rating %>|<%= pxv_n.last_access_datetime_disp %>】
+            [@"<%= pxv_n.twtid %>"(pxv)
             <% if pxv_n.twtid == @twitter.twtid %>
               TWT ID一致
             <% else %>
-              != "<%= @twitter.twtid %>"(twt) TWT ID不一致
+              != "<%= @twitter.twtid %>"(twt)] TWT ID不一致
             <% end %>
-            ]
             <%= link_to_ex("■pxv■", artist_path(pxv_n.id, access_dt_update: "yes")) %>
             <br />
           <% end %>
@@ -263,7 +262,7 @@
     <% main_twtid = Twitter.find_by_twtid_ignore_case(@twitter.main_twtid) %>
     <% if main_twtid.presence %>
       <%= main_twtid.twtname %>
-      【<%= main_twtid.rating %>|<%= main_twtid.status %>】
+      【<%= main_twtid.rating %>|<%= main_twtid.drawing_method %>|<%= main_twtid.status %>】
       [<%= link_to_ex "■twt■", main_twtid %>]
       |<%= main_twtid.last_access_datetime_disp %>|
       <%= %!|PXVID:#{main_twtid.pxvid}! if main_twtid.pxvid.presence %>
@@ -279,7 +278,7 @@
     <% sub_twt = Twitter.find_by_twtid_ignore_case(@twitter.sub_twtid) %>
     <% if sub_twt.presence %>
       <%= sub_twt.twtname %>
-      【<%= sub_twt.rating %>|<%= sub_twt.status %>】
+      【<%= sub_twt.rating %>|<%= sub_twt.drawing_method %>|<%= sub_twt.status %>】
       [<%= link_to_ex "■twt■", sub_twt %>]
       |<%= sub_twt.last_access_datetime_disp %>|
       <%= %!|PXVID:#{sub_twt.pxvid}! if sub_twt.pxvid.presence %>
@@ -322,7 +321,7 @@
     <% old_twt = Twitter.find_by_twtid_ignore_case(@twitter.old_twtid) %>
     <% if old_twt.presence %>
       <%= old_twt.twtname %>
-      【<%= old_twt.rating %>|<%= old_twt.status %>】
+      【<%= old_twt.rating %>|<%= old_twt.drawing_method %>|<%= old_twt.status %>】
       [<%= link_to_ex "■twt■", old_twt %>]
       |<%= old_twt.last_access_datetime_disp %>|
       <%= %!|PXVID:#{old_twt.pxvid}! if old_twt.pxvid.presence %>

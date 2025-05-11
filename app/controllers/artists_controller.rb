@@ -299,6 +299,7 @@ class ArtistsController < ApplicationController
     LONG_TERM_NO_UPDATS = "長期更新なし"
     SIX_MONTH_NO_UPDATS = "半年以上更新なし"
     NO_ARTWORKS = "作品ゼロ"
+    SUSPEND = "停止"
   end
 
   module ShowMode
@@ -379,15 +380,17 @@ class ArtistsController < ApplicationController
         #puts "prms.last_access_datetime=#{prms.last_access_datetime}"
       end
 
-      # 
-      artists = Artist.all
-      artists = artists.select {|x| x.rating == nil or x.rating == 0}
-      artists = artists.select {|x| x.filenum == x.recent_filenum}
-      artists = index_select_status_exclude(artists)
-      artists = artists.sort_by {|x| [-x.prediction_up_cnt(true)]}
-      group = {}
-      group["ファイル数同じ"] = artists
-      group_list << group
+      if false
+        # 
+        artists = Artist.all
+        artists = artists.select {|x| x.rating == nil or x.rating == 0}
+        artists = artists.select {|x| x.filenum == x.recent_filenum}
+        artists = index_select_status_exclude(artists)
+        artists = artists.sort_by {|x| [-x.prediction_up_cnt(true)]}
+        group = {}
+        group["ファイル数同じ"] = artists
+        group_list << group
+      end
 
       # 未設定gr
       artists = Artist.all
@@ -454,6 +457,10 @@ class ArtistsController < ApplicationController
           path = UrlTxtReader::get_latest_txt
         elsif datestr == ""
           path = ""
+        elsif datestr =~ /^(\d{2})$/
+          path = UrlTxtReader::txt_file_list($1 + "\\d{4}")
+        elsif datestr =~ /^(\d{4})$/
+          path = UrlTxtReader::txt_file_list($1 + "\\d+")
         elsif datestr =~ /^\d+$/
           path = ["public/get illust url_#{datestr}.txt"]
         else
@@ -744,6 +751,7 @@ class ArtistsController < ApplicationController
         path = UrlTxtReader::txt_file_list($1 + "\\d{4}")
       when /target23(\d{2})/
         path = UrlTxtReader::txt_file_list($1 + "\\d{2}")
+        path = nil if path.size == 0 #てきとう
       when /target(\d{4})/
         path = UrlTxtReader::txt_file_list($1 + "\\d+")
       else
@@ -774,23 +782,32 @@ class ArtistsController < ApplicationController
       else
         pxvid_list2 = []
         pxv_id_list, twt_url_infos, @misc_urls = UrlTxtReader::get_url_txt_info(path)
-        if @target.include?("twt既知")
+
+        # twt
+        if @target.include?("twt既知") or @target.include?("twt未知")
           known_twt_url_list, unknown_twt_url_list, pxvid_list2 = Twitter::twt_user_classify(twt_url_infos)
-          @known_twt_url_list = known_twt_url_list
-          #@twt_urls = known_twt_url_list
-        end
-        if @target.include?("twt未知")
-          known_twt_url_list, unknown_twt_url_list, pxvid_list2 = Twitter::twt_user_classify(twt_url_infos)
-          @unknown_twt_url_list = unknown_twt_url_list.sort_by {|k,v| -v.size}.to_h
+
+          if @target.include?("twt既知")
+            @known_twt_url_list = known_twt_url_list
+            #@twt_urls = known_twt_url_list
+          end
+
+          if @target.include?("twt未知")
+            @unknown_twt_url_list = unknown_twt_url_list.sort_by {|k,v| -v.size}.to_h
+          end
         end
   
-        if @target.include?("known_pxv")
+        # pxv
+        if @target.include?("known_pxv") or @target.include?("unknown_pxv")
           known_pxv_user_id_list, unknown_pxv_user_id_list = Artist::pxv_user_id_classify([pxv_id_list, pxvid_list2].flatten)
-          @known_pxv_user_id_list = known_pxv_user_id_list
-        end
-        if @target.include?("unknown_pxv")
-          known_pxv_user_id_list, unknown_pxv_user_id_list = Artist::pxv_user_id_classify([pxv_id_list, pxvid_list2].flatten)
-          @unknown_pxv_user_id_list = unknown_pxv_user_id_list
+
+          if @target.include?("known_pxv")
+            @known_pxv_user_id_list = known_pxv_user_id_list
+          end
+
+          if @target.include?("unknown_pxv")
+            @unknown_pxv_user_id_list = unknown_pxv_user_id_list
+          end
         end
       end
     end
@@ -892,9 +909,13 @@ class ArtistsController < ApplicationController
       puts %![LOG] twtid=#{params["artist"]["twtid"]}!
     end
 
-=begin
-    # TODO:rating変更の履歴登録
-=end
+    if @artist.rating != params[:artist][:rating]
+      msg = %!rating変更:"#{params[:artist][:rating]}" <= "#{@artist.rating}"!
+      Logger.debug(msg)
+
+      # TODO:rating変更の履歴登録
+      #params[:artist][:chg_history] = @artist.chg_history + %!#{@artist.rating} => #{params[:artist][:rating]}!
+    end
 
     respond_to do |format|
       if @artist.update(artist_params)
