@@ -115,8 +115,9 @@ textarea {
 
     <% if twitter.filenum and twitter.filenum > twt_pic_list.size %>
         <h3>すべての画像が表示されていない可能性があります(<%= twt_pic_list.size %>/<%= twitter.filenum %>)</h3>
+    <% else %>
+        <br />
     <% end %>
-    <br />
 
     <% pl = twt_pic_list.map {|x| x[1]} %>
     <% freq_90d = Twt::calc_freq(pl, 90) %>
@@ -140,6 +141,8 @@ textarea {
     ファイルサイズ平均：<%= (fsize_sum / show_pic_num) / 1024 %> KB
      合計：<%= (fsize_sum) / 1024 / 1024 %> MB
     (<%= show_pic_num %> files)
+    <% tweet_id_list = twt_pic_list.map {|x| x[2]} %>
+    1投稿あたりの平均画像数:<%= Twt::image_num_a_post(tweet_id_list) %>
     <% if twt_pic_list[0] != nil %>
     <% end %>
     <br />

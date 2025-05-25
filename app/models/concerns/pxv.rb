@@ -84,7 +84,7 @@ module Pxv
         if File.basename(path) =~ /(.*?)\(\d+\)$/
             username = $1
         else
-            STDERR.puts %!can't find user name:"#{path}"!
+            STDERR.puts %!get_user_name_from_path():can't find user name:"#{path}"!
             username = ""
         end
         username
@@ -280,13 +280,19 @@ module Pxv
 
     def self.name_test
 
+        STDERR.puts %!### test ### >>>!
         PxvArtist.init_exception_name_list
 
         dir_list = stock_dir_list()
         dir_list.each do |path|
             pxv_user_id = get_pxv_user_id(path)
+            if pxv_user_id == ""
+                STDERR.puts %!"#{path}"(#{pxv_user_id}) 不正フォルダ名!
+            end
             pxv_artist = PxvArtist.new(pxv_user_id, path)
         end
+
+        PxvArtist.print_chg_list
     end
 
     def self.db_update_by_newdir(update_record=true)
@@ -447,7 +453,7 @@ module Pxv
 
         if pxv.pxvname != pxv_artist.pxv_name
             msg = %!名前変更あり「#{pxv.pxvname}」=>「#{pxv_artist.pxv_name}」!
-            Rails.logger.debug(msg)
+            Rails.logger.info(msg)
 
             #pxv_params[:pxvname] = pxv_artist.pxv_name
             if pxv.oldname.presence
@@ -458,7 +464,7 @@ module Pxv
                     updated_oldname = pxv.oldname + "/" + pxv.pxvname
                     #pxv_params[:oldname] = updated_oldname
                     msg =  %!名前:oldname「#{pxv.oldname}」=>「#{updated_oldname}」!
-                    Rails.logger.debug(msg)
+                    Rails.logger.info(msg)
                 end
             else
                 #pxv_params[:oldname] = pxv.pxvname
@@ -540,6 +546,13 @@ module Pxv
         key_str
     end
 
+    def self.get_key_term(rating, str)
+        r = (rating||0)
+        point = sprintf("%03d:評価%03d", 100 - r, r)
+        key_str = %!\!#{str}アクセスしてない!
+        key_str
+    end
+
     def self.hash_group2(pxv_group, pxv_list_tmp)
         key_pxv_list_from_twt_list_a = "141.twt url list high"
         key_pxv_list_from_twt_list_a2= "142.twt url list low"
@@ -575,13 +588,13 @@ module Pxv
     end
 
     def self.hash_group(known_pxv_user_id_list, pxv_group, hide_day)
-        key_pxv_list_no_access_1y    = "12ヶ月(1年以上)"
-        key_pxv_list_no_access_6m    = "6ヶ月(半年以上)"
-        key_pxv_list_no_access_5m    = "5ヶ月以上"
-        key_pxv_list_no_access_4m    = "4ヶ月以上"
-        key_pxv_list_no_access_3m    = "3ヶ月以上"
-        key_pxv_list_no_access_2m    = "2ヶ月以上"
-        key_pxv_list_pred            = "100"
+        key_pxv_list_no_access_1y    = "101.12ヶ月(1年以上)"
+        key_pxv_list_no_access_6m    = "102.6ヶ月(半年以上)"
+        key_pxv_list_no_access_5m    = "103.5ヶ月以上"
+        key_pxv_list_no_access_4m    = "104.4ヶ月以上"
+        key_pxv_list_no_access_3m    = "105.3ヶ月以上"
+        key_pxv_list_no_access_2m    = "106.2ヶ月以上"
+        key_pxv_list_pred            = "199."
     
         key_pxv_list_unset           = "000.未設定"
     
@@ -590,6 +603,16 @@ module Pxv
         key_pxv_list_no_artworks     = "904.#{ArtistsController::Status::NO_ARTWORKS}"
     
         recent_pxv_list = []
+
+        if false
+            method_proc = Proc.new {|a,b|
+                get_key_term(a, b)
+            }
+        else
+            method_proc = Proc.new {|a,b|
+                get_key(a, b)
+            }
+        end
 
         known_pxv_user_id_list.each do |elem|
             p = elem.p
@@ -626,30 +649,43 @@ module Pxv
             else
             end
 
-=begin
-            if !(p.last_access_datetime_p(365))
-                key_str = get_key(p.rating, key_pxv_list_no_access_1y)
-                pxv_group[key_str] << elem
-            elsif !(p.last_access_datetime_p(180))
-                key_str = get_key(p.rating, key_pxv_list_no_access_6m)
-                pxv_group[key_str] << elem
-            elsif !(p.last_access_datetime_p(150))
-                key_str = get_key(p.rating, key_pxv_list_no_access_5m)
-                pxv_group[key_str] << elem
-            elsif !(p.last_access_datetime_p(120))
-                key_str = get_key(p.rating, key_pxv_list_no_access_4m)
-                pxv_group[key_str] << elem
-            elsif !(p.last_access_datetime_p(90))
-                key_str = get_key(p.rating, key_pxv_list_no_access_3m)
-                pxv_group[key_str] << elem
-            elsif !(p.last_access_datetime_p(60))
-                key_str = get_key(p.rating, key_pxv_list_no_access_2m)
-                pxv_group[key_str] << elem
+            if true
+                if !(p.last_access_datetime_p(365))
+                    #key_str = get_key_term(p.rating, key_pxv_list_no_access_1y)
+                    str = key_pxv_list_no_access_1y
+                    key_str = method_proc.call(p.rating, str)
+                    pxv_group[key_str] << elem
+                elsif !(p.last_access_datetime_p(180))
+                    #key_str = get_key_term(p.rating, key_pxv_list_no_access_6m)
+                    str = key_pxv_list_no_access_6m
+                    key_str = method_proc.call(p.rating, str)
+                    pxv_group[key_str] << elem
+                elsif !(p.last_access_datetime_p(150))
+                    #key_str = get_key_term(p.rating, key_pxv_list_no_access_5m)
+                    str = key_pxv_list_no_access_5m
+                    key_str = method_proc.call(p.rating, str)
+                    pxv_group[key_str] << elem
+                elsif !(p.last_access_datetime_p(120))
+                    #key_str = get_key_term(p.rating, key_pxv_list_no_access_4m)
+                    str = key_pxv_list_no_access_4m
+                    key_str = method_proc.call(p.rating, str)
+                    pxv_group[key_str] << elem
+                elsif !(p.last_access_datetime_p(90))
+                    #key_str = get_key_term(p.rating, key_pxv_list_no_access_3m)
+                    str = key_pxv_list_no_access_3m
+                    key_str = method_proc.call(p.rating, str)
+                    pxv_group[key_str] << elem
+                elsif !(p.last_access_datetime_p(60))
+                    #key_str = get_key_term(p.rating, key_pxv_list_no_access_2m)
+                    str = key_pxv_list_no_access_2m
+                    key_str = method_proc.call(p.rating, str)
+                    pxv_group[key_str] << elem
+                else
+                    pxv_group[key_pxv_list_pred] << elem
+                end
             else
-                pxv_group[key_pxv_list_pred] << elem
+                pxv_group[get_key(p.rating, "")] << elem
             end
-=end
-            pxv_group[get_key(p.rating, "")] << elem
         end
 
         recent_pxv_list
@@ -657,8 +693,53 @@ module Pxv
 end
 
 class PxvArtist
+    #extend ArtistName
+
     def self.init_exception_name_list()
         @@exception_name_list = Util::exception_name_list
+        @@remove_word_list = Util::words_to_remove
+
+        #@@remove_word_list.each do |x|
+            #STDERR.puts %!"#{x}"!
+        #end
+
+        @@chg_list = []
+    end
+
+    def self.special_str_p(x)
+        rgx_han = %r|[｡-ｦｧ-ｯｱ-ﾝﾞﾟ･ｰϘàäåÏïÜüËéëêÖö♾©♥ø² ₀ᵕ̈🩵]|
+        #rgx_han2 = /\p{Emoji_Modifier_Base}\p{Emoji_Modifier}?|\p{Emoji_Presentation}|\p{Emoji}\uFE0F|\p{In_Letterlike_Symbols}|\p{In_Mathematical_Alphanumeric_Symbols}|\p{Egyptian_Hieroglyphs}|\p{Old_Italic}|\p{In_Enclosed_Alphanumerics}|\p{In_Enclosed_Alphanumeric_Supplement}/
+        if x =~ rgx_han
+        #if x =~ rgx_han or x =~ rgx_han2
+            return true
+        end
+        false
+    end
+
+    def self.screen_width(str)
+		ascii_len = str.each_char.count{|x| x.ascii_only?}
+		hankaku_len = ascii_len + str.each_char.count{|x| special_str_p(x)}
+		zenkaku_len = (str.size - hankaku_len) * 2
+
+		result = hankaku_len + zenkaku_len
+		result
+	end
+
+    def self.print_chg_list
+        len_max = @@chg_list.map {|x| screen_width(x[1])}.max if @@chg_list.size > 0
+
+        ##TODO: 文字スペースカウントする関数
+        @@chg_list.each do |x|
+            #spc1 = " "
+            #spc2 = " "
+            spc1 = " " * (len_max - screen_width(x[0]) + 1)
+            spc2 = " " * (len_max - screen_width(x[1]) + 1)
+
+            #str = x[1]
+            #STDERR.puts %!"#{str}" => #{screen_width(str)}!
+
+            STDERR.puts %!"#{x[0]}"! + spc1 + %!"#{x[1]}"! +spc2 + %!"#{x[2]}"!
+        end
     end
 
     attr_accessor :pxv_user_id, :pxv_name, :path_list,
@@ -670,14 +751,20 @@ class PxvArtist
         @pxv_user_id = id
 
         user_name = Pxv::get_user_name_from_path(path)
-        @pxv_name = ArtistName::get_name_part_only(user_name, @@exception_name_list)
+        @pxv_name = ArtistName::get_name_part_only(user_name, @@exception_name_list, @@remove_word_list)
+
+        if user_name != @pxv_name
+            removed_str = user_name.gsub(@pxv_name, "")
+            @@chg_list << [removed_str, user_name, @pxv_name]
+        end
+
         #@pxv_name = user_name #### TODO:
         @path_list = []
         filepath_list = UrlTxtReader::get_path_list(path)
         @path_list = Pxv::sort_pathlist(filepath_list)
 
         if @path_list.size == 0
-            STDERR.puts %!ファイルが存在しません!
+            STDERR.puts %!PxvArtist#ctor:ファイルが存在しません(#{id})"#{path}"!
             return
         end
 

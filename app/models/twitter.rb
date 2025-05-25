@@ -33,7 +33,9 @@ class Twitter < ApplicationRecord
         if ignore
             records = Twitter.where('UPPER(twtid) = ?', twtid.upcase)
             if records.size > 1
-                puts %!"#{twtid}":#{records.size}件のレコードが見つかりました !
+                msg = %!"#{twtid}":#{records.size}件のレコードが見つかりました !
+                STDERR.puts msg
+                Rails.logger.warn(msg)
             end
             records.first
         else
@@ -238,6 +240,8 @@ class Twitter < ApplicationRecord
         #cond_day = 30
         if last_access_datetime_p(cond_day)
             #指定日以内にアクセスしているので対象外
+
+            STDERR.puts %!最近更新してない・対象外・#{num_of_days_elapased}/#{cond_day}(@#{twtid})!
             false
         else
             true

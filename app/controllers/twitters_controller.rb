@@ -145,12 +145,41 @@ class TwittersController < ApplicationController
       puts %!num_of_times="#{num_of_times}"!
 
       if params[:ex_pxv].presence and params[:ex_pxv] == "true"
-        
         tmp = twitters.select {|x|
           x.select_cond_no_pxv
         }
       else
         tmp = twitters
+      end
+
+      twitters_bak = twitters
+
+
+      if false#true
+        group = {}
+        
+        twitters = twitters.select {|x| x.drawing_method == params[:target]}
+        twitters = twitters.select {|x| x.status == "TWT巡回"}
+        twitters = twitters.sort_by {|x| [x.last_access_datetime, -(x.rating||0), -x.prediction]}
+        
+        r = 85
+        twitters_w = twitters.select {|x| x.rating == nil or x.rating >= r }
+        group["#{r}A:アクセス日順"] = twitters_w
+
+        r = 80
+        twitters = twitters.select {|x| x.rating == nil or x.rating >= r }
+        group["#{r}A:アクセス日順"] = twitters
+
+        twitters = twitters.sort_by {|x| [-x.prediction, -(x.rating||0), x.last_access_datetime]}
+        group["#{r}A:予測数順"] = twitters
+
+        group_list << group
+      end
+
+      if true
+        top = [89, rating_gt - 1].min
+        bottom = top - 9
+        group_list << routine_group(twitters, params, bottom, top)
       end
 
       num_of_times.times do |cnt|
@@ -164,6 +193,8 @@ class TwittersController < ApplicationController
       end
       @rating_min = rating_gt
 
+      ###
+      twitters = twitters_bak
       #tmp = tmp.select {|x| x.select_cond_no_pxv}
       twitters = twitters.select {|x| !(x.pxvid.presence) and x.artist_pxvid == nil or x.artist_status == "長期更新なし" or x.artist_status == "半年以上更新なし"}
       twitters = twitters.select {|x| x.rating == nil or x.rating == 0}
@@ -172,15 +203,26 @@ class TwittersController < ApplicationController
         twitters2 = twitters.select {|x| x.last_access_datetime_p(-30)}
         twitters2 = twitters2.sort_by {|x| [-x.prediction, x.last_access_datetime]}
         group = {}
-        group["未設定1"] = twitters2
+        group["未設定"] = twitters2
         group_list << group
       end
 
-      twitters = twitters.select {|x| !x.last_access_datetime_p(-30)}
-      twitters = twitters.sort_by {|x| [-x.prediction, x.last_access_datetime]}
-      group = {}
-      group["未設定2"] = twitters
-      group_list << group
+      if true
+        twitters_w = twitters.select {|x| !x.last_access_datetime_p(-30)}
+        twitters_w = twitters_w.sort_by {|x| [-x.prediction, x.last_access_datetime]}
+        group = {}
+        group["未設定 最近"] = twitters_w
+        group_list << group
+      end
+
+      if true
+        #twitters_w = twitters.select {|x| !x.last_access_datetime_p(-30)}
+        twitters_w = twitters
+        twitters_w = twitters_w.sort_by {|x| [-(x.filenum||0), x.last_access_datetime]}
+        group = {}
+        group["未設定 ファイル数↑"] = twitters_w
+        group_list << group
+      end
 
       @twitters_group = group_list[0].merge(*group_list)
       return
@@ -630,17 +672,63 @@ class TwittersController < ApplicationController
       end
 
       if true
+        STDERR.puts %!xxx(twitters_check.size)=#{twitters_check.size}!
         twitters_check = twitters_check.select {|x| x.select_cond_post_date}
         twitters_check = twitters_check.sort_by {|x| [x.last_access_datetime, -(x.rating||0), -x.prediction]}
-        twitters_group["#{rating_gt}:更新なし"] = twitters_check if twitters_check.size > 0
+        if twitters_check.size > 0
+          twitters_group["#{rating_gt}:更新なし"] = twitters_check
+        else
+          STDERR.puts %!更新なしゼロ件!
+        end
       end
 
-      if true
+      if true and rating_gt != rating_lt
         twitters = twitters.select {|x| !x.last_access_datetime_p(3)}
-        twitters = twitters.sort_by {|x| [-(x.rating||0), x.last_access_datetime, x.prediction]}
+
+        #twitters = twitters.sort_by {|x| [-(x.rating||0), x.last_access_datetime, x.prediction]}
+        twitters = twitters.sort_by {|x| [-(x.rating||0), x.prediction, x.last_access_datetime]}
         twitters_group["#{rating_gt}:評価順"] = twitters
       end
 
       [twitters_group, twitters_total_count]
+    end
+
+    def routine_group(twitters_arg, params, l_limit_r, u_limit_r)
+      if l_limit_r > u_limit_r
+        raise "不正な引き数:#{l_limit_r}-#{u_limit_r}" 
+      end
+
+      twitters = twitters_arg
+      group = {}
+
+      twitters = twitters.select {|x| x.drawing_method == params[:target]}
+      twitters = twitters.select {|x| x.status == "TWT巡回"}
+      
+      twitters = twitters.sort_by {|x| [x.last_access_datetime, -(x.rating||0), -x.prediction]}
+
+      twitters_pred_list = []
+      twitters_accs_list = []
+
+      rate = l_limit_r
+      while rate <= u_limit_r
+        #STDERR.puts %!#{rate} - #{u_limit_r}!
+        twitters_wk = twitters.select {|x| x.rating == rate}
+        rate += 1
+
+        if twitters_wk.size == 0
+          next
+        end
+
+        twitters_wk = twitters_wk.sort_by {|x| [-x.prediction, x.last_access_datetime]}
+        twitters_pred_list << twitters_wk.first(1)[0]
+
+        twitters_wk = twitters_wk.sort_by {|x| [x.last_access_datetime, -x.prediction]}
+        twitters_accs_list << twitters_wk.first(1)[0]
+      end
+
+      group["(#{l_limit_r}-#{u_limit_r}):予測数順"] = twitters_pred_list.sort_by {|x| [-x.rating]}
+      group["(#{l_limit_r}-#{u_limit_r}):アクセス日順"] = twitters_accs_list.sort_by {|x| [-x.rating]}
+
+      group
     end
 end

@@ -454,6 +454,27 @@ module Twt
         point
     end
 
+    def self.image_num_a_post(tweet_id_list)
+        hash = Hash.new {|h, k| h[k] = []}
+
+        tweet_id_list.each do |x|
+            tweet_id, pic_no = x
+            
+            if hash.has_key?(tweet_id)
+                hash[tweet_id] += 1
+            else
+                hash[tweet_id] = 1
+            end
+        end
+
+        v = hash.values
+        if v.size > 0
+            (v.sum * 10 / v.size + 5) / 10
+        else
+            0
+        end
+    end
+
     def self.get_screen_name(str)
         if str =~ /(\w+)/
             result = $1

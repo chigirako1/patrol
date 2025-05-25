@@ -911,10 +911,13 @@ class ArtistsController < ApplicationController
 
     if @artist.rating != params[:artist][:rating]
       msg = %!rating変更:"#{params[:artist][:rating]}" <= "#{@artist.rating}"!
-      Logger.debug(msg)
+      Rails.logger.info(msg)
 
       # TODO:rating変更の履歴登録
-      #params[:artist][:chg_history] = @artist.chg_history + %!#{@artist.rating} => #{params[:artist][:rating]}!
+      history = "元データ" + %!#{@artist.rating}/#{params[:artist][:rating]}!
+      #history = @artist.chg_history + %!#{@artist.rating} => #{params[:artist][:rating]}!
+      Rails.logger.info(history)
+      #params[:artist][:chg_history] = history
     end
 
     respond_to do |format|

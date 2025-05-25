@@ -291,7 +291,6 @@
         <% end %>
     <% end %>
     <% @known_pxv_user_id_list = [] %>
-    <% #p pxv_group %>
 <% end %>
 
 
@@ -325,6 +324,10 @@
     <% pxv_group = pxv_group.sort.to_h %>
     <% pxv_group.each do |key, val| %>
         <% list = val %>
+
+        <% #list = list.sort_by {|x| -(x.p.rating||0)} %>
+        <% list = list.sort_by {|x| x.p.sort_cond} %>
+
         <% unless list.presence %>
             <% next %>
         <% end %>
@@ -435,21 +438,6 @@
 <% if recent_pxv_list.size > 0 %>
     <h2>既知pxv 最近アクセス分 [<%= @hide_day %>日以内] (<%= recent_pxv_list.size %>)</h2>
 
-    <!-- 
-    <% h = recent_pxv_list.group_by {|x| x.p.created_at_day_num < 60} %>
-    <% if h[false] %>
-        <% #recent_pxv_group = h[false].group_by {|x| x.p.last_access_datetime_num / 7} %>
-        <% h2 = h[false].group_by {|x| x.p.last_ul_datetime_delta > 30 } %>
-        <% #recent_pxv_group = h2[false].group_by {|x| %!#{x.p.last_access_datetime_num / 7}w!} %>
-        <% recent_pxv_group = h2[false].group_by {|x| x.p.key_for_group_by} %>
-        
-        <% recent_pxv_group["更新古い"] = h2[true] %>
-    <% else %>
-        <% recent_pxv_group = Hash.new { |h, k| h[k] = [] } %>
-    <% end %>
-    <% recent_pxv_group["最近登録"] = h[true] if h[true] %>
-    <% #p recent_pxv_group %>
-    -->
     <% recent_pxv_group = recent_pxv_list.group_by {|x| x.p.key_for_group_by} %>
     <% recent_pxv_group = recent_pxv_group.sort.reverse.to_h %>
     <% recent_pxv_group.each do |key, val| %>
@@ -475,18 +463,6 @@
                 <th>twt</th>
                 <th>@</th>
             </tr>
-            <%# list = list.sort_by {|z|
-                    x = z.p;
-                    [
-                        x.status||"", 
-                        x.feature||"",
-                        x.last_ul_datetime||Time.new(2001,1,1),
-                        -(x.prediction_up_cnt(true)), 
-                        x.rating||0, 
-                        x.last_access_datetime
-                    ]
-                }
-            %>
             <% list = list.sort_by {|z| z.p.sort_cond} %>
             <% list.each.with_index(1) do |elem, idx| %>
                 <% p = elem.p %>

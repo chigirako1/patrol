@@ -523,7 +523,18 @@ class Artist < ApplicationRecord
             last_ul_datetime||Time.new(2001,1,1),
             -(prediction_up_cnt(true)), 
             rating||0, 
-            last_access_datetime
+            last_access_datetime,
+        ]
+    end
+
+    def sort_cond2
+        [
+            status||"", 
+            feature||"",
+            rating||0, 
+            last_access_datetime,
+            last_ul_datetime||Time.new(2001,1,1),
+            -(prediction_up_cnt(true)), 
         ]
     end
 

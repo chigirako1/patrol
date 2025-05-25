@@ -143,45 +143,64 @@ module Util
     def self.google_search_url(phrase)
         %!https://www.google.com/search?q=#{phrase}!
     end
-    
-    def self.exception_name_list
+
+    #！！！よくわからないがArtistNameに定義するとコールできない。。。
+
+    def self.get_word_list(filepath)
         list = []
-        txtpath = Rails.root.join("public/exception.txt").to_s
+        txtpath = Rails.root.join(filepath).to_s
         File.open(txtpath) { |file|
-            while line  = file.gets
-                list << line.chomp
-                STDERR.puts line
+            while line = file.gets
+                str = line.chomp
+                list << str
+                #STDERR.puts %!ワード:"#{str}"!
             end
         }
-        list
+        list.sort.uniq
+    end
+
+    def self.exception_name_list()
+        get_word_list("public/exception.txt")
+    end
+
+    def self.words_to_remove()
+        get_word_list("public/remove_words.txt")
     end
 end
 
-module ArtistName
-REMOVE_WORDS = %w(
-原稿中
-)
-    
-# 区切り文字を削除しない対象
-EXCEPT_WORDS = %w(
-)
 
-SEPA_STRS = %w(
-＠
-@
-：
-｜
-／
-)
-        
-    def self.remove_spec_str(name)
-        rmv_word_list = REMOVE_WORDS.map {|w| Regexp.escape(w)}
+
+module ArtistName
+    def normalize_font(str)
+        mapping = {
+            "\u{1D412}" => "A", # 𝐴
+            # 小文字
+            "\u{1D41A}" => "a", # 𝑎
+        }
+
+        str.chars.map { |char| mapping[char] || char }.join
+    end
+
+    #㈪東ス66b(5342006)
+    separate_chars = %w(
+    ＠
+    @
+    ：
+    ｜
+    ／
+    ㈪
+    1日目
+    )
+
+    sepa_char_list = separate_chars.map {|w| Regexp.escape(w)}
+    sepa_char = "(.*?)" + "(" + sepa_char_list.join("|") + ")" + "(.*)"
+    @@sepa_rgx = Regexp.new(sepa_char)
+
+    def self.remove_spec_str(name, remove_words)
+        rmv_word_list = remove_words.map {|w| Regexp.escape(w)}
         rmv_str = "(" + rmv_word_list.join("|") + ")"
         rgx = Regexp.new(rmv_str)
-        name.sub!(rgx, "")
-        name.strip!
-    
-        name
+        name.sub(rgx, "").strip
     end
 
     def self.substitute_name(name)
@@ -194,19 +213,20 @@ SEPA_STRS = %w(
             name
         end
     end
-           
-       
+
+    def self.remove_emoji(str)
+        #rgx = /[\u{1F600}-\u{1F64F}\u{1F300}-\u{1F5FF}\u{1F680}-\u{1F6FF}\u{2600}-\u{26FF}\u{2700}-\u{27BF}]/
+        # geminiが作ったやつ↑
+
+        rgx = /\p{Emoji_Modifier_Base}\p{Emoji_Modifier}?|\p{Emoji_Presentation}|\p{Emoji}\uFE0F|\p{In_Letterlike_Symbols}|\p{In_Mathematical_Alphanumeric_Symbols}|\p{Egyptian_Hieroglyphs}|\p{Old_Italic}|\p{In_Enclosed_Alphanumerics}|\p{In_Enclosed_Alphanumeric_Supplement}/
+        str.gsub(rgx, '')
+    end
+
     # "＠"など区切り文字以降の余計な文字の削除
     def self.del_unnecessary_part(name_orig)
         name_chg = name_orig
 
-        sepa_char_list = SEPA_STRS.map {|w| Regexp.escape(w)}
-        sepa_char = "(.*)" + "(" + sepa_char_list.join("|") + ")" + "(.*)"
-        sepa_rgx = Regexp.new(sepa_char)
-
-        # /(.*)(土曜|日曜|歌姫庭園|コミケ|コミティア|金曜|C\d\d\d|２日目|2日目|1日目|夏コミ)(.*)/i
-
-        if name_orig =~ sepa_rgx
+        if name_orig =~ @@sepa_rgx
             name_chg = $1
             #STDERR.puts %!"#{name_orig}" => "#{name_chg}"!
         end
@@ -214,7 +234,7 @@ SEPA_STRS = %w(
     end
 
     # 余計な文字の削除。p.g. ＠以降とか
-    def self.get_name_part_only(name_orig, exception_names)
+    def self.get_name_part_only(name_orig, exception_names, remove_word_list)
         name_chg = name_orig
 
         # 区切り文字以降の削除
@@ -226,13 +246,21 @@ SEPA_STRS = %w(
             name_chg = del_unnecessary_part(name_orig)
         end
 
-        if name_orig != name_chg
-            #puts %!#{name_orig}/#{name_chg}!
-            removed_str = name_orig.gsub(name_chg, "")
-            STDERR.puts %!"#{removed_str}"\t\t"#{name_orig}"\t\t"#{name_chg}"!
-            #raise "[DBG] owari"
+        tmp = remove_emoji(name_chg)
+        if tmp.size > 0
+            name_chg = tmp
+        else
+            STDERR.puts %!emoji:すべての文字が削除されたので変更しない:"#{name_chg}"!
+        end
+
+        tmp = remove_spec_str(name_chg, remove_word_list)
+        if tmp.size > 0
+            name_chg = tmp
+        else
+            STDERR.puts %!words:すべての文字が削除されたので変更しない:"#{name_chg}"!
         end
 
         name_chg.strip
     end
+
 end
