@@ -104,6 +104,8 @@
   <%= render "viewer", artist: @artist %>
 <% elsif @show_mode == ArtistsController::ShowMode::SHOW_LIST_VIEW %>
   <%= render "list_view", artist: @artist %>
+<%# elsif @show_mode == ArtistsController::ShowMode::INTERVAL_CHECK %>
+  <%#= render "list_view", artist: @artist %>
 <% else %>
   <%= render @artist %>
 
@@ -111,7 +113,7 @@
 
   <%= render "pics", artist: @artist %>
 
-  <% if @show_mode == "twt_pic_list" %>
+  <% if @show_mode == ArtistsController::ShowMode::TWT_PIC_LIST #"twt_pic_list" %>
     <%= render "twt_pic_list", artist: @artist %>
   <% end %>
   <%= render "form", artist: @artist %>
@@ -129,7 +131,9 @@
   <% end %>
 
   <%= render "stat", artist: @artist %>
+  <hr />
   <%= link_to_ex("個別表示", "../artists/#{@artist.id}?mode=#{ArtistsController::ShowMode::SHOW_VIEWER}") %>
   <%= link_to_ex("リスト表示(全画像)", artist_path(@artist, mode: ArtistsController::ShowMode::SHOW_LIST_VIEW, thumbnail: "yes")) %>
   <%= link_to_ex("リスト表示", artist_path(@artist, mode: ArtistsController::ShowMode::SHOW_LIST_VIEW, thumbnail: "yes", no_pic: "t")) %>
+  <%#= link_to_ex("投稿間隔空きチェック", artist_path(@artist, mode: ArtistsController::ShowMode::INTERVAL_CHECK, thumbnail: "yes", no_pic: "t")) %>
 <% end %>

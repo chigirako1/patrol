@@ -157,8 +157,17 @@ class Twitter < ApplicationRecord
             end
             twt = Twitter.find_by_twtid_ignore_case(twt_id, ignore_case)
             if twt and pxv
-                pxvid_list << pxv.pxvid
-                #registered_twt_acnt_list[twt_id] = twt_url_info.url_list
+                case pxv.status
+                when ArtistsController::Status::DELETED
+                when ArtistsController::Status::SUSPEND
+                when ArtistsController::Status::SIX_MONTH_NO_UPDATS
+                when ArtistsController::Status::SIX_MONTH_NO_UPDATS
+                when ArtistsController::Status::ACCOUNT_MIGRATION
+                when ArtistsController::Status::NO_ARTWORKS
+                    registered_twt_acnt_list[twt_id] = twt_url_info.url_list
+                else
+                    pxvid_list << pxv.pxvid
+                end
             elsif pxv
                 pxvid_list << pxv.pxvid
             elsif twt
@@ -233,6 +242,29 @@ class Twitter < ApplicationRecord
         end
     end
 
+    def update_chk?
+        pat = {
+            TWT_STATUS::STATUS_PATROL => false,
+            TWT_STATUS::STATUS_NO_PATROL => false,
+            TWT_STATUS::STATUS_NO_UPDATE_LT => true,
+            TWT_STATUS::STATUS_NO_PATROL_PXV_CHECK => false,
+            TWT_STATUS::STATUS_NO_UPDATE_IM => true,
+            TWT_STATUS::STATUS_DELETED => false,#存在しないのでチェック不能
+            TWT_STATUS::STATUS_NOT_EXIST => false,#存在しないのでチェック不能
+            TWT_STATUS::STATUS_FROZEN => true,#凍結は解除される場合がある？
+            TWT_STATUS::STATUS_PRIVATE => true,#フォロー申請通った？
+            TWT_STATUS::STATUS_WAITING => true,#フォロー申請通った？
+            TWT_STATUS::STATUS_ANOTHER => true,#
+            TWT_STATUS::STATUS_SCREEN_NAME_CHANGED => false,
+        }
+
+        if pat[status]
+            true
+        else
+            false
+        end
+    end
+
     def select_cond_post_date
         num_of_days_elapased = get_date_delta(last_post_datetime)
 
@@ -241,7 +273,8 @@ class Twitter < ApplicationRecord
         if last_access_datetime_p(cond_day)
             #指定日以内にアクセスしているので対象外
 
-            STDERR.puts %!最近更新してない・対象外・#{num_of_days_elapased}/#{cond_day}(@#{twtid})!
+            #STDERR.puts %!@#{twtid}[#{status}]:#{num_of_days_elapased}(#{cond_day}):最近更新してない・対象外!
+            STDERR.puts %!@#{twtid}:\t\t#{num_of_days_elapased}(#{cond_day}):最近更新してない・対象外!
             false
         else
             true
@@ -312,7 +345,7 @@ class Twitter < ApplicationRecord
         #when Twitter::TWT_STATUS::STATUS_FROZEN
         #when Twitter::TWT_STATUS::STATUS_SCREEN_NAME_CHANGED
         else
-            key = "000:#{status}"
+            key = "000:#{status}(約#{(filenum||0) / 10}0ファイル)"
         end
         key
     end

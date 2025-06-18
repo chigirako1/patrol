@@ -6,23 +6,59 @@ class HomeController < ApplicationController
 
   def index
     @menus = [
+      # =====================================
       { :label => "unified t", :path => "" },
-      { :label => "Twitter [AI] 91 (-2 * 4)",
+      { :label => "Twitter [AI] 92 (-3 * 3)[3]",
         :path => twitters_path(
           target: "AI",
-          page_title: "AI 91 (-2 * 4)",
-          rating: 91,
+          page_title: "AI 92 (-3 * 3)",
+          rating: 92,
           #hide_within_days: 0, 
           num_of_disp: 3,
           #pred: 5,
           #force_disp_day: 10,
           mode: TwittersController::ModeEnum::ALL_IN_ONE,
-          step: 2,
-          num_of_times: 4,
+          step: 3,
+          num_of_times: 3,
           ex_pxv: false,
           thumbnail: ""
         ) 
       },
+      { :label => "Twitter [AI] 87 (-1 * 2)",
+        :path => twitters_path(
+          target: "AI",
+          page_title: "AI 87 (-1 * 2)",
+          rating: 87,
+          #hide_within_days: 0, 
+          num_of_disp: 5,
+          #pred: 5,
+          #force_disp_day: 10,
+          mode: TwittersController::ModeEnum::ALL_IN_ONE,
+          step: 1,
+          num_of_times: 2,
+          ex_pxv: false,
+          thumbnail: ""
+        ) 
+      },
+      { :label => "Twitter [AI] 86 (-1 * 2) 予測/アクセス日",
+        :path => twitters_path(
+          target: "AI",
+          page_title: "AI 86 (-1 * 3)",
+          rating: 86,
+          #hide_within_days: 0, 
+          num_of_disp: 5,
+          #pred: 5,
+          #force_disp_day: 10,
+          mode: TwittersController::ModeEnum::ALL_IN_ONE,
+          aio: TwittersController::GRP_SORT::GRP_SORT_ACCESS + "|" + TwittersController::GRP_SORT::GRP_SORT_PRED,
+          step: 1,
+          num_of_times: 2,
+          ex_pxv: false,
+          thumbnail: ""
+        ) 
+      },
+      # ----------------------------
+      { :label => "-", :path => "" },
       { :label => "Twitter [AI] 90 (-5 * 3)",
         :path => twitters_path(
           target: "AI",
@@ -89,22 +125,6 @@ class HomeController < ApplicationController
           thumbnail: ""
         ) 
       },
-      { :label => "Twitter [AI] 86 (0 * 1)",
-        :path => twitters_path(
-          target: "AI",
-          page_title: "AI 86 (0 * 1)",
-          rating: 86,
-          #hide_within_days: 0, 
-          num_of_disp: 10,
-          #pred: 5,
-          #force_disp_day: 10,
-          mode: TwittersController::ModeEnum::ALL_IN_ONE,
-          step: 1,
-          num_of_times: 1,
-          ex_pxv: false,
-          thumbnail: ""
-        ) 
-      },
       { :label => "-", :path => "" },
       { :label => "Twitter [AI] 89 (-1 * 10)",
         :path => twitters_path(
@@ -154,6 +174,7 @@ class HomeController < ApplicationController
           thumbnail: ""
         ) 
       },
+      { :label => "-", :path => "" },
       { :label => "Twitter [手描き] 95 (-5 * 4)",
         :path => twitters_path(
           target: "手描き",
@@ -233,9 +254,27 @@ class HomeController < ApplicationController
             #thumbnail: "t"
           )
       },
+      { :label => "-", :path => "" },
+      { :label => "twt(dir-DB更新 BY FS)", :path => artists_twt_index_path(dir: "update") },#, target:"twt") },
       # ----------------------------
       { :label => "unified p", :path => "" },
       { :label => "-", :path => "" },
+      { :label => "pxv [AI] 98 (-2 * 3)",
+          :path => artists_path(
+            file: ArtistsController::MethodEnum::ALL_IN_ONE,
+            page_title: "pxv [AI] 95 (-2 * 3)[3]",
+            exclude_ai: "",
+            ai: true,
+            status: "「長期更新なし」を除外",
+            #prediction: 6,
+            rating: 98,
+            step: 2,
+            num_of_times: 3,
+            display_number: 3,
+            last_access_datetime: 5,
+            thumbnail: false,
+          )
+      },
       { :label => "pxv [AI] 95 (-5 * 3)",
           :path => artists_path(
             file: ArtistsController::MethodEnum::ALL_IN_ONE,
@@ -251,23 +290,24 @@ class HomeController < ApplicationController
             thumbnail: false,
           )
       },
-      { :label => "pxv [AI] 100",
+      { :label => "pxv [AI] 95 (-2 * 2)",
           :path => artists_path(
             file: ArtistsController::MethodEnum::ALL_IN_ONE,
-            page_title: "pxv all in one 100 AI",
+            page_title: "pxv [AI] 95 (-2 * 2)",
             exclude_ai: "",
             ai: true,
             status: "「長期更新なし」を除外",
             #prediction: 6,
-            rating: 100,#90,
+            rating: 95,
             step: 2,
-            num_of_times: 5,
+            num_of_times: 2,
             display_number: 4,
-            last_access_datetime: 3,
+            last_access_datetime: 7,
             thumbnail: false,
           )
       },
-      { :label => "pxv [手描き] 95 (-5 * 4)",
+      { :label => "-", :path => "" },
+      { :label => "pxv [手描き] 95 (-5 * 3)",
           :path => artists_path(
             file: ArtistsController::MethodEnum::ALL_IN_ONE,
             page_title: "pxv all in one 95 手描き",
@@ -278,14 +318,14 @@ class HomeController < ApplicationController
             display_number: 5,
             last_access_datetime: 7,
             step: 5,
-            num_of_times: 4,
+            num_of_times: 3,
             thumbnail: false,
           )
       },
-      { :label => "pxv [手描き] 85",
+      { :label => "pxv [手描き] 85 (-1 * 3)",
           :path => artists_path(
             file: ArtistsController::MethodEnum::ALL_IN_ONE,
-            page_title: "pxv all in one 85 手描き",
+            page_title: "pxv [手描き] 85 (-1 * 3)",
             exclude_ai: "true",
             ai: false,
             status: "「長期更新なし」を除外",
@@ -293,7 +333,7 @@ class HomeController < ApplicationController
             display_number: 4,
             last_access_datetime: 7,
             step: 1,
-            num_of_times: 5,
+            num_of_times: 3,
             thumbnail: false,
           )
       },
@@ -327,7 +367,7 @@ class HomeController < ApplicationController
             #recent_filenum: 5,
             rating: 0, 
             #last_access_datetime: -100,#7,
-            created_at: 30,
+            created_at: 90,
             display_number: 7,
             #year: 2023, 
             thumbnail: true
@@ -338,7 +378,7 @@ class HomeController < ApplicationController
       { :label => "pxv url list",
           :path => artists_path(
             page_title: "pxv url list(latest)", 
-            file: ArtistsController::MethodEnum::URL_LIST_PXV_ONLY_LATEST,#"urllist-pxv-only(latest)",
+            file: ArtistsController::MethodEnum::URL_LIST_PXV_ONLY_LATEST,
             sort_by: "予測▽", 
             group_by: "status/rating",
             #exclude_ai: "true",
@@ -353,23 +393,216 @@ class HomeController < ApplicationController
             thumbnail: false
           )
       },
-      { :label => "pxv url list txt(250421)",
+      { :label => "pxv url list txt(latest)",
           :path => artists_path(
             page_title: "pxv url list txt", 
             file: ArtistsController::MethodEnum::URL_LIST,
-            filename: "250421",
+            filename: "latest",
             sort_by: "予測▽", 
-            group_by: "status/rating",
+            group_by: ArtistsController::GROUP_TYPE::GROUP_FEAT_STAT_RAT,
             #exclude_ai: "true",
             #status: "「長期更新なし」を除外",
             #point: 1, 
-            #prediction: 13, 
+            prediction: 11,
             #recent_filenum: 5,
-            #rating: 0, 
-            last_access_datetime: 15,
-            display_number: 22,
+            rating: 85,
+            last_access_datetime: 30,
+            force_disp_day: 90,
+            display_number: 11,
             #year: 2023,
             thumbnail: false
+          )
+      },
+      # ----------------------------
+      { :label => "-", :path => "" },
+      #file: ArtistsController::MethodEnum::TABLE_UPDATE_NEW_USER,
+            
+      # ----------------------------
+      { :label => "url file", :path => "" },
+      { :label => "最新ファイル all",
+          :path => artists_twt_index_path(
+            filename: "latest",
+            hide_day: 30,
+            pred: 5,
+            target:"twt,twt既知,twt未知,known_pxv,unknown_pxv",
+          )
+      },
+      { :label => "最新ファイル 実験pxv",
+          :path => artists_twt_index_path(
+            filename: "latest",
+            hide_day: 30,
+            target: ArtistsController::FileTarget::PXV_EXPERIMENT
+          )
+      },
+      { :label => "最新ファイル 実験twt",
+          :path => artists_twt_index_path(
+            filename: "latest",
+            hide_day: 30,
+            target: ArtistsController::FileTarget::TWT_EXPERIMENT
+          )
+      },
+      { :label => "最新ファイル twt",
+          :path => artists_twt_index_path(
+            filename: "latest",
+            hide_day: 30,
+            force_disp_day: 90,
+            pred: PRED_TWT,
+            target:"twt,twt既知,twt未知",
+          )
+      },
+      { :label => "最新ファイル 既知twt",
+          :path => artists_twt_index_path(
+            filename: "latest",
+            hide_day: 30,
+            force_disp_day: 90,
+            pred: PRED_TWT,
+            target:"twt,twt既知",
+          )
+      },
+      { :label => "最新ファイル twt未知",
+          :path => artists_twt_index_path(
+            filename: "latest",
+            hide_day: 30,
+            #force_disp_day: 90,
+            #pred: 5,
+            target:"twt,twt未知",
+          )
+      },
+      { :label => "最新ファイル 既知 pxv",
+          :path => artists_twt_index_path(
+            filename: "latest",
+            hide_day: 30,
+            force_disp_day: 90,
+            pred: PRED_PXV,
+            target:"known_pxv",
+          )
+      },
+      { :label => "最新ファイル 未登録 pxv",
+          :path => artists_twt_index_path(
+            filename: "latest",
+            #hide_day: 30,
+            target: ArtistsController::FileTarget::PXV_UNKNOWN_ONLY,
+          )
+      },
+      { :label => "-", :path => "" },
+      { :label => "最新3ファイル all",
+          :path => artists_twt_index_path(
+            filename: "latest 3",
+            hide_day: 30,
+            pred: 8,
+            target:"twt,twt既知,twt未知,known_pxv,unknown_pxv",
+          )
+      },
+      { :label => "最新3ファイル twt",
+          :path => artists_twt_index_path(
+            filename: "latest 3",
+            hide_day: 30,
+            force_disp_day: 90,
+            pred: PRED_TWT,
+            target:"twt,twt既知,twt未知"
+          )
+      },
+      { :label => "最新3ファイル 既知twt",
+          :path => artists_twt_index_path(
+            filename: "latest 3",
+            hide_day: 30,
+            force_disp_day: 90,
+            pred: PRED_TWT,
+            target:"twt,twt既知",
+          )
+      },
+      { :label => "最新3ファイル twt未知",
+          :path => artists_twt_index_path(
+            filename: "latest 3",
+            #hide_day: 15,
+            force_disp_day: 90,
+            #pred: 5,
+            target:"twt,twt未知",
+          )
+      },
+      { :label => "最新3ファイル 既知pxv",
+          :path => artists_twt_index_path(
+            filename: "latest 3",
+            hide_day: 30,
+            force_disp_day: 90,
+            pred: PRED_PXV,
+            target:"known_pxv"
+          )
+      },
+      { :label => "最新3ファイル 未登録pxv",
+          :path => artists_twt_index_path(
+            filename: "latest 3",
+            #hide_day: 30,
+            target: ArtistsController::FileTarget::PXV_UNKNOWN_ONLY,
+          )
+      },
+      # -----------
+      { :label => "-", :path => "" },
+      { :label => "全ファイル twt",
+          :path => artists_twt_index_path(
+            filename: "all",
+            hide_day: 15,
+            force_disp_day: 90,
+            pred: PRED_TWT,
+            target:"twt,twt既知,twt未知"
+          )
+      },
+      { :label => "全ファイル twt既知",
+          :path => artists_twt_index_path(
+            filename: "all",
+            hide_day: 15,
+            force_disp_day: 90,
+            pred: PRED_TWT,
+            target:"twt既知"
+          )
+      },
+      { :label => "全ファイル twt未知",
+          :path => artists_twt_index_path(
+            filename: "all",
+            #hide_day: 30,
+            url_cnt: 2,
+            target: ArtistsController::FileTarget::TWT_UNKNOWN_ONLY
+          )
+      },
+      { :label => "全ファイル 既知pxv",
+          :path => artists_twt_index_path(
+            filename: "all",
+            hide_day: 30,
+            force_disp_day: 90,
+            pred: PRED_PXV,
+            target:"known_pxv"
+          )
+      },
+      { :label => "全ファイル 未登録pxv",
+          :path => artists_twt_index_path(
+            filename: "all",
+            #hide_day: 30,
+            target: ArtistsController::FileTarget::PXV_UNKNOWN_ONLY
+          )
+      },
+      { :label => "-", :path => "" },
+      { :label => "twt(dir-all)",
+        :path => artists_twt_index_path(
+          target:"twt"
+        )
+      },
+      { :label => "twt(dir-new)", :path => artists_twt_index_path(dir: "new", target:"twt") },
+      { :label => "twt(dir-old)", :path => artists_twt_index_path(dir: "old", target:"twt") },
+      { :label => "twt(重複ファイル登録)", :path => artists_twt_index_path(dir: "register_dup_files") },
+      { :label => "twt(dir-new-list)",
+        :path => artists_twt_index_path(dir: "new-list")
+      },
+      #
+      { :label => "-", :path => "" },
+      { :label => "ファイルlist",
+          :path => artists_twt_index_path(
+            filename: "",
+          )
+      },
+      { :label => "pxv artwork id リスト",
+          :path => artists_twt_index_path(
+            filename: "all",
+            target: ArtistsController::FileTarget::PXV_ARTWORK_LIST
           )
       },
       # ----------------------------
@@ -1118,195 +1351,6 @@ class HomeController < ApplicationController
             display_number: 5,
             last_access_datetime: 30, 
             thumbnail: true,
-          )
-      },
-      # ----------------------------
-      { :label => "url file", :path => "" },
-      { :label => "最新ファイル all",
-          :path => artists_twt_index_path(
-            filename: "latest",
-            hide_day: 30,
-            pred: 5,
-            target:"twt,twt既知,twt未知,known_pxv,unknown_pxv",
-          )
-      },
-      { :label => "最新ファイル 実験pxv",
-          :path => artists_twt_index_path(
-            filename: "latest",
-            hide_day: 30,
-            target: ArtistsController::FileTarget::PXV_EXPERIMENT
-          )
-      },
-      { :label => "最新ファイル 実験twt",
-          :path => artists_twt_index_path(
-            filename: "latest",
-            hide_day: 30,
-            target: ArtistsController::FileTarget::TWT_EXPERIMENT
-          )
-      },
-      { :label => "最新ファイル twt",
-          :path => artists_twt_index_path(
-            filename: "latest",
-            hide_day: 30,
-            force_disp_day: 90,
-            pred: PRED_TWT,
-            target:"twt,twt既知,twt未知",
-          )
-      },
-      { :label => "最新ファイル 既知twt",
-          :path => artists_twt_index_path(
-            filename: "latest",
-            hide_day: 30,
-            force_disp_day: 90,
-            pred: PRED_TWT,
-            target:"twt,twt既知",
-          )
-      },
-      { :label => "最新ファイル twt未知",
-          :path => artists_twt_index_path(
-            filename: "latest",
-            hide_day: 30,
-            #force_disp_day: 90,
-            #pred: 5,
-            target:"twt,twt未知",
-          )
-      },
-      { :label => "最新ファイル 既知 pxv",
-          :path => artists_twt_index_path(
-            filename: "latest",
-            hide_day: 30,
-            force_disp_day: 90,
-            pred: PRED_PXV,
-            target:"known_pxv",
-          )
-      },
-      { :label => "最新ファイル 未登録 pxv",
-          :path => artists_twt_index_path(
-            filename: "latest",
-            #hide_day: 30,
-            target: ArtistsController::FileTarget::PXV_UNKNOWN_ONLY,
-          )
-      },
-      { :label => "-", :path => "" },
-      { :label => "最新3ファイル all",
-          :path => artists_twt_index_path(
-            filename: "latest 3",
-            hide_day: 30,
-            pred: 8,
-            target:"twt,twt既知,twt未知,known_pxv,unknown_pxv",
-          )
-      },
-      { :label => "最新3ファイル twt",
-          :path => artists_twt_index_path(
-            filename: "latest 3",
-            hide_day: 30,
-            force_disp_day: 90,
-            pred: PRED_TWT,
-            target:"twt,twt既知,twt未知"
-          )
-      },
-      { :label => "最新3ファイル 既知twt",
-          :path => artists_twt_index_path(
-            filename: "latest 3",
-            hide_day: 30,
-            force_disp_day: 90,
-            pred: PRED_TWT,
-            target:"twt,twt既知",
-          )
-      },
-      { :label => "最新3ファイル twt未知",
-          :path => artists_twt_index_path(
-            filename: "latest 3",
-            #hide_day: 15,
-            force_disp_day: 90,
-            #pred: 5,
-            target:"twt,twt未知",
-          )
-      },
-      { :label => "最新3ファイル 既知pxv",
-          :path => artists_twt_index_path(
-            filename: "latest 3",
-            hide_day: 30,
-            force_disp_day: 90,
-            pred: PRED_PXV,
-            target:"known_pxv"
-          )
-      },
-      { :label => "最新3ファイル 未登録pxv",
-          :path => artists_twt_index_path(
-            filename: "latest 3",
-            #hide_day: 30,
-            target: ArtistsController::FileTarget::PXV_UNKNOWN_ONLY,
-          )
-      },
-      # -----------
-      { :label => "-", :path => "" },
-      { :label => "全ファイル twt",
-          :path => artists_twt_index_path(
-            filename: "all",
-            hide_day: 15,
-            force_disp_day: 90,
-            pred: PRED_TWT,
-            target:"twt,twt既知,twt未知"
-          )
-      },
-      { :label => "全ファイル twt既知",
-          :path => artists_twt_index_path(
-            filename: "all",
-            hide_day: 15,
-            force_disp_day: 90,
-            pred: PRED_TWT,
-            target:"twt既知"
-          )
-      },
-      { :label => "全ファイル twt未知",
-          :path => artists_twt_index_path(
-            filename: "all",
-            #hide_day: 30,
-            url_cnt: 2,
-            target: ArtistsController::FileTarget::TWT_UNKNOWN_ONLY
-          )
-      },
-      { :label => "全ファイル 既知pxv",
-          :path => artists_twt_index_path(
-            filename: "all",
-            hide_day: 30,
-            force_disp_day: 90,
-            pred: PRED_PXV,
-            target:"known_pxv"
-          )
-      },
-      { :label => "全ファイル 未登録pxv",
-          :path => artists_twt_index_path(
-            filename: "all",
-            #hide_day: 30,
-            target: ArtistsController::FileTarget::PXV_UNKNOWN_ONLY
-          )
-      },
-      { :label => "-", :path => "" },
-      { :label => "twt(dir-all)",
-        :path => artists_twt_index_path(
-          target:"twt"
-        )
-      },
-      { :label => "twt(dir-new)", :path => artists_twt_index_path(dir: "new", target:"twt") },
-      { :label => "twt(dir-old)", :path => artists_twt_index_path(dir: "old", target:"twt") },
-      { :label => "twt(dir-DB更新 BY FS)", :path => artists_twt_index_path(dir: "update") },#, target:"twt") },
-      { :label => "twt(重複ファイル登録)", :path => artists_twt_index_path(dir: "register_dup_files") },
-      { :label => "twt(dir-new-list)",
-        :path => artists_twt_index_path(dir: "new-list")
-      },
-      #
-      { :label => "-", :path => "" },
-      { :label => "ファイルlist",
-          :path => artists_twt_index_path(
-            filename: "",
-          )
-      },
-      { :label => "pxv artwork id リスト",
-          :path => artists_twt_index_path(
-            filename: "all",
-            target: ArtistsController::FileTarget::PXV_ARTWORK_LIST
           )
       },
       # ----------------------------

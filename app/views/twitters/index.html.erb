@@ -83,6 +83,9 @@
         </td>
         <td>
           <%= twitter.drawing_method %>【<%= twitter.rating %>】<%= twitter.r18 %>
+          <% if twitter.r18 == "R18" %>
+            🔞
+          <% end %>
           <br />
           <b><%= twitter.twtname %></b>
           (@<%= twitter.twtid %>)
@@ -99,7 +102,7 @@
         <% pred = prediction + pred_2 %>
         <% pred_bg_color = pred_bg_color(pred) %>
         <td bgcolor="<%= pred_bg_color %>">
-          <%= prediction %><%= %!(#{pred})! if prediction != pred %>
+          <%= prediction %><%= %!(#{pred})! if pred - prediction > 5  %>
           <br />
           [<%= link_to_ex "■twt■", twitter %>]
           <br />
@@ -248,6 +251,7 @@ button.horizontal {
 <div class="view_form">
   <%= form_with url: twitters_path, local: true, method: :get do |f| %>
    
+    <%= f.submit("検索", name: nil, class: 'subtmi-btn') %>
     検索：<%= f.text_field :search_word, :value => params[:search_word] %>
     <br />
     <!-- 
@@ -259,7 +263,39 @@ button.horizontal {
     <%= f.label :page_title %>
     <%= f.text_field :page_title, :value => params[:page_title] %>
     <br />
-    <%= f.submit("検索", name: nil, class: 'subtmi-btn') %>
+    <%= f.label :target %>
+    <%= f.text_field :target, :value => params[:target] %>
+    <br />
+    <%= f.label :num_of_disp %>
+    <%= f.number_field :num_of_disp, :value => params[:num_of_disp] %>
+    <br />
+    <%= f.label :rating %>
+    <%= f.number_field :rating, :value => params[:rating] %>
+    <br />
+    <%= f.label :step %>
+    <%= f.number_field :step, :value => params[:step] %>
+    <br />
+    <%= f.label :num_of_times %>
+    <%= f.number_field :num_of_times, :value => params[:num_of_times] %>
+    <br />
+
+    <%= f.label :hide_within_days %>
+    <%= f.number_field :hide_within_days, :value => params[:hide_within_days] %>
+    <br />
+    <%= f.label :pred %>
+    <%= f.number_field :pred, :value => params[:pred] %>
+    <br />
+    <%= f.label :force_disp_day %>
+    <%= f.number_field :force_disp_day, :value => params[:force_disp_day] %>
+    <br />
+
+    <%= f.check_box :ex_pxv, {checked: params[:ex_pxv] == "true"}, true, false %>
+    <%= f.label :pxv除外 %>
+    <br />
+    <%= f.check_box :thumbnail, {checked: params[:thumbnail] == "true"}, true, false %>
+    <%= f.label :サムネイル表示 %>
+    <br />
+
   <% end %>
 </div>
 

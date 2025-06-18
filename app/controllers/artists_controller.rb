@@ -294,18 +294,40 @@ class ArtistsController < ApplicationController
     PXV_EXPERIMENT = "pxv_experiment"
     PXV_ARTWORK_LIST = "pxv_artwork_list"
   end
-
+=begin
+        ["退会", "退会"],
+        ["停止", "停止"],
+        #["長期更新なし★", "長期更新なし"], 
+        ["長期更新なし★", ArtistsController::Status::LONG_TERM_NO_UPDATS],
+        ["半年以上更新なし", ArtistsController::Status::SIX_MONTH_NO_UPDATS], 
+        ["3ヶ月以上更新なし", "3ヶ月以上更新なし"], 
+        ["1ヶ月以上更新なし", "1ヶ月以上更新なし"], 
+        ["別アカウントに移行", "別アカウントに移行"],
+        ["作品ゼロ", "作品ゼロ"], 
+        ["一部消えた", "一部消えた"], 
+        ["ほぼ消えた", "ほぼ消えた"], 
+        ["取得途中", "取得途中"], 
+        ["最新から取得し直し中", "最新から取得し直し中"], 
+        ["最新追っかけ中", "最新追っかけ中"], 
+        ["彼岸", "彼岸"],
+        ["更新頻度低", "更新頻度低"],
+=end
   module Status
+    DELETED = "退会"
+    SUSPEND = "停止"
     LONG_TERM_NO_UPDATS = "長期更新なし"
     SIX_MONTH_NO_UPDATS = "半年以上更新なし"
+    ACCOUNT_MIGRATION = "別アカウントに移行"
     NO_ARTWORKS = "作品ゼロ"
-    SUSPEND = "停止"
   end
 
   module ShowMode
     SHOW_NORAML = "normal"
     SHOW_VIEWER = "viewer"
     SHOW_LIST_VIEW = "list_view"
+    INTERVAL_CHECK = "interval_chk"
+    STAT = "stat"
+    TWT_PIC_LIST = "twt_pic_list"
   end
 
   module SORT_TYPE
@@ -316,6 +338,7 @@ class ArtistsController < ApplicationController
 
   module GROUP_TYPE
     GROUP_ACCESS_OLD_TO_NEW = "ACCESS旧→新"
+    GROUP_FEAT_STAT_RAT = "feature/status/rating"
   end
 
   def api_hoge
@@ -452,21 +475,25 @@ class ArtistsController < ApplicationController
         return
       else
         datestr = prms.filename
+        puts %!datestr="#{datestr}"!
         if prms.param_file == "urllist-twt-only(latest)" or prms.param_file == "urllist-pxv-only(latest)"
-          #path = "public/get illust url_1029.txt"
           path = UrlTxtReader::get_latest_txt
         elsif datestr == ""
           path = ""
+        elsif datestr == "latest"
+          path = UrlTxtReader::get_latest_txt
         elsif datestr =~ /^(\d{2})$/
+          # yy
           path = UrlTxtReader::txt_file_list($1 + "\\d{4}")
         elsif datestr =~ /^(\d{4})$/
+          # yymm
           path = UrlTxtReader::txt_file_list($1 + "\\d+")
         elsif datestr =~ /^\d+$/
           path = ["public/get illust url_#{datestr}.txt"]
         else
           path = ["public/#{datestr}.txt"]
         end
-        puts "path='#{path}'"
+        puts %!path="#{path}"!
         id_list, @twt_urls, @misc_urls = Artist.get_url_list(path)
 
         if prms.param_file == "urllist-unknown-only"
@@ -648,7 +675,7 @@ class ArtistsController < ApplicationController
     end
     @path_list = Pxv::get_pathlist(@artist[:pxvid], archive_dir)
 
-    if @show_mode == "twt_pic_list"
+    if @show_mode == ArtistsController::ShowMode::TWT_PIC_LIST #"twt_pic_list"
       @twt_pic_path_list = Twt::get_pic_filelist(@artist[:twtid])
     end
   end
@@ -1224,6 +1251,8 @@ class ArtistsController < ApplicationController
         artists_group = artists.group_by {|x| -x.rating}.sort.to_h
       when "status/rating"
         artists_group = artists.group_by {|x| [x.status, -x.rating]}.sort.to_h
+      when GROUP_TYPE::GROUP_FEAT_STAT_RAT
+        artists_group = artists.group_by {|x| [x.feature, x.status, -x.rating]}.sort.to_h
       when "評価+年齢制限"
         #artists_group = artists.group_by {|x| [-x.rating, x.r18]}.sort.to_h
         artists_group = artists.group_by {|x| [x.rating, x.r18]}.sort.reverse.to_h

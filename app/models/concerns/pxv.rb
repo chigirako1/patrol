@@ -12,6 +12,7 @@ module Pxv
     PXV_WORK_TMP_DIR_F_WC = "*/*/*"
     PXV_WORK_TMP_DIR_WC = "*"
     ARCHIVE_PATH = "D:/r18/dlPic"
+    PXV_TMP_PATH = "D:/data/src/ror/myapp/public"
 
     def self.pxv_user_url(pxvid)
         %!https://www.pixiv.net/users/#{pxvid}!
@@ -578,7 +579,7 @@ module Pxv
         pxv_group[key_pxv_list_from_twt_list_z] = twt_list_z.sort_by {|z|
             x = z.p;
             [
-                x.last_access_datetime,
+                x.last_access_datetime||"",
                 x.status||"", 
                 x.feature||"",
                 -(x.prediction_up_cnt(true)), 
@@ -594,9 +595,9 @@ module Pxv
         key_pxv_list_no_access_4m    = "104.4ヶ月以上"
         key_pxv_list_no_access_3m    = "105.3ヶ月以上"
         key_pxv_list_no_access_2m    = "106.2ヶ月以上"
-        key_pxv_list_pred            = "199."
+        key_pxv_list_pred            = "199.わりと最近アクセス"
     
-        key_pxv_list_unset           = "000.未設定"
+        key_pxv_list_unset           = "000.未設定|ファイル数"
     
         key_pxv_list_no_update_6m    = "902.#{ArtistsController::Status::SIX_MONTH_NO_UPDATS}"
         key_pxv_list_no_update_long  = "903.#{ArtistsController::Status::LONG_TERM_NO_UPDATS}"
@@ -625,10 +626,10 @@ module Pxv
 
             if p.rating.presence and p.rating == 0
                 key = key_pxv_list_unset
-                unit = 50
+                unit = 25
                 fn = (p.filenum||0) / unit
                 #key = %!#{key}(#{fn}f)!
-                key = key + sprintf("%04d", fn * unit)
+                key = key + sprintf("%04d～", fn * unit)
                 pxv_group[key] << elem
                 next
             end
@@ -795,8 +796,8 @@ end
 class PxvArtworkInfo
     attr_accessor :art_id, :publication_date, :title, :path_list
 
-    def initialize(id, title, date, path)
-        @art_id = id
+    def initialize(artwork_id, title, date, path)
+        @art_id = artwork_id
         @title = title
         @publication_date = date
         @path_list = []

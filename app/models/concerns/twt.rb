@@ -186,6 +186,12 @@ module Twt
         if pxv
             twt_params[:pxvid] = pxv.pxvid
         end
+        
+        old_twt = Twitter.find_by(new_twtid: val.twt_id)
+        if old_twt
+            twt_params[:old_twtid] = old_twt.twtid
+        end
+
         puts %!new. "#{key}"!
         twt = Twitter.new(twt_params)
         twt.save
@@ -283,7 +289,7 @@ module Twt
             tweet_id, pic_no = get_tweet_info_from_filepath(path)
             if tweet_id_hash.has_key? tweet_id
                 # 同一のTweet idの場合は単純に同じツイートを多重で保存しただけとして記録しない
-                puts %!重複DL(DLミス):"#{path}"!
+                puts %!重複DL(DLミス[同一ID]):"#{path}"!
                 next
             end
             tweet_id_hash[tweet_id] = true
@@ -329,6 +335,7 @@ module Twt
         hash_hash = get_hash_val_hash(pic_list)
         hash_hash.each do |k, v|
             if v.size < 2
+                #重複してないので次へ
                 next
             end
 

@@ -406,7 +406,7 @@ class Artist < ApplicationRecord
         Nje::nje_member_url(njeid)
     end
 
-    def stats(path_list)
+    def self.stats(path_list)
         stats = {}
 
         path_list.each do |path|
@@ -457,7 +457,9 @@ class Artist < ApplicationRecord
                     #puts artwork_id
                     #puts artwork_title
                     if artwork_id < 10
-                        STDERR.puts %!warning:artwork id=#{artwork_id}, #{artwork_title}, #{date}!
+                        msg = %!warning:artwork id=#{artwork_id}, #{artwork_title}, #{date}!
+                        STDERR.puts msg
+                        Rails.logger.info(msg)
                     end
                     artworks[artwork_id] = [path, %!#{artwork_title}!, date, 1, []]
                 end
@@ -467,6 +469,29 @@ class Artist < ApplicationRecord
         end
 
         artworks.to_a.reverse.to_h
+    end
+
+    def self.interval_list(list, nday = 7)
+        aw_tmp = nil
+        long_term_list = []
+        date_tmp = Date.today
+        list.each do |(artwork_id, data)|
+            path = data[0]
+            art_title = data[1]
+            date = data[2]
+            pic_cnt = data[3]
+            pic_path_list = data[4]
+
+            #aw = PxvArtworkInfo.new(artwork_id, art_title, date, pic_path_list.sort[0])
+            aw = PxvArtworkInfo.new(artwork_id, art_title, date, path)
+            dayn = (date_tmp - date).to_i
+            if dayn > nday and aw_tmp
+                long_term_list << [aw, dayn, aw_tmp]
+            end
+            date_tmp = date
+            aw_tmp = aw
+        end
+        long_term_list.sort_by {|x| -x[1]}
     end
 
     def self.artwork_list_file_num(alist)
@@ -511,6 +536,18 @@ class Artist < ApplicationRecord
 
         if reverse_status.presence
             tag += %!(#{reverse_status})!
+        end
+
+        tag
+    end
+
+    def r18_disp()
+        tag = ""
+
+        if r18.presence and r18 == "R18"
+            tag += "🔞" + r18
+        else
+            tag += r18
         end
 
         tag

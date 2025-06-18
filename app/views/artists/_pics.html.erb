@@ -6,7 +6,12 @@
     <% if @path_list.size == 0 %>
       <% txt = "" %>
     <% else %>
-      <% txt = File.dirname (Pxv::ARCHIVE_PATH + @path_list[0]) %>
+      <% tpath = @path_list[0] %>
+      <% if tpath.start_with?("f_dl") %>
+        <% txt = File.dirname (Pxv::ARCHIVE_PATH + tpath) %>
+      <% else %>
+        <% txt = File.dirname (Pxv::PXV_TMP_PATH + tpath) %>
+      <% end %>
     <% end %>
     <%= txt %>
   </textarea>
@@ -56,23 +61,31 @@
     <% url = artist.pxv_artwork_url(artwork_id) %>
     <%= list.size %>.
     (<%= link_to_ex artwork_id, url %>)
-    <%= path.gsub("%23", "#") %><br />
-    <% if list[-1] =~ /(\d\d-\d\d-\d\d)/ #@path_list[-1] =~ /(\d\d-\d\d-\d\d)/ %>
+    <%= path.gsub("%23", "#") %>
+    <br />
+
+    <% if path =~ /(\d\d-\d\d-\d\d)/ #@path_list[-1] =~ /(\d\d-\d\d-\d\d)/ %>
       <% pub_date = Date.parse($1) %>
       <% if artist.earliest_ul_date.to_date < pub_date %>
         <% if artist.reverse_status != "さかのぼり済" %>
-          <b>↑最古のファイルでない可能性があります(<%= %!#{pub_date}!%>)</b> > <%= %!#{artist.earliest_ul_date.to_date}! %>
-          <% puts %!path:"#{list[-1]}"! %>
+          <b>↑最古のファイルでない可能性があります(<%= %!#{pub_date}!%>)</b> > <%= %!#{artist.earliest_ul_date.to_date}! %>(登録されている日付)
+          <% STDERR.puts %!path:"#{list[-1]}/#{path}"! %>
           <br />
+        <% else %>
+          xx
         <% end %>
+      <% else %>
+        zz
       <% end %>
+    <% else %>
+      yy
     <% end %>
   <% end %>
 
   <% file_num = 0 %>
   <% if list.presence %>
     <% file_num = Artist.artwork_list_file_num(list) %>
-    <%= file_num %>(全ファイル数)平均<%= (file_num.to_f / list.size.to_f).round(2) %>枚
+    <%= file_num %>(読み込みファイル数)平均<%= (file_num.to_f / list.size.to_f).round(2) %>枚
   <% end %>
   <br />
   最初期投稿日(DB登録データ):<%= artist.get_datetime_string(artist.earliest_ul_date, true) if artist.earliest_ul_date.presence %>

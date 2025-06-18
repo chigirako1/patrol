@@ -263,4 +263,16 @@ module ArtistName
         name_chg.strip
     end
 
+    def aspect_ratio(width, height)
+        target_ratio = [16, 9] # 基準となる比率
+        actual_ratio = [width.to_f / height, height.to_f / width]
+
+        # 近い比率をチェック
+        if (actual_ratio[0] - target_ratio[0].to_f / target_ratio[1]).abs < 0.01
+            return "#{target_ratio[0]},#{target_ratio[1]}"
+        end
+
+        gcd = width.gcd(height) # 最大公約数で約分
+        "#{width / gcd},#{height / gcd}"
+    end
 end

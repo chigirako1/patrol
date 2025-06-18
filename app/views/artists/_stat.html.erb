@@ -1,6 +1,7 @@
 <div id="<%= dom_id artist %>">
     <h1 id="stat">stat</h1>
-    <%= link_to "stat", "../artists/#{@artist.id}?mode=stat#stat" %>
+    <%= link_to "stat", "../artists/#{@artist.id}?mode=stat#stat" %> | 
+    <%= link_to "投稿間隔空きチェック", artist_path(artist, access_dt_update: "no", thumbnail: :yes, mode: ArtistsController::ShowMode::INTERVAL_CHECK) %>
 
     <table border="1">
         <tr>
@@ -10,7 +11,7 @@
             <% } %>
             <th>sum</th>
         </tr>
-        <% stats = artist.stats(@path_list) %>
+        <% stats = Artist.stats(@path_list) %>
         <% stats.each do |key, val| %>
             <tr>
                 <th><%= key %></th>
@@ -26,7 +27,7 @@
         <% end %>
     </table>
 
-    <% if @show_mode == "stat" %>
+    <% if @show_mode == ArtistsController::ShowMode::STAT #"stat" %>
         <% year = 0 %>
         <% month = 0 %>
         <% list = Artist.artwork_list(@path_list) %>
@@ -76,6 +77,37 @@
         <br />
         <% urllist.each.with_index(1) do |u, idx| %>
             <%= idx %>:(<%= link_to u[4], u[2], target: :_blank, rel: "noopener noreferrer" %>) <%= u[3].gsub("%23", "#") %><br />
+        <% end %>
+    <% elsif @show_mode == ArtistsController::ShowMode::INTERVAL_CHECK %>
+        <% ratio = '10%' %>
+        <% list = Artist.artwork_list(@path_list) %>
+        <h2>hogehoge</h2>
+        <% long_term_list = Artist.interval_list(list, 14) %>
+        <% long_term_list.each do |x| %>
+            <% aw = x[0] %>
+            <% dayn = x[1] %>
+            <% aw2 = x[2] %>
+
+            <% url1 = artist.pxv_artwork_url(aw.art_id) %>
+            <% path1 = aw.path_list[0] %>
+
+            <%# if aw2 %>
+                <% url2 = artist.pxv_artwork_url(aw2.art_id) %>
+                <% path2 = aw2.path_list[0] %>
+
+                (<%= link_to_ex(aw2.art_id, url2) %>)
+                <%= aw2.publication_date %>「<%= aw2.title %>」
+                <%= link_to_ex(image_tag(path2, width: ratio, height: ratio), path2) %>
+            <%# end %>
+
+            <br>
+            ↑↑↑<%= dayn %>日間隔空き↓↓↓
+            <br>
+
+            (<%= link_to_ex(aw.art_id, url1) %>)
+            <%= aw.publication_date %>「<%= aw.title %>」
+            <%= link_to_ex(image_tag(path1, width: ratio, height: ratio), path1) %>
+            <hr />
         <% end %>
     <% end %>
 </div>

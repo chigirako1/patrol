@@ -7,6 +7,14 @@ class TwittersController < ApplicationController
     URL_TXT = 'url txt'
   end
 
+  module GRP_SORT
+      GRP_SORT_PRED = "予測順"
+      GRP_SORT_ACCESS = "アクセス日順"
+      GRP_SORT_UL = "投稿日順"
+      GRP_SORT_NO_UPDATE = "更新なし"
+      GRP_SORT_RATE = "評価順"
+  end
+
   # GET /twitters or /twitters.json
   def index
 
@@ -154,7 +162,6 @@ class TwittersController < ApplicationController
 
       twitters_bak = twitters
 
-
       if false#true
         group = {}
         
@@ -176,14 +183,18 @@ class TwittersController < ApplicationController
         group_list << group
       end
 
-      if true
-        top = [89, rating_gt - 1].min
-        bottom = top - 9
-        group_list << routine_group(twitters, params, bottom, top)
+      if params[:aio].presence
+        keys = params[:aio].split("|")
+
+        target_hash = {}
+        keys.each do |key|
+          target_hash[key] = true
+        end
+      else
       end
 
       num_of_times.times do |cnt|
-        group, @twitters_total_count = index_all_in_one(tmp, params, rating_gt, rating_lt)
+        group, @twitters_total_count = index_all_in_one(tmp, params, rating_gt, rating_lt, target_hash)
         if group
           group_list << group
         end
@@ -192,6 +203,12 @@ class TwittersController < ApplicationController
         rating_gt -= step
       end
       @rating_min = rating_gt
+
+      if true
+        top = [89, rating_gt].min
+        bottom = top - 9
+        group_list << routine_group(twitters, params, bottom, top)
+      end
 
       ###
       twitters = twitters_bak
@@ -296,6 +313,7 @@ class TwittersController < ApplicationController
     when "patrol3"
       twitters = twitters.select {|x| x.drawing_method != nil}
       twitters = twitters.select {|x|
+=begin
         #x.status == "長期更新なし" or
         #x.status == "最近更新してない？" or
         x.status == "削除" or
@@ -303,6 +321,8 @@ class TwittersController < ApplicationController
         x.status == "凍結" or
         x.status == "別アカウントに移行" or
         x.status == "アカウントID変更"
+=end
+        x.update_chk?
       }
       if params[:target].presence
         twitters = twitters.select {|x| x.drawing_method == params[:target]}
@@ -631,8 +651,7 @@ class TwittersController < ApplicationController
         )
     end
 
-    def index_all_in_one(twitters, params, rating_gt, rating_lt)
-
+    def index_all_in_one(twitters, params, rating_gt, rating_lt, target_hash)
       twitters = twitters.select {|x| x.rating == nil or x.rating >= rating_gt }
       if rating_lt > 0
         twitters = twitters.select {|x| x.rating == nil or x.rating < rating_lt }
@@ -642,7 +661,10 @@ class TwittersController < ApplicationController
       #### !!! こっちを先にやらないとだめ !!! ↓####
       #STDERR.puts %!twitters=#{twitters.size}!
       #twitters2 = twitters.select {|x| x.status == "長期更新なし" or x.status == "最近更新してない？"}
-      twitters_check = twitters.select {|x| x.status == "最近更新してない？"}
+      
+      #twitters_check = twitters.select {|x| x.status == "最近更新してない？"}
+      twitters_check = twitters.select {|x| x.update_chk?}
+      
       #STDERR.puts %!twitters2=#{twitters2.size}!
       ### ↑↑↑↑↑↑
 
@@ -651,14 +673,14 @@ class TwittersController < ApplicationController
 
       twitters_group = {}
 
-      if true
-        twitters = twitters.sort_by {|x| [x.last_access_datetime, -(x.rating||0), -x.prediction]}
-        twitters_group["#{rating_gt}:アクセス日順"] = twitters
-      end
-
-      if true
+      if target_hash == nil or target_hash[GRP_SORT::GRP_SORT_PRED]
         twitters = twitters.sort_by {|x| [-x.prediction, -(x.rating||0), x.last_access_datetime]}
         twitters_group["#{rating_gt}:予測順"] = twitters
+      end
+
+      if target_hash == nil or target_hash[GRP_SORT::GRP_SORT_ACCESS]
+        twitters = twitters.sort_by {|x| [x.last_access_datetime, -(x.rating||0), -x.prediction]}
+        twitters_group["#{rating_gt}:アクセス日順"] = twitters
       end
 
       twitters_total_count = twitters.size
@@ -666,27 +688,27 @@ class TwittersController < ApplicationController
       ### ###
       twitters = twitters.select {|x|x.select_cond_post_date()}
 
-      if true
+      if target_hash == nil or target_hash[GRP_SORT::GRP_SORT_UL]
         twitters = twitters.sort_by {|x| [(x.last_post_datetime || "2000-01-01"), -(x.rating||0), x.prediction]}
         twitters_group["#{rating_gt}:投稿日順"] = twitters
       end
 
-      if true
-        STDERR.puts %!xxx(twitters_check.size)=#{twitters_check.size}!
+      if target_hash == nil or target_hash[GRP_SORT::GRP_SORT_NO_UPDATE]
+        STDERR.puts %!|xxx|[#{rating_gt}](twitters_check.size)=#{twitters_check.size}!
         twitters_check = twitters_check.select {|x| x.select_cond_post_date}
         twitters_check = twitters_check.sort_by {|x| [x.last_access_datetime, -(x.rating||0), -x.prediction]}
         if twitters_check.size > 0
           twitters_group["#{rating_gt}:更新なし"] = twitters_check
         else
-          STDERR.puts %!更新なしゼロ件!
+          STDERR.puts %!|xxx|更新なしゼロ件/rating_gt=#{rating_gt}!
         end
       end
 
-      if true and rating_gt != rating_lt
+      if (target_hash == nil or target_hash[GRP_SORT::GRP_SORT_RATE]) and rating_gt != rating_lt
         twitters = twitters.select {|x| !x.last_access_datetime_p(3)}
 
         #twitters = twitters.sort_by {|x| [-(x.rating||0), x.last_access_datetime, x.prediction]}
-        twitters = twitters.sort_by {|x| [-(x.rating||0), x.prediction, x.last_access_datetime]}
+        twitters = twitters.sort_by {|x| [-(x.rating||0), -(x.prediction), x.last_access_datetime]}
         twitters_group["#{rating_gt}:評価順"] = twitters
       end
 

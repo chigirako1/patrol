@@ -129,7 +129,8 @@ textarea {
     <% if twt_acnt != nil and twt_acnt.update_frequency != nil %>
         <% current_val_freq = twt_acnt.update_frequency %>
         設定値：<%= %!#{current_val_freq}! %>
-        <% if (avg - current_val_freq).abs >= 100 %>
+        <% tval = [current_val_freq / 10, 50].max %>
+        <% if (avg - current_val_freq).abs >= tval %>
             [※現在の設定値との差が大きい]
         <% end %>
         →
@@ -159,10 +160,11 @@ textarea {
         (公開日時：<%= Twt::date_info(tweet_id) %>)
         <% dt = Twt::get_time_from_path(twt_pic_list[0][1]) %>
         【以降の投稿数予測】<%= twitter.prediction(dt) %>
-        <br />
-        <% if @twitter.status == Twitter::TWT_STATUS::STATUS_NOT_EXIST %>
+        <% #if @twitter.status == Twitter::TWT_STATUS::STATUS_NOT_EXIST %>
+            (id変わったとき用→)
             <%= link_to_ex tweet_id, Twt::twt_tweet_url_dev(tweet_id) %>
-        <% end %>
+        <% #end %>
+        <br />
     <% end %>
 
     <!-- URLのテキストファイルに含まれる画像が存在するかチェック -->
