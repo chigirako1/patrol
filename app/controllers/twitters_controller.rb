@@ -204,7 +204,7 @@ class TwittersController < ApplicationController
       end
       @rating_min = rating_gt
 
-      if true
+      if target_hash == nil
         top = [89, rating_gt].min
         bottom = top - 9
         group_list << routine_group(twitters, params, bottom, top)
@@ -226,6 +226,7 @@ class TwittersController < ApplicationController
 
       if true
         twitters_w = twitters.select {|x| !x.last_access_datetime_p(-30)}
+        twitters_w = twitters_w.select {|x| x.status != Twitter::TWT_STATUS::STATUS_NOT_EXIST}
         twitters_w = twitters_w.sort_by {|x| [-x.prediction, x.last_access_datetime]}
         group = {}
         group["未設定 最近"] = twitters_w
@@ -233,8 +234,8 @@ class TwittersController < ApplicationController
       end
 
       if true
-        #twitters_w = twitters.select {|x| !x.last_access_datetime_p(-30)}
         twitters_w = twitters
+        twitters_w = twitters.select {|x| !x.last_access_datetime_p(-90) and !x.last_access_datetime_p(4)}
         twitters_w = twitters_w.sort_by {|x| [-(x.filenum||0), x.last_access_datetime]}
         group = {}
         group["未設定 ファイル数↑"] = twitters_w
@@ -248,10 +249,13 @@ class TwittersController < ApplicationController
       twtids = Twitter.select('twtid')
       h = twtids.chunk {|x| x.twtid.upcase}
       h.each do |k,v|
+        #puts %!#{k}|#{v}!
         if v.size > 1
-          dup_ids = k
+          STDERR.puts %!dup="#{k}"!
+          dup_ids << k
         end
       end
+      STDERR.puts %!#{dup_ids}!
       twitters = twitters.select {|x| dup_ids.include?(x.twtid.upcase)}
       @twitters_group = {}
       @twitters_group[""] = twitters
@@ -595,6 +599,13 @@ class TwittersController < ApplicationController
   # PATCH/PUT /twitters/1 or /twitters/1.json
   def update
 
+    twtname = params[:twitter][:twtname]
+    twtname_mod = Twt::sanitize_filename(twtname)
+    if twtname != twtname_mod
+      STDERR.puts %!"#{twtname}" => "#{twtname_mod}"!
+      #params[:twitter][:twtname] = twtname_mod
+    end
+
     params[:twitter][:main_twtid] = Twt::get_screen_name(params[:twitter][:main_twtid])
     params[:twitter][:sub_twtid]  = Twt::get_screen_name(params[:twitter][:sub_twtid])
     params[:twitter][:alt_twtid]  = Twt::get_screen_name(params[:twitter][:alt_twtid])
@@ -648,6 +659,10 @@ class TwittersController < ApplicationController
         :new_twtid,
         :sub_twtid,
         :main_twtid,
+        :latest_tweet_id,
+        :oldest_tweet_id,
+        :zipped_at,
+        :change_history
         )
     end
 
@@ -673,14 +688,14 @@ class TwittersController < ApplicationController
 
       twitters_group = {}
 
-      if target_hash == nil or target_hash[GRP_SORT::GRP_SORT_PRED]
-        twitters = twitters.sort_by {|x| [-x.prediction, -(x.rating||0), x.last_access_datetime]}
-        twitters_group["#{rating_gt}:予測順"] = twitters
-      end
-
       if target_hash == nil or target_hash[GRP_SORT::GRP_SORT_ACCESS]
         twitters = twitters.sort_by {|x| [x.last_access_datetime, -(x.rating||0), -x.prediction]}
         twitters_group["#{rating_gt}:アクセス日順"] = twitters
+      end
+
+      if target_hash == nil or target_hash[GRP_SORT::GRP_SORT_PRED]
+        twitters = twitters.sort_by {|x| [-x.prediction, -(x.rating||0), x.last_access_datetime]}
+        twitters_group["#{rating_gt}:予測順"] = twitters
       end
 
       twitters_total_count = twitters.size
@@ -696,6 +711,7 @@ class TwittersController < ApplicationController
       if target_hash == nil or target_hash[GRP_SORT::GRP_SORT_NO_UPDATE]
         STDERR.puts %!|xxx|[#{rating_gt}](twitters_check.size)=#{twitters_check.size}!
         twitters_check = twitters_check.select {|x| x.select_cond_post_date}
+        twitters_check = twitters_check.select {|x| x.status != Twitter::TWT_STATUS::STATUS_WAITING}
         twitters_check = twitters_check.sort_by {|x| [x.last_access_datetime, -(x.rating||0), -x.prediction]}
         if twitters_check.size > 0
           twitters_group["#{rating_gt}:更新なし"] = twitters_check
@@ -705,7 +721,7 @@ class TwittersController < ApplicationController
       end
 
       if (target_hash == nil or target_hash[GRP_SORT::GRP_SORT_RATE]) and rating_gt != rating_lt
-        twitters = twitters.select {|x| !x.last_access_datetime_p(3)}
+        twitters = twitters.select {|x| !x.last_access_datetime_p(5) or x.prediction > 5}
 
         #twitters = twitters.sort_by {|x| [-(x.rating||0), x.last_access_datetime, x.prediction]}
         twitters = twitters.sort_by {|x| [-(x.rating||0), -(x.prediction), x.last_access_datetime]}
@@ -748,8 +764,10 @@ class TwittersController < ApplicationController
         twitters_accs_list << twitters_wk.first(1)[0]
       end
 
-      group["(#{l_limit_r}-#{u_limit_r}):予測数順"] = twitters_pred_list.sort_by {|x| [-x.rating]}
-      group["(#{l_limit_r}-#{u_limit_r}):アクセス日順"] = twitters_accs_list.sort_by {|x| [-x.rating]}
+      if true
+        group["(#{l_limit_r}-#{u_limit_r}):予測数順"] = twitters_pred_list.sort_by {|x| [-x.rating]}
+        group["(#{l_limit_r}-#{u_limit_r}):アクセス日順"] = twitters_accs_list.sort_by {|x| [-x.rating]}
+      end
 
       group
     end

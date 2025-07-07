@@ -265,7 +265,7 @@ class ArtistsController < ApplicationController
     ACCESS_UL_DIFF_FAR = 'アクセス日と最新投稿日の日数差大きい'
     REGIST_UL_DIFF_NEAR = '新規登録日と昔の投稿日の日数差近い'
     TWTID_CASE_DIFF = 'twt screen name大文字・小文字違い'
-    TABLE_UPDATE_NEW_USER = '新規ユーザーDB登録(PXV DB更新)'
+    TABLE_UPDATE_NEW_USER = 'PXV DB更新（ファイルシステム）'
     UPDATE_RECORD = 'pxvレコード更新(PXV id 指定)'
     SEARCH = '検索'
     NAME_TEST = '名前テスト'
@@ -295,17 +295,12 @@ class ArtistsController < ApplicationController
     PXV_ARTWORK_LIST = "pxv_artwork_list"
   end
 =begin
-        ["退会", "退会"],
-        ["停止", "停止"],
-        #["長期更新なし★", "長期更新なし"], 
-        ["長期更新なし★", ArtistsController::Status::LONG_TERM_NO_UPDATS],
-        ["半年以上更新なし", ArtistsController::Status::SIX_MONTH_NO_UPDATS], 
         ["3ヶ月以上更新なし", "3ヶ月以上更新なし"], 
         ["1ヶ月以上更新なし", "1ヶ月以上更新なし"], 
-        ["別アカウントに移行", "別アカウントに移行"],
-        ["作品ゼロ", "作品ゼロ"], 
+
         ["一部消えた", "一部消えた"], 
         ["ほぼ消えた", "ほぼ消えた"], 
+
         ["取得途中", "取得途中"], 
         ["最新から取得し直し中", "最新から取得し直し中"], 
         ["最新追っかけ中", "最新追っかけ中"], 
@@ -416,34 +411,46 @@ class ArtistsController < ApplicationController
       end
 
       # 未設定gr
-      artists = Artist.all
-      artists = artists.select {|x| x.rating == nil or x.rating == 0}
-      artists = artists.select {|x| x.last_access_datetime_num < 90}
-      #artists = artists.sort_by {|x| [-x.prediction_up_cnt(true), x.last_access_datetime]}
-      artists = artists.sort_by {|x| [-x.prediction_up_cnt(true)]}
-      group = {}
-      group["未設定"] = artists
-      group_list << group
+      if true
+        artists = Artist.all
+        artists = artists.select {|x| x.rating == nil or x.rating == 0}
+        artists = artists.select {|x| x.last_access_datetime_num < 90}
+        #artists = artists.sort_by {|x| [-x.prediction_up_cnt(true), x.last_access_datetime]}
+        artists = artists.sort_by {|x| [-x.prediction_up_cnt(true)]}
+        group = {}
+        group["未設定 予測順"] = artists
+        group_list << group
+        
+        artists = Artist.all
+        artists = artists.select {|x| x.rating == nil or x.rating == 0}
+        artists = artists.select {|x| x.last_access_datetime_num > 90}
+        artists = artists.sort_by {|x| [-x.filenum]}
+        group = {}
+        group["未設定 ファイル数順"] = artists
+        group_list << group
+      end
 
       # 
-      artists = Artist.all
       if false
-        artists = artists.select {|x| x.days_elapsed_since_created < 60}
-        artists = artists.select {|x| x.last_access_datetime_num > 30 and x.last_access_datetime_num < 360}
-        artists = artists.select {|x| x.last_ul_datetime != nil}
-        #artists = artists.sort_by {|x| [-((x.created_at.to_date - x.last_ul_datetime.to_date).to_i)]}
-        artists = artists.sort_by {|x| [-(x.days_elapsed(x.last_ul_datetime, x.created_at))]}
-        artists = index_select_status_exclude(artists)
-      else
-        artists = artists.select {|x| x.last_access_datetime_num > 30 and x.last_access_datetime_num < 90}
-        artists = artists.select {|x| x.last_ul_datetime != nil}
-        artists = artists.select {|x| x.days_elapsed(x.last_ul_datetime, x.created_at) > 180}
-        artists = artists.sort_by {|x| x.last_access_datetime}
-        artists = index_select_status_exclude(artists)
+        artists = Artist.all
+        if false
+          artists = artists.select {|x| x.days_elapsed_since_created < 60}
+          artists = artists.select {|x| x.last_access_datetime_num > 30 and x.last_access_datetime_num < 360}
+          artists = artists.select {|x| x.last_ul_datetime != nil}
+          #artists = artists.sort_by {|x| [-((x.created_at.to_date - x.last_ul_datetime.to_date).to_i)]}
+          artists = artists.sort_by {|x| [-(x.days_elapsed(x.last_ul_datetime, x.created_at))]}
+          artists = index_select_status_exclude(artists)
+        else
+          artists = artists.select {|x| x.last_access_datetime_num > 30 and x.last_access_datetime_num < 90}
+          artists = artists.select {|x| x.last_ul_datetime != nil}
+          artists = artists.select {|x| x.days_elapsed(x.last_ul_datetime, x.created_at) > 180}
+          artists = artists.sort_by {|x| x.last_access_datetime}
+          artists = index_select_status_exclude(artists)
+        end
+        group = {}
+        group["レコード登録日と最新公開日が離れている"] = artists
+        group_list << group
       end
-      group = {}
-      group["レコード登録日と最新公開日が離れている"] = artists
-      group_list << group
       
       @artists_group = group_list[0].merge(*group_list)
       return
@@ -983,7 +990,8 @@ class ArtistsController < ApplicationController
         :warnings, :feature, :twt_check, :earliest_ul_date, :circle_name,
         :fetish, :pxv_fav_artwork_id, :web_url, :append_info,
         :twt_checked_date, :nje_checked_date, :show_count, :reverse_status,
-        :latest_artwork_id, :oldest_artwork_id, :zipped_at, :recent_filenum
+        :latest_artwork_id, :oldest_artwork_id, :zipped_at, :recent_filenum,
+        :del_cnt, :change_history, :del_info
       )
     end
 
@@ -1342,8 +1350,10 @@ class ArtistsController < ApplicationController
       #artists = artists.select {|x| x.status == "長期更新なし"}
       artists = index_select_status_include(artists)
       #artists = artists.select {|x| !x.last_access_datetime_p(interval)}
+      artists = artists.select {|x| x.select_cond_post_date()}
 
       artists_no_updated = artists.sort_by {|x| [x.last_access_datetime]}
+      #artists_no_updated = artists_no_updated.select {|x| x.status != }
       #artists_group[prefix + "更新なし"] = artists_no_updated
 
       tmp_group = artists_no_updated.group_by {|x| [
@@ -1364,7 +1374,7 @@ class ArtistsController < ApplicationController
 
       # ---
       artists = index_select(Artist.all, prms, false)
-      artists = artists.select {|x| (x.status == "退会" or x.status == "停止")}
+      artists = artists.select {|x| (x.status == ArtistsController::Status::DELETED or x.status == ArtistsController::Status::SUSPEND)}
       #artists = artists.select {|x| !x.last_access_datetime_p(interval)}
 
       artists_vanish = artists.sort_by {|x| [x.twtid, x.last_access_datetime]}.reverse

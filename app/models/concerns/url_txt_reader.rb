@@ -114,7 +114,7 @@ module UrlTxtReader
         tmp_list = []
 
         if tpath == ""
-            puts %!tpath="#{tpath}"!
+            puts %![UrlTxtReader#get_path_list] tpath="#{tpath}"!
             return tmp_list
         end
 

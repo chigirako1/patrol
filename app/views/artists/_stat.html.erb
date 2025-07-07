@@ -1,7 +1,7 @@
 <div id="<%= dom_id artist %>">
     <h1 id="stat">stat</h1>
     <%= link_to "stat", "../artists/#{@artist.id}?mode=stat#stat" %> | 
-    <%= link_to "投稿間隔空きチェック", artist_path(artist, access_dt_update: "no", thumbnail: :yes, mode: ArtistsController::ShowMode::INTERVAL_CHECK) %>
+    <%= link_to "投稿間隔空きチェック", artist_path(artist, access_dt_update: "no", thumbnail: :yes, mode: ArtistsController::ShowMode::INTERVAL_CHECK, nday: 14, anchor: "interval_chk") %>
 
     <table border="1">
         <tr>
@@ -81,8 +81,14 @@
     <% elsif @show_mode == ArtistsController::ShowMode::INTERVAL_CHECK %>
         <% ratio = '10%' %>
         <% list = Artist.artwork_list(@path_list) %>
-        <h2>hogehoge</h2>
-        <% long_term_list = Artist.interval_list(list, 14) %>
+        <h2 id="interval_chk">公開日の間隔が離れている</h2>
+        <!-- TODO: 無視する間隔を記録する(artwork id a/b) -->
+        <% if params[:nday] %>
+            <% daysn = params[:nday].to_i %>
+        <% else %>
+            <% daysn = 14 %>
+        <% end %>
+        <% long_term_list = Artist.interval_list(list, daysn) %>
         <% long_term_list.each do |x| %>
             <% aw = x[0] %>
             <% dayn = x[1] %>

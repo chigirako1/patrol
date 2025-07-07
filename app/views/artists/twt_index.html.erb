@@ -314,7 +314,7 @@
             <% if p.rating == 0 or p.rating == nil %>
                 <% pxv_group[k + ":00"] << elem %>
             <% else %>
-                <% key_tmp = sprintf("%03d", 100 - ((p.rating||0) / 10 * 10)) %>
+                <% key_tmp = sprintf("%03d(%03d)", 100 - ((p.rating||0) / 10 * 10), p.rating||0) %>
                 <% pxv_group[k + ":" + key_tmp] << elem %>
             <% end %>
         <% end %>

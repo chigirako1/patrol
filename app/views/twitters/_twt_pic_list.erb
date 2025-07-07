@@ -115,6 +115,19 @@ textarea {
 
     <% if twitter.filenum and twitter.filenum > twt_pic_list.size %>
         <h3>すべての画像が表示されていない可能性があります(<%= twt_pic_list.size %>/<%= twitter.filenum %>)</h3>
+        <% if twt_pic_list.size == 0 and twitter.last_post_datetime %>
+            おおよそのtweet id:
+            <% tweet_id = Twt::time2tweet_id(twitter.last_post_datetime) %>
+            <b>
+                <%= Twt::tweet_id_with_comma(tweet_id) %>
+            </b>
+            (最新DLファイル投稿日:
+            <b>
+                <%= l twitter.last_post_datetime %>
+            </b>
+            )
+            <br />
+        <% end %>
     <% else %>
         <br />
     <% end %>
@@ -126,10 +139,10 @@ textarea {
     <% ary = [freq_90d, freq_30d, freq_15d] %>
     <% avg = ary.sum / ary.size %>
     【更新頻度<%= Twt::CALC_FREQ_UNIT %>日あたり(90/30/14)】
-    <% if twt_acnt != nil and twt_acnt.update_frequency != nil %>
+    <% if avg > 0 and (twt_acnt != nil and twt_acnt.update_frequency != nil) %>
         <% current_val_freq = twt_acnt.update_frequency %>
         設定値：<%= %!#{current_val_freq}! %>
-        <% tval = [current_val_freq / 10, 50].max %>
+        <% tval = [current_val_freq / 10, 100].max %>
         <% if (avg - current_val_freq).abs >= tval %>
             [※現在の設定値との差が大きい]
         <% end %>

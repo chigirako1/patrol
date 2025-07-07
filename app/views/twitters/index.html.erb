@@ -208,11 +208,16 @@
 
           <% if thumbnail %>
               <% twt_pic_list = list.map {|x| [Twt::twt_path_str(x), x]}.sort.reverse %>
-              <% list = twt_pic_list.map {|x| x[1]}.first(3) %>
+
+              <!-- -->
+              <%= twitter.filenum %><%= %!(#{twt_pic_list.size})! if twitter.filenum != twt_pic_list.size %>
+
+              <!-- -->
+              <% fnum = 3 %>
+              <% list = twt_pic_list.map {|x| x[1]}.first(fnum) %>
               <% list.each do |filepath| %>
                 <%= link_to image_tag(filepath, width: pic_disp_mag, height: pic_disp_mag), filepath, target: :_blank, rel: "noopener noreferrer" if filepath.presence %>
               <% end %>
-              <%= twt_pic_list.size %>
           <% else %>
             <%= twitter.filenum %>
           <% end %>

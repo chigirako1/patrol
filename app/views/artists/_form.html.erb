@@ -147,7 +147,7 @@
         <% if artist.twtid != twt.twtid %>
           <% twtid_val = twt.twtid %>
           登録されているスクリーンネームが異なります<br />
-          ・@<%= artist.twtid %>(pxv)<br />
+          ・@<%= artist.twtid %>(pxv)現在の値<br />
           ・@<%= twt.twtid %>(twt)<br />
           <font color='red'>twtに合わせて更新↓</font><br />
         <% end %>
@@ -292,7 +292,7 @@
         ["一部消えた", "一部消えた"], 
         ["ほぼ消えた", "ほぼ消えた"], 
         ["取得途中", "取得途中"], 
-        ["最新から取得し直し中", "最新から取得し直し中"], 
+        ["最新から取得し直し中(歯抜けあり)", "最新から取得し直し中"], 
         ["最新追っかけ中", "最新追っかけ中"], 
         ["彼岸", "彼岸"],
         ["更新頻度低", "更新頻度低"],
@@ -423,9 +423,11 @@
     <% end %>
 
     <%= form.label :最近のファイル数, style: "display: block" %>
-    <% if recent_filenum %>
+    <% if recent_filenum and recent_filenum > 0 %>
       "<%= artist.recent_filenum %>"↓<font color='red'>更新あり</font><br />
       <%= form.number_field :recent_filenum, :value => recent_filenum %>
+    <% elsif recent_filenum == nil %>
+      <%= form.number_field :recent_filenum, :value => 0 %>
     <% else %>
       <%= form.number_field :recent_filenum %>
     <% end %>

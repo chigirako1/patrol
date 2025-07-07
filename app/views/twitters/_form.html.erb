@@ -264,7 +264,8 @@
       <%= main_twtid.twtname %>
       【<%= main_twtid.rating %>|<%= main_twtid.drawing_method %>|<%= main_twtid.status %>】
       [<%= link_to_ex "■twt■", main_twtid %>]
-      |<%= main_twtid.last_access_datetime_disp %>|
+      |A:<%= main_twtid.last_access_datetime_disp %>|
+      |U:<%= Util.get_date_info main_twtid.last_post_datetime %>
       <%= %!|PXVID:#{main_twtid.pxvid}! if main_twtid.pxvid.presence %>
     <% elsif @twitter.main_twtid.presence %>
       <%= link_to_ex %!☆twt☆:@#{@twitter.main_twtid}!, artist_twt_path(@twitter.main_twtid) %>
@@ -280,7 +281,8 @@
       <%= sub_twt.twtname %>
       【<%= sub_twt.rating %>|<%= sub_twt.drawing_method %>|<%= sub_twt.status %>】
       [<%= link_to_ex "■twt■", sub_twt %>]
-      |<%= sub_twt.last_access_datetime_disp %>|
+      |A:<%= sub_twt.last_access_datetime_disp %>
+      |U:<%= Util.get_date_info sub_twt.last_post_datetime %>
       <%= %!|PXVID:#{sub_twt.pxvid}! if sub_twt.pxvid.presence %>
     <% end %>
   </div>
@@ -339,16 +341,60 @@
       include_blank: "選択して下さい" %>
   </div>
 
+  <hr />
+
+  <% if @twt_pic_path_list %>
+    <% twt_pic_list = @twt_pic_path_list.map {|x| [Twt::twt_path_str(x), x]}.sort.reverse %>
+    <% if twt_pic_list and twt_pic_list[0] != nil %>
+      <% latest_tweet_id, _ = Twt::get_tweet_info_from_filepath(twt_pic_list[0][1]) %>
+      <% oldest_tweet_id, _ = Twt::get_tweet_info_from_filepath(twt_pic_list[-1][1]) %>
+      <% ul_date = Twt::get_time_from_path(twt_pic_list[0][1]).round #in_time_zone("Asia/Tokyo") %>
+    <% end %>
+  <% else %>
+    <% ul_date = nil %>
+  <% end %>
+
+  <div>
+    <% tweet_id = twitter.latest_tweet_id %>
+    <% if latest_tweet_id %>
+      <% if tweet_id == nil %>
+        <% tweet_id = latest_tweet_id %>
+      <% elsif latest_tweet_id > tweet_id %>
+        <% tweet_id = latest_tweet_id %>
+      <% end %>        
+    <% end %>
+    <% puts %!#{twitter.latest_tweet_id}/#{latest_tweet_id}/#{tweet_id}! %>
+
+    <%= form.label :最新tweetId, style: "display: block" %>
+
+    <% if tweet_id != twitter.latest_tweet_id %>
+      現在の値:"<%= twitter.latest_tweet_id %>"↓<font color='red'>更新あり</font><br />
+    <% end %>
+
+    <%= form.number_field :latest_tweet_id, value: tweet_id %>
+  </div>
+
+  <div>
+    <% tweet_id = twitter.oldest_tweet_id %>
+    <% if oldest_tweet_id %>
+      <% if tweet_id == nil %>
+        <% tweet_id = oldest_tweet_id %>
+      <% elsif oldest_tweet_id < tweet_id %>
+        <% tweet_id = oldest_tweet_id %>
+      <% end %>        
+    <% end %>
+
+    <%= form.label :最古tweetId, style: "display: block" %>
+
+    <% if tweet_id != twitter.oldest_tweet_id %>
+      現在の値:"<%= twitter.oldest_tweet_id %>"↓<font color='red'>更新あり</font><br />
+    <% end %>
+
+    <%= form.number_field :oldest_tweet_id, value: tweet_id %>
+  </div>
+
   <div>
     <%= form.label :最新投稿日時, style: "display: block" %>
-    <% if @twt_pic_path_list %>
-      <% twt_pic_list = @twt_pic_path_list.map {|x| [Twt::twt_path_str(x), x]}.sort.reverse %>
-      <% if twt_pic_list and twt_pic_list[0] != nil %>
-        <% ul_date = Twt::get_time_from_path(twt_pic_list[0][1]).round #in_time_zone("Asia/Tokyo") %>
-      <% end %>
-    <% else %>
-      <% ul_date = nil %>
-    <% end %>
     <% if ul_date and (@twitter.last_post_datetime and ul_date > @twitter.last_post_datetime) %>
       <!-- 
       2025-01-12 21:55:36 +0900       (Time)
@@ -392,12 +438,22 @@
     <% end %>
 
     <% if old_filenum < new_filenum %>
-      "<%= @twitter.filenum %>"↓<font color='red'>更新あり</font>
+      現在の値:"<%= @twitter.filenum %>"↓<font color='red'>更新あり</font>
       <br />
       <%= form.number_field :filenum, value: @twt_pic_path_list.size %>
     <% else %>
       <%= form.number_field :filenum %>
     <% end %>
+  </div>
+
+  <div>
+    <%= form.label :zip化日時, style: "display: block" %>
+    <%= form.datetime_field :zipped_at %>
+  </div>
+
+  <div>
+    <%= form.label :変更履歴, style: "display: block" %>
+    <%= form.text_area :change_history %>
   </div>
 
   <hr />

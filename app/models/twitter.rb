@@ -332,6 +332,9 @@ class Twitter < ApplicationRecord
                 elsif days_accs < 30
                     nweek = (days_accs + 6) / 7
                     key = %!090:#{nweek}週間以内!
+                elsif days_accs > 90
+                    month = sprintf("%03d", days_accs / 30)
+                    key = %!990:#{month}ヶ月以上!
                 else
                     month = sprintf("%03d", days_accs / 30)
                     #key = "901:評価#{rating}(#{month}ヶ月)"

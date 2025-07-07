@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.0].define(version: 2025_01_12_023555) do
+ActiveRecord::Schema[8.0].define(version: 2025_07_04_075937) do
   create_table "artists", force: :cascade do |t|
     t.string "pxvname"
     t.integer "pxvid"
@@ -59,6 +59,9 @@ ActiveRecord::Schema[8.0].define(version: 2025_01_12_023555) do
     t.integer "latest_artwork_id"
     t.integer "oldest_artwork_id"
     t.datetime "zipped_at"
+    t.integer "del_cnt"
+    t.string "change_history"
+    t.string "del_info"
   end
 
   create_table "books", force: :cascade do |t|
@@ -131,6 +134,10 @@ ActiveRecord::Schema[8.0].define(version: 2025_01_12_023555) do
     t.string "new_twtid"
     t.string "sub_twtid"
     t.string "main_twtid"
+    t.integer "latest_tweet_id"
+    t.integer "oldest_tweet_id"
+    t.datetime "zipped_at"
+    t.string "change_history"
   end
 
   create_table "users", force: :cascade do |t|

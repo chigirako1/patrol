@@ -2,15 +2,24 @@
 
 module Pxv
     extend ActiveSupport::Concern
-    
-    PXV_DIRLIST_PATH = "public/pxv/dirlist.txt"
+
     PXV_ARCHIVE_DIR_PATH = "public/pxv/"
+    #PXV_DIRLIST_PATH = "public/pxv/dirlist.txt"
+    PXV_DIRLIST_PATH = PXV_ARCHIVE_DIR_PATH + "dirlist.txt"
+
     PXV_ARCHIVE_DIR_WC = "*/*/*"
-    PXV_WORK_DIR_PATH = "public/f_dl/PxDl/"
-    PXV_WORK_TMP_DIR_PATH = "public/f_dl/PxDl-/"
-    PXV_WORK_TMP_DIR_F_PATH = "public/f_dl/PxDl-/alphabet"
+
+    PXV_TMP_DIR_PATH = "public/f_dl/"
+    #PXV_WORK_DIR_PATH = "public/f_dl/PxDl/"
+    #PXV_WORK_TMP_DIR_PATH = "public/f_dl/PxDl-/"
+    #PXV_WORK_TMP_DIR_F_PATH = "public/f_dl/PxDl-/alphabet"
+    PXV_WORK_DIR_PATH       = PXV_TMP_DIR_PATH + "PxDl/"
+    PXV_WORK_TMP_DIR_PATH   = PXV_TMP_DIR_PATH + "PxDl-/"
+    PXV_WORK_TMP_DIR_F_PATH = PXV_TMP_DIR_PATH + "PxDl-/alphabet"
+
     PXV_WORK_TMP_DIR_F_WC = "*/*/*"
     PXV_WORK_TMP_DIR_WC = "*"
+
     ARCHIVE_PATH = "D:/r18/dlPic"
     PXV_TMP_PATH = "D:/data/src/ror/myapp/public"
 
@@ -579,7 +588,8 @@ module Pxv
         pxv_group[key_pxv_list_from_twt_list_z] = twt_list_z.sort_by {|z|
             x = z.p;
             [
-                x.last_access_datetime||"",
+                #x.last_access_datetime||"",
+                x.last_access_datetime||Time.new(2001,1,1),
                 x.status||"", 
                 x.feature||"",
                 -(x.prediction_up_cnt(true)), 
@@ -597,7 +607,7 @@ module Pxv
         key_pxv_list_no_access_2m    = "106.2ヶ月以上"
         key_pxv_list_pred            = "199.わりと最近アクセス"
     
-        key_pxv_list_unset           = "000.未設定|ファイル数"
+        key_pxv_list_unset           = "!000.未設定|ファイル数"
     
         key_pxv_list_no_update_6m    = "902.#{ArtistsController::Status::SIX_MONTH_NO_UPDATS}"
         key_pxv_list_no_update_long  = "903.#{ArtistsController::Status::LONG_TERM_NO_UPDATS}"
@@ -654,7 +664,7 @@ module Pxv
                 if !(p.last_access_datetime_p(365))
                     #key_str = get_key_term(p.rating, key_pxv_list_no_access_1y)
                     str = key_pxv_list_no_access_1y
-                    key_str = method_proc.call(p.rating, str)
+                    key_str = "!" + method_proc.call(p.rating, str)
                     pxv_group[key_str] << elem
                 elsif !(p.last_access_datetime_p(180))
                     #key_str = get_key_term(p.rating, key_pxv_list_no_access_6m)
@@ -682,7 +692,8 @@ module Pxv
                     key_str = method_proc.call(p.rating, str)
                     pxv_group[key_str] << elem
                 else
-                    pxv_group[key_pxv_list_pred] << elem
+                    key = key_pxv_list_pred + ":#{pred / 5 * 5}"
+                    pxv_group[key] << elem
                 end
             else
                 pxv_group[get_key(p.rating, "")] << elem

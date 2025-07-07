@@ -86,7 +86,7 @@ class Artist < ApplicationRecord
         if ignore
             records = Artist.where('UPPER(twtid) = ?', twtid.upcase)
             if records.size > 1
-                puts %!"#{twtid}":#{records.size}件のレコードが見つかりました !
+                puts %!"[pxv]#{twtid}":#{records.size}件のレコードが見つかりました !
             end
             records.first
         else

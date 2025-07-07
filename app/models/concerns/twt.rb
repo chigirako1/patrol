@@ -12,9 +12,15 @@ module Twt
     TWT_DOMAIN_NAME_ELON = %!x.com!
     TWT_DOMAIN_NAME = TWT_DOMAIN_NAME_ELON
 
-    TWT_CURRENT_DIR_PATH = "public/d_dl/Twitter/"
-    TWT_TMP_DIR_PATH     = "public/d_dl/Twitter-/"
-    TWT_TMP_DIR_PATH_A   = "public/d_dl/Twitter-/a/"
+    TMP_DIR_PATH = "public/d_dl/"
+    
+    #TWT_CURRENT_DIR_PATH = "public/d_dl/Twitter/"
+    #TWT_TMP_DIR_PATH     = "public/d_dl/Twitter-/"
+    #TWT_TMP_DIR_PATH_A   = "public/d_dl/Twitter-/a/"
+    TWT_CURRENT_DIR_PATH = TMP_DIR_PATH + "Twitter/"
+    TWT_TMP_DIR_PATH     = TMP_DIR_PATH + "Twitter-/"
+    TWT_TMP_DIR_PATH_A   = TMP_DIR_PATH + "Twitter-/a/"
+
     TWT_ARCHIVE_DIR_PATH = "public/twt"
     TWT_DIRLIST_TXT_PATH = "#{TWT_ARCHIVE_DIR_PATH}/dirlist.txt"
 
@@ -42,6 +48,9 @@ module Twt
     def self.get_twt_user_path_list(path, wc, twtid)
         twt_root = Rails.root.join(path).to_s + wc
         dirpath = Util::get_dir_path_by_twtid(twt_root, twtid)
+        if dirpath != ""
+            STDERR.puts %!"#{twt_root}"/@#{twtid}!
+        end
         UrlTxtReader::get_path_list(dirpath)
     end
 
@@ -58,13 +67,20 @@ module Twt
         path_list << get_twt_user_path_list(TWT_CURRENT_DIR_PATH, "*/", twtid)
 
         if Dir.exist?(TWT_TMP_DIR_PATH_A)
+            #twt_root = Rails.root.join(TWT_TMP_DIR_PATH).to_s + "*/*/"
             twt_root = Rails.root.join(TWT_TMP_DIR_PATH).to_s + "*/*/"
+            STDERR.puts %![get_pic_filelist] "#{TWT_TMP_DIR_PATH_A}"\ttwt_root="#{twt_root}"!
+
             dirpath = Util::get_dir_path_by_twtid(twt_root, twtid)
             path_list << UrlTxtReader::get_path_list(dirpath)
         elsif Dir.exist?(TWT_TMP_DIR_PATH)
             twt_root = Rails.root.join(TWT_TMP_DIR_PATH).to_s + "*/"
+            STDERR.puts %![get_pic_filelist] "#{TWT_TMP_DIR_PATH}"\ttwt_root="#{twt_root}"!
+
             dirpath = Util::get_dir_path_by_twtid(twt_root, twtid)
             path_list << UrlTxtReader::get_path_list(dirpath)
+        else
+            STDERR.puts %![get_pic_filelist] ???!
         end
 
         path_list.flatten.sort.reverse
@@ -72,6 +88,11 @@ module Twt
 
     def self.get_twt_path_from_dirlist(twtid)
         path = ""
+        unless File.exist? TWT_DIRLIST_TXT_PATH
+            STDERR.puts %!ファイルがない:"#{TWT_DIRLIST_TXT_PATH}"!
+            return path
+        end
+
         txtpath = Rails.root.join(TWT_DIRLIST_TXT_PATH).to_s
         File.open(txtpath) { |file|
             while line = file.gets
@@ -179,6 +200,8 @@ module Twt
         twt_params[:last_dl_datetime] = val.ctime
         twt_params[:last_access_datetime] = val.ctime
         twt_params[:last_post_datetime] = val.last_post_datetime(pic_path_list)
+        #twt_params[:latest_tweet_id] = #別にいらない気がしてきた
+        #twt_params[:oldest_tweet_id] = 
         twt_params[:filenum] = val.num_of_files
         twt_params[:recent_filenum] = val.num_of_files
         twt_params[:update_frequency] = val.calc_freq(pic_path_list)
@@ -380,6 +403,10 @@ module Twt
         timestamp = Time.at(((tweet_id >> 22) + TW_EPOCH) / 1000.0)
     end
 
+    def self.time2tweet_id(time)
+        (time.to_f * 1000 - TW_EPOCH).to_i << 22
+    end
+
     def self.timestamp_str(tweet_id)
         ts = get_timestamp(tweet_id)
         #ts.strftime("%Y-%m-%d %H:%M:%S.%L %Z")
@@ -491,6 +518,30 @@ module Twt
             end
         end
         return str
+    end
+
+    def self.sanitize_filename(filename)
+        # 禁止文字とその代替全角文字のマッピング
+        # 必要に応じて、他の文字もここに追加してください
+        replacements = {
+            "/" => "／",
+            "?" => "？",
+            "\\" => "＼",
+            ":" => "：",
+            "*" => "＊",
+            "\"" => "”",
+            "<" => "＜",
+            ">" => "＞",
+            "|" => "｜"
+        }
+
+        sanitized_name = filename.dup # 元の文字列を変更しないために複製
+
+        replacements.each do |forbidden_char, replacement_char|
+            sanitized_name.gsub!(forbidden_char, replacement_char)
+        end
+
+        sanitized_name
     end
 
     # =========================================================================

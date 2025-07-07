@@ -83,6 +83,7 @@ module Util
             #if twtid.downcase == File.basename(path).downcase
             #if File.basename(path).downcase.start_with?(twtid.downcase)
             if File.basename(path).downcase =~ /^(\w+)\s?/
+                #STDERR.puts %!"#{path}"!
                 id = $1
                 if wk_twt_screen_name == id
                     puts %!get_dir_path_by_twtid("#{twtid}"):path="#{path}"!
@@ -169,9 +170,8 @@ module Util
 end
 
 
-
 module ArtistName
-    def normalize_font(str)
+    def self.normalize_font(str)
         mapping = {
             "\u{1D412}" => "A", # 𝐴
             # 小文字
@@ -181,7 +181,10 @@ module ArtistName
         str.chars.map { |char| mapping[char] || char }.join
     end
 
-    #㈪東ス66b(5342006)
+    #@@emoji_rgx = /[\u{1F600}-\u{1F64F}\u{1F300}-\u{1F5FF}\u{1F680}-\u{1F6FF}\u{2600}-\u{26FF}\u{2700}-\u{27BF}]/
+    # geminiが作ったやつ↑
+    @@emoji_rgx = /\p{Emoji_Modifier_Base}\p{Emoji_Modifier}?|\p{Emoji_Presentation}|\p{Emoji}\uFE0F|\p{In_Letterlike_Symbols}|\p{In_Mathematical_Alphanumeric_Symbols}|\p{Egyptian_Hieroglyphs}|\p{Old_Italic}|\p{In_Enclosed_Alphanumerics}|\p{In_Enclosed_Alphanumeric_Supplement}/
+
     separate_chars = %w(
     ＠
     @
@@ -215,11 +218,8 @@ module ArtistName
     end
 
     def self.remove_emoji(str)
-        #rgx = /[\u{1F600}-\u{1F64F}\u{1F300}-\u{1F5FF}\u{1F680}-\u{1F6FF}\u{2600}-\u{26FF}\u{2700}-\u{27BF}]/
-        # geminiが作ったやつ↑
 
-        rgx = /\p{Emoji_Modifier_Base}\p{Emoji_Modifier}?|\p{Emoji_Presentation}|\p{Emoji}\uFE0F|\p{In_Letterlike_Symbols}|\p{In_Mathematical_Alphanumeric_Symbols}|\p{Egyptian_Hieroglyphs}|\p{Old_Italic}|\p{In_Enclosed_Alphanumerics}|\p{In_Enclosed_Alphanumeric_Supplement}/
-        str.gsub(rgx, '')
+        str.gsub(@@emoji_rgx, '')
     end
 
     # "＠"など区切り文字以降の余計な文字の削除
@@ -229,6 +229,9 @@ module ArtistName
         if name_orig =~ @@sepa_rgx
             name_chg = $1
             #STDERR.puts %!"#{name_orig}" => "#{name_chg}"!
+        #elsif name_orig =~ /(.*)\p{Emoji}/ #←これだと数字までマッチしてしまう。。。
+        elsif name_orig =~ /(.*)#{@@emoji_rgx}/
+            name_chg = $1
         end
         name_chg
     end
