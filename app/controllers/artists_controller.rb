@@ -819,7 +819,8 @@ class ArtistsController < ApplicationController
 
         # twt
         if @target.include?("twt既知") or @target.include?("twt未知")
-          known_twt_url_list, unknown_twt_url_list, pxvid_list2 = Twitter::twt_user_classify(twt_url_infos)
+          pxv_chk = true#false
+          known_twt_url_list, unknown_twt_url_list, pxvid_list2 = Twitter::twt_user_classify(twt_url_infos, pxv_chk)
 
           if @target.include?("twt既知")
             @known_twt_url_list = known_twt_url_list

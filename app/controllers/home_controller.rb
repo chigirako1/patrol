@@ -8,13 +8,13 @@ class HomeController < ApplicationController
     @menus = [
       # =====================================
       { :label => "unified t", :path => "" },
-      { :label => "Twitter [AI] 86 (-1 * 3) アクセス [3]",
+      { :label => "Twitter [AI] 86 (-1 * 3) アクセス [2]",
         :path => twitters_path(
           target: "AI",
           page_title: "AI 86 (-1 * 3)",
           rating: 86,
           #hide_within_days: 0, 
-          num_of_disp: 3,
+          num_of_disp: 2,
           #pred: 5,
           #force_disp_day: 10,
           mode: TwittersController::ModeEnum::ALL_IN_ONE,
@@ -25,13 +25,13 @@ class HomeController < ApplicationController
           thumbnail: ""
         ) 
       },
-      { :label => "Twitter [AI] 89 (-1 * 3) 予測/アクセス [3]",
+      { :label => "Twitter [AI] 89 (-1 * 3) 予測/アクセス [2]",
         :path => twitters_path(
           target: "AI",
           page_title: "AI 89 (-1 * 3)",
           rating: 89,
           #hide_within_days: 0, 
-          num_of_disp: 3,
+          num_of_disp: 2,
           #pred: 5,
           #force_disp_day: 10,
           mode: TwittersController::ModeEnum::ALL_IN_ONE,
@@ -42,13 +42,13 @@ class HomeController < ApplicationController
           thumbnail: ""
         ) 
       },
-      { :label => "Twitter [AI] 90 (-1 * 1)[8]",
+      { :label => "Twitter [AI] 90 (-1 * 1)[5]",
         :path => twitters_path(
           target: "AI",
-          page_title: "Twitter [AI] 90 (-1 * 1)[8]",
+          page_title: "Twitter [AI] 90 (-1 * 1)[5]",
           rating: 90,
           #hide_within_days: 0, 
-          num_of_disp: 8,
+          num_of_disp: 5,
           #pred: 5,
           #force_disp_day: 10,
           mode: TwittersController::ModeEnum::ALL_IN_ONE,
@@ -458,6 +458,7 @@ class HomeController < ApplicationController
           :path => artists_twt_index_path(
             filename: "latest",
             hide_day: 30,
+            #show_times: 2,
             pred: 5,
             target:"twt,twt既知,twt未知,known_pxv,unknown_pxv",
           )
@@ -525,6 +526,7 @@ class HomeController < ApplicationController
           :path => artists_twt_index_path(
             filename: "latest 3",
             hide_day: 30,
+            #show_times: 2,
             pred: 8,
             target:"twt,twt既知,twt未知,known_pxv,unknown_pxv",
           )
@@ -551,6 +553,7 @@ class HomeController < ApplicationController
           :path => artists_twt_index_path(
             filename: "latest 3",
             #hide_day: 15,
+            show_times: 2,
             force_disp_day: 90,
             #pred: 5,
             target:"twt,twt未知",
@@ -596,6 +599,7 @@ class HomeController < ApplicationController
           :path => artists_twt_index_path(
             filename: "all",
             #hide_day: 30,
+            show_times: 3,
             url_cnt: 2,
             target: ArtistsController::FileTarget::TWT_UNKNOWN_ONLY
           )
@@ -652,67 +656,7 @@ class HomeController < ApplicationController
           mode: "patrol", thumbnail: "t"
         )
       },
-      { :label => "Twitter[AI] 75", :path => twitters_path(target: "AI", page_title: "AI 75", rating: 75, hide_within_days: 7, num_of_disp: NUM_OF_DISP,pred: 21, mode: "patrol", thumbnail: "t") },
-      { :label => "Twitter[AI] 70", :path => twitters_path(target: "AI", page_title: "AI 70", rating: 70, hide_within_days: 14, num_of_disp: NUM_OF_DISP,pred: 24, mode: "patrol", thumbnail: "t") },
-      { :label => "Twitter[AI] 65", :path => twitters_path(target: "AI", page_title: "AI 65", rating: 65, hide_within_days: 14, num_of_disp: NUM_OF_DISP,pred: 27, mode: "patrol", thumbnail: "t") },
-      { :label => "Twitter[AI] 60", :path => twitters_path(target: "AI", page_title: "AI 60", rating: 60, hide_within_days: 14, num_of_disp: NUM_OF_DISP,pred: 30, mode: "patrol", thumbnail: "t") },
-      { :label => "Twitter[AI] 55", :path => twitters_path(target: "AI", page_title: "AI 55", rating: 55, hide_within_days: 18, num_of_disp: NUM_OF_DISP,pred: 33, mode: "patrol", thumbnail: "t") },
-      { :label => "Twitter[AI] 50", :path => twitters_path(target: "AI", page_title: "AI 50", rating: 50, hide_within_days: 20, num_of_disp: NUM_OF_DISP,pred: 34, mode: "patrol", thumbnail: "t") },
-      { :label => "Twitter[AI] 45", :path => twitters_path(target: "AI", page_title: "AI 45", rating: 45, hide_within_days: 22, num_of_disp: NUM_OF_DISP,pred: 36, mode: "patrol", thumbnail: "t") },
-      { :label => "Twitter[AI] 31",
-          :path => twitters_path(
-            page_title: "AI 31", rating: 31, hide_within_days: 26, num_of_disp: 2, pred: 36, mode: "patrol", thumbnail: "t"
-          )
-      },
       { :label => "-", :path => "" },
-      { :label => "Twitter[AI] ご無沙汰 85",
-        :path => twitters_path(
-          page_title: "AI ご無沙汰 85",
-          target: "AI",
-          sort_by: "access",
-          rating: 85,
-          hide_within_days: 21,
-          num_of_disp: NUM_OF_DISP,
-          mode: "patrol",
-          thumbnail: "t",
-        )
-      },
-      { :label => "Twitter[AI] ご無沙汰 75",
-        :path => twitters_path(
-          page_title: "AI ご無沙汰 75",
-          target: "AI",
-          sort_by: "access",
-          rating: 75,
-          hide_within_days: 27,
-          num_of_disp: NUM_OF_DISP,
-          mode: "patrol",
-          thumbnail: "t",
-        )
-      },
-      { :label => "Twitter[AI] ご無沙汰 60",
-        :path => twitters_path(
-          page_title: "AI ご無沙汰 60",
-          target: "AI",
-          sort_by: "access",
-          rating: 60,
-          hide_within_days: 40,
-          num_of_disp: 2,
-          mode: "patrol",
-          thumbnail: "t",
-        )
-      },
-      { :label => "Twitter[AI] ご無沙汰 50",
-        :path => twitters_path(
-          page_title: "AI ご無沙汰 50",
-          target: "AI",
-          sort_by: "access",
-          rating: 50,
-          hide_within_days: 45,
-          num_of_disp: 2,
-          mode: "patrol",
-          thumbnail: "t",
-        )
-      },
       # ----------------------------
       { :label => "-", :path => "" },
       { :label => "Twitter[AI] 更新なし？ 85",
@@ -723,18 +667,6 @@ class HomeController < ApplicationController
           rating: 85,
           hide_within_days: 60,
           num_of_disp: 3,
-          mode: "patrol2",
-          thumbnail: "t",
-        )
-      },
-      { :label => "Twitter[AI] 更新なし？ 75",
-        :path => twitters_path(
-          page_title: "AI 更新なし？ 75",
-          target: "AI",
-          sort_by: "access",
-          rating: 75,
-          hide_within_days: 90,
-          num_of_disp: 2,
           mode: "patrol2",
           thumbnail: "t",
         )
@@ -778,62 +710,12 @@ class HomeController < ApplicationController
         )
       },
       { :label => "-", :path => "" },
-      { :label => "Twitter[手描き] 100",
-        :path => twitters_path(
-          page_title: "手描き 100", 
-          rating: 100,
-          hide_within_days: 45, 
-          num_of_disp: NUM_OF_DISP,
-          pred: 3,
-          mode: "hand", 
-          sort_by: "access",
-          thumbnail: "t"
-        )
-      },
       { :label => "Twitter[手描き] 95",
         :path => twitters_path(
           page_title: "手描き 95", 
           rating: 95,
           hide_within_days: 45, 
           num_of_disp: 4,
-          pred: 5,
-          mode: "hand", 
-          sort_by: "access",
-          thumbnail: "t"
-        )
-      },
-      { :label => "Twitter[手描き] 90",
-        :path => twitters_path(
-          page_title: "手描き 90", 
-          rating: 90,
-          hide_within_days: 60, 
-          num_of_disp: 4,
-          pred: 5,
-          mode: "hand", 
-          sort_by: "access",
-          thumbnail: "t"
-        )
-      },
-      { :label => "Twitter[手描き] 85",
-        :path => twitters_path(
-          page_title: "手描き 85",
-          rating_lt: 90,
-          rating: 85,
-          hide_within_days: 75,
-          num_of_disp: NUM_OF_DISP,
-          pred: 5,
-          ex_pxv: true,#false,
-          mode: "hand",
-          sort_by: "access",
-          thumbnail: "t"
-        )
-      },
-      { :label => "Twitter[手描き] 80",
-        :path => twitters_path(
-          page_title: "手描き 80",
-          rating: 80,
-          hide_within_days: 90,
-          num_of_disp: NUM_OF_DISP,
           pred: 5,
           mode: "hand", 
           sort_by: "access",
@@ -964,128 +846,6 @@ class HomeController < ApplicationController
           thumbnail: true
         )
       },
-      { :label => "pxv AI 90",
-        :path => artists_path(
-          page_title: "AI 90",
-          sort_by: "予測▽",
-          group_by: "評価+年齢制限",
-          exclude_ai: "",
-          ai: true,
-          status: "「長期更新なし」を除外",
-          prediction: 8,
-          rating: 90,
-          last_access_datetime: 7,
-          display_number: 7,
-          thumbnail: true
-        )
-      },
-      { :label => "pxv AI 85",
-        :path => artists_path(
-          page_title: "AI 85",
-          sort_by: "予測▽",
-          group_by: "評価+年齢制限",
-          exclude_ai: "",
-          ai: true,
-          status: "「長期更新なし」を除外",
-          prediction: 9,
-          rating: 85,
-          last_access_datetime: 8,
-          display_number: 6,
-          thumbnail: true
-        )
-      },
-      { :label => "pxv AI 80",
-        :path => artists_path(
-          page_title: "AI 80",
-          sort_by: "予測▽",
-          group_by: "評価+年齢制限",
-          exclude_ai: "",
-          ai: true,
-          status: "「長期更新なし」を除外",
-          prediction: 10,
-          rating: 80,
-          last_access_datetime: 9,
-          display_number: 6,
-          thumbnail: true
-        )
-      },
-      { :label => "pxv AI 75",
-        :path => artists_path(
-            page_title: "AI 75",
-            sort_by: "予測▽",
-            group_by: "評価+年齢制限",
-            exclude_ai: "",
-            ai: true,
-            status: "「長期更新なし」を除外",
-            prediction: 12,
-            rating: 75,
-            last_access_datetime: 14,
-            display_number: 5,
-            thumbnail: true
-          )
-      },
-      { :label => "pxv AI 70",
-        :path => artists_path(
-            page_title: "AI 70",
-            sort_by: "予測▽",
-            group_by: "評価+年齢制限",
-            exclude_ai: "",
-            ai: true,
-            status: "「長期更新なし」を除外",
-            prediction: 14,
-            rating: 70,
-            last_access_datetime: 15,
-            display_number: 5,
-            thumbnail: true
-          )
-      },
-      { :label => "pxv AI 60",
-        :path => artists_path(
-            page_title: "AI 60",
-            sort_by: "予測▽",
-            group_by: "評価+年齢制限",
-            exclude_ai: "",
-            ai: true,
-            status: "「長期更新なし」を除外",
-            prediction: 18,
-            rating: 60,
-            last_access_datetime: 21,
-            display_number: 4,
-            thumbnail: true
-          )
-      },
-      { :label => "pxv AI ご無沙汰 100",
-        :path => artists_path(
-          page_title: "ご無沙汰 ai 100", 
-          sort_by: "access_date_X_last_ul_datetime", 
-          group_by: "評価+年齢制限",
-          ai: true,
-          status: "「長期更新なし」を除外",
-          point: 0, 
-          prediction: 0, 
-          rating: 100,
-          last_access_datetime: 20,
-          display_number: 3, 
-          year: 0, 
-          thumbnail: true
-        )
-      },
-      { :label => "pxv AI ご無沙汰 95",
-        :path => artists_path(
-          page_title: "ご無沙汰 ai 95", 
-          sort_by: "access_date_X_last_ul_datetime", 
-          group_by: "評価+年齢制限",
-          ai: true,
-          status: "「長期更新なし」を除外",
-          point: 0, 
-          prediction: 0, 
-          rating: 95,
-          last_access_datetime: 40, 
-          display_number: 3, 
-          year: 0, 
-          thumbnail: true
-        )
-      },
       { :label => "pxv AI ご無沙汰 90",
         :path => artists_path(
           page_title: "ご無沙汰 ai 90", 
@@ -1096,23 +856,6 @@ class HomeController < ApplicationController
           point: 0, 
           prediction: 0, 
           rating: 90,
-          last_access_datetime: 60, 
-          display_number: 3, 
-          year: 0, 
-          thumbnail: true
-        )
-      },
-      { :label => "pxv AI ご無沙汰 80 R18",
-        :path => artists_path(
-          page_title: "ご無沙汰 ai 80/R18", 
-          sort_by: "access_date_X_last_ul_datetime", 
-          group_by: "評価+年齢制限",
-          ai: true,
-          status: "「長期更新なし」を除外",
-          point: 0, 
-          prediction: 0, 
-          rating: 80,
-          r18: "R18",
           last_access_datetime: 60, 
           display_number: 3, 
           year: 0, 

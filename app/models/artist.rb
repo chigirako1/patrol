@@ -32,6 +32,8 @@ class Artist < ApplicationRecord
     C_ARTIST_MATCH_BEGIN = "begin_match"
     C_ARTIST_MATCH_END = "end_match"
 
+    PXV_USER_URL_REGEX = %r!pixiv\.net/users/(\d+)!
+
     #--------------------------------------------------------------------------
     # クラスメソッド
     #--------------------------------------------------------------------------
@@ -43,7 +45,8 @@ class Artist < ApplicationRecord
         if target_col == "(自動判断)"
             if search_word =~ /^\d+$/
                 target_col = "pxvid"
-            elsif search_word =~ %r!www\.pixiv\.net/users/(\d+)!
+            #elsif search_word =~ %r!www\.pixiv\.net/users/(\d+)!
+            elsif search_word =~ PXV_USER_URL_REGEX
                 target_col = "pxvid"
                 search_word = $1
             else
@@ -86,7 +89,7 @@ class Artist < ApplicationRecord
         if ignore
             records = Artist.where('UPPER(twtid) = ?', twtid.upcase)
             if records.size > 1
-                puts %!"[pxv]#{twtid}":#{records.size}件のレコードが見つかりました !
+                puts %![pxv]"#{twtid}":#{records.size}件のレコードが見つかりました !
             end
             records.first
         else
@@ -528,13 +531,13 @@ class Artist < ApplicationRecord
         cnt
     end
 
-    def status_disp(txt="※")
+    def status_disp(rev, txt="※")
         tag = ""
         if status.presence
             tag += txt + status
         end
 
-        if reverse_status.presence
+        if rev and reverse_status.presence
             tag += %!(#{reverse_status})!
         end
 

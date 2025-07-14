@@ -466,6 +466,7 @@ module Pxv
             Rails.logger.info(msg)
 
             #pxv_params[:pxvname] = pxv_artist.pxv_name
+
             if pxv.oldname.presence
                 oldnames = pxv.oldname.split(/\//)
                 if oldnames.include?(pxv.pxvname)
@@ -477,19 +478,27 @@ module Pxv
                     Rails.logger.info(msg)
                 end
             else
-                #pxv_params[:oldname] = pxv.pxvname
+                pxv_params[:pxvname] = pxv_artist.pxv_name#zantei
+
+                pxv_params[:oldname] = pxv.pxvname
                 #STDERR.puts %!oldname:「#{pxv.oldname}」new\!!
             end
         end
 
         if pxv_artist.path_list.size > pxv.filenum
-            #pxv_params[:filenum] = pxv_artist.path_list.size
-            STDERR.print %![DBG] filenum:#{pxv_params[:filenum]} <= #{pxv_artist.path_list.size}!
+            if pxv.filenum.presence
+            else
+                pxv_params[:filenum] = pxv_artist.path_list.size
+                STDERR.puts %![DBG] filenum:"#{pxv_params[:filenum]}" <= #{pxv_artist.path_list.size}!
+            end
             
-            alist = Artist.artwork_list(pxv_artist.path_list)
-            recent_filenum = Artist.artwork_list_recent_file_num(alist)
-            #pxv_params[:recent_filenum] = recent_filenum
-            STDERR.print %![DBG] recent_filenum:#{pxv_params[:recent_filenum]} <= #{recent_filenum}!
+            if pxv.recent_filenum.presence
+            else
+                alist = Artist.artwork_list(pxv_artist.path_list)
+                recent_filenum = Artist.artwork_list_recent_file_num(alist)
+                pxv_params[:recent_filenum] = recent_filenum
+                STDERR.puts %![DBG] recent_filenum:"#{pxv_params[:recent_filenum]}" <= #{recent_filenum}!
+            end
         end
 
         #STDERR.print %!最古UL日:\t#{pxv.earliest_ul_date.strftime("%Y-%m-%d")} => #{pxv_artist.earliest_ul_date.strftime("%Y-%m-%d")}!
@@ -503,7 +512,11 @@ module Pxv
         end
 
         #STDERR.print %!最新DL日:\t#{pxv.last_dl_datetime.strftime("%Y-%m-%d")} => #{pxv_artist.last_dl_datetime.strftime("%Y-%m-%d")}!
-        if pxv_artist.last_dl_datetime > pxv.last_dl_datetime
+        #if pxv_artist.last_dl_datetime > pxv.last_dl_datetime
+        if pxv_artist.last_dl_datetime.round > pxv.last_dl_datetime.round
+            STDERR.puts %!"#{pxv_artist.last_dl_datetime}"\t"#{pxv.last_dl_datetime}"!
+            puts pxv_artist.last_dl_datetime.strftime("%Y-%m-%d %H:%M:%S.%L %z")
+            puts pxv.last_dl_datetime.strftime("%Y-%m-%d %H:%M:%S.%L %z")
             pxv_params[:last_dl_datetime] = pxv_artist.last_dl_datetime
         end
 
@@ -537,14 +550,11 @@ module Pxv
             end
         end
 
-        STDERR.puts %!#{pxv_params}!
-        #pxv_artist.path_list.each do |path|
-        #    btime = File.birthtime(Util::get_public_path(path))
-        #    STDERR.puts %!#{btime}"#{path}":!
-        #end
-#=begin
-        pxv.update(pxv_params)
-#=end
+        if pxv_params.size > 0
+            STDERR.print "更新内容=>"
+            STDERR.puts %!#{pxv_params}!
+            pxv.update(pxv_params)
+        end
     end
 
     def self.get_key(rating, str)
@@ -692,7 +702,7 @@ module Pxv
                     key_str = method_proc.call(p.rating, str)
                     pxv_group[key_str] << elem
                 else
-                    key = key_pxv_list_pred + ":#{pred / 5 * 5}"
+                    key = key_pxv_list_pred + ":予測#{pred / 5 * 5}"
                     pxv_group[key] << elem
                 end
             else

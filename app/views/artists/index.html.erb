@@ -67,15 +67,15 @@
         <% ac_delta = artist.get_date_delta(artist.last_access_datetime) %>
         <% ac_bg_color = access_date_bg_color(ac_delta, pred) %>
         <td bgcolor="<%= ac_bg_color %>">
+          <% if artist.status.presence %>
+            <font color="tomato"><b>(※<%= artist.status %>)</b></font>
+            <br />
+          <% end%>
           <%= pred %>
           <br />
           <%= link_to_ex("■pxv■", artist_path(artist, access_dt_update: "yes")) %>
           <br />
           <%= artist.last_access_datetime_disp %>
-          <% if artist.status.presence %>
-            <br />
-            <font color="tomato"><b>(※<%= artist.status %>)</b></font>
-          <% end%>
           <% if artist.reverse_status.presence %>
             <br />
             [<%= artist.reverse_status %>]
@@ -165,7 +165,8 @@
 
 <% @artists_group.each do |key, artists| %>
   <% if artists.size == 0 and params[:file] == "検索" %>
-    <% if search_word =~ %r!https?://www\.pixiv\.net/users/(\d+)! %>
+    <%# if search_word =~ %r!pixiv\.net/users/(\d+)! %>
+    <% if search_word =~ Artist::PXV_USER_URL_REGEX %>
       <% pxv_user_id = $1 %>
       <% dirlist = Pxv::stock_dir_list %>
       <% user_name = Pxv::user_name(dirlist, pxv_user_id) %>

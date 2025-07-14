@@ -200,8 +200,10 @@ module Twt
         twt_params[:last_dl_datetime] = val.ctime
         twt_params[:last_access_datetime] = val.ctime
         twt_params[:last_post_datetime] = val.last_post_datetime(pic_path_list)
-        #twt_params[:latest_tweet_id] = #別にいらない気がしてきた
-        #twt_params[:oldest_tweet_id] = 
+
+        twt_params[:latest_tweet_id] = val.get_last_post_tweet_id(pic_path_list)
+        twt_params[:oldest_tweet_id] = val.get_oldest_post_tweet_id(pic_path_list)
+
         twt_params[:filenum] = val.num_of_files
         twt_params[:recent_filenum] = val.num_of_files
         twt_params[:update_frequency] = val.calc_freq(pic_path_list)
@@ -223,6 +225,7 @@ module Twt
     def self.db_update_by_newdir_update(key, val, twt)
         pic_path_list = val.twt_pic_path_list
         twt_params = {}
+
         last_post_datetime = Time.at(val.last_post_datetime(pic_path_list).to_i)
         if twt.last_post_datetime.presence
             #p twt.last_post_datetime
@@ -230,7 +233,7 @@ module Twt
             #puts %!i=#{twt.last_post_datetime.to_i}, class=#{twt.last_post_datetime.class}!
             #puts %!i=#{last_post_datetime.to_i}, class=#{last_post_datetime.class}!
             if last_post_datetime.after? (twt.last_post_datetime)
-                puts %!update:"#{pic_path_list[0]}"\told="#{twt.last_post_datetime}",new="#{last_post_datetime}"!
+                #puts %!update[last_post_datetime]:"#{pic_path_list[0]}"\told="#{twt.last_post_datetime}",new="#{last_post_datetime}"!
                 twt_params[:last_post_datetime] = last_post_datetime
             else
                 #更新しない
@@ -250,6 +253,24 @@ module Twt
             twt_params[:last_dl_datetime] = val.ctime
         end
 
+        last_post_tweet_id = val.get_last_post_tweet_id(pic_path_list)
+        if twt.latest_tweet_id.presence
+            if twt.latest_tweet_id < last_post_tweet_id
+                twt_params[:latest_tweet_id] = last_post_tweet_id
+            end
+        else
+            twt_params[:latest_tweet_id] = last_post_tweet_id
+        end
+
+        oldest_post_tweet_id = val.get_oldest_post_tweet_id(pic_path_list)
+        if twt.oldest_tweet_id.presence
+            if twt.oldest_tweet_id > oldest_post_tweet_id
+                twt_params[:oldest_tweet_id] = oldest_post_tweet_id
+            end
+        else
+            twt_params[:oldest_tweet_id] = oldest_post_tweet_id
+        end
+
         if twt.filenum == nil
             twt_params[:filenum] = val.num_of_files
         else
@@ -259,6 +280,13 @@ module Twt
         if twt.recent_filenum == nil
             twt_params[:recent_filenum] = val.num_of_files
         end
+
+        if twt_params.size > 0
+            STDERR.print "更新内容=>"
+            STDERR.puts %!#{twt_params}!
+            #twt.update(twt_params)
+        end
+
         twt.update(twt_params)
     end
 
@@ -659,6 +687,16 @@ class TwtArtist
 
     def last_post_datetime(pic_path_list)
         Twt::get_time_from_path(pic_path_list[0])
+    end
+
+    def get_last_post_tweet_id(pic_path_list)
+        id, _ = Twt::get_tweet_info_from_filepath(pic_path_list[0])
+        id
+    end
+
+    def get_oldest_post_tweet_id(pic_path_list)
+        id, _ = Twt::get_tweet_info_from_filepath(pic_path_list[-1])
+        id
     end
 end
 

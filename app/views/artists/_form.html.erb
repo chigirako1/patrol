@@ -298,9 +298,10 @@
         ["更新頻度低", "更新頻度低"],
       ],
       include_blank: "選択して下さい" %>
+    <input type="button" value="'歯抜けあり'に変更" onclick="set_option('status', 12);" class="btn2" />
     <input type="button" value="'最新追っかけ中'に変更" onclick="set_option('status', 13);" class="btn2" />
-    <input type="button" value="'長期更新なし'に変更" onclick="set_option('status', 3);" class="btn2" />
     <input type="button" value="'半年以上更新なし'に変更" onclick="set_option('status', 4);" class="btn2" />
+    <input type="button" value="'長期更新なし'に変更" onclick="set_option('status', 3);" class="btn2" />
     <input type="button" value="空白に変更" onclick="set_option('status', 0);" class="btn" />
   </div>
  
@@ -320,6 +321,11 @@
   <div>
     <%= form.label :注意点, style: "display: block" %>
     <%= form.text_field :warnings %>
+  </div>
+
+  <div>
+    <%= form.label :不要画像情報, style: "display: block" %>
+    <%= form.text_field :del_info %>
   </div>
 
   <div>
@@ -426,7 +432,7 @@
     <% if recent_filenum and recent_filenum > 0 %>
       "<%= artist.recent_filenum %>"↓<font color='red'>更新あり</font><br />
       <%= form.number_field :recent_filenum, :value => recent_filenum %>
-    <% elsif recent_filenum == nil %>
+    <% elsif artist.recent_filenum == nil and recent_filenum == nil %>
       <%= form.number_field :recent_filenum, :value => 0 %>
     <% else %>
       <%= form.number_field :recent_filenum %>

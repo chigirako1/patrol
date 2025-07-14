@@ -16,6 +16,10 @@
     <% pxv_disp_number = 6 %>
 <% end %>
 
+<% if params[:show_times].presence %>
+    <% show_times = params[:show_times].to_i %>
+<% end %>
+
 <!-- twt -->
 <% pxv_artist_id_list = [] %> <!-- TODO:なんだこれ？ -->
 <% twt_group = Hash.new { |h, k| h[k] = [] } %>
@@ -34,9 +38,13 @@
 <% if @known_twt_url_list.presence %>
     <% idx = 0 %>
     <% @known_twt_url_list.each do |key, url_list| %>
+        <% if show_times.presence and url_list.size < show_times %>
+            <!-- 飛ばす -->
+            <% next %>
+        <% end %>
         <% twt_account = Twitter.find_by_twtid_ignore_case(key) %>
 
-        <% key_twt = twt_account.group_key %>
+        <% key_twt = twt_account.group_key(url_list.size) %>
         <% twt_group[key_twt] << [twt_account, url_list] %>
 
         <% idx += 1 %>
@@ -138,7 +146,7 @@
                             <% end %>
                         <% end %>
                         <%= twt_account.filenum %>
-                        (<%= twt_account.update_frequency %>)
+                        <%= %!(#{twt_account.update_frequency})! if false %>
                     </td>
                     <!-- pxv -->
                     <td>
@@ -156,6 +164,9 @@
                             <%= p_pred %>
                         </td>
                         <td>
+                            <% if p.status %>
+                                <%= p.status_disp(false) %>
+                            <% end %>
                             <%= link_to_ex("■pxv■", artist_path(p, access_dt_update: "yes")) %>
                         </td>
                         <td>
@@ -205,15 +216,15 @@
     <% twt_dirs = Twt::TwtDirs.new %>
     <% cnt = 0 %>
     <% @unknown_twt_url_list.each.with_index(1) do |(key, url_list), idx| %>
+        <% if show_times.presence and url_list.size < show_times %>
+            <% break %>
+        <% end %>
+
         <% if cnt != url_list.size %>
             <% cnt = url_list.size %>
             <h3><%= cnt %></h3>
         <% end %>
 
-        <% exist = twt_dirs.user_exist?(key) %>
-        <% if exist %>
-            !ローカルファイルにあり!(<%= key %>)→
-        <% end %>
         <% twt_account = Twitter.find_by_twtid_ignore_case(key) %>
         <% if twt_account %>
             <%= idx %>:*<%= key %>*（大文字・小文字チェック）|<%= twt_account.twtid %>|
@@ -227,7 +238,10 @@
         <!-- pxv -->
         <% pxv_artist = Artist.find_by_twtid_ignore_case(key) %>
         <% if pxv_artist %>
-            <!--[<%#= link_to_ex "■pxv■", pxv_artist %>(<%= pxv_artist.pxvname %>)]-->
+            <%= idx %>:
+            (@<%= key %>)(<%= pxv_artist.pxvname %>)[<%= link_to_ex "■pxv■", pxv_artist %>]
+            <br />
+
             <% pxv_list_tmp << PxvInfo.new(pxv_artist.pxvid, url_list.size, pxv_artist) %>
             <% next %>
         <% end %>
@@ -237,6 +251,12 @@
         <% end %>
 
         <%= idx %>:
+
+        <% exist = twt_dirs.user_exist?(key) %>
+        <% if exist %>
+            !ローカルファイルにあり!(<%= key %>)→
+        <% end %>
+
         <%= link_to_ex "@" + key, Twt::twt_user_url(key) %>
         (<%= link_to_ex "show", key %>)
 
@@ -296,6 +316,12 @@
 
 <% recent_pxv_list = [] %>
 <% if @known_pxv_user_id_list.size > 0 %>
+    <% if show_times.presence %>
+        <% STDERR.puts %!"#{show_times}" #{@known_pxv_user_id_list.size}=>! %>
+        <% @known_pxv_user_id_list.delete_if {|x| x.cnt < show_times} %>
+        <% STDERR.puts %!#{@known_pxv_user_id_list.size}! %>
+    <% end %>
+
     <h2>登録済み pxv list (<%= @known_pxv_user_id_list.size %>)</h2>
     <% recent_pxv_list = Pxv::hash_group(@known_pxv_user_id_list, pxv_group, @hide_day) %>
 <% end %>
@@ -315,7 +341,7 @@
                 <% pxv_group[k + ":00"] << elem %>
             <% else %>
                 <% key_tmp = sprintf("%03d(%03d)", 100 - ((p.rating||0) / 10 * 10), p.rating||0) %>
-                <% pxv_group[k + ":" + key_tmp] << elem %>
+                <% pxv_group[k + ":評価" + key_tmp] << elem %>
             <% end %>
         <% end %>
         <% pxv_group.delete(k) %>
@@ -331,6 +357,7 @@
         <% unless list.presence %>
             <% next %>
         <% end %>
+        
         <h3>PXV [<%= key %>] (<%= list.size %>)</h3>
         <table border="1" rules="all">
             <tr>
@@ -348,6 +375,7 @@
             </tr>
             <% idx = 0 %>
             <% list.each do |elem| %>
+
                 <% p = elem.p %>
                 <% pred = p.prediction_up_cnt(true) %>
                 <% if idx >= pxv_disp_number %>
@@ -376,6 +404,8 @@
                     <% ul_delta = p.get_date_delta(p.last_ul_datetime) %>
                     <% ul_bg_color = date_bg_color(ul_delta) %>
                     <td bgcolor="<%= ul_bg_color %>">
+                        <b><%= p.status_disp(true) %></b>
+
                         <%= p.get_date_info(p.last_ul_datetime) %>
 
                         <% a_u_days = Util::get_days_date_delta(p.last_ul_datetime||Time.new(2001,1,1), p.last_access_datetime||Time.new(2001,1,1)) %>
@@ -384,7 +414,6 @@
                             [※アクセス日と公開日の差が大きい(<%= a_u_days %>日)]
                         <% end %>
                         <br />
-                        <b><%= p.status_disp %></b>
                     </td>
                     <td>
                         <% if (thumb_disp and pred > @pred) or (p.rating == 0) %>

@@ -147,17 +147,21 @@ textarea {
             [※現在の設定値との差が大きい]
         <% end %>
         →
+    <% elsif twt_acnt.update_frequency %>
+        設定値：<%= %!#{twt_acnt.update_frequency}! %>
     <% else %>
         ※値が設定されていません※
     <% end %>
-    計算結果"<%= avg %>"
-    (<%= freq_90d %>/<%= freq_30d %>/<%= freq_15d %>)
-    ファイルサイズ平均：<%= (fsize_sum / show_pic_num) / 1024 %> KB
-     合計：<%= (fsize_sum) / 1024 / 1024 %> MB
-    (<%= show_pic_num %> files)
-    <% tweet_id_list = twt_pic_list.map {|x| x[2]} %>
-    1投稿あたりの平均画像数:<%= Twt::image_num_a_post(tweet_id_list) %>
-    <% if twt_pic_list[0] != nil %>
+    <% if twt_pic_list.size > 0 %>
+        計算結果"<%= avg %>"
+        (<%= freq_90d %>/<%= freq_30d %>/<%= freq_15d %>)
+        <% if show_pic_num > 0 %>
+            ファイルサイズ平均：<%= (fsize_sum / show_pic_num) / 1024 %> KB
+            合計：<%= (fsize_sum) / 1024 / 1024 %> MB
+        <% end %>
+        (<%= show_pic_num %> files)
+        <% tweet_id_list = twt_pic_list.map {|x| x[2]} %>
+        1投稿あたりの平均画像数:<%= Twt::image_num_a_post(tweet_id_list) %>
     <% end %>
     <br />
 

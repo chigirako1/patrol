@@ -313,7 +313,7 @@ class Twitter < ApplicationRecord
         end
     end
 
-    def group_key()
+    def group_key(count)
         case status
         when Twitter::TWT_STATUS::STATUS_PATROL
             if rating.presence
@@ -332,6 +332,9 @@ class Twitter < ApplicationRecord
                 elsif days_accs < 30
                     nweek = (days_accs + 6) / 7
                     key = %!090:#{nweek}週間以内!
+                elsif days_accs > 365 * 2
+                    year = sprintf("%03d", days_accs / 365)
+                    key = %!990:#{year}年以上!
                 elsif days_accs > 90
                     month = sprintf("%03d", days_accs / 30)
                     key = %!990:#{month}ヶ月以上!
@@ -350,6 +353,7 @@ class Twitter < ApplicationRecord
         else
             key = "000:#{status}(約#{(filenum||0) / 10}0ファイル)"
         end
-        key
+        #key
+        %!#{count}:#{key}!
     end
 end

@@ -40,23 +40,19 @@ module ApplicationHelper
 
     def yellow_shade(value)
         # 100以上なら完全な黄色
-        #return "#FFFF00" if value >= 100
+        return "#FFFF00" if value >= 100
         
         # 15以下ならごく薄い黄色
         #return "#111100" if value <= 15
 
-        # 15～99の範囲で黄色の濃淡を計算
-        # RとGの値を調整（線形補間を利用）
-        #intensity = ((value - 15) * (255 - 17) / (100 - 15) + 17).to_i
-        #hex_value = intensity.to_s(16).rjust(2, '0').upcase
-        #"##{hex_value * 2}00"
-
+        base = 204#255#204
         min = 15
         max = 100
+
         # 15〜99 の間で B（青）の値を線形補間
-        #blue_intensity = ((value - 15) * (0 - 204) / (100 - 15) + 204).to_i
-        blue_intensity = ((value - min) * (0 - 204) / (max - min) + 204).to_i
+        blue_intensity = ((value - min) * (0 - base) / (max - min) + base).to_i
         blue_hex = blue_intensity.to_s(16).rjust(2, '0').upcase
+        #STDERR.puts %!#{value}=>"#{blue_intensity}(##{blue_hex})"!
          "#FFFF#{blue_hex}"
     end
 
