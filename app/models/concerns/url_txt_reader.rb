@@ -198,7 +198,15 @@ module UrlTxtReader
         #puts "dup name=#{dup_pxvnames}"
         dup_pxvnames
     end
-    
+
+    def self.same_pxv_user_id(artists)
+        ids = artists.map {|x| x.pxvid}
+        chunks = ids.chunk(&:itself)
+        dup_ids = chunks.select{|_, v| v.size > 1}.map(&:first)
+        STDERR.puts %!#{ids.size}|#{dup_ids.size}!
+        dup_ids
+    end
+
     def self.same_twtid(artists)
         ids = artists.map {|x| x.twtid}
         #puts "names=#{names}"

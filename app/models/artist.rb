@@ -89,7 +89,10 @@ class Artist < ApplicationRecord
         if ignore
             records = Artist.where('UPPER(twtid) = ?', twtid.upcase)
             if records.size > 1
-                puts %![pxv]"#{twtid}":#{records.size}件のレコードが見つかりました !
+                STDERR.puts %![pxv]"#{twtid}":#{records.size}件のレコードが見つかりました =>!
+                records.each do |x|
+                    STDERR.puts %!\t#{x.pxvname}(#{x.pxvid})!
+                end
             end
             records.first
         else
@@ -329,7 +332,7 @@ class Artist < ApplicationRecord
 
         delta_d = get_date_delta(datetime)
 
-        pred = (recent_filenum * 100 / 60) * delta_d / 100
+        pred = (recent_filenum||0 * 100 / 60) * delta_d / 100
         pred
     end
 

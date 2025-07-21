@@ -279,6 +279,7 @@ class ArtistsController < ApplicationController
     ALL_IN_ONE = 'all in one'
     URL_LIST = 'urllist'
     URL_LIST_PXV_ONLY_LATEST = "urllist-pxv-only(latest)"
+    DUP_USER_ID_CHK = '重複ユーザーIDチェック'
   end
 
   module ApiEnum
@@ -374,6 +375,12 @@ class ArtistsController < ApplicationController
 
     #case params[:file]
     case prms.param_file
+    when ArtistsController::MethodEnum::DUP_USER_ID_CHK
+      artists = Artist.all
+      dup_ids = UrlTxtReader::same_pxv_user_id(artists)
+      artists = artists.select {|x| dup_ids.include?(x[:pxvid])}
+      @artists_group[""] = artists
+      return
     when ArtistsController::MethodEnum::NAME_TEST
       artists = Artist.all
       Pxv::name_test()
@@ -752,7 +759,7 @@ class ArtistsController < ApplicationController
     else
       @target = []
     end
-    puts "target='#{@target}'"
+    STDERR.puts "[twt_index] target='#{@target}'"
 
     filename = params[:filename]
     if filename == nil
@@ -815,6 +822,7 @@ class ArtistsController < ApplicationController
         end
       else
         pxvid_list2 = []
+
         pxv_id_list, twt_url_infos, @misc_urls = UrlTxtReader::get_url_txt_info(path)
 
         # twt
@@ -825,10 +833,12 @@ class ArtistsController < ApplicationController
           if @target.include?("twt既知")
             @known_twt_url_list = known_twt_url_list
             #@twt_urls = known_twt_url_list
+            STDERR.puts %!known_twt_url_list=#{@known_twt_url_list.size}!
           end
 
           if @target.include?("twt未知")
             @unknown_twt_url_list = unknown_twt_url_list.sort_by {|k,v| -v.size}.to_h
+            STDERR.puts %!unknown_twt_url_list=#{@unknown_twt_url_list.size}!
           end
         end
   
@@ -838,10 +848,12 @@ class ArtistsController < ApplicationController
 
           if @target.include?("known_pxv")
             @known_pxv_user_id_list = known_pxv_user_id_list
+            STDERR.puts %!known_pxv_user_id_list=#{@known_pxv_user_id_list.size}!
           end
 
           if @target.include?("unknown_pxv")
             @unknown_pxv_user_id_list = unknown_pxv_user_id_list
+            STDERR.puts %!unknown_pxv_user_id_list=#{@unknown_pxv_user_id_list.size}!
           end
         end
       end
@@ -944,15 +956,16 @@ class ArtistsController < ApplicationController
       puts %![LOG] twtid=#{params["artist"]["twtid"]}!
     end
 
-    if @artist.rating != params[:artist][:rating]
-      msg = %!rating変更:"#{params[:artist][:rating]}" <= "#{@artist.rating}"!
-      Rails.logger.info(msg)
+    if @artist.rating != params[:artist][:rating].to_i
+      if @artist.change_history
+        prev_val = @artist.change_history
+      else
+        prev_val = @artist.rating
+      end
+      history = %!#{prev_val}=>#{params[:artist][:rating]}!
 
-      # TODO:rating変更の履歴登録
-      history = "元データ" + %!#{@artist.rating}/#{params[:artist][:rating]}!
-      #history = @artist.chg_history + %!#{@artist.rating} => #{params[:artist][:rating]}!
       Rails.logger.info(history)
-      #params[:artist][:chg_history] = history
+      params[:artist][:change_history] = history
     end
 
     respond_to do |format|

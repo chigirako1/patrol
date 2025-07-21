@@ -179,8 +179,9 @@
         <%= twt.twtname %>
         [<%= twt.drawing_method %>]【<%= twt.rating %>|<%= twt.r18 %>】
         [<%= link_to "■twt■", twitter_path(twt) %>]
+        <b><%= %!(#{twt.status})! if twt.status != "TWT巡回" %></b>
         ACCS:(<%= twt.get_date_info(twt.last_access_datetime) if twt.last_access_datetime.presence %>)
-        UL:<%= twt.get_date_info(twt.last_post_datetime) if twt.last_post_datetime.presence %>(<%= twt.status %>)
+        UL:<%= twt.get_date_info(twt.last_post_datetime) if twt.last_post_datetime.presence %>
         予測：<%= twt.prediction %>
         <br />
         PXVID:<%= twt.pxvid %>
@@ -210,7 +211,7 @@
     <% else %>
       <% rating_val = 0 %>
     <% end %>
-    <%= form.number_field :rating, :value => rating_val %>
+    <%= form.number_field :rating, in: 0..150, :value => rating_val %>
     <input type="button" value="+5" onclick="plus_rate('rating', 5);" class="btn" />
     <input type="button" value="+4" onclick="plus_rate('rating', 4);" class="btn" />
     <input type="button" value="+1" onclick="plus_rate('rating', 1);" class="btn" />
@@ -464,6 +465,11 @@
   <div>
     <%= form.label :zipped_at, style: "display: block" %>
     <%= form.datetime_field :zipped_at %>
+  </div>
+  
+  <div>
+    <%= form.label :変更履歴, style: "display: block" %>
+    <%= form.text_area :change_history %>
   </div>
   
   <h2>pxv</h2>

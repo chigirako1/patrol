@@ -449,6 +449,9 @@ module Pxv
         #    STDERR.puts %!#{btime}"#{path}":!
         #end
 =end
+
+        STDERR.puts %!更新内容 => \t#{pxv_params}!
+
         pxv = Artist.new(pxv_params)
         pxv.save
     end
@@ -551,7 +554,7 @@ module Pxv
         end
 
         if pxv_params.size > 0
-            STDERR.print "更新内容=>"
+            STDERR.print %!"#{pxv.pxvname}(#{pxv.pxvid})":更新内容 => !
             STDERR.puts %!#{pxv_params}!
             pxv.update(pxv_params)
         end
@@ -578,6 +581,7 @@ module Pxv
         key_pxv_list_from_twt_list_a2= "142.twt url list low"
         key_pxv_list_from_twt_list_b = "143.twt url list 状態"
         key_pxv_list_from_twt_list_z = "149.twt url list 最近アクセス"
+        key_pxv_list_from_twt_list_zz = "150.twt url list 極最近アクセス"
 
         twt_list_z, tmp_ltns = pxv_list_tmp.partition {|x| x.p.last_access_datetime_p(60)}
         tmp_a, tmp_st = tmp_ltns.partition {|x| x.p.status == ""}
@@ -595,7 +599,20 @@ module Pxv
        
         pxv_group[key_pxv_list_from_twt_list_b] = tmp_st
         pxv_group[key_pxv_list_from_twt_list_a2] = tmp_low
-        pxv_group[key_pxv_list_from_twt_list_z] = twt_list_z.sort_by {|z|
+
+        twt_list_zz, twt_list_z1 = twt_list_z.partition {|x| x.p.last_access_datetime_p(7)}
+        pxv_group[key_pxv_list_from_twt_list_z] = twt_list_z1.sort_by {|z|
+            x = z.p;
+            [
+                #x.last_access_datetime||"",
+                x.last_access_datetime||Time.new(2001,1,1),
+                x.status||"", 
+                x.feature||"",
+                -(x.prediction_up_cnt(true)), 
+                x.rating||0, 
+            ]
+        }
+        pxv_group[key_pxv_list_from_twt_list_zz] = twt_list_zz.sort_by {|z|
             x = z.p;
             [
                 #x.last_access_datetime||"",

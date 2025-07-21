@@ -8,6 +8,38 @@ class HomeController < ApplicationController
     @menus = [
       # =====================================
       { :label => "unified t", :path => "" },
+      { :label => "Twitter [AI] 87 (-1 * 1)[5]",
+        :path => twitters_path(
+          target: "AI",
+          page_title: "Twitter [AI] 87 (-1 * 1)[5]",
+          rating: 87,
+          #hide_within_days: 0, 
+          num_of_disp: 5,
+          #pred: 5,
+          #force_disp_day: 10,
+          mode: TwittersController::ModeEnum::ALL_IN_ONE,
+          step: 1,
+          num_of_times: 1,
+          ex_pxv: false,
+          thumbnail: ""
+        ) 
+      },
+      { :label => "Twitter [AI] 87 (+2 * 2)[3]",
+        :path => twitters_path(
+          target: "AI",
+          page_title: "Twitter [AI] 87 (+2 * 2)[3]",
+          rating: 87,
+          #hide_within_days: 0, 
+          num_of_disp: 3,
+          #pred: 5,
+          #force_disp_day: 10,
+          mode: TwittersController::ModeEnum::ALL_IN_ONE,
+          step: -2,
+          num_of_times: 2,
+          ex_pxv: false,
+          thumbnail: ""
+        ) 
+      },
       { :label => "Twitter [AI] 86 (-1 * 3) アクセス [2]",
         :path => twitters_path(
           target: "AI",
@@ -194,18 +226,34 @@ class HomeController < ApplicationController
         ) 
       },
       { :label => "-", :path => "" },
-      { :label => "Twitter [手描き] 95 (-5 * 4)",
+      { :label => "Twitter [手描き] 90 (-5 * 1)[5]",
         :path => twitters_path(
           target: "手描き",
           #page_title: "手描き 95",
-          rating: 95,
-          hide_within_days: 15,
+          rating: 90,
+          hide_within_days: 30,
           num_of_disp: 5,
           #pred: 5,
           #force_disp_day: 10,
           mode: TwittersController::ModeEnum::ALL_IN_ONE,
           step: 5,
-          num_of_times: 4,
+          num_of_times: 1,
+          ex_pxv: true,#false,
+          thumbnail: ""
+        ) 
+      },
+      { :label => "Twitter [手描き] 95 (-5 * 2)[5]",
+        :path => twitters_path(
+          target: "手描き",
+          #page_title: "手描き 95",
+          rating: 95,
+          hide_within_days: 30,
+          num_of_disp: 5,
+          #pred: 5,
+          #force_disp_day: 10,
+          mode: TwittersController::ModeEnum::ALL_IN_ONE,
+          step: 5,
+          num_of_times: 2,
           ex_pxv: true,#false,
           thumbnail: ""
         ) 
@@ -342,7 +390,7 @@ class HomeController < ApplicationController
           )
       },
       { :label => "-", :path => "" },
-      { :label => "pxv [手描き] 95 (-5 * 3)",
+      { :label => "pxv [手描き] 95 (-5 * 2)[5]",
           :path => artists_path(
             file: ArtistsController::MethodEnum::ALL_IN_ONE,
             page_title: "pxv all in one 95 手描き",
@@ -351,9 +399,9 @@ class HomeController < ApplicationController
             status: "「長期更新なし」を除外",
             rating: 95,
             display_number: 5,
-            last_access_datetime: 7,
+            last_access_datetime: 30,
             step: 5,
-            num_of_times: 3,
+            num_of_times: 2,
             thumbnail: false,
           )
       },
@@ -410,20 +458,21 @@ class HomeController < ApplicationController
       },
       # ----------------------------
       { :label => "-", :path => "" },
-      { :label => "pxv url list",
+      { :label => "pxv url list (all)",
           :path => artists_path(
-            page_title: "pxv url list(latest)", 
-            file: ArtistsController::MethodEnum::URL_LIST_PXV_ONLY_LATEST,
+            page_title: "pxv url list (all)",
+            file: ArtistsController::MethodEnum::URL_LIST,
             sort_by: "予測▽", 
             group_by: "status/rating",
             #exclude_ai: "true",
             #status: "「長期更新なし」を除外",
             #point: 1, 
-            #prediction: 13, 
+            prediction: 11,
             #recent_filenum: 5,
-            #rating: 0, 
-            last_access_datetime: 15,
-            display_number: 22,
+            rating: 90,
+            last_access_datetime: 60,
+            force_disp_day: 180,
+            display_number: 11,
             #year: 2023,
             thumbnail: false
           )
@@ -450,8 +499,13 @@ class HomeController < ApplicationController
       },
       # ----------------------------
       { :label => "-", :path => "" },
-      #file: ArtistsController::MethodEnum::TABLE_UPDATE_NEW_USER,
-            
+      { :label => "pxv (dir-DB更新 BY FS)",
+          :path => artists_path(
+            page_title: "pxv (dir-DB更新 BY FS)", 
+            file: ArtistsController::MethodEnum::TABLE_UPDATE_NEW_USER
+          )
+      },
+
       # ----------------------------
       { :label => "url file", :path => "" },
       { :label => "最新ファイル all",
@@ -526,7 +580,7 @@ class HomeController < ApplicationController
           :path => artists_twt_index_path(
             filename: "latest 3",
             hide_day: 30,
-            #show_times: 2,
+            show_times: 2,
             pred: 8,
             target:"twt,twt既知,twt未知,known_pxv,unknown_pxv",
           )
@@ -577,11 +631,22 @@ class HomeController < ApplicationController
       },
       # -----------
       { :label => "-", :path => "" },
+      { :label => "全ファイル all",
+          :path => artists_twt_index_path(
+            filename: "all",
+            hide_day: 30,
+            show_times: 10,
+            pred: 5,
+            rating: 80,
+            target:"twt,twt既知,twt未知,known_pxv,unknown_pxv",
+          )
+      },
       { :label => "全ファイル twt",
           :path => artists_twt_index_path(
             filename: "all",
             hide_day: 15,
             force_disp_day: 90,
+            show_times: 2,
             pred: PRED_TWT,
             target:"twt,twt既知,twt未知"
           )
@@ -648,7 +713,8 @@ class HomeController < ApplicationController
       # ----------------------------
       { :label => "twitter AI", :path => "" },
       { :label => "Twitter[AI] 90", :path => twitters_path(
-          target: "AI", page_title: "AI 90", rating: 90, 
+          target: "AI", page_title: "AI 90",
+          rating: 90, 
           hide_within_days: 2,
           num_of_disp: NUM_OF_DISP,
           pred: 13, 

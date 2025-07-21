@@ -99,9 +99,12 @@
           <% if artist.twtid.presence and artist.twtid != "-" %>
             @<%= artist.twtid %>
             <% if twt %>
-              <%= twt.r18 %>|<%= twt.drawing_method %>
+              |<%= twt.r18 %>|<%= twt.drawing_method %>
               <br />
               【<%= twt.rating %>】<%= twt.prediction %>[<%= link_to_ex "■twt■", twt %>]
+              <% if twt.status.presence and twt.status != "TWT巡回" %>
+                <font color="red"><b>[<%= twt.status %>]</b></font>
+              <% end %>
               <% if artist.twtid != twt.twtid %>
                 <%= link_to_ex "@#{twt.twtid}", artist.twt_user_url %>
               <% end %>
@@ -121,10 +124,6 @@
         <td bgcolor="lightskyblue">
           <% if twt %>
             <%= Util.get_date_info(twt.last_post_datetime) %>
-            <br />
-            <% if twt.status.presence and twt.status != "TWT巡回" %>
-              <font color="red"><b>[<%= twt.status %>]</b></font>
-            <% end %>
             <br />
           <% end %>
         </td>
@@ -197,7 +196,7 @@
 
 <% if @unknown_id_list.size > 0 %>
   <h2>TWT DBに登録されているがPXV DBにないPXV IDの一覧</h2>
-  <% @unknown_id_list.each do |pxv_uid| %>
+  <% @unknown_id_list.sort.each do |pxv_uid| %>
     <% url = Pxv::pxv_user_url(pxv_uid) %>
     <% host_name = Util::get_host_name_from_uri(url) %>
     <%= pxv_uid %>(<%= link_to_ex(%!→#{host_name}!, url) %>)
@@ -241,6 +240,7 @@
           [''],
           [ArtistsController::MethodEnum::TABLE_UPDATE_NEW_USER],
           [ArtistsController::MethodEnum::UPDATE_RECORD],
+          [ArtistsController::MethodEnum::DUP_USER_ID_CHK],
           [ArtistsController::MethodEnum::NAME_TEST],
           [ArtistsController::MethodEnum::ALL_IN_ONE],
           [ArtistsController::MethodEnum::SEARCH],
@@ -396,6 +396,9 @@
           ['R15'], 
           ['R12'],
           ['R36'],
+          ['かわいい系'],
+          ['健全'],
+          ['全年齢'],
         ],
         selected: params[:r18] 
       ) %>

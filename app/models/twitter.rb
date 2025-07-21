@@ -33,9 +33,12 @@ class Twitter < ApplicationRecord
         if ignore
             records = Twitter.where('UPPER(twtid) = ?', twtid.upcase)
             if records.size > 1
-                msg = %!"#{twtid}":#{records.size}件のレコードが見つかりました !
+                msg = %!"@#{twtid}":#{records.size}件のレコードが見つかりました =>!
                 STDERR.puts msg
                 Rails.logger.warn(msg)
+                records.each do |x|
+                    STDERR.puts %!\t"#{x.twtname}"(@#{x.twtid})!
+                end
             end
             records.first
         else
@@ -281,7 +284,7 @@ class Twitter < ApplicationRecord
         end
     end
 
-    def select_cond_no_pxv
+    def select_cond_no_pxv(days = 150)
         if artists_last_ul_datetime.presence
         else
             return true
@@ -289,8 +292,8 @@ class Twitter < ApplicationRecord
 
         artists_last_access_dayn = Util::get_date_delta(artists_last_access_datetime)
 
-        if (Util::get_date_delta(artists_last_ul_datetime) > 90 and
-            artists_last_access_dayn > 90)
+        if (Util::get_date_delta(artists_last_ul_datetime) > days and
+            artists_last_access_dayn > days)
             return true
         end
 
@@ -327,8 +330,10 @@ class Twitter < ApplicationRecord
                 end
                 
                 days_accs = Util::get_date_delta(last_access_datetime)
-                if days_accs < 3
-                    key = %!080:#{days_accs}日以内!
+                if days_accs < 7
+                    #key = %!080:#{days_accs}日以内!
+                    key = %!080:7日以内!
+                    return %!#{key}!
                 elsif days_accs < 30
                     nweek = (days_accs + 6) / 7
                     key = %!090:#{nweek}週間以内!
@@ -347,13 +352,16 @@ class Twitter < ApplicationRecord
             else
                 key = "999.未設定(約#{(filenum||0) / 10}0ファイル)"
             end
-        #when Twitter::TWT_STATUS::STATUS_NOT_EXIST
-        #when Twitter::TWT_STATUS::STATUS_FROZEN
+        when Twitter::TWT_STATUS::STATUS_NOT_EXIST
+        when Twitter::TWT_STATUS::STATUS_FROZEN
+        when Twitter::TWT_STATUS::STATUS_PRIVATE
+            key = "000:#{status}"
+            return %!#{key}!
         #when Twitter::TWT_STATUS::STATUS_SCREEN_NAME_CHANGED
         else
             key = "000:#{status}(約#{(filenum||0) / 10}0ファイル)"
         end
-        #key
-        %!#{count}:#{key}!
+
+        sprintf("%03d:%s", count / 5 * 5, key)
     end
 end

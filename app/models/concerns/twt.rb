@@ -282,7 +282,7 @@ module Twt
         end
 
         if twt_params.size > 0
-            STDERR.print "更新内容=>"
+            STDERR.print "@#{key}:更新内容 => "
             STDERR.puts %!#{twt_params}!
             #twt.update(twt_params)
         end
@@ -582,7 +582,7 @@ module Twt
         end
     
         def user_exist?(twtid)
-            puts %!#{twtid}!
+            #STDERR.puts %![dbg y]#{twtid}!
             return @twt_user_list.include? twtid.downcase
         end
     end

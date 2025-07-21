@@ -5,6 +5,8 @@ class TwittersController < ApplicationController
     UNASSOCIATED_TWT_ACNT = '未紐づけTWTアカウント' #PXV DBにはTWT IDが登録されているがTWT DBにはPXV IDが登録されていない
     ALL_IN_ONE = 'all in one'
     URL_TXT = 'url txt'
+    PATROL = 'patrol'
+    STATS = 'stats'
   end
 
   module GRP_SORT
@@ -199,10 +201,16 @@ class TwittersController < ApplicationController
           group_list << group
         end
       
-        rating_lt = rating_gt
-        rating_gt -= step
+        if step > 0
+          rating_lt = rating_gt
+          rating_gt -= step
+        else
+          rating_gt -= step
+        end
       end
       @rating_min = rating_gt
+
+      rating_gt += step - 1
 
       if target_hash == nil
         top = [89, rating_gt].min
@@ -355,10 +363,11 @@ class TwittersController < ApplicationController
       @twitters_group = twitters.group_by {|x| x.status}
       #@twitters_group = @twitters_group.sort_by {|k, v| k || 0}.reverse.to_h
       return
-    when "patrol", "patrol2"
+    when TwittersController::ModeEnum::PATROL, "patrol2", TwittersController::ModeEnum::STATS
       twitters = twitters.select {|x| x.drawing_method != nil}
-      if mode == "patrol"
+      if mode == TwittersController::ModeEnum::PATROL
         twitters = twitters.select {|x| x.status == "TWT巡回"}
+      elsif mode == TwittersController::ModeEnum::STATS
       else
         twitters = twitters.select {|x|
           x.status == "長期更新なし" or
@@ -375,6 +384,7 @@ class TwittersController < ApplicationController
       #twitters = twitters.select {|x| x.id == 1388}
       
       if params[:target].presence
+        puts %!target=#{params[:target]}!
         twitters = twitters.select {|x| x.drawing_method == params[:target]}
       else
         twitters = twitters.select {|x| x.drawing_method != nil and (x.drawing_method == "AI" or x.drawing_method == "パクリ")}
@@ -392,6 +402,12 @@ class TwittersController < ApplicationController
         twitters = twitters.select {|x| x.rating == nil or x.rating >= rating_gt }
       end
 
+      if rating_lt != 0
+        puts %!xyx #{twitters.size}!
+        twitters = twitters.select {|x| x.rating == nil or x.rating <= rating_lt }
+        puts %!xyy #{twitters.size} (#{rating_lt})!
+      end
+
       case sort_by
       when "access"
         #twitters = twitters.sort_by {|x| [-x.rating, x.last_access_datetime, (x.last_dl_datetime)]}#.reverse
@@ -399,7 +415,7 @@ class TwittersController < ApplicationController
       when "pred"
         twitters = twitters.sort_by {|x| [-x.prediction, x.last_access_datetime]}
       else
-        twitters = twitters.sort_by {|x| [-x.rating, -x.prediction, x.last_access_datetime]}
+        twitters = twitters.sort_by {|x| [-(x.rating||0), -x.prediction, x.last_access_datetime]}
       end
 
       @twitters_total_count = twitters.size
@@ -598,12 +614,22 @@ class TwittersController < ApplicationController
 
   # PATCH/PUT /twitters/1 or /twitters/1.json
   def update
-
     twtname = params[:twitter][:twtname]
     twtname_mod = Twt::sanitize_filename(twtname)
     if twtname != twtname_mod
       STDERR.puts %!"[update] #{twtname}" => "#{twtname_mod}"!
       #params[:twitter][:twtname] = twtname_mod
+    end
+
+    if params[:twitter][:rating] and @twitter.rating != params[:twitter][:rating].to_i
+      if @twitter.change_history.presence
+        prev_val = @twitter.change_history
+      else
+        prev_val = @twitter.rating
+      end
+      c_history = %!#{prev_val}=>#{params[:twitter][:rating]}!
+      STDERR.puts %![dbg]#{c_history}!
+      params[:twitter][:change_history] = c_history
     end
 
     params[:twitter][:main_twtid] = Twt::get_screen_name(params[:twitter][:main_twtid])
@@ -695,6 +721,11 @@ class TwittersController < ApplicationController
 
       if target_hash == nil or target_hash[GRP_SORT::GRP_SORT_PRED]
         twitters = twitters.sort_by {|x| [-x.prediction, -(x.rating||0), x.last_access_datetime]}
+
+        if @hide_within_days > 0
+          twitters = twitters.select {|x| !x.last_access_datetime_p(@hide_within_days)}
+        end
+        
         twitters_group["#{rating_gt}:予測順"] = twitters
       end
 
@@ -732,6 +763,7 @@ class TwittersController < ApplicationController
     end
 
     def routine_group(twitters_arg, params, l_limit_r, u_limit_r)
+      STDERR.puts %!#{l_limit_r}|#{u_limit_r}!
       if l_limit_r > u_limit_r
         raise "不正な引き数:#{l_limit_r}-#{u_limit_r}" 
       end

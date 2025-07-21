@@ -15,11 +15,27 @@
             <% val.each do |k, v| %>
                 <tr>
                     <td>
-                        <%= %!"#{k}"! %>
+                        <%#= %!"#{k}"! %>
+                        <% if key.include?("pxv") %>
+                            <% if key =~ /.*:(.*)/ %>
+                                <% col = $1 %>
+                                <% if col == "status" %>
+                                    <% url = artists_path(page_title: "xxx", status: k, ai: true) %>
+                                <% elsif col == "r18" %>
+                                    <% url = artists_path(page_title: "xxx", r18: k, ai: true) %>
+                                <% end %>
+                            <% end %>
+                        <% elsif key.include?("twt") %>
+
+                            <% url = twitters_path(page_title: "xxx", mode: TwittersController::ModeEnum::STATS, rating: k, rating_lt: k, target: "AI") %>
+                        <% else %>
+                        <% end %>
+                        <%= link_to_ex("#{k}", url) %>
                     </td>
                     <td align="right">
                         <%= %!#{v}! %>
                     </td>
+
                     <% percent = (v.to_f / sum * 100).round(1) %>
                     
                     <td align="right">

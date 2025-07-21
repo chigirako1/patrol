@@ -148,6 +148,7 @@ module Util
     #！！！よくわからないがArtistNameに定義するとコールできない。。。
 
     def self.get_word_list(filepath)
+        STDERR.puts %![get_word_list]"#{filepath}"!
         list = []
         txtpath = Rails.root.join(filepath).to_s
         File.open(txtpath) { |file|
@@ -196,7 +197,8 @@ module ArtistName
     )
 
     sepa_char_list = separate_chars.map {|w| Regexp.escape(w)}
-    sepa_char = "(.*?)" + "(" + sepa_char_list.join("|") + ")" + "(.*)"
+    #sepa_char = "(.*?)" + "(" + sepa_char_list.join("|") + ")" + "(.*)"
+    sepa_char = "(.+?)" + "(" + sepa_char_list.join("|") + ")" + "(.*)"
     @@sepa_rgx = Regexp.new(sepa_char)
 
     def self.remove_spec_str(name, remove_words)
@@ -253,14 +255,14 @@ module ArtistName
         if tmp.size > 0
             name_chg = tmp
         else
-            STDERR.puts %!emoji:すべての文字が削除されたので変更しない:"#{name_chg}"!
+            STDERR.puts %!emoji:すべての文字が削除されたので変更しない:"#{name_orig}"!
         end
 
         tmp = remove_spec_str(name_chg, remove_word_list)
         if tmp.size > 0
             name_chg = tmp
         else
-            STDERR.puts %!words:すべての文字が削除されたので変更しない:"#{name_chg}"!
+            STDERR.puts %!words:すべての文字が削除されたので変更しない:"#{name_orig}"/"#{name_chg}"!
         end
 
         name_chg.strip
