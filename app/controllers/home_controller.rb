@@ -8,6 +8,22 @@ class HomeController < ApplicationController
     @menus = [
       # =====================================
       { :label => "unified t", :path => "" },
+      { :label => "Twitter [AI] 90 (-1 * 1)[5]",
+        :path => twitters_path(
+          target: "AI",
+          page_title: "Twitter [AI] 90 (-1 * 1)[5]",
+          rating: 90,
+          #hide_within_days: 0, 
+          num_of_disp: 5,
+          #pred: 5,
+          #force_disp_day: 10,
+          mode: TwittersController::ModeEnum::ALL_IN_ONE,
+          step: 1,
+          num_of_times: 1,
+          ex_pxv: false,
+          thumbnail: ""
+        ) 
+      },
       { :label => "Twitter [AI] 87 (-1 * 1)[5]",
         :path => twitters_path(
           target: "AI",
@@ -18,6 +34,40 @@ class HomeController < ApplicationController
           #pred: 5,
           #force_disp_day: 10,
           mode: TwittersController::ModeEnum::ALL_IN_ONE,
+          step: 1,
+          num_of_times: 1,
+          ex_pxv: false,
+          thumbnail: ""
+        ) 
+      },
+      { :label => "Twitter [AI] 89 (-1 * 3) 予測/アクセス [2]",
+        :path => twitters_path(
+          target: "AI",
+          page_title: "AI 89 (-1 * 3)",
+          rating: 89,
+          #hide_within_days: 0, 
+          num_of_disp: 2,
+          #pred: 5,
+          #force_disp_day: 10,
+          mode: TwittersController::ModeEnum::ALL_IN_ONE,
+          aio: TwittersController::GRP_SORT::GRP_SORT_ACCESS + "|" + TwittersController::GRP_SORT::GRP_SORT_PRED,
+          step: 1,
+          num_of_times: 3,
+          ex_pxv: false,
+          thumbnail: ""
+        ) 
+      },
+      { :label => "Twitter [AI] 87 (-1 * 1) 予測/アクセス [5]",
+        :path => twitters_path(
+          target: "AI",
+          page_title: "Twitter [AI] 87 (-1 * 1) 予測/アクセス [5]",
+          rating: 87,
+          #hide_within_days: 0, 
+          num_of_disp: 5,
+          #pred: 5,
+          #force_disp_day: 10,
+          mode: TwittersController::ModeEnum::ALL_IN_ONE,
+          aio: TwittersController::GRP_SORT::GRP_SORT_ACCESS + "|" + TwittersController::GRP_SORT::GRP_SORT_PRED,
           step: 1,
           num_of_times: 1,
           ex_pxv: false,
@@ -53,39 +103,6 @@ class HomeController < ApplicationController
           aio: TwittersController::GRP_SORT::GRP_SORT_ACCESS, #+ "|" + TwittersController::GRP_SORT::GRP_SORT_PRED,
           step: 1,
           num_of_times: 3,
-          ex_pxv: false,
-          thumbnail: ""
-        ) 
-      },
-      { :label => "Twitter [AI] 89 (-1 * 3) 予測/アクセス [2]",
-        :path => twitters_path(
-          target: "AI",
-          page_title: "AI 89 (-1 * 3)",
-          rating: 89,
-          #hide_within_days: 0, 
-          num_of_disp: 2,
-          #pred: 5,
-          #force_disp_day: 10,
-          mode: TwittersController::ModeEnum::ALL_IN_ONE,
-          aio: TwittersController::GRP_SORT::GRP_SORT_ACCESS + "|" + TwittersController::GRP_SORT::GRP_SORT_PRED,
-          step: 1,
-          num_of_times: 3,
-          ex_pxv: false,
-          thumbnail: ""
-        ) 
-      },
-      { :label => "Twitter [AI] 90 (-1 * 1)[5]",
-        :path => twitters_path(
-          target: "AI",
-          page_title: "Twitter [AI] 90 (-1 * 1)[5]",
-          rating: 90,
-          #hide_within_days: 0, 
-          num_of_disp: 5,
-          #pred: 5,
-          #force_disp_day: 10,
-          mode: TwittersController::ModeEnum::ALL_IN_ONE,
-          step: 1,
-          num_of_times: 1,
           ex_pxv: false,
           thumbnail: ""
         ) 

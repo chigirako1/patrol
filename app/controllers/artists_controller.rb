@@ -433,7 +433,7 @@ class ArtistsController < ApplicationController
         artists = artists.select {|x| x.last_access_datetime_num > 90}
         artists = artists.sort_by {|x| [-x.filenum]}
         group = {}
-        group["未設定 ファイル数順"] = artists
+        group["未設定 総ファイル数順"] = artists
         group_list << group
       end
 
@@ -503,9 +503,11 @@ class ArtistsController < ApplicationController
           # yymm
           path = UrlTxtReader::txt_file_list($1 + "\\d+")
         elsif datestr =~ /^\d+$/
-          path = ["public/get illust url_#{datestr}.txt"]
+          #path = ["public/get illust url_#{datestr}.txt"]
+          path = [UrlTxtReader::URLLIST_DIR_PATH + "/get illust url_#{datestr}.txt"]
         else
-          path = ["public/#{datestr}.txt"]
+          #path = ["public/#{datestr}.txt"]
+          path = [UrlTxtReader::URLLIST_DIR_PATH + "/#{datestr}.txt"]
         end
         puts %!path="#{path}"!
         id_list, @twt_urls, @misc_urls = Artist.get_url_list(path)
@@ -654,7 +656,7 @@ class ArtistsController < ApplicationController
   # GET /artists/1 or /artists/1.json
   def show
     @last_access_datetime = @artist.last_access_datetime
-    if params[:access_dt_update].presence and params[:access_dt_update] == "yes"
+    if true #params[:access_dt_update].presence and params[:access_dt_update] == "yes"
       dn = Util::get_date_delta(@artist.last_access_datetime)
       if dn == 0
         STDERR.puts "更新不要:#{dn}"

@@ -95,20 +95,25 @@
 
   <% if artist.filenum > file_num or show_oldest %>
     <h3>一部のみ表示？(<%= file_num %>/<%= artist.filenum %>)</h3>
-    <% if @artist.latest_artwork_id.presence %>
-      <% url = artist.pxv_artwork_url(@artist.latest_artwork_id) %>
-      最新：(<%= link_to_ex(@artist.latest_artwork_id, url) %>)
+
+    <% latest_artwork_id, oldest_artwork_id = artist.get_artwork_id %>
+
+    <% if latest_artwork_id.presence %>
+      <% url = artist.pxv_artwork_url(latest_artwork_id) %>
+      最新：(<%= link_to_ex(latest_artwork_id, url) %>)
+
       <%= l @artist.last_ul_datetime, format: :date %>
       <br />
     <% end %>
-    <% if @artist.oldest_artwork_id.presence %>
-      <% url = artist.pxv_artwork_url(@artist.oldest_artwork_id) %>
-      最古：(<%= link_to_ex(@artist.oldest_artwork_id, url) %>)
+
+    <% if oldest_artwork_id.presence %>
+      <% url = artist.pxv_artwork_url(oldest_artwork_id) %>
+      最古：(<%= link_to_ex(oldest_artwork_id, url) %>)
+
       <%= l @artist.earliest_ul_date, format: :date %>
       (<%= artist.reverse_status %>)
       <br />
     <% end %>
-    
   <% end %>
   <br />
   

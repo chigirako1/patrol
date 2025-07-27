@@ -38,7 +38,7 @@
     <h3>twt:"<%= search_word %>" not found</h3>
     <% pt = Artist.find_by(twtid: search_word) %>
     <% if pt %>
-      PXVに登録あり:"<%= pt.pxvname %>"[<%= link_to_ex "■pxv■", pt %>](@<%= pt.twtid %>)
+      PXVには登録あり:"<%= pt.pxvname %>"[<%= link_to_ex "■pxv■", pt %>](@<%= pt.twtid %>)
     <% end %>
   <% end %>
 <% end %>
@@ -97,7 +97,9 @@
           [<%= twitter.status %>]
           <br />
          
-          <%= %!※#{twitter.comment}! if twitter.comment.presence %>
+          <% if twitter.comment.presence %>
+            <b><%= %!※#{twitter.comment}! %></b>
+          <% end %>
           <%= twitter.remarks %>
         </td>
 

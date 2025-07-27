@@ -20,6 +20,8 @@ class Artist < ApplicationRecord
     include UrlTxtReader
     #extend UrlTxtReader 違いがよくわかってない
 
+    validates :pxvid, uniqueness: true
+
     has_one :twitters, :class_name => 'Twitter'
 
     C_ARTIST_TARGET_AUTO = "(自動判断)"
@@ -410,6 +412,25 @@ class Artist < ApplicationRecord
 
     def nje_member_url
         Nje::nje_member_url(njeid)
+    end
+
+    def get_artwork_id
+
+
+        if latest_artwork_id.presence
+            l_artwork_id = latest_artwork_id
+        else
+            tsv_l_artwork_id, tsv_o_artwork_id = UrlTxtReader::get_pxv_artwork_id_from_tsv(pxvid)
+            l_artwork_id = tsv_l_artwork_id
+        end
+
+        if oldest_artwork_id.presence
+            o_artwork_id = oldest_artwork_id
+        else
+            o_artwork_id = tsv_o_artwork_id
+        end
+
+        [l_artwork_id, o_artwork_id]
     end
 
     def self.stats(path_list)

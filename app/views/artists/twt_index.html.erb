@@ -1,4 +1,4 @@
-<% title = %!url 一覧  #{params[:title]}/file:#{params[:filename]}/dir:#{params[:dir]}! %>
+<% title = %!url 一覧  #{params[:title]}/file:"#{params[:filename]}"/dir:#{params[:dir]}! %>
 
 <% provide(:title, title) %>
 
@@ -114,7 +114,11 @@
                         【<%= twt_account.rating %>】<%= twt_account.r18 %>
                     </td>
                     <td>
-                        <%= twt_account.status %>
+                        <% if twt_account.status == "TWT巡回" %>
+                            <%#= twt_account.status %>
+                        <% else %>
+                            <b><%= twt_account.status %></b>
+                        <% end %>
                     </td>
                     <td>
                         <b>
@@ -209,6 +213,7 @@
 <% known_twt_account_list = {} %>
 
 <!-- 未知twt -->
+<% disp_twt_pxv = false%>
 <% pxv_list_tmp = [] %>
 <% if @unknown_twt_url_list.presence %>
     <% STDERR.puts "[dbgx]#{@unknown_twt_url_list.size}" %>
@@ -240,11 +245,20 @@
         <!-- pxv -->
         <% pxv_artist = Artist.find_by_twtid_ignore_case(key) %>
         <% if pxv_artist %>
-            <%= idx %>:
-            (@<%= key %>)(<%= pxv_artist.pxvname %>)[<%= link_to_ex "■pxv■", pxv_artist %>]
-            <%= pxv_artist.get_datetime_string(pxv_artist.last_ul_datetime, true) %>
-            (<%= pxv_artist.get_date_info(pxv_artist.last_ul_datetime) %>)
-            <br />
+            <% if disp_twt_pxv %>
+                <%= idx %>:
+                @<%= key %>
+                【<%= pxv_artist.pxvname %>
+                |<%= pxv_artist.rating %>
+                |<%= pxv_artist.r18 %>
+                |<%= pxv_artist.feature %>
+                】
+                [<%= link_to_ex "■pxv■", artist_path(pxv_artist, access_dt_update: "yes") %>]
+                アクセス日:<%= pxv_artist.get_date_info(pxv_artist.last_access_datetime) %>
+                公開日:<%= pxv_artist.get_datetime_string(pxv_artist.last_ul_datetime, true) %>
+                (<%= pxv_artist.get_date_info(pxv_artist.last_ul_datetime) %>)
+                <br />
+            <% end %>
 
             <% pxv_list_tmp << PxvInfo.new(pxv_artist.pxvid, url_list.size, pxv_artist) %>
             <% next %>
@@ -648,7 +662,7 @@
         <% #puts d %>
         <% file = %!target#{d.strftime('%y')}! %>
         <% url_all = artists_twt_index_path(filename: file, hide_day: 30, pred: 5, target: "twt,twt既知,twt未知,known_pxv,unknown_pxv", force_disp_day: 90) %>
-        <% url_t_u = artists_twt_index_path(filename: file, hide_day: 30, pred: 5, target: ArtistsController::FileTarget::TWT_UNKNOWN_ONLY, force_disp_day: 90) %>
+        <% url_t_u = artists_twt_index_path(filename: file, hide_day: 30, pred: 5, target: ArtistsController::FileTarget::TWT_UNKNOWN_ONLY, force_disp_day: 90, show_times: 2) %>
         <% url_p_u = artists_twt_index_path(filename: file, hide_day: 30, pred: 5, target: ArtistsController::FileTarget::PXV_UNKNOWN_ONLY, force_disp_day: 90) %>
         <% url_p_k = artists_twt_index_path(filename: file, hide_day: 30, pred: 5, target:"known_pxv", force_disp_day: 90) %>
         <% url_t_e = artists_twt_index_path(filename: file, hide_day: 60, pred: 5, target: ArtistsController::FileTarget::TWT_EXPERIMENT, force_disp_day: 90) %>
@@ -671,7 +685,7 @@
         <% #puts d %>
         <% file = %!target#{d.strftime('%y%m')}! %>
         <% url_all = artists_twt_index_path(filename: file, hide_day: 30, pred: 5, target: "twt,twt既知,twt未知,known_pxv,unknown_pxv", force_disp_day: 90) %>
-        <% url_t_u = artists_twt_index_path(filename: file, hide_day: 30, pred: 5, target: ArtistsController::FileTarget::TWT_UNKNOWN_ONLY, force_disp_day: 90) %>
+        <% url_t_u = artists_twt_index_path(filename: file, hide_day: 30, pred: 5, target: ArtistsController::FileTarget::TWT_UNKNOWN_ONLY, force_disp_day: 90, show_times: 2) %>
         <% url_p_u = artists_twt_index_path(filename: file, hide_day: 30, pred: 5, target: ArtistsController::FileTarget::PXV_UNKNOWN_ONLY, force_disp_day: 90) %>
         <% url_p_k = artists_twt_index_path(filename: file, hide_day: 30, pred: 5, target:"known_pxv", force_disp_day: 90) %>
         <% url_t_e = artists_twt_index_path(filename: file, hide_day: 60, pred: 5, target: ArtistsController::FileTarget::TWT_EXPERIMENT, force_disp_day: 90) %>

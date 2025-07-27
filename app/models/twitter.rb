@@ -1,6 +1,8 @@
 class Twitter < ApplicationRecord
     include UrlTxtReader
 
+    validates :twtid, uniqueness: true
+
     belongs_to :artists, :class_name => 'Artist', optional: true
 
     module TWT_STATUS
@@ -310,33 +312,41 @@ class Twitter < ApplicationRecord
                 %!x:#{drawing_method}-#{rating}-#{r18}!
             end
         when nil
-            "z"
+            "a:nil"
+        when ""
+            %!a:"()"!
         else
-            %!a:#{status}!
+            %!a:"#{status}"!
         end
     end
 
     def group_key(count)
+        add_count = true
         case status
         when Twitter::TWT_STATUS::STATUS_PATROL
             if rating.presence
-                case drawing_method 
+                case drawing_method
                 when "AI"
-                    method = "102:AI"
+                    #method = "102:AI"
+                    method = "AI"
                 when "パクリ"
-                    method = "101:paku"
+                    #method = "101:paku"
+                    method = "paku"
                 else
-                    method = "109:手"
+                    #method = "109:手"
+                    method = ""
                 end
                 
                 days_accs = Util::get_date_delta(last_access_datetime)
                 if days_accs < 7
                     #key = %!080:#{days_accs}日以内!
                     key = %!080:7日以内!
-                    return %!#{key}!
+                    add_count = false
+                    #return %!#{key}!
                 elsif days_accs < 30
                     nweek = (days_accs + 6) / 7
                     key = %!090:#{nweek}週間以内!
+                    add_count = false
                 elsif days_accs > 365 * 2
                     year = sprintf("%03d", days_accs / 365)
                     key = %!990:#{year}年以上!
@@ -362,6 +372,16 @@ class Twitter < ApplicationRecord
             key = "000:#{status}(約#{(filenum||0) / 10}0ファイル)"
         end
 
-        sprintf("%03d:%s", count / 5 * 5, key)
+        if add_count
+            key = sprintf("%03d:%s", count / 5 * 5, key)
+        else
+            key = sprintf("%03d:%s", 0, key)
+        end
+
+        if drawing_method == "手描き"
+            %!|#{key}!
+        else
+            (drawing_method||"") + "|" + key
+        end
     end
 end

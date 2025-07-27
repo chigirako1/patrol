@@ -5,6 +5,9 @@ require 'digest'
 module Util
     extend ActiveSupport::Concern
 
+    EXCEPTION_TXT_PATH = "public/exception.txt"
+    REMOVE_WORDS_FILE_PATH = "public/remove_words.txt"
+
     # よくわからないが、
     # ・"24-09-22".to_date => 0024-09-22
     # ・Date.parse("24-09-22") => 2024-09-22
@@ -162,11 +165,11 @@ module Util
     end
 
     def self.exception_name_list()
-        get_word_list("public/exception.txt")
+        get_word_list(EXCEPTION_TXT_PATH)
     end
 
     def self.words_to_remove()
-        get_word_list("public/remove_words.txt")
+        get_word_list(REMOVE_WORDS_FILE_PATH)
     end
 end
 

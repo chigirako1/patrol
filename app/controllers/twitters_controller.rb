@@ -246,7 +246,7 @@ class TwittersController < ApplicationController
         twitters_w = twitters.select {|x| !x.last_access_datetime_p(-90) and !x.last_access_datetime_p(7)}
         twitters_w = twitters_w.sort_by {|x| [-(x.filenum||0), x.last_access_datetime]}
         group = {}
-        group["未設定 ファイル数↑"] = twitters_w
+        group["未設定 総ファイル数↑"] = twitters_w
         group_list << group
       end
 

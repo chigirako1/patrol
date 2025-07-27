@@ -6,6 +6,8 @@ require 'find'
 module UrlTxtReader
     extend ActiveSupport::Concern
 
+    URLLIST_DIR_PATH = "public/urllist"
+
     def get_date_delta(date)
         Util::get_date_delta(date)
     end
@@ -88,16 +90,18 @@ module UrlTxtReader
         end
     end
 
-    def self.public_path
-        Rails.root.join("public").to_s
+    def self.public_path(path = "public")
+        Rails.root.join(path).to_s
     end
 
     def self.txt_file_list(rgx="\\d+")
         path_list = []
-        base_path = public_path
-        puts %!basepath="#{base_path}"!
+        base_path = public_path(URLLIST_DIR_PATH)
+        puts %![txt_file_list] basepath="#{base_path}"!
+
         rg_filename = %r!get illust url_#{rgx}\.txt!
-        p rg_filename
+        STDERR.puts %!#{rg_filename}!
+
         Dir.glob(base_path + "/*") do |path|
             if path =~ rg_filename
                 path_list << path
@@ -138,6 +142,29 @@ module UrlTxtReader
     def self.get_latest_txt(filecnt=1)
         path_list = txt_file_list.sort
         path_list.last(filecnt)
+    end
+
+    def self.get_pxv_artwork_id_from_tsv(pxv_user_id)
+
+        base_path = public_path
+        tsv_file_path = base_path + "/mydata/4tb_pxv_id_list.tsv"
+        tsv = CSV.read(tsv_file_path, headers: true, col_sep: "\t")
+
+        tsv.each do |row|
+            #p row
+            user_id = row["userid"].to_i
+            if user_id == pxv_user_id
+                o_artwork_id = row["min"].to_i
+                l_artwork_id = row["max"].to_i
+                puts %!#{pxv_user_id}:#{o_artwork_id}/#{l_artwork_id}!
+                return [l_artwork_id, o_artwork_id]
+            elsif user_id > pxv_user_id
+                STDERR.puts %!#{user_id} > #{pxv_user_id}!
+                break
+            end
+        end
+
+        return [nil, nil]
     end
 
     def self.authors_list(filename, type)

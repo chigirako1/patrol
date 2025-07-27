@@ -634,7 +634,7 @@ module Pxv
         key_pxv_list_no_access_2m    = "106.2ヶ月以上"
         key_pxv_list_pred            = "199.わりと最近アクセス"
     
-        key_pxv_list_unset           = "!000.未設定|ファイル数"
+        key_pxv_list_unset           = "!未設定|総ファイル数"
     
         key_pxv_list_no_update_6m    = "902.#{ArtistsController::Status::SIX_MONTH_NO_UPDATS}"
         key_pxv_list_no_update_long  = "903.#{ArtistsController::Status::LONG_TERM_NO_UPDATS}"
@@ -691,7 +691,7 @@ module Pxv
                 if !(p.last_access_datetime_p(365))
                     #key_str = get_key_term(p.rating, key_pxv_list_no_access_1y)
                     str = key_pxv_list_no_access_1y
-                    key_str = "!" + method_proc.call(p.rating, str)
+                    key_str = "!ご無沙汰" + method_proc.call(p.rating, str)
                     pxv_group[key_str] << elem
                 elsif !(p.last_access_datetime_p(180))
                     #key_str = get_key_term(p.rating, key_pxv_list_no_access_6m)
@@ -719,7 +719,9 @@ module Pxv
                     key_str = method_proc.call(p.rating, str)
                     pxv_group[key_str] << elem
                 else
-                    key = key_pxv_list_pred + ":予測#{pred / 5 * 5}"
+                    #key = key_pxv_list_pred + ":予測#{pred / 5 * 5}"
+                    key = key_pxv_list_pred + sprintf(":予測%03d", pred / 5 * 5)
+                   
                     pxv_group[key] << elem
                 end
             else
