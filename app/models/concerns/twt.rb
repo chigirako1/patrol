@@ -188,6 +188,36 @@ module Twt
         twt_tweet_url("TwitterDev", tweet_id)
     end
 
+    def self.get_tweet_id_from_url(url)
+        search_tweet_id = nil
+        if url =~ /status\/(\d+)/
+            search_tweet_id = $1.to_i
+        elsif url =~ /(\d+)/
+            search_tweet_id = $1.to_i
+        else
+        end
+        search_tweet_id
+    end
+
+    def self.search_tweet(twt_pic_path_list, search_tweet_id)
+
+
+        if search_tweet_id == nil
+            STDERR.puts %![search_tweet]:"#{search_tweet_id}"!
+        end
+
+        paths = []
+
+        twt_pic_path_list.each do |x|
+            tweet_id, _ = get_tweet_info_from_filepath(x)
+            if tweet_id == search_tweet_id
+                paths << x
+            end
+        end
+
+        paths
+    end
+
     def self.db_update_by_newdir_new(key, val)
         pic_path_list = val.twt_pic_path_list
         if pic_path_list.size == 0

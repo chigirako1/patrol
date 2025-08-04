@@ -151,12 +151,12 @@
         <!-- pxv access -->
         <td bgcolor="pink">
           <% if pxv.presence %>
-            <%= pxv.prediction_up_cnt(true) %>
+            予測：<%= pxv.prediction_up_cnt(true) %>
             <% if twitter.artist_status.presence %>
               PXVID:<%= %!#{twitter.artist_pxvid}! %>
               <br />
               <font color="red">
-              <b><%= %!※#{twitter.artist_status}! %></b>
+                <b><%= %!※#{twitter.artist_status}! %></b>
               </font>
             <% end %>
             <br />
@@ -164,10 +164,16 @@
             <% if pxv2.presence %>
               [<%= link_to_ex("■pxv■(#{pxv2.id})", artist_path(pxv2, access_dt_update: "yes")) %>]
               (@<%= pxv2.twtid %>)
+              <font color="red">
+                <b><%= %!※#{pxv2.status}! %></b>
+              </font>
             <% else %>
               [<%= link_to_ex("■pxv■(#{pxv.id})", artist_path(pxv, access_dt_update: "yes")) %>]
               <%= twitter.artist_id %>
               (@<%= pxv.twtid %>)
+              <font color="red">
+                <b><%= %!※#{pxv.status}! %></b>
+              </font>
             <% end %>
             <br />
 

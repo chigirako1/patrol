@@ -291,6 +291,7 @@ class ArtistsController < ApplicationController
   module FileTarget
     TWT_UNKNOWN_ONLY = "unknown_twt_only"
     PXV_UNKNOWN_ONLY = "unknown_pxv_only"
+    TWT_KNOWN_ONLY = "twt,twt既知"
     TWT_EXPERIMENT = "twt_experiment"
     PXV_EXPERIMENT = "pxv_experiment"
     PXV_ARTWORK_LIST = "pxv_artwork_list"
@@ -335,6 +336,7 @@ class ArtistsController < ApplicationController
   module GROUP_TYPE
     GROUP_ACCESS_OLD_TO_NEW = "ACCESS旧→新"
     GROUP_FEAT_STAT_RAT = "feature/status/rating"
+    GROUP_STAT_RAT_R18 = "status/rating/r18"
   end
 
   def api_hoge
@@ -734,26 +736,17 @@ class ArtistsController < ApplicationController
   # GET /artists/twt
   def twt_index
     
-    hide_day = params[:hide_day]
-    if hide_day =~ /(\d+)/
-      @hide_day = $1.to_i
-    else
-      @hide_day = 5
-    end
+    @hide_day = get_int(params[:hide_day], 5)
+    STDERR.puts %![twt_index] hide_day="#{@hide_day}"!
 
-    force_disp_day = params[:force_disp_day]
-    if force_disp_day =~ /(\d+)/
-      @force_disp_day = $1.to_i
-    else
-      @force_disp_day = 0
-    end
+    @rating = get_int(params[:rating], 0)
+    STDERR.puts %![twt_index] rating="#{@rating}"!
 
-    pred = params[:pred]
-    if pred =~ /(\d+)/
-      @pred = $1.to_i
-    else
-      @pred = 0
-    end
+    @force_disp_day = get_int(params[:force_disp_day], 0)
+    STDERR.puts %![twt_index] force_disp_day="#{@force_disp_day}"!
+
+    @pred = get_int(params[:pred], 0)
+    STDERR.puts %![twt_index] pred="#{@pred}"!
 
     target = params[:target]
     if target.presence
@@ -1227,6 +1220,14 @@ class ArtistsController < ApplicationController
       artists
     end
 
+    def get_int(str, def_val)
+      if str =~ /(\d+)/
+        return $1.to_i
+      else
+        return def_val
+      end
+    end
+
     def filenum_g(filenum)
       f = 0
       if filenum >= 300
@@ -1277,6 +1278,8 @@ class ArtistsController < ApplicationController
         artists_group = artists.group_by {|x| [x.status, -x.rating]}.sort.to_h
       when GROUP_TYPE::GROUP_FEAT_STAT_RAT
         artists_group = artists.group_by {|x| [x.feature, x.status, -x.rating]}.sort.to_h
+      when GROUP_TYPE::GROUP_STAT_RAT_R18
+        artists_group = artists.group_by {|x| [x.status, -x.rating, x.r18]}.sort.to_h
       when "評価+年齢制限"
         #artists_group = artists.group_by {|x| [-x.rating, x.r18]}.sort.to_h
         artists_group = artists.group_by {|x| [x.rating, x.r18]}.sort.reverse.to_h
@@ -1339,26 +1342,27 @@ class ArtistsController < ApplicationController
       artists = index_select_status_exclude(artists)
 
       artists_sort_pred = artists.sort_by {|x| [-x.prediction_up_cnt(true), x[:recent_filenum], -x[:filenum], x[:last_ul_datetime]]}
-      artists_group[prefix + "予測順"] = artists_sort_pred
 
       @artists_total_count = artists.size
 
       prms.last_access_datetime = interval
       artists = artists.select {|x| !x.last_access_datetime_p(interval)}
       artists_sort_high = artists.sort_by {|x| [-x.rating, -x.prediction_up_cnt(true), x.last_access_datetime]}
-      artists_group[prefix + "評価順"] = artists_sort_high
       
       # ---
-      artists = index_select(Artist.all, prms, false)
-      artists = index_select_status_exclude(artists)
-      #artists = artists.select {|x| !x.last_access_datetime_p(interval)}
+      if true
+        artists = index_select(Artist.all, prms, false)
+        artists = index_select_status_exclude(artists)
 
-      artists_sort_access = artists.sort_by {|x| [x.last_access_datetime, -x.recent_filenum, -x.filenum]}
+        artists_sort_access = artists.sort_by {|x| [x.last_access_datetime, -x.recent_filenum, -x.filenum]}
+
+        artists2 = artists.select {|x| x.select_cond_post_date()}
+        artists_sort_ul = artists2.sort_by {|x| [x.last_ul_datetime]}
+      end
+
       artists_group[prefix + "アクセス日順"] = artists_sort_access
-
-      #artists2 = artists.select {|x| !x.last_access_datetime_p(interval)}
-      artists2 = artists.select {|x| x.select_cond_post_date()}
-      artists_sort_ul = artists2.sort_by {|x| [x.last_ul_datetime]}
+      artists_group[prefix + "予測順"] = artists_sort_pred
+      artists_group[prefix + "評価順"] = artists_sort_high
       artists_group[prefix + "公開日順"] = artists_sort_ul
 
       # ---

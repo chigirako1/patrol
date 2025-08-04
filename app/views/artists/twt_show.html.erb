@@ -20,11 +20,13 @@
 <% end %>
 
 <% pxv_artist = Artist.find_by_twtid_ignore_case(@twtid) %>
-<% if pxv_artist != nil %>
+<% if pxv_artist %>
     pxv:<%= pxv_artist.pxvname %> [<%= link_to "show", pxv_artist, target: :_blank, rel: "noopener noreferrer" %>]
         <%= pxv_artist.get_datetime_string(pxv_artist.last_ul_datetime) %>
         <%= pxv_artist.status %>
     <br />
+<% else %>
+    xxx
 <% end %>
 <hr />
 
@@ -63,6 +65,20 @@
 <% end %>
 <%= twt_pic_list.size %>
 <br />
+
+<h2>url txt</h2>
+<% tweet_ids = Twt::get_twt_tweet_ids_from_txts(@twtid) %>
+<% tweet_ids.each do |x| %>
+    <% url = Twt::twt_tweet_url(@twtid, x) %>
+    <%= link_to_ex(url, url) %>
+    [<%= Twt::timestamp_str(x) %>]
+
+    <% paths = Twt::search_tweet(@twt_pic_path_list, x) %>
+    <% if paths.size > 0 %>
+        ファイルあり
+    <% end %>
+    <br>
+<% end %>
 
 <hr />
 <%= form_with url: artists_path, local: true, method: :get do |f| %>

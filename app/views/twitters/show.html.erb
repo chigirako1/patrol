@@ -20,6 +20,18 @@
 <%= render "form", twitter: @twitter %>
 <hr />
 
+
+<div class="view_form">
+  <%= form_with(url: twitter_path, local: true, method: :get) do |f| %>
+   
+    <%= f.submit("検索", name: nil, class: 'subtmi-btn') %>
+    検索：<%= f.text_field :search_id, :value => params[:search_id] %>
+    <%= f.hidden_field :picn, value: 'all' %>
+    <br />
+
+  <% end %>
+</div>
+
 <div>
     <%= link_to "Back to twitters", twitters_path %>
     <%= button_to "Destroy this twitter", @twitter, method: :delete %>

@@ -66,6 +66,27 @@ textarea {
     </textarea>
     <br />
 
+    <% search_tweet_id = params[:search_id]%>
+    <% if search_tweet_id.presence %>
+        <h3>検索ID:"<%= search_tweet_id %>"</h3>
+        <br />
+
+        <% s_tweet_id = Twt::get_tweet_id_from_url(search_tweet_id) %>
+        <% paths = Twt::search_tweet(@twt_pic_path_list, s_tweet_id) %>
+        <% if paths %>
+            <%= paths.size %>件ヒット<br />
+            <% d_ratio = '10%' %>
+
+            <% paths.each.with_index(1) do |path, idx| %>
+                <%= idx %>.
+                <%= link_to_ex(image_tag(path, width: d_ratio, height: d_ratio, :alt => path), path) %>
+            <% end %>
+        <% else %>
+            見つかりませんでした。
+        <% end %>
+        <hr />
+    <% end %>
+
     <% fsize_sum = 0 %>
     <!-- サムネイル -->
     <% if @twt_ids == nil %>
@@ -199,7 +220,9 @@ textarea {
                     <% if params[:show_pic].presence %>
                         <%= link_to_ex image_tag(path, width: '10%', height: '10%', :alt => path), path %>
                     <% end %>
+
                     <% if tweet.presence %>
+                        "<%= tweet.status %>"
                     <% else %>
                         <!-- DBになければDBに登録 -->
                         <% Tweet::create_record(@twitter.twtid, tweet_id) %>
@@ -210,6 +233,7 @@ textarea {
                     <% break %>
                 <% end %>
             <% end %>
+
             <% if hit %>
             <% else %>
                 <br />
@@ -225,8 +249,10 @@ textarea {
                     <% elsif tweet.status == Tweet::StatusEnum::DELETED %>
                         <b><%= Tweet::StatusEnum::DELETED %></b>
                     <% else %>
-                        <% url = twitter_path(file_check: 't', picn: 'all', pic_lf: '', corr: '0', show_pic: 't', tweet_st: Tweet::StatusEnum::DELETED, tweet_id: tweet_id) %>
-                        <%= link_to("'削除済み'として更新", url, class: 'button') %>
+                        <% if false %>
+                            <% url = twitter_path(file_check: 't', picn: 'all', pic_lf: '', corr: '0', show_pic: 't', tweet_st: Tweet::StatusEnum::DELETED, tweet_id: tweet_id) %>
+                            <%= link_to("'削除済み'として更新", url, class: 'button') %>
+                        <% end %>
                     <% end %>
                 <% else %>
                     <% if params[:tweet_id].to_i == tweet_id and params[:tweet_st] == Tweet::StatusEnum::UNACCESSIBLE %>

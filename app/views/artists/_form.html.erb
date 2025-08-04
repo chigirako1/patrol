@@ -152,13 +152,23 @@
           <font color='red'>twtに合わせて更新↓</font><br />
         <% end %>
       <% else %>
+        <% twt_pic_path_list = Twt::get_pic_filelist(twtid_val) %>
+
         <% tweet_ids = Twt::get_twt_tweet_ids_from_txts(twtid_val) %>
         <% tweet_ids.each do |x| %>
           <% url = Twt::twt_tweet_url(twtid_val, x) %>
-          <%= link_to_ex(url, url) %>[<%= Twt::timestamp_str(x) %>]<br>
+          <%= link_to_ex(url, url) %>
+          [<%= Twt::timestamp_str(x) %>]
+
+          <% paths = Twt::search_tweet(twt_pic_path_list, x) %>
+          <% if paths.size > 0 %>
+            ファイルあり
+          <% end %>
+          <br>
         <% end %>
         <%= link_to_ex("New Twt", new_twitter_path(twtid: artist.twtid, pxvid: artist.pxvid, status: Twitter::TWT_STATUS::STATUS_PATROL, twtname: artist.pxvname)) %>
         <br />
+
       <% end %>
     <% else %>
       <% if artist.pxvid.presence %>
@@ -188,6 +198,14 @@
         <hr />
       <% elsif artist.twtid != "" %>
         <%#= link_to "New Twt", new_twitter_path(twtid: artist.twtid, pxvid: artist.pxvid, status: Twitter::TWT_STATUS::STATUS_PATROL, twtname: artist.pxvname) %>
+        <% search_word = artist.twtid%>
+        <% user_exist = Twt::user_exist?(search_word) %>
+        <% if user_exist %>
+          <br />
+          DB未登録だがフォルダあり:"@<%= search_word %>"
+          <%= link_to_ex %!☆twt☆:@#{search_word}!, artist_twt_path(search_word) %>
+          <br />
+        <% end %>
       <% end %>
     <% else %>
       <font color="red">twt未設定
@@ -256,7 +274,9 @@
   <br />
   <div>
     <%= form.submit("更新", class: 'subtmi-btn') %>
+    <!-- 
     <input type="button" value="最新DL日時を現在日時に設定" onclick="set_time('artist_last_dl_datetime', -5);" />
+    -->
   </div>
 
   <hr />
