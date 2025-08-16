@@ -136,6 +136,9 @@ textarea {
 
     <% if twitter.filenum and twitter.filenum > twt_pic_list.size %>
         <h3>すべての画像が表示されていない可能性があります(<%= twt_pic_list.size %>/<%= twitter.filenum %>)</h3>
+        <% if twitter.filenum == 0  %>
+            <b><%= Twt::tweet_id_with_comma(twitter.latest_tweet_id) %></b><br />
+        <% end %>
         <% if twt_pic_list.size == 0 and twitter.last_post_datetime %>
             おおよそのtweet id:
             <% tweet_id = Twt::time2tweet_id(twitter.last_post_datetime) %>
@@ -145,8 +148,8 @@ textarea {
             (最新DLファイル投稿日:
             <b>
                 <%= l twitter.last_post_datetime %>
-            </b>
-            )
+            </b>)
+            (<%= Util.get_date_info(twitter.last_post_datetime) %>)
             <br />
         <% end %>
     <% else %>
@@ -208,14 +211,17 @@ textarea {
     <!-- URLのテキストファイルに含まれる画像が存在するかチェック -->
     <% if @twt_ids.presence %>
         <h2>チェック</h2>
+
         <% if @twt_ids.size == 0 %>
             対象なし
         <% end %>
+
         <% @twt_ids.each do |tweet_id| %>
             <% tweet = Tweet.find_by(tweet_id: tweet_id) %>
             <% hit = false %>
             <% @twt_pic_path_list.each do |path| %>
                 <% if path.include? tweet_id.to_s %><!-- TODO:これはだめでは？ -->
+                    <% hit = true %>
                     hit!(<%= Twt::timestamp_str(tweet_id) %>)|<%= tweet_id %> 
                     <% if params[:show_pic].presence %>
                         <%= link_to_ex image_tag(path, width: '10%', height: '10%', :alt => path), path %>
@@ -229,8 +235,8 @@ textarea {
                         |DBレコード新規登録
                     <% end %>
                     <br />
-                    <% hit = true %>
                     <% break %>
+                <% else %>
                 <% end %>
             <% end %>
 
@@ -242,6 +248,7 @@ textarea {
                 <% if tweet.presence %>
                     <% if tweet.status == Tweet::StatusEnum::UNACCESSIBLE %>
                         <b><%= Tweet::StatusEnum::UNACCESSIBLE %></b>
+                        (id変わったとき用→)
                         <%= link_to_ex(tweet_id, Twt::twt_tweet_url_dev(tweet_id)) %>
                     <% elsif params[:tweet_id].to_i == tweet_id and params[:tweet_st] == Tweet::StatusEnum::DELETED %>
                         <% Tweet::update_record(tweet_id, Tweet::StatusEnum::DELETED) %>
@@ -249,6 +256,7 @@ textarea {
                     <% elsif tweet.status == Tweet::StatusEnum::DELETED %>
                         <b><%= Tweet::StatusEnum::DELETED %></b>
                     <% else %>
+                        <%= %!"#{tweet.status}"! if tweet.presence %>
                         <% if false %>
                             <% url = twitter_path(file_check: 't', picn: 'all', pic_lf: '', corr: '0', show_pic: 't', tweet_st: Tweet::StatusEnum::DELETED, tweet_id: tweet_id) %>
                             <%= link_to("'削除済み'として更新", url, class: 'button') %>

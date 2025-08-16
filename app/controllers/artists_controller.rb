@@ -402,8 +402,11 @@ class ArtistsController < ApplicationController
         #puts "#{i}/#{interval}(#{interval_wk})/#{prms.last_access_datetime}"
 
         ### 
-        prms.rating_upper_limit = prms.rating
-        prms.rating = prms.rating_upper_limit - prms.step
+        #prms.rating_upper_limit = prms.rating
+        
+        #prms.rating = prms.rating_upper_limit - prms.step
+        prms.rating -= prms.step
+
         #puts "prms.last_access_datetime=#{prms.last_access_datetime}"
       end
 
@@ -1035,6 +1038,7 @@ class ArtistsController < ApplicationController
       #puts %!artists.size=#{artists.size}!
 
       if prms.rating_upper_limit >= 0
+        STDERR.puts %!rating_upper_limit=#{rating_upper_limit}!
         artists = artists.select {|x| x.rating < prms.rating_upper_limit}
       end
 
@@ -1360,7 +1364,11 @@ class ArtistsController < ApplicationController
         artists_sort_ul = artists2.sort_by {|x| [x.last_ul_datetime]}
       end
 
-      artists_group[prefix + "アクセス日順"] = artists_sort_access
+      #artists_group[prefix + "アクセス日順"] = artists_sort_access
+      tmp_grp = artists_sort_access.group_by {|x| x.r18}.sort.reverse.to_h
+      tmp_grp.each do |k,v|
+        artists_group[%!#{prefix}#{k}:アクセス日順!] = v
+      end
       artists_group[prefix + "予測順"] = artists_sort_pred
       artists_group[prefix + "評価順"] = artists_sort_high
       artists_group[prefix + "公開日順"] = artists_sort_ul

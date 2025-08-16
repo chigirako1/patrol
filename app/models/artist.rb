@@ -414,21 +414,9 @@ class Artist < ApplicationRecord
         Nje::nje_member_url(njeid)
     end
 
-    def get_artwork_id
+    def get_artwork_id_from_file
 
-
-        if latest_artwork_id.presence
-            l_artwork_id = latest_artwork_id
-        else
-            tsv_l_artwork_id, tsv_o_artwork_id = UrlTxtReader::get_pxv_artwork_id_from_tsv(pxvid)
-            l_artwork_id = tsv_l_artwork_id
-        end
-
-        if oldest_artwork_id.presence
-            o_artwork_id = oldest_artwork_id
-        else
-            o_artwork_id = tsv_o_artwork_id
-        end
+        l_artwork_id, o_artwork_id = UrlTxtReader::get_pxv_artwork_id_from_tsv(pxvid)
 
         [l_artwork_id, o_artwork_id]
     end
@@ -608,7 +596,8 @@ class Artist < ApplicationRecord
             "00.今日アクセス"
         else
             if created_at_day_num < 60
-                "01.最近登録"
+
+                "01.最近登録|#{(days + 6) / 7}"
             else
                 if last_ul_datetime_delta > 60
                     "02.公開日むかし"

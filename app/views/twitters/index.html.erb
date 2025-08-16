@@ -129,7 +129,7 @@
         <% end %>
 
         <% pxv = Artist.find_by(pxvid: twitter.pxvid) %>
-        <% if twitter.artist_pxvid.presence %>
+        <% if twitter.artist_pxvid.presence and twitter.pxvid != twitter.artist_pxvid %>
           <% pxv2 = Artist.find_by(id: twitter.artist_id) %>
         <% end %>
 
@@ -164,15 +164,17 @@
             <% if pxv2.presence %>
               [<%= link_to_ex("■pxv■(#{pxv2.id})", artist_path(pxv2, access_dt_update: "yes")) %>]
               (@<%= pxv2.twtid %>)
+              <br />
               <font color="red">
-                <b><%= %!※#{pxv2.status}! %></b>
+                <b><%= %!※#{pxv2.status}! if pxv2.status.presence %></b>
               </font>
             <% else %>
               [<%= link_to_ex("■pxv■(#{pxv.id})", artist_path(pxv, access_dt_update: "yes")) %>]
               <%= twitter.artist_id %>
               (@<%= pxv.twtid %>)
+              <br />
               <font color="red">
-                <b><%= %!※#{pxv.status}! %></b>
+                <b><%= %!※#{pxv.status}! if pxv.status.presence %></b>
               </font>
             <% end %>
             <br />

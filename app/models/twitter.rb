@@ -247,6 +247,20 @@ class Twitter < ApplicationRecord
         end
     end
 
+    def sort_cond(cnt)
+        #[x.drawing_method||"", x.prediction, x.rating||0, x.last_access_datetime]}.reverse
+        [
+            drawing_method||"", 
+            status||"", 
+            rating||0, 
+            #last_access_datetime,
+            prediction,
+            last_access_datetime,
+            -(cnt),
+            r18
+        ]
+    end
+
     def update_chk?
         pat = {
             TWT_STATUS::STATUS_PATROL => false,
@@ -279,7 +293,7 @@ class Twitter < ApplicationRecord
             #指定日以内にアクセスしているので対象外
 
             #STDERR.puts %!@#{twtid}[#{status}]:#{num_of_days_elapased}(#{cond_day}):最近更新してない・対象外!
-            STDERR.puts %!@#{twtid}:\t\t#{num_of_days_elapased}(#{cond_day}):最近更新してない・対象外!
+            #STDERR.puts %![select_cond_post_date]@#{twtid}:\t\t#{num_of_days_elapased}(#{cond_day}):最近更新してない・対象外!
             false
         else
             true
@@ -320,7 +334,7 @@ class Twitter < ApplicationRecord
         end
     end
 
-    def group_key(count)
+    def group_key(count, rating_arg)
         add_count = true
         case status
         when Twitter::TWT_STATUS::STATUS_PATROL
@@ -347,7 +361,7 @@ class Twitter < ApplicationRecord
                     nweek = (days_accs + 6) / 7
                     key = %!090:#{nweek}週間以内!
                     add_count = false
-                elsif days_accs > 365 * 2
+                elsif days_accs > 365 #* 2
                     year = sprintf("%03d", days_accs / 365)
                     key = %!990:#{year}年以上!
                 elsif days_accs > 90
@@ -360,7 +374,7 @@ class Twitter < ApplicationRecord
                 end
                 #key = %!#{method}|#{key}!
             else
-                key = "999.未設定(約#{(filenum||0) / 10}0ファイル)"
+                key = "999.未設定(総ファイル数約#{(filenum||0) / 10}0-)"
             end
         when Twitter::TWT_STATUS::STATUS_NOT_EXIST
         when Twitter::TWT_STATUS::STATUS_FROZEN
@@ -369,19 +383,24 @@ class Twitter < ApplicationRecord
             return %!#{key}!
         #when Twitter::TWT_STATUS::STATUS_SCREEN_NAME_CHANGED
         else
-            key = "000:#{status}(約#{(filenum||0) / 10}0ファイル)"
+            key = "000:#{status}(総ファイル数約#{(filenum||0) / 10}0-)"
         end
 
         if add_count
-            key = sprintf("%03d:%s", count / 5 * 5, key)
+            key = sprintf("<%03d>:%s", count / 5 * 5, key)
         else
-            key = sprintf("%03d:%s", 0, key)
+            key = sprintf("<%03d>:%s", 0, key)
         end
 
         if drawing_method == "手描き"
-            %!|#{key}!
+            key = %!手|#{key}!
         else
-            (drawing_method||"") + "|" + key
+            key = (drawing_method||"") + "|" + key
         end
+
+        if rating_arg > 0 and rating and rating < rating_arg
+            key = "!評価規定以下|#{rating}"
+        end
+        key
     end
 end

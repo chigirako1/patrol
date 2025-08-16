@@ -202,7 +202,7 @@ class TwittersController < ApplicationController
         end
       
         if step > 0
-          rating_lt = rating_gt
+          #rating_lt = rating_gt
           rating_gt -= step
         else
           rating_gt -= step
@@ -797,8 +797,8 @@ class TwittersController < ApplicationController
       end
 
       if true
-        group["(#{l_limit_r}-#{u_limit_r}):予測数順"] = twitters_pred_list.sort_by {|x| [-x.rating]}
-        group["(#{l_limit_r}-#{u_limit_r}):アクセス日順"] = twitters_accs_list.sort_by {|x| [-x.rating]}
+        group["(#{u_limit_r}-#{l_limit_r}):アクセス日順"] = twitters_accs_list.sort_by {|x| [-x.rating]}
+        group["(#{u_limit_r}-#{l_limit_r}):予測数順"] = twitters_pred_list.sort_by {|x| [-x.rating]}
       end
 
       group

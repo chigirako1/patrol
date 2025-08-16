@@ -59,8 +59,8 @@
     <%= form.label :評価, style: "display: block" %>
     <%= form.number_field :rating, in: 0..150 %>
     <input type="button" value="+5" onclick="plus_rate('rating', 5);" class="btn_s" />
-    <input type="button" value="-5" onclick="plus_rate('rating', -5);" class="btn_s" />
     <input type="button" value="+1" onclick="plus_rate('rating', 1);" class="btn_s" />
+    <input type="button" value="-5" onclick="plus_rate('rating', -5);" class="btn_s" />
     <input type="button" value="-1" onclick="plus_rate('rating', -1);" class="btn_s" />
     <br />
     <input type="button" value="85" onclick="set_rate('rating', 85);" class="btn_s" />
@@ -184,7 +184,7 @@
       <%= %!pxvid="#{pxv.pxvid}"! %>
       【<%= pxv.rating %>】
       [A:<%= pxv.last_access_datetime_disp %>
-      [<%= artist_status_tag(pxv) %>|<%= pxv.feature %>|<%= pxv.pxvname %>|<%= pxv.r18 %>]
+      [<%= twitter_status_tag(pxv) %>|<%= pxv.feature %>|<%= pxv.pxvname %>|<%= pxv.r18 %>]
       [<%= link_to_ex("■pxv■", artist_path(pxv.id, access_dt_update: "yes")) %>]
       予測：<%= pxv.prediction_up_cnt(true) %>
       <br />
@@ -197,7 +197,7 @@
         【<%= pxv2.rating %>】<%= pxv2.r18 %>|<%= pxv2.filenum %>
         <br />
         <%= pxv2.pxvname %>(@<%= pxv2.twtid %>)
-        [<%= artist_status_tag(pxv2) %>|<%= pxv2.feature %>]
+        [<%= twitter_status_tag(pxv2) %>|<%= pxv2.feature %>]
         <br />
         予測：<%= pxv2.prediction_up_cnt(true) %>
         [<%= link_to_ex("■pxv■", artist_path(pxv2.id, access_dt_update: "yes")) %>]
@@ -261,12 +261,7 @@
     <%= link_to_ex "@#{@twitter.main_twtid}", Twt::twt_user_url(@twitter.main_twtid) if @twitter.main_twtid.presence %>
     <% main_twtid = Twitter.find_by_twtid_ignore_case(@twitter.main_twtid) %>
     <% if main_twtid.presence %>
-      <%= main_twtid.twtname %>
-      【<%= main_twtid.rating %>|<%= main_twtid.drawing_method %>|<%= main_twtid.status %>】
-      [<%= link_to_ex "■twt■", main_twtid %>]
-      |A:<%= main_twtid.last_access_datetime_disp %>|
-      |U:<%= Util.get_date_info main_twtid.last_post_datetime %>
-      <%= %!|PXVID:#{main_twtid.pxvid}! if main_twtid.pxvid.presence %>
+      <%= twitter_info_tag(main_twtid) %>
     <% elsif @twitter.main_twtid.presence %>
       <%= link_to_ex %!☆twt☆:@#{@twitter.main_twtid}!, artist_twt_path(@twitter.main_twtid) %>
     <% end %>
@@ -278,12 +273,7 @@
     <%= link_to_ex "@#{@twitter.sub_twtid}", Twt::twt_user_url(@twitter.sub_twtid) if @twitter.sub_twtid.presence %>
     <% sub_twt = Twitter.find_by_twtid_ignore_case(@twitter.sub_twtid) %>
     <% if sub_twt.presence %>
-      <%= sub_twt.twtname %>
-      【<%= sub_twt.rating %>|<%= sub_twt.drawing_method %>|<%= sub_twt.status %>】
-      [<%= link_to_ex "■twt■", sub_twt %>]
-      |A:<%= sub_twt.last_access_datetime_disp %>
-      |U:<%= Util.get_date_info sub_twt.last_post_datetime %>
-      <%= %!|PXVID:#{sub_twt.pxvid}! if sub_twt.pxvid.presence %>
+      <%= twitter_info_tag(sub_twt) %>
     <% end %>
   </div>
 
@@ -294,11 +284,7 @@
     <%= link_to_ex "@#{@twitter.alt_twtid}", Twt::twt_user_url(@twitter.alt_twtid) if @twitter.alt_twtid.presence %>
     <% alt_twt = Twitter.find_by_twtid_ignore_case(@twitter.alt_twtid) %>
     <% if alt_twt.presence %>
-      <%= alt_twt.twtname %>
-      【<%= alt_twt.rating %>|<%= alt_twt.drawing_method %>|<%= alt_twt.status %>】
-      [<%= link_to_ex "■twt■", alt_twt %>]
-      |<%= alt_twt.last_access_datetime_disp %>|
-      <%= %!|PXVID:#{alt_twt.pxvid}! if alt_twt.pxvid.presence %>
+      <%= twitter_info_tag(alt_twt) %>
     <% end %>
   </div>
 
@@ -308,11 +294,7 @@
     <%= link_to_ex "@#{@twitter.new_twtid}", Twt::twt_user_url(@twitter.new_twtid) if @twitter.new_twtid.presence %>
     <% new_twt = Twitter.find_by_twtid_ignore_case(@twitter.new_twtid) %>
     <% if new_twt.presence %>
-      <%= new_twt.twtname %>
-      【<%= new_twt.rating %>|<%= new_twt.drawing_method %>|<%= new_twt.status %>】
-      [<%= link_to_ex "■twt■", new_twt %>]
-      |<%= new_twt.last_access_datetime_disp %>|
-      <%= %!|PXVID:#{new_twt.pxvid}! if new_twt.pxvid.presence %>
+      <%= twitter_info_tag(new_twt) %>
     <% end %>
   </div>
 

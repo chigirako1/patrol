@@ -59,7 +59,7 @@ module Twt
 
         if read_archive
             tpath = get_twt_path_from_dirlist(twtid)
-            puts %!archive dir path=#{tpath}!
+            STDERR.puts %![get_pic_filelist] twtid="#{twtid}" archive dir path="#{tpath}"!
 
             path_list << UrlTxtReader::get_path_list(tpath)
         end
@@ -80,7 +80,7 @@ module Twt
             dirpath = Util::get_dir_path_by_twtid(twt_root, twtid)
             path_list << UrlTxtReader::get_path_list(dirpath)
         else
-            STDERR.puts %![get_pic_filelist] ???!
+            STDERR.puts %![get_pic_filelist] どっちもない:"#{TWT_TMP_DIR_PATH_A}"/"#{TWT_TMP_DIR_PATH}"!
         end
 
         path_list.flatten.sort.reverse
@@ -95,10 +95,13 @@ module Twt
 
         txtpath = Rails.root.join(TWT_DIRLIST_TXT_PATH).to_s
         File.open(txtpath) { |file|
+            rgx = %r!#{TWT_ARCHIVE_DIR_PATH}\/.\/#{twtid.downcase}!
+            STDERR.puts %!rgx="#{rgx}"!
             while line = file.gets
                 #if line =~ %r!#{TWT_ARCHIVE_DIR_PATH}/./#{twtid}!
-                if line.downcase =~ %r!#{TWT_ARCHIVE_DIR_PATH}/./#{twtid.downcase}!
+                if line.downcase =~ rgx
                     path << line.chomp
+                    STDERR.puts %!"#{line}"!
                     break
                 end
             end
@@ -118,10 +121,14 @@ module Twt
             path_list << Util::glob("#{TWT_ARCHIVE_DIR_PATH}/", "*/*")
         end
 
+        STDERR.puts %!path_list=#{path_list.size}!
         artist_hash = {}
         path_list.flatten.each do |path|
+            STDERR.print "."
             set_twt_user(artist_hash, path)
         end
+        STDERR.puts
+
         #artist_hash.sort_by{|s| [s[0].downcase, s[0]]}.to_h
         artist_hash.sort_by{|_, v| v.ctime}.to_h
     end
@@ -134,14 +141,17 @@ module Twt
             name = $2.strip
 
             if artist_hash.include? id
+                STDERR.puts %!+:@#{id}!
                 artist_hash[id].append_path(path)
             else
+                #STDERR.puts %!\!:@#{id}!
                 #artist_hash[id] = TwtArtist.new(id, name, path)
                 artist_hash[id] = TwtArtist.new(twtid, name, path)
                 artist_hash[id].set_filenum
             end
         else
-            puts %!invalid format:"#{path}" (#{__FILE__}:#{__LINE__})!
+            msg = %!invalid format:"#{path}" (#{__FILE__}:#{__LINE__})!
+            Rails.logger.warning(msg)
         end
     end
 
@@ -218,7 +228,8 @@ module Twt
         paths
     end
 
-    def self.db_update_by_newdir_new(key, val)
+    def self.db_update_new_user(key, val)
+        #STDERR.puts %![db_update_new_user] @#{key}!
         pic_path_list = val.twt_pic_path_list
         if pic_path_list.size == 0
             STDERR.puts %!ファイルなし: @#{key}!
@@ -247,12 +258,16 @@ module Twt
             twt_params[:old_twtid] = old_twt.twtid
         end
 
-        puts %!new. "#{key}"!
+        msg = %!新規登録アカウント => "@#{key}"!
+        Rails.logger.info(msg)
+
         twt = Twitter.new(twt_params)
         twt.save
     end
 
-    def self.db_update_by_newdir_update(key, val, twt)
+    def self.db_update_user_update(key, val, twt)
+        #STDERR.puts %![db_update_user_update] @#{key}!
+
         pic_path_list = val.twt_pic_path_list
         twt_params = {}
 
@@ -267,7 +282,11 @@ module Twt
                 twt_params[:last_post_datetime] = last_post_datetime
             else
                 #更新しない
-                #puts %![no update] "#{key}":"#{twt.last_post_datetime}":"#{last_post_datetime}"!
+                #STDERR.puts %![no update] "#{key}":"#{twt.last_post_datetime}":"#{last_post_datetime}"!
+                
+                #######################
+                ##### 
+                ######################
                 return
             end
         else
@@ -291,6 +310,9 @@ module Twt
         else
             twt_params[:latest_tweet_id] = last_post_tweet_id
         end
+        #if twt_params[:latest_tweet_id]
+        #    STDERR.puts %!"#{twt.latest_tweet_id}" => "#{twt_params[:latest_tweet_id]}"!
+        #end
 
         oldest_post_tweet_id = val.get_oldest_post_tweet_id(pic_path_list)
         if twt.oldest_tweet_id.presence
@@ -300,20 +322,32 @@ module Twt
         else
             twt_params[:oldest_tweet_id] = oldest_post_tweet_id
         end
+        #if twt_params[:oldest_tweet_id]
+        #    STDERR.puts %!"#{twt.oldest_tweet_id}" => "#{twt_params[:oldest_tweet_id]}"!
+        #end
 
-        if twt.filenum == nil
+        if twt.filenum == nil or twt.filenum < val.num_of_files
             twt_params[:filenum] = val.num_of_files
         else
             #あほかtwt_params[:filenum] = 
         end
 
-        if twt.recent_filenum == nil
+        if twt.recent_filenum == nil or twt.recent_filenum < val.num_of_files
             twt_params[:recent_filenum] = val.num_of_files
         end
 
+        if twt.update_frequency == nil #or pic_path_list.size > 10
+            update_frequency = val.calc_freq(pic_path_list)
+            twt_params[:update_frequency] = update_frequency
+            msg = %!(@#{key}) update_frequency:"#{twt.update_frequency}" => "#{update_frequency}"!
+            Rails.logger.info(msg)
+        end
+
         if twt_params.size > 0
-            STDERR.print "@#{key}:更新内容 => "
-            STDERR.puts %!#{twt_params}!
+            msg = "@#{key}:更新内容 =>\t#{twt_params}"
+            #STDERR.puts msg
+            Rails.logger.info(msg)
+
             #twt.update(twt_params)
         end
 
@@ -322,13 +356,14 @@ module Twt
 
     def self.db_update_by_newdir()
         twt_id_list = twt_user_list("new")
+
         twt_id_list.each do |key, val|
             twt = Twitter.find_by_twtid_ignore_case(key)
             if twt == nil
                 # 新規追加
-                db_update_by_newdir_new(key, val)
+                db_update_new_user(key, val)
             else
-                db_update_by_newdir_update(key, val, twt)
+                db_update_user_update(key, val, twt)
             end
         end
     end
@@ -720,14 +755,23 @@ class TwtArtist
     end
 
     def get_last_post_tweet_id(pic_path_list)
-        id, _ = Twt::get_tweet_info_from_filepath(pic_path_list[0])
-        id
+        get_tweet_id(pic_path_list[0])
     end
 
     def get_oldest_post_tweet_id(pic_path_list)
-        id, _ = Twt::get_tweet_info_from_filepath(pic_path_list[-1])
-        id
+        get_tweet_id(pic_path_list[-1])
     end
+
+    private
+        def get_tweet_id(path)
+            id, _ = Twt::get_tweet_info_from_filepath(path)
+
+            if id == nil
+                STDERR.puts %!(#{@twt_id})id="#{id}"!
+            end
+
+            id
+        end
 end
 
 # =============================================================================

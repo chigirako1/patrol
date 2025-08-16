@@ -160,13 +160,17 @@
           <%= link_to_ex(url, url) %>
           [<%= Twt::timestamp_str(x) %>]
 
+          <% url2 = Twt::twt_tweet_url_dev(x) %>
+          <%= link_to_ex(url2, url2) %>
+
           <% paths = Twt::search_tweet(twt_pic_path_list, x) %>
           <% if paths.size > 0 %>
             ファイルあり
           <% end %>
           <br>
         <% end %>
-        <%= link_to_ex("New Twt", new_twitter_path(twtid: artist.twtid, pxvid: artist.pxvid, status: Twitter::TWT_STATUS::STATUS_PATROL, twtname: artist.pxvname)) %>
+        [<%= link_to_ex("New Twt", new_twitter_path(twtid: artist.twtid, pxvid: artist.pxvid, status: Twitter::TWT_STATUS::STATUS_PATROL, twtname: artist.pxvname)) %>]
+        [<%= link_to_ex %!☆twt☆:@#{artist.twtid}!, artist_twt_path(artist.twtid) %>]
         <br />
 
       <% end %>
@@ -190,7 +194,7 @@
         [<%= twt.drawing_method %>]【<%= twt.rating %>|<%= twt.r18 %>】
         [<%= link_to "■twt■", twitter_path(twt) %>]
         <b><%= %!(#{twt.status})! if twt.status != "TWT巡回" %></b>
-        ACCS:(<%= twt.get_date_info(twt.last_access_datetime) if twt.last_access_datetime.presence %>)
+        ACCS:<%= twt.get_date_info(twt.last_access_datetime) if twt.last_access_datetime.presence %>
         UL:<%= twt.get_date_info(twt.last_post_datetime) if twt.last_post_datetime.presence %>
         予測：<%= twt.prediction %>
         <br />
@@ -222,6 +226,7 @@
     <br />
   </div>
 
+  <!-- rating -->
   <div>
     <%= form.label :rating, style: "display: block" %>
     <% if artist.rating %>
@@ -466,12 +471,6 @@
     <%= form.datetime_field :last_dl_datetime %>
   </div>
  
-  <div>
-    <%= form.label :last_access_datetime, style: "display: block" %>
-    <%= form.datetime_field :last_access_datetime %>
-    <!--<input type="button" value="現在時刻に設定" onclick="set_time('artist_last_access_datetime', -5);" />-->
-  </div>
-
   <div>
     <%= form.label :nje_checked_date, style: "display: block" %>
     <%= form.datetime_field :nje_checked_date %>

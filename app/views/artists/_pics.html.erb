@@ -88,6 +88,10 @@
   <% if list.presence %>
     <% file_num = Artist.artwork_list_file_num(list) %>
     <%= file_num %>(読み込みファイル数)平均<%= (file_num.to_f / list.size.to_f).round(2) %>枚
+
+    <br />
+    <% recent_filenum = Artist.artwork_list_recent_file_num(list) %>
+    最近のファイル数:<%= recent_filenum %>
   <% end %>
   <br />
   最初期投稿日(DB登録データ):<%= artist.get_datetime_string(artist.earliest_ul_date, true) if artist.earliest_ul_date.presence %>
@@ -96,23 +100,47 @@
   <% if artist.filenum > file_num or show_oldest %>
     <h3>一部のみ表示？(<%= file_num %>/<%= artist.filenum %>)</h3>
 
-    <% latest_artwork_id, oldest_artwork_id = artist.get_artwork_id %>
+    <% latest_artwork_id, oldest_artwork_id = artist.get_artwork_id_from_file() %>
 
-    <% if latest_artwork_id.presence %>
-      <% url = artist.pxv_artwork_url(latest_artwork_id) %>
-      最新：(<%= link_to_ex(latest_artwork_id, url) %>)
-
-      <%= l @artist.last_ul_datetime, format: :date %>
-      <br />
+    <% if !@artist.latest_artwork_id.presence or !@artist.oldest_artwork_id.presence %>
     <% end %>
 
-    <% if oldest_artwork_id.presence %>
-      <% url = artist.pxv_artwork_url(oldest_artwork_id) %>
-      最古：(<%= link_to_ex(oldest_artwork_id, url) %>)
+    <% if @artist.latest_artwork_id.presence %>
+      <% url = artist.pxv_artwork_url(@artist.latest_artwork_id) %>
+      最新：(<%= link_to_ex(@artist.latest_artwork_id, url) %>)
+
+      <%= l @artist.last_ul_datetime, format: :date %>
+    <% else %>
+      <% url = artist.pxv_artwork_url(latest_artwork_id) %>
+      最新(TSV)：(<%= link_to_ex(latest_artwork_id, url) %>)
+
+      <%= l @artist.last_ul_datetime, format: :date %>
+    <% end %>
+    <br />
+
+    <% if @artist.oldest_artwork_id.presence %>
+      <% url = artist.pxv_artwork_url(@artist.oldest_artwork_id) %>
+      最古：(<%= link_to_ex(@artist.oldest_artwork_id, url) %>)
 
       <%= l @artist.earliest_ul_date, format: :date %>
       (<%= artist.reverse_status %>)
       <br />
+
+      <% if oldest_artwork_id and @artist.oldest_artwork_id > oldest_artwork_id %>
+        TSVのほうが古い→
+        <% url = artist.pxv_artwork_url(oldest_artwork_id) %>
+        最古：(<%= link_to_ex(oldest_artwork_id, url) %>)
+
+        <% if oldest_artwork_id == @artist.pxvid %>
+          ※pxv user idと同じなので多分ミス
+        <% end %>
+      <% end %>
+    <% else %>
+      <% url = artist.pxv_artwork_url(oldest_artwork_id) %>
+      最古(TSV)：(<%= link_to_ex(oldest_artwork_id, url) %>)
+
+      <%= l @artist.earliest_ul_date, format: :date %>
+      (<%= artist.reverse_status %>)
     <% end %>
   <% end %>
   <br />

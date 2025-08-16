@@ -400,7 +400,9 @@ module Pxv
 
         alist = Artist.artwork_list(pxv_artist.path_list)
         recent_filenum = Artist.artwork_list_recent_file_num(alist)
+
         STDERR.puts %!recent_filenum=#{recent_filenum}(filenum=#{pxv_artist.path_list.size})!
+
         pxv_params[:recent_filenum] = recent_filenum
         pxv_params[:status] = ""
         twt = Twitter.find_by(pxvid: pxv_user_id)
@@ -450,7 +452,7 @@ module Pxv
         #end
 =end
 
-        STDERR.puts %!更新内容 => \t#{pxv_params}!
+        STDERR.puts %!新規ユーザー("#{}") => \t#{pxv_params}!
 
         pxv = Artist.new(pxv_params)
         pxv.save
@@ -477,6 +479,7 @@ module Pxv
                 else
                     updated_oldname = pxv.oldname + "/" + pxv.pxvname
                     #pxv_params[:oldname] = updated_oldname
+                    
                     msg =  %!名前:oldname「#{pxv.oldname}」=>「#{updated_oldname}」!
                     Rails.logger.info(msg)
                 end
@@ -492,7 +495,9 @@ module Pxv
             if pxv.filenum.presence
             else
                 pxv_params[:filenum] = pxv_artist.path_list.size
-                STDERR.puts %![DBG] filenum:"#{pxv_params[:filenum]}" <= #{pxv_artist.path_list.size}!
+
+                msg = %!filenum:"#{pxv_params[:filenum]}" <= #{pxv_artist.path_list.size}!
+                Rails.logger.info(msg)
             end
             
             if pxv.recent_filenum.presence
@@ -500,7 +505,9 @@ module Pxv
                 alist = Artist.artwork_list(pxv_artist.path_list)
                 recent_filenum = Artist.artwork_list_recent_file_num(alist)
                 pxv_params[:recent_filenum] = recent_filenum
-                STDERR.puts %![DBG] recent_filenum:"#{pxv_params[:recent_filenum]}" <= #{recent_filenum}!
+
+                msg = %!recent_filenum:"#{pxv_params[:recent_filenum]}" <= #{recent_filenum}!
+                Rails.logger.info(msg)
             end
         end
 
@@ -517,7 +524,7 @@ module Pxv
         #STDERR.print %!最新DL日:\t#{pxv.last_dl_datetime.strftime("%Y-%m-%d")} => #{pxv_artist.last_dl_datetime.strftime("%Y-%m-%d")}!
         #if pxv_artist.last_dl_datetime > pxv.last_dl_datetime
         if pxv_artist.last_dl_datetime.round > pxv.last_dl_datetime.round
-            STDERR.puts %!"#{pxv_artist.last_dl_datetime}"\t"#{pxv.last_dl_datetime}"!
+            #STDERR.puts %!"#{pxv_artist.last_dl_datetime}"\t"#{pxv.last_dl_datetime}"!
             puts pxv_artist.last_dl_datetime.strftime("%Y-%m-%d %H:%M:%S.%L %z")
             puts pxv.last_dl_datetime.strftime("%Y-%m-%d %H:%M:%S.%L %z")
             pxv_params[:last_dl_datetime] = pxv_artist.last_dl_datetime
@@ -554,8 +561,8 @@ module Pxv
         end
 
         if pxv_params.size > 0
-            STDERR.print %!"#{pxv.pxvname}(#{pxv.pxvid})":更新内容 => !
-            STDERR.puts %!#{pxv_params}!
+            msg = %!"#{pxv.pxvname}(#{pxv.pxvid})":更新内容 => #{pxv_params}!
+            Rails.logger.info(msg)
             pxv.update(pxv_params)
         end
     end
@@ -663,7 +670,7 @@ module Pxv
 
             if p.rating.presence and p.rating == 0
                 key = key_pxv_list_unset
-                unit = 25
+                unit = 10
                 fn = (p.filenum||0) / unit
                 #key = %!#{key}(#{fn}f)!
                 key = key + sprintf("%04d～", fn * unit)
