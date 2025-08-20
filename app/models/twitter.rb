@@ -185,6 +185,43 @@ class Twitter < ApplicationRecord
         [registered_twt_acnt_list, unregistered_twt_acnt_list, pxvid_list]
     end
     
+    def self.twt_build_group(twt_url_list)
+        list = []
+        twt_url_list.each do |screen_name, url_list|
+            twt = Twitter.find_by_twtid_ignore_case(screen_name)
+
+            if twt.pxvid.presence
+                pxv = Artist.find_by(pxvid: twt.pxvid)
+            else
+                pxv = Artist.find_by(twtid: twt.twtid)
+            end
+
+            list << [screen_name, url_list, twt, pxv]
+        end
+        list.sort_by {|x|
+            url_list = x[1];
+            twt = x[2];
+            pxv = x[3];
+            pxv_exist = pxv == nil ? 0:1;
+            pxv_e = [];
+            #pxv_e = [pxv.status||"", pxv.last_access_datetime||""] if pxv;
+            pxv_e = [pxv.status||"", -(pxv.rating||0)] if pxv;
+            pxv_status = pxv.status if pxv;
+
+            [
+                pxv_exist,
+                pxv_status||"",
+                pxv_e,
+                twt.status||"",
+                -url_list.size,
+                -(twt.rating || 0),
+                twt.r18||"",
+                twt.last_access_datetime||"",
+                twt.last_post_datetime||"",
+            ]
+        }
+    end
+
     def twt_screen_name
         twtname
 =begin
@@ -334,11 +371,16 @@ class Twitter < ApplicationRecord
         end
     end
 
-    def group_key(count, rating_arg)
-        add_count = true
+    def group_key(count, rating_arg, add_count = false)
+        
         case status
         when Twitter::TWT_STATUS::STATUS_PATROL
             if rating.presence
+                if rating_arg > 0 and rating < rating_arg
+                    key = "!評価規定以下|#{rating}"
+                    return key
+                end
+
                 case drawing_method
                 when "AI"
                     #method = "102:AI"
@@ -352,7 +394,10 @@ class Twitter < ApplicationRecord
                 end
                 
                 days_accs = Util::get_date_delta(last_access_datetime)
-                if days_accs < 7
+                if days_accs < 2
+                    key = %!080:2日以内!
+                    add_count = false
+                elsif days_accs < 7
                     #key = %!080:#{days_accs}日以内!
                     key = %!080:7日以内!
                     add_count = false
@@ -363,7 +408,7 @@ class Twitter < ApplicationRecord
                     add_count = false
                 elsif days_accs > 365 #* 2
                     year = sprintf("%03d", days_accs / 365)
-                    key = %!990:#{year}年以上!
+                    key = %!991:#{year}年以上!
                 elsif days_accs > 90
                     month = sprintf("%03d", days_accs / 30)
                     key = %!990:#{month}ヶ月以上!
@@ -398,9 +443,6 @@ class Twitter < ApplicationRecord
             key = (drawing_method||"") + "|" + key
         end
 
-        if rating_arg > 0 and rating and rating < rating_arg
-            key = "!評価規定以下|#{rating}"
-        end
         key
     end
 end

@@ -651,9 +651,9 @@
         <% if pa %>
             <!-- <%= pa.state %>/<%= pa.release_date %>/user_id:<%= pa.user_id %>/「<%= pa.title %>」 -->
             <%= pa.info_txt %>
-            [<%= link_to_ex("Edit", edit_pxv_artwork_path(pa)) %>]
+            [<%= link_to_ex("★Edit★", edit_pxv_artwork_path(pa)) %>]
         <% else %>
-            [<%= link_to_ex("New", new_pxv_artwork_path(artwork_id: artwork_id)) %>]
+            [<%= link_to_ex("★New★", new_pxv_artwork_path(artwork_id: artwork_id)) %>]
         <% end %>
         <br />
     <% end %>

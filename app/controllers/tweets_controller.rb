@@ -1,18 +1,56 @@
 class TweetsController < ApplicationController
   before_action :set_tweet, only: %i[ show edit update destroy ]
 
+  module ModeEnum
+    SUMMARY = 'summary'
+    URL_LIST = 'urllist'
+  end
+
   # GET /tweets or /tweets.json
   def index
-    if params[:screen_name].presence
-      scrn_name = params[:screen_name]
-      @tweets = Tweet.select {|x| x.screen_name == scrn_name}
-      #@tweets = []
 
-      @tweet_ids = Twt::get_twt_tweet_ids_from_txts(scrn_name)
-
-      @pic_list = Twt::get_pic_filelist(scrn_name)
+    if params[:hide_within_days] == ""
+      @hide_within_days = 0
     else
-      @tweets = Tweet.all
+      @hide_within_days = params[:hide_within_days].to_i
+    end
+    puts %!hide_within_days="#{@hide_within_days}"!
+
+    if params[:rating] == ""
+      @rating_gt = 0
+    else
+      @rating_gt = params[:rating].to_i
+    end
+    puts %!rating_gt="#{@rating_gt}"!
+
+    @tweet_cnt_list = []
+    @known_twt_url_list = []
+    @unknown_twt_url_list = []
+    @tweets = []
+
+    mode = params[:mode].presence
+    case mode
+    when ModeEnum::SUMMARY
+      @tweet_cnt_list = Tweet.group("screen_name").count.sort_by {|x| x[1]}.reverse
+    when ModeEnum::URL_LIST
+      filename = "all"
+      filename = "target2507"
+      filename = params[:filename]
+      path = UrlTxtReader::get_path(filename)
+      _, twt_url_infos, _ = UrlTxtReader::get_url_txt_info(path)
+      pxv_chk = false
+      @known_twt_url_list, @unknown_twt_url_list, _ = Twitter::twt_user_classify(twt_url_infos, pxv_chk)
+    else
+      if params[:screen_name].presence
+        scrn_name = params[:screen_name]
+        @tweets = Tweet.select {|x| x.screen_name == scrn_name}
+
+        @tweet_ids = Twt::get_twt_tweet_ids_from_txts(scrn_name)
+
+        @pic_list = Twt::get_pic_filelist(scrn_name)
+      else
+        @tweets = Tweet.all.first(100)#TBD
+      end
     end
   end
 

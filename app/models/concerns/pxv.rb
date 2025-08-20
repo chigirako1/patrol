@@ -671,9 +671,9 @@ module Pxv
             if p.rating.presence and p.rating == 0
                 key = key_pxv_list_unset
                 unit = 10
-                fn = (p.filenum||0) / unit
+                fn = (p.filenum||0) / unit + 1
                 #key = %!#{key}(#{fn}f)!
-                key = key + sprintf("%04d～", fn * unit)
+                key = key + sprintf("%04d|%04d～", (10000 - fn * unit), (fn - 1) * unit)
                 pxv_group[key] << elem
                 next
             end

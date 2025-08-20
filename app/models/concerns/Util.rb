@@ -27,6 +27,10 @@ module Util
         (date_to.to_date - date_from.to_date).to_i
     end
 
+    def self.elapsed?(specified_datetime, days)
+        Time.current >= specified_datetime + days_to_check.days
+    end
+
     def self.get_date_info(date)
         if date == nil
             return "(未設定)"

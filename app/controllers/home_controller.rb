@@ -8,39 +8,6 @@ class HomeController < ApplicationController
     @menus = [
       # =====================================
       { :label => "unified t [ai]", :path => "" },
-      { :label => "Twitter [AI] 94 (-2 * 5)[3]",
-        :path => twitters_path(
-          target: "AI",
-          page_title: "Twitter [AI] 94 (-2 * 5)[3]",
-          rating: 94,
-          #hide_within_days: 0, 
-          num_of_disp: 3,
-          #pred: 5,
-          #force_disp_day: 10,
-          mode: TwittersController::ModeEnum::ALL_IN_ONE,
-          aio: TwittersController::GRP_SORT::GRP_SORT_ACCESS + "|" + TwittersController::GRP_SORT::GRP_SORT_PRED,
-          step: 2,
-          num_of_times: 5,
-          ex_pxv: false,
-          thumbnail: ""
-        ) 
-      },
-      { :label => "Twitter [AI] 90 (-2 * 3)[3]",
-        :path => twitters_path(
-          target: "AI",
-          page_title: "Twitter [AI] 90 (-2 * 3)[3]",
-          rating: 90,
-          #hide_within_days: 0, 
-          num_of_disp: 3,
-          #pred: 5,
-          #force_disp_day: 10,
-          mode: TwittersController::ModeEnum::ALL_IN_ONE,
-          step: 2,
-          num_of_times: 3,
-          ex_pxv: false,
-          thumbnail: ""
-        ) 
-      },
       { :label => "Twitter [AI] 88 (-1 * 1)[6]",
         :path => twitters_path(
           target: "AI",
@@ -89,6 +56,43 @@ class HomeController < ApplicationController
           thumbnail: ""
         ) 
       },
+      # ----------------------------
+      { :label => "-", :path => "" },
+      { :label => "Twitter [AI] 94 (-2 * 5)[3]",
+        :path => twitters_path(
+          target: "AI",
+          page_title: "Twitter [AI] 94 (-2 * 5)[3]",
+          rating: 94,
+          #hide_within_days: 0, 
+          num_of_disp: 3,
+          #pred: 5,
+          #force_disp_day: 10,
+          mode: TwittersController::ModeEnum::ALL_IN_ONE,
+          aio: TwittersController::GRP_SORT::GRP_SORT_ACCESS + "|" + TwittersController::GRP_SORT::GRP_SORT_PRED,
+          step: 2,
+          num_of_times: 5,
+          ex_pxv: false,
+          thumbnail: ""
+        ) 
+      },
+      { :label => "Twitter [AI] 90 (-2 * 3)[3]",
+        :path => twitters_path(
+          target: "AI",
+          page_title: "Twitter [AI] 90 (-2 * 3)[3]",
+          rating: 90,
+          #hide_within_days: 0, 
+          num_of_disp: 3,
+          #pred: 5,
+          #force_disp_day: 10,
+          mode: TwittersController::ModeEnum::ALL_IN_ONE,
+          step: 2,
+          num_of_times: 3,
+          ex_pxv: false,
+          thumbnail: ""
+        ) 
+      },
+      # ----------------------------
+      { :label => "-", :path => "" },
       { :label => "Twitter [AI] 85 (0 * 0) アクセス [8]",
         :path => twitters_path(
           target: "AI",
@@ -136,6 +140,23 @@ class HomeController < ApplicationController
           aio: TwittersController::GRP_SORT::GRP_SORT_ACCESS, #+ "|" + TwittersController::GRP_SORT::GRP_SORT_PRED,
           step: 1,
           num_of_times: 3,
+          ex_pxv: false,
+          thumbnail: ""
+        ) 
+      },
+      { :label => "Twitter [AI] 80 (+1 * 5)アクセス[3]",
+        :path => twitters_path(
+          target: "AI",
+          page_title: "AI 80 (+1 * 5) アクセス [3]",
+          rating: 80,
+          #hide_within_days: 0, 
+          #pred: 5,
+          #force_disp_day: 10,
+          mode: TwittersController::ModeEnum::ALL_IN_ONE,
+          aio: TwittersController::GRP_SORT::GRP_SORT_ACCESS, #+ "|" + TwittersController::GRP_SORT::GRP_SORT_PRED,
+          step: -1,
+          num_of_times: 5,
+          num_of_disp: 3,
           ex_pxv: false,
           thumbnail: ""
         ) 
@@ -239,38 +260,6 @@ class HomeController < ApplicationController
           mode: TwittersController::ModeEnum::ALL_IN_ONE,
           step: 1,
           num_of_times: 10,
-          ex_pxv: false,
-          thumbnail: ""
-        ) 
-      },
-      { :label => "Twitter [AI] 85",
-        :path => twitters_path(
-          target: "AI",
-          page_title: "AI 85",
-          rating: 85,
-          #hide_within_days: 0, 
-          num_of_disp: 5,
-          #pred: 5,
-          #force_disp_day: 10,
-          mode: TwittersController::ModeEnum::ALL_IN_ONE,
-          step: 1,
-          num_of_times: 5,
-          ex_pxv: false,
-          thumbnail: ""
-        ) 
-      },
-      { :label => "Twitter [AI] 80",
-        :path => twitters_path(
-          target: "AI",
-          page_title: "AI 80",
-          rating: 80,
-          #hide_within_days: 0, 
-          num_of_disp: 5,
-          #pred: 5,
-          #force_disp_day: 10,
-          mode: TwittersController::ModeEnum::ALL_IN_ONE,
-          step: 5,
-          num_of_times: 2,
           ex_pxv: false,
           thumbnail: ""
         ) 
@@ -1263,6 +1252,18 @@ class HomeController < ApplicationController
       # ----------------------------
       { :label => "Tweet", :path => "" },
       { :label => "Tweet", :path => tweets_path },
+      { :label => "Tweet cond",
+          :path => tweets_path(
+            page_title: "Tweets",
+            mode: TweetsController::ModeEnum::URL_LIST,
+            filename: "latest",
+            hide_within_days: 180,
+            rating: 85,
+          )
+      },
+      # ----------------------------
+      { :label => "Pxv artworks", :path => "" },
+      { :label => "Pxv artworks", :path => pxv_artworks_path },
       # ----------------------------
       { :label => "", :path => "" },
       { :label => "User", :path => users_path },

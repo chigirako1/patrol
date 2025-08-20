@@ -546,14 +546,14 @@ class Artist < ApplicationRecord
     def status_disp(rev, txt="※")
         tag = ""
         if status.presence
-            tag += txt + status
+            tag += %!<b>#{txt + status}</b>!
         end
 
         if rev and reverse_status.presence
             tag += %!(#{reverse_status})!
         end
 
-        tag
+        tag.html_safe
     end
 
     def r18_disp()
@@ -600,9 +600,10 @@ class Artist < ApplicationRecord
                 "01.最近登録|#{(days + 6) / 7}"
             else
                 if last_ul_datetime_delta > 60
-                    "02.公開日むかし"
+                    "02.公開日むかし|#{days / 7}w"
                 else
-                    %!09.#{(days + 6) / 7}週間以内アクセス!
+                    #%!09.#{(days + 6) / 7}週間以内アクセス!
+                    %!09.#{(days) / 7}週間以内アクセス!
                 end
             end
         end

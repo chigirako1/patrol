@@ -563,8 +563,13 @@ class TwittersController < ApplicationController
   # GET /twitters/1 or /twitters/1.json
   def show
     if params[:file_check].presence
+
       @twt_ids = Twt::get_twt_tweet_ids_from_txts(@twitter.twtid)
-      if false
+      STDERR.puts %!@twt_ids=#{@twt_ids.size}!
+
+      # TODO: スクリーンネーム変更の場合の対応
+      old_chk = true
+      if old_chk
         if @twitter.old_twtid.presence
           old_twt_ids = Twt::get_twt_tweet_ids_from_txts(@twitter.old_twtid)
           @twt_ids = [@twt_ids, old_twt_ids].flatten
@@ -617,8 +622,9 @@ class TwittersController < ApplicationController
     twtname = params[:twitter][:twtname]
     twtname_mod = Twt::sanitize_filename(twtname)
     if twtname != twtname_mod
-      STDERR.puts %!"[update] #{twtname}" => "#{twtname_mod}"!
-      #params[:twitter][:twtname] = twtname_mod
+      msg = %!"[update] #{twtname}" => "#{twtname_mod}"!
+      Rails.logger.info(msg)
+      params[:twitter][:twtname] = twtname_mod
     end
 
     if params[:twitter][:rating] and @twitter.rating != params[:twitter][:rating].to_i

@@ -5,6 +5,120 @@
 <h1>Tweets</h1>
 
 <div id="tweets">
+    <%  %>
+    <% @tweet_cnt_list.each.with_index(1) do |e, idx| %>
+        <% screen_name = e[0] %>
+        <% cnt = e[1] %>
+        <%= idx %>.
+        "<%= screen_name %>"
+
+        <% twt = Twitter.find_by_twtid_ignore_case(screen_name) %>
+        [<%= link_to_ex("■twt■", twt) %>]
+
+        <%= cnt %>
+        <br />
+        <%# puts idx %>
+    <% end %>
+
+    <h2>@known_twt_url_list</h2>
+    <table border="1" rules="all">
+        <tr>
+            <th>#</th>
+            <th>pxv</th>
+            <th>pxv</th>
+            <th>pxv</th>
+            <th>pxv</th>
+            <th>pxv</th>
+            <th>pxv</th>
+            <th>cnt</th>
+            <th>twtname(twtid)</th>
+            <th>status</th>
+            <th>a</th>
+            <th>b</th>
+            <th>c</th>
+        </tr>
+        <% twt_group = Twitter::twt_build_group(@known_twt_url_list) %>
+        <% twt_group.each.with_index(1) do |(screen_name, url_list, twt, pxv), idx| %>
+
+            <% if twt.last_access_date_within?(@hide_within_days) %>
+                <% next %>
+            <% end %>
+
+            <% if twt.rating and twt.rating < @rating_gt %>
+                <%# STDERR.puts %!#{twt.rating} < #{@rating_gt}! %>
+                <% next %>
+            <% end %>
+
+            <% if pxv and pxv.last_access_date_within?(@hide_within_days) %>
+                <% next %>
+            <% end %>
+
+            <% if pxv and pxv.rating and pxv.rating < @rating_gt %>
+                <%# STDERR.puts %!#{pxv.rating} < #{@rating_gt}! %>
+                <% next %>
+            <% end %>
+
+            <tr>
+                <td><%= idx %></td>
+                <% if pxv %>
+                    <td>
+                        <%= pxv.pxvname %>
+                    </td>
+                    <td>
+                        [<%= link_to_ex(%!■pxv■!, pxv) %>]
+                        【<%= pxv.rating %>|<%= pxv.r18 %>】
+                    </td>
+                    <td>
+                        <%= pxv.status %>
+                       
+                    </td>
+                    <td>
+                        <%= pxv.last_access_datetime_disp %>
+                    </td>
+                    <td>
+                        <%= pxv.get_date_info(pxv.last_ul_datetime) %>
+                    </td>
+                <% else %>
+                    <td>
+                    </td>
+                    <td>
+                    </td>
+                    <td>
+                    </td>
+                    <td>
+                    </td>
+                    <td>
+                        ※未登録
+                    </td>
+                <% end %>
+                <td>
+                    <%= twt.status %>
+                </td>
+                <td>
+                    <%= url_list.size %>
+                </td>
+                <td>
+                    <%= twt.twtname %>(@<%= screen_name %>)
+                </td>
+                <td>
+                    【<%= twt.rating %>|<%= twt.r18 %>】
+                </td>
+                <td>
+                    [<%= link_to_ex("■twt■", twt) %>]
+                </td>
+                <td>
+                    <%= twt.last_access_datetime_disp %>
+                </td>
+            </tr>
+        <% end %>
+    </table>
+
+    <h2>@unknown_twt_url_list</h2>
+    <% @unknown_twt_url_list.each.with_index(1) do |(key, url_list), idx| %>
+        <% break %>
+        <%= key %><%= url_list.size %><br />
+    <% end %>
+
     <% @tweets.each do |tweet| %>
         <%= render tweet %>
         <p>
@@ -14,10 +128,18 @@
 
     <% if @tweet_ids %>
         <% scrn_name = params[:screen_name] %>
-        <h2><%= scrn_name %></h2>
+        <h2>@<%= scrn_name %></h2>
         <% @tweet_ids.each do |x| %>
+            [<%= Twt::timestamp_str(x) %>]
             <% url = Twt::twt_tweet_url(scrn_name, x) %>
-            <%= link_to_ex(url, url) %><br>
+            <%= link_to_ex(x, url) %>
+            <% tweet = Tweet.find_by(tweet_id: x) %>
+            <% if tweet %>
+                【<%= tweet.status %>】
+            <% else %>
+                [DB登録なし]
+            <% end %>
+            <br>
 
             <% hit = false %>
             <% @pic_list.each do |path| %>
@@ -28,13 +150,12 @@
                 <% end %>
             <% end %>
             <% unless hit %>
-                [<%= Twt::timestamp_str(x) %>]
-                なし
+                ファイルみつからず
             <% end %>
             <br />
         <% end %>
     <% else %>
-        0件
+        
     <% end %>
 </div>
 

@@ -127,12 +127,13 @@ textarea {
     <% if twt_pic_list.size > show_pic_num %>
         <%= link_to "...全て表示", twitter_path(picn: 'all', pic_lf: '3', corr: '0', refresh: "y") %>
     <% end %>
-    <%= link_to "url txtチェック", twitter_path(file_check: 't', picn: 'all', pic_lf: '', corr: '0') %>
     全画像数：<%= twitter.filenum %>
     <%= link_to("重複チェック", twitter_path(dup_chk: 't', refresh: "y"), class: 'button') %>
     <% if twitter.filenum != twt_pic_list.size %>
         (読み込み:<%= twt_pic_list.size %>)
     <% end %>
+    <br />
+    <%= link_to "url txtチェック", twitter_path(file_check: 't', picn: 'all', pic_lf: '', corr: '0') %>
 
     <% if twitter.filenum and twitter.filenum > twt_pic_list.size %>
         <h3>すべての画像が表示されていない可能性があります(<%= twt_pic_list.size %>/<%= twitter.filenum %>)</h3>
@@ -209,14 +210,15 @@ textarea {
     <% end %>
 
     <!-- URLのテキストファイルに含まれる画像が存在するかチェック -->
-    <% if @twt_ids.presence %>
+    <% if @twt_ids #.presence %>
         <h2>チェック</h2>
 
         <% if @twt_ids.size == 0 %>
             対象なし
         <% end %>
 
-        <% @twt_ids.each do |tweet_id| %>
+        <% @twt_ids.each.with_index(1) do |tweet_id, idx| %>
+            #<%= idx %>.
             <% tweet = Tweet.find_by(tweet_id: tweet_id) %>
             <% hit = false %>
             <% @twt_pic_path_list.each do |path| %>
@@ -228,7 +230,12 @@ textarea {
                     <% end %>
 
                     <% if tweet.presence %>
-                        "<%= tweet.status %>"
+                        <% if tweet.status != Tweet::StatusEnum::SAVED %>
+                            <% Tweet::update_record(tweet_id, Tweet::StatusEnum::SAVED) %>
+                            【レコード更新】"<%= tweet.status %>"" => "<%= Tweet::StatusEnum::SAVED %>"
+                        <% else %>
+                            "<%= tweet.status %>"
+                        <% end %>
                     <% else %>
                         <!-- DBになければDBに登録 -->
                         <% Tweet::create_record(@twitter.twtid, tweet_id) %>
@@ -270,6 +277,8 @@ textarea {
                     <% else %>
                         <% url = twitter_path(file_check: 't', picn: 'all', pic_lf: '', corr: '0', show_pic: 't', tweet_st: Tweet::StatusEnum::UNACCESSIBLE, tweet_id: tweet_id) %>
                         <%= link_to("'アクセス不可'として更新", url, class: 'button') %>
+                        (id変わったとき用→)
+                        <%= link_to_ex(tweet_id, Twt::twt_tweet_url_dev(tweet_id)) %>
                     <% end %>
                 <% end %>
                 <br />

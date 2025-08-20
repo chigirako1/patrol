@@ -32,9 +32,16 @@
 
   <% if @path_list[0] =~ /(\d\d-\d\d-\d\d)/ %>
     <% pub_date = Date.parse($1) %>
-    最新投稿日：<%= Util::get_date_info(pub_date) %>
+    最新投稿日(ファイル)：<%= Util::get_date_info(pub_date) %><br />
     <% if artist.last_ul_datetime > pub_date %>
-      <b>↓最新のファイルでない可能性があります</b>
+      <% if @artist.latest_artwork_id.presence %>
+        <% url = artist.pxv_artwork_url(@artist.latest_artwork_id) %>
+        最新(DB)：(<%= link_to_ex(@artist.latest_artwork_id, url) %>)
+        <%= l @artist.last_ul_datetime, format: :date %>
+        (<%= Util::get_date_info(@artist.last_ul_datetime) %>)
+      <% end %>
+      <br />
+      <b>↓最新のファイルでない可能性があります</b>。
     <% end %>
   <% else %>
     最新投稿日(DB):
@@ -131,9 +138,10 @@
         <% url = artist.pxv_artwork_url(oldest_artwork_id) %>
         最古：(<%= link_to_ex(oldest_artwork_id, url) %>)
 
-        <% if oldest_artwork_id == @artist.pxvid %>
-          ※pxv user idと同じなので多分ミス
-        <% end %>
+      <% end %>
+      
+      <% if oldest_artwork_id == @artist.pxvid %>
+        ※pxv user idと同じなので多分ミス
       <% end %>
     <% else %>
       <% url = artist.pxv_artwork_url(oldest_artwork_id) %>
@@ -141,6 +149,10 @@
 
       <%= l @artist.earliest_ul_date, format: :date %>
       (<%= artist.reverse_status %>)
+      
+      <% if oldest_artwork_id == @artist.pxvid %>
+        ※pxv user idと同じなので多分ミス
+      <% end %>
     <% end %>
   <% end %>
   <br />

@@ -26,6 +26,13 @@ module UrlTxtReader
         end
     end
 
+    def last_access_date_within?(days)
+        delta = Util::get_date_delta(last_access_datetime)
+        delta <= days
+
+        #!Util::elapsed?(last_access_datetime, dayss)
+    end
+
     def get_date_info(date)
         Util::get_date_info(date)
     end
@@ -112,7 +119,32 @@ module UrlTxtReader
         path_list
     end
 
-
+    def self.get_path(filename)
+        case filename
+        when "all"
+            path = []
+        when "latest"
+            path = UrlTxtReader::get_latest_txt
+        when /latest\s+(\d+)/
+            path = UrlTxtReader::get_latest_txt($1.to_i)
+        when /target23$/
+            path = UrlTxtReader::txt_file_list("\\d{4}")
+        when /target(\d{2})$/
+            path = UrlTxtReader::txt_file_list($1 + "\\d{4}")
+        when /target23(\d{2})/
+            path = UrlTxtReader::txt_file_list($1 + "\\d{2}")
+            path = nil if path.size == 0 #てきとう
+        when /target(\d{4})/
+            path = UrlTxtReader::txt_file_list($1 + "\\d+")
+        when nil
+        when ""
+            path = UrlTxtReader::get_latest_txt
+        else
+            path = ["public/#{filename}.txt"]
+        end
+        puts "path='#{path}'"
+        path
+    end
 
     def self.get_path_list(tpath)
         tmp_list = []

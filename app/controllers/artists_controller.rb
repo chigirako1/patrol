@@ -426,11 +426,20 @@ class ArtistsController < ApplicationController
       if true
         artists = Artist.all
         artists = artists.select {|x| x.rating == nil or x.rating == 0}
-        artists = artists.select {|x| x.last_access_datetime_num < 90}
+
+        d_thre = 365
+        artists = artists.select {|x| x.last_access_datetime_num < d_thre}
+        artists = artists.sort_by {|x| [-x.prediction_up_cnt(true)]}
+        group = {}
+        group["未設定 予測順 #{d_thre}"] = artists
+        group_list << group
+
+        d_thre = 90
+        artists = artists.select {|x| x.last_access_datetime_num < d_thre}
         #artists = artists.sort_by {|x| [-x.prediction_up_cnt(true), x.last_access_datetime]}
         artists = artists.sort_by {|x| [-x.prediction_up_cnt(true)]}
         group = {}
-        group["未設定 予測順"] = artists
+        group["未設定 予測順 #{d_thre}"] = artists
         group_list << group
         
         artists = Artist.all
@@ -777,26 +786,7 @@ class ArtistsController < ApplicationController
       @url_file_list = UrlTxtReader::txt_file_list()
       @known_twt_url_list = []
     else
-      case filename
-      when "all"
-        path = []
-      when "latest"
-        path = UrlTxtReader::get_latest_txt
-      when /latest\s+(\d+)/
-        path = UrlTxtReader::get_latest_txt($1.to_i)
-      when /target23$/
-        path = UrlTxtReader::txt_file_list("\\d{4}")
-      when /target(\d{2})$/
-        path = UrlTxtReader::txt_file_list($1 + "\\d{4}")
-      when /target23(\d{2})/
-        path = UrlTxtReader::txt_file_list($1 + "\\d{2}")
-        path = nil if path.size == 0 #てきとう
-      when /target(\d{4})/
-        path = UrlTxtReader::txt_file_list($1 + "\\d+")
-      else
-        path = ["public/#{filename}.txt"]
-      end
-      puts "path='#{path}'"
+      path = UrlTxtReader::get_path(filename)
 
       if @target.size == 1 and @target[0] != "known_pxv"#適当すぎる。。。
         pxvid_list2 = []
