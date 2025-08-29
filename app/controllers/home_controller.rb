@@ -8,6 +8,22 @@ class HomeController < ApplicationController
     @menus = [
       # =====================================
       { :label => "unified t [ai]", :path => "" },
+      { :label => "Twitter [AI] 90 (-1 * 1)[5]",
+        :path => twitters_path(
+          target: "AI",
+          page_title: "Twitter [AI] 90 (-1 * 1)[5]",
+          rating: 90,
+          #hide_within_days: 0, 
+          num_of_disp: 5,
+          #pred: 5,
+          #force_disp_day: 10,
+          mode: TwittersController::ModeEnum::ALL_IN_ONE,
+          step: 1,
+          num_of_times: 1,
+          ex_pxv: false,
+          thumbnail: ""
+        ) 
+      },
       { :label => "Twitter [AI] 88 (-1 * 1)[6]",
         :path => twitters_path(
           target: "AI",
@@ -24,18 +40,55 @@ class HomeController < ApplicationController
           thumbnail: ""
         ) 
       },
-      { :label => "Twitter [AI] 90 (-1 * 1)[5]",
+      { :label => "Twitter [AI] 86 (+1 * 5) 予測/アクセス [2]",
         :path => twitters_path(
           target: "AI",
-          page_title: "Twitter [AI] 90 (-1 * 1)[5]",
-          rating: 90,
+          page_title: "Twitter [AI] 86 (+1 * 5) 予測/アクセス [2]",
+          rating: 86,
           #hide_within_days: 0, 
-          num_of_disp: 5,
+          num_of_disp: 2,
           #pred: 5,
           #force_disp_day: 10,
           mode: TwittersController::ModeEnum::ALL_IN_ONE,
+          aio: TwittersController::GRP_SORT::GRP_SORT_ACCESS + "|" + TwittersController::GRP_SORT::GRP_SORT_PRED,
+          step: -1,
+          num_of_times: 5,
+          ex_pxv: false,
+          thumbnail: ""
+        ) 
+      },
+      { :label => "Twitter [AI] 85 (1 * 5) アクセス [2]",
+        :path => twitters_path(
+          target: "AI",
+          page_title: "AI 85 1 * 5 [2]",
+          rating: 85,
+          #hide_within_days: 0,
+          num_of_disp: 2,
+          #pred: 5,
+          #force_disp_day: 10,
+          mode: TwittersController::ModeEnum::ALL_IN_ONE,
+          aio: TwittersController::GRP_SORT::GRP_SORT_ACCESS, #+ "|" + TwittersController::GRP_SORT::GRP_SORT_PRED,
           step: 1,
-          num_of_times: 1,
+          num_of_times: 5,
+          ex_pxv: false,
+          thumbnail: ""
+        ) 
+      },
+      # ----------------------------
+      { :label => "-", :path => "" },
+      { :label => "Twitter [AI] 87 (+1 * 3) 予測/アクセス [3]",
+        :path => twitters_path(
+          target: "AI",
+          page_title: "Twitter [AI] 87 (+1 * 3) 予測/アクセス [3]",
+          rating: 87,
+          #hide_within_days: 0, 
+          num_of_disp: 3,
+          #pred: 5,
+          #force_disp_day: 10,
+          mode: TwittersController::ModeEnum::ALL_IN_ONE,
+          aio: TwittersController::GRP_SORT::GRP_SORT_ACCESS + "|" + TwittersController::GRP_SORT::GRP_SORT_PRED,
+          step: -1,
+          num_of_times: 3,
           ex_pxv: false,
           thumbnail: ""
         ) 
@@ -366,6 +419,22 @@ class HomeController < ApplicationController
       # ----------------------------
       { :label => "unified p [ai]", :path => "" },
       { :label => "-", :path => "" },
+      { :label => "pxv [AI] 99 (-1 * 4)[3]",
+          :path => artists_path(
+            file: ArtistsController::MethodEnum::ALL_IN_ONE,
+            page_title: "pxv [AI] 99 (-1 * 4)[3]",
+            exclude_ai: "",
+            ai: true,
+            status: "「長期更新なし」を除外",
+            #prediction: 6,
+            rating: 99,
+            step: 1,
+            num_of_times: 4,
+            display_number: 3,
+            last_access_datetime: 5,
+            thumbnail: false,
+          )
+      },
       { :label => "pxv [AI] 95 (0 * 1)[5]",
           :path => artists_path(
             file: ArtistsController::MethodEnum::ALL_IN_ONE,
@@ -413,22 +482,23 @@ class HomeController < ApplicationController
             thumbnail: false,
           )
       },
-      { :label => "pxv [AI] 98 (-2 * 3)",
+      { :label => "pxv [AI] 90 (-1 * 5)[2]アクセス順のみ",
           :path => artists_path(
             file: ArtistsController::MethodEnum::ALL_IN_ONE,
-            page_title: "pxv [AI] 95 (-2 * 3)[3]",
+            page_title: "pxv [AI] all in one 85",
             exclude_ai: "",
             ai: true,
             status: "「長期更新なし」を除外",
-            #prediction: 6,
-            rating: 98,
-            step: 2,
-            num_of_times: 3,
-            display_number: 3,
-            last_access_datetime: 5,
+            aio: TwittersController::GRP_SORT::GRP_SORT_ACCESS, #+ "|" + TwittersController::GRP_SORT::GRP_SORT_PRED,
+            rating: 95,#85,
+            step: 1,
+            num_of_times: 5,
+            display_number: 2,
+            last_access_datetime: 30,
             thumbnail: false,
           )
       },
+
       { :label => "unified p [手]", :path => "" },
       { :label => "-", :path => "" },
       { :label => "pxv [手描き] 95 (-5 * 2)[5]",
@@ -1062,6 +1132,25 @@ class HomeController < ApplicationController
       { :label => "pxv", :path => "" },
       #
       { :label => "pxv", :path => artists_path },
+      { :label => "-", :path => "" },
+      { :label => "pxvファイル数多い、ご無沙汰、手書き",
+          :path => artists_path(
+            page_title: "pxvファイル数多い、ご無沙汰、手書き", 
+            sort_by: "last_ul_date",
+            group_by: "rating",
+            exclude_ai: "true",
+            #status: "「長期更新なし」を除外",
+            #point: 1,
+            #prediction: 8,
+            #force_disp_day: 90,
+            rating: 80,
+            #r18: "R18",
+            amount_gt: 400,
+            last_access_datetime: 90,
+            display_number: 9, 
+            thumbnail: true
+          ) 
+      },
       { :label => "-", :path => "" },
       { :label => "pxv 高評価85 R18",
           :path => artists_path(

@@ -24,7 +24,8 @@
         <th>コメント</th>
         <th>備考</th>
         <th>癖（へき）</th>
-        <th>ファイル数</th>
+        <th>DB登録日</th>
+        <th>前回アクセス日</th>
       </tr>
       <tr>
         <td><%= artist.feature %></td>
@@ -39,47 +40,21 @@
         <td><%= artist.comment %></td>
         <td><%= artist.remarks %></td>
         <td><%= artist.fetish %></td>
-        <td><%= artist.filenum %>(<%= artist.recent_filenum %>)</td>
-      </tr>
-    </table>
-  </p>
-
-  <p>
-    <table border="1">
-      <tr>
-        <th>最新投稿日</th>
-        <th>DB登録日</th>
-        <th>最初期投稿日</th>
-        <th>前回アクセス日</th>
-        <th>最新DL日</th>
-      </tr>
-      <tr>
-        <td>
-          <font color="red">
-            <%= artist.get_datetime_string(artist.last_ul_datetime, true) %>
-          </font>
-          (<%= artist.get_date_info(artist.last_ul_datetime) %>)
-        </td>
         <td>
           <%= artist.get_date_info(artist.created_at) %>
         </td>
         <td>
-          <%= artist.get_datetime_string(artist.earliest_ul_date, true) if artist.earliest_ul_date.presence %>
-        </td>
-        <td>
           <%= artist.get_date_info(@last_access_datetime) %>
-        </td>
-        <td>
-          <%= artist.get_date_info(artist.last_dl_datetime) %>
-          (<%= artist.get_datetime_string(artist.last_dl_datetime, true) %>)
         </td>
       </tr>
     </table>
   </p>
-  
+
+  <!--
   <% if @path_list.size == 0 %>
     <%= link_to "サムネイル強制表示", artist_path(artist, thumbnail: :yes, number_of_display: 5) %>
   <% end %>
+  !-->
 
   <% if artist.chara.presence %>
     <p>

@@ -36,6 +36,11 @@ class Artist < ApplicationRecord
 
     PXV_USER_URL_REGEX = %r!pixiv\.net/users/(\d+)!
 
+    module ReverseEnum
+        REV_ON = "さかのぼり中"
+        REV_DONE = "さかのぼり済"
+    end
+
     #--------------------------------------------------------------------------
     # クラスメソッド
     #--------------------------------------------------------------------------
@@ -486,7 +491,7 @@ class Artist < ApplicationRecord
         artworks.to_a.reverse.to_h
     end
 
-    def self.interval_list(list, nday = 7)
+    def self.interval_list(list, nday, dayn_sort = true)
         aw_tmp = nil
         long_term_list = []
         date_tmp = Date.today
@@ -506,7 +511,13 @@ class Artist < ApplicationRecord
             date_tmp = date
             aw_tmp = aw
         end
-        long_term_list.sort_by {|x| -x[1]}
+
+        if dayn_sort
+            #空き間隔順でソート
+            long_term_list.sort_by {|x| -x[1]}
+        else
+            #日時順
+        end
     end
 
     def self.artwork_list_file_num(alist)
@@ -595,8 +606,11 @@ class Artist < ApplicationRecord
         if days < 1
             "00.今日アクセス"
         else
-            if created_at_day_num < 60
+            d_delta = Util.get_days_date_delta(last_ul_datetime, created_at)
 
+            if d_delta > 60
+                "00.更新むかし？"
+            elsif created_at_day_num < 60
                 "01.最近登録|#{(days + 6) / 7}"
             else
                 if last_ul_datetime_delta > 60

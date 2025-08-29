@@ -15,6 +15,7 @@ class TwittersController < ApplicationController
       GRP_SORT_UL = "投稿日順"
       GRP_SORT_NO_UPDATE = "更新なし"
       GRP_SORT_RATE = "評価順"
+      GRP_SORT_DEL = "削除"
   end
 
   # GET /twitters or /twitters.json
@@ -622,7 +623,7 @@ class TwittersController < ApplicationController
     twtname = params[:twitter][:twtname]
     twtname_mod = Twt::sanitize_filename(twtname)
     if twtname != twtname_mod
-      msg = %!"[update] #{twtname}" => "#{twtname_mod}"!
+      msg = %![update] 置換文字あり："#{twtname}" => "#{twtname_mod}"!
       Rails.logger.info(msg)
       params[:twitter][:twtname] = twtname_mod
     end

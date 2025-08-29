@@ -32,23 +32,34 @@
 
   <% if @path_list[0] =~ /(\d\d-\d\d-\d\d)/ %>
     <% pub_date = Date.parse($1) %>
-    最新投稿日(ファイル)：<%= Util::get_date_info(pub_date) %><br />
+  <% end %>
+
+  【DB】
+  ファイル数:<%= artist.filenum %>(<%= artist.recent_filenum %>)
+  <hr />
+
+    
+  <% if pub_date %>
+    最新投稿日(FS):
+    <%= artist.get_datetime_string(pub_date, true) %>
+    (<%= Util::get_date_info(pub_date) %>)
+    <br />
+
     <% if artist.last_ul_datetime > pub_date %>
       <% if @artist.latest_artwork_id.presence %>
         <% url = artist.pxv_artwork_url(@artist.latest_artwork_id) %>
         最新(DB)：(<%= link_to_ex(@artist.latest_artwork_id, url) %>)
-        <%= l @artist.last_ul_datetime, format: :date %>
+        <%= artist.get_datetime_string @artist.last_ul_datetime, true %>
         (<%= Util::get_date_info(@artist.last_ul_datetime) %>)
       <% end %>
       <br />
       <b>↓最新のファイルでない可能性があります</b>。
     <% end %>
   <% else %>
-    最新投稿日(DB):
-    <%= artist.get_datetime_string(artist.last_ul_datetime, true) %>
+    最新投稿日(DB):<%= artist.get_datetime_string(artist.last_ul_datetime, true) %>
     (<%= artist.get_date_info(artist.last_ul_datetime) %>)
   <% end %>
-    <br />
+  <br />
 
   <% show_oldest = false %>
   <% list = Artist.artwork_list(@path_list) %>
@@ -74,6 +85,7 @@
 
     <% if path =~ /(\d\d-\d\d-\d\d)/ #@path_list[-1] =~ /(\d\d-\d\d-\d\d)/ %>
       <% pub_date = Date.parse($1) %>
+
       <% if artist.earliest_ul_date.to_date < pub_date %>
         <% if artist.reverse_status != "さかのぼり済" %>
           <b>↑最古のファイルでない可能性があります(<%= %!#{pub_date}!%>)</b> > <%= %!#{artist.earliest_ul_date.to_date}! %>(登録されている日付)
@@ -98,11 +110,26 @@
 
     <br />
     <% recent_filenum = Artist.artwork_list_recent_file_num(list) %>
-    最近のファイル数:<%= recent_filenum %>
+    <% if recent_filenum > @artist.recent_filenum %>
+      <% eq_symbol = ">" %>
+    <% elsif recent_filenum == @artist.recent_filenum %>
+      <% eq_symbol = "" %>
+    <% else %>
+      <% eq_symbol = "<" %>
+    <% end %>
+
+    <% if eq_symbol == "" %>
+    <% else %>
+      【最近のファイル数】計算:<%= recent_filenum %><%= eq_symbol %>DB:<%= @artist.recent_filenum %>
+    <% end %>
   <% end %>
   <br />
-  最初期投稿日(DB登録データ):<%= artist.get_datetime_string(artist.earliest_ul_date, true) if artist.earliest_ul_date.presence %>
-  <br />
+
+  <% if artist.earliest_ul_date.presence %>
+    最初期投稿日(DB):<%= artist.get_datetime_string(artist.earliest_ul_date, true) %>
+    (<%= artist.get_date_info(artist.earliest_ul_date) %>)
+    <br />
+  <% end %>
 
   <% if artist.filenum > file_num or show_oldest %>
     <h3>一部のみ表示？(<%= file_num %>/<%= artist.filenum %>)</h3>
@@ -116,12 +143,12 @@
       <% url = artist.pxv_artwork_url(@artist.latest_artwork_id) %>
       最新：(<%= link_to_ex(@artist.latest_artwork_id, url) %>)
 
-      <%= l @artist.last_ul_datetime, format: :date %>
+      <%= artist.get_datetime_string @artist.last_ul_datetime, true %>
     <% else %>
       <% url = artist.pxv_artwork_url(latest_artwork_id) %>
       最新(TSV)：(<%= link_to_ex(latest_artwork_id, url) %>)
 
-      <%= l @artist.last_ul_datetime, format: :date %>
+      <%= artist.get_datetime_string @artist.last_ul_datetime, true %>
     <% end %>
     <br />
 
@@ -129,7 +156,7 @@
       <% url = artist.pxv_artwork_url(@artist.oldest_artwork_id) %>
       最古：(<%= link_to_ex(@artist.oldest_artwork_id, url) %>)
 
-      <%= l @artist.earliest_ul_date, format: :date %>
+      <%= artist.get_datetime_string @artist.earliest_ul_date, true %>
       (<%= artist.reverse_status %>)
       <br />
 
@@ -147,7 +174,7 @@
       <% url = artist.pxv_artwork_url(oldest_artwork_id) %>
       最古(TSV)：(<%= link_to_ex(oldest_artwork_id, url) %>)
 
-      <%= l @artist.earliest_ul_date, format: :date %>
+      <%= artist.get_datetime_string @artist.earliest_ul_date, true %>
       (<%= artist.reverse_status %>)
       
       <% if oldest_artwork_id == @artist.pxvid %>

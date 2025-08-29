@@ -96,7 +96,7 @@ module Twt
         txtpath = Rails.root.join(TWT_DIRLIST_TXT_PATH).to_s
         File.open(txtpath) { |file|
             rgx = %r!#{TWT_ARCHIVE_DIR_PATH}\/.\/#{twtid.downcase}!
-            STDERR.puts %!rgx="#{rgx}"!
+            STDERR.puts %![get_twt_path_from_dirlist] rgx="#{rgx}"!
             while line = file.gets
                 #if line =~ %r!#{TWT_ARCHIVE_DIR_PATH}/./#{twtid}!
                 if line.downcase =~ rgx

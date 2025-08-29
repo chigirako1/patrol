@@ -1,8 +1,17 @@
-<% title = %!url 一覧  #{params[:title]}/file:"#{params[:filename]}"/dir:#{params[:dir]}! %>
+<% if @url_file_list.presence %>
+    <% title = "ファイルリスト"%>
+<% else %>
+    <% title = %!「#{params[:filename]}」 url 一覧  #{params[:title]}/dir:#{params[:dir]}! %>
+<% end %>
 
 <% provide(:title, title) %>
 
 <h1><%= title %></h1>
+
+<% if params[:show_times].presence %>
+    <% show_times = params[:show_times].to_i %>
+    ・<%= show_times %>回以上のURLのみ
+<% end %>
 
 <% thumb_disp = false %>
 
@@ -16,9 +25,6 @@
     <% pxv_disp_number = 6 %>
 <% end %>
 
-<% if params[:show_times].presence %>
-    <% show_times = params[:show_times].to_i %>
-<% end %>
 
 <!-- twt -->
 <% pxv_artist_id_list = [] %> <!-- TODO:なんだこれ？ -->

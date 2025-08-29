@@ -265,7 +265,7 @@
     <% if main_twtid.presence %>
       <%= twitter_info_tag(main_twtid) %>
     <% elsif @twitter.main_twtid.presence %>
-      <%= link_to_ex %!☆twt☆:@#{@twitter.main_twtid}!, artist_twt_path(@twitter.main_twtid) %>
+      [<%= link_to_ex %!☆twt☆:@#{@twitter.main_twtid}!, artist_twt_path(@twitter.main_twtid) %>]
     <% end %>
   </div>
 

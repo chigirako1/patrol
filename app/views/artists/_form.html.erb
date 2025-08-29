@@ -142,6 +142,24 @@
     <%= form.label :twtid, style: "display: block" %>
     <% twtid_val = artist.twtid %>
     <% if twtid_val.presence %>
+      <% twt_pic_path_list = Twt::get_pic_filelist(twtid_val) %>
+
+      <% tweet_ids = Twt::get_twt_tweet_ids_from_txts(twtid_val) %>
+      <% tweet_ids.each do |x| %>
+        <% url = Twt::twt_tweet_url(twtid_val, x) %>
+        <%= link_to_ex(url, url) %>
+        [<%= Twt::timestamp_str(x) %>]
+
+        <% paths = Twt::search_tweet(twt_pic_path_list, x) %>
+        <% if paths.size > 0 %>
+          ファイルあり
+        <% else %>
+          <% url2 = Twt::twt_tweet_url_dev(x) %>
+          <%= link_to_ex(url2, url2) %>
+        <% end %>
+        <br>
+      <% end %>
+
       <% twt = Twitter.find_by_twtid_ignore_case(artist.twtid) %>
       <% if twt.presence %>
         <% if artist.twtid != twt.twtid %>
@@ -152,23 +170,6 @@
           <font color='red'>twtに合わせて更新↓</font><br />
         <% end %>
       <% else %>
-        <% twt_pic_path_list = Twt::get_pic_filelist(twtid_val) %>
-
-        <% tweet_ids = Twt::get_twt_tweet_ids_from_txts(twtid_val) %>
-        <% tweet_ids.each do |x| %>
-          <% url = Twt::twt_tweet_url(twtid_val, x) %>
-          <%= link_to_ex(url, url) %>
-          [<%= Twt::timestamp_str(x) %>]
-
-          <% url2 = Twt::twt_tweet_url_dev(x) %>
-          <%= link_to_ex(url2, url2) %>
-
-          <% paths = Twt::search_tweet(twt_pic_path_list, x) %>
-          <% if paths.size > 0 %>
-            ファイルあり
-          <% end %>
-          <br>
-        <% end %>
         [<%= link_to_ex("New Twt", new_twitter_path(twtid: artist.twtid, pxvid: artist.pxvid, status: Twitter::TWT_STATUS::STATUS_PATROL, twtname: artist.pxvname)) %>]
         [<%= link_to_ex %!☆twt☆:@#{artist.twtid}!, artist_twt_path(artist.twtid) %>]
         <br />

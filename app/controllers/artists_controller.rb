@@ -339,6 +339,15 @@ class ArtistsController < ApplicationController
     GROUP_STAT_RAT_R18 = "status/rating/r18"
   end
 
+  module GRP_SORT
+      GRP_SORT_PRED = "予測順"
+      GRP_SORT_ACCESS = "アクセス日順"
+      GRP_SORT_UL = "投稿日順"
+      GRP_SORT_NO_UPDATE = "更新なし"
+      GRP_SORT_RATE = "評価順"
+      GRP_SORT_DEL = "削除"
+  end
+
   def api_hoge
     puts %!api=#{params[:api]}!
     case params[:api].to_i
@@ -392,13 +401,23 @@ class ArtistsController < ApplicationController
       @artists_group = index_group_by(artists, prms)
       return
     when MethodEnum::ALL_IN_ONE
+      if params[:aio].presence
+        keys = params[:aio].split("|")
+
+        target_hash = {}
+        keys.each do |key|
+          target_hash[key] = true
+        end
+      else
+      end
+
       group_list = []
       interval = prms.last_access_datetime
 
       prms.num_of_times.times do |i|
         interval_wk = interval * (i + 1)
         #puts %!#{prms.rating}/#{prms.rating_upper_limit}!
-        group_list << index_all_in_one(prms, %!#{prms.rating}:!, interval_wk)
+        group_list << index_all_in_one(prms, %!#{prms.rating}:!, interval_wk, target_hash)
         #puts "#{i}/#{interval}(#{interval_wk})/#{prms.last_access_datetime}"
 
         ### 
@@ -1325,78 +1344,97 @@ class ArtistsController < ApplicationController
       artists_group
     end
 
-    def index_all_in_one(prms, prefix, interval)
+    def index_all_in_one(prms, prefix, interval, target_hash)
       #puts "interval=#{interval}"
+
+      @artists_total_count = 0
 
       artists_group = {}
 
-      # ---
-      prms.last_access_datetime = 0
-      artists = index_select(Artist.all, prms)
-      artists = index_select_status_exclude(artists)
-
-      artists_sort_pred = artists.sort_by {|x| [-x.prediction_up_cnt(true), x[:recent_filenum], -x[:filenum], x[:last_ul_datetime]]}
-
-      @artists_total_count = artists.size
-
-      prms.last_access_datetime = interval
-      artists = artists.select {|x| !x.last_access_datetime_p(interval)}
-      artists_sort_high = artists.sort_by {|x| [-x.rating, -x.prediction_up_cnt(true), x.last_access_datetime]}
-      
-      # ---
-      if true
+      if target_hash == nil or target_hash[GRP_SORT::GRP_SORT_ACCESS]
         artists = index_select(Artist.all, prms, false)
         artists = index_select_status_exclude(artists)
 
         artists_sort_access = artists.sort_by {|x| [x.last_access_datetime, -x.recent_filenum, -x.filenum]}
 
+        if false
+          artists_group[prefix + "アクセス日順"] = artists_sort_access
+        else
+          tmp_grp = artists_sort_access.group_by {|x| x.r18}.sort.reverse.to_h
+          tmp_grp.each do |k,v|
+            artists_group[%!#{prefix}#{k}:アクセス日順!] = v
+          end
+        end
+      end
+
+      if target_hash == nil or target_hash[GRP_SORT::GRP_SORT_PRED]
+        prms.last_access_datetime = 0
+        artists = index_select(Artist.all, prms)
+        artists = index_select_status_exclude(artists)
+
+        artists_sort_pred = artists.sort_by {|x| [-x.prediction_up_cnt(true), x[:recent_filenum], -x[:filenum], x[:last_ul_datetime]]}
+        artists_group[prefix + "予測順"] = artists_sort_pred
+
+      end
+
+      if target_hash == nil or target_hash[GRP_SORT::GRP_SORT_RATE]
+        artists = index_select(Artist.all, prms)
+        artists = index_select_status_exclude(artists)
+
+        prms.last_access_datetime = interval
+        artists = artists.select {|x| !x.last_access_datetime_p(interval)}
+        artists_sort_high = artists.sort_by {|x| [-x.rating, -x.prediction_up_cnt(true), x.last_access_datetime]}
+
+        artists_group[prefix + "評価順"] = artists_sort_high
+      end
+
+      if target_hash == nil or target_hash[GRP_SORT::GRP_SORT_UL]
+        artists = index_select(Artist.all, prms, false)
+        artists = index_select_status_exclude(artists)
+
         artists2 = artists.select {|x| x.select_cond_post_date()}
         artists_sort_ul = artists2.sort_by {|x| [x.last_ul_datetime]}
+        artists_group[prefix + "公開日順"] = artists_sort_ul
       end
 
-      #artists_group[prefix + "アクセス日順"] = artists_sort_access
-      tmp_grp = artists_sort_access.group_by {|x| x.r18}.sort.reverse.to_h
-      tmp_grp.each do |k,v|
-        artists_group[%!#{prefix}#{k}:アクセス日順!] = v
-      end
-      artists_group[prefix + "予測順"] = artists_sort_pred
-      artists_group[prefix + "評価順"] = artists_sort_high
-      artists_group[prefix + "公開日順"] = artists_sort_ul
+      if target_hash == nil or target_hash[GRP_SORT::GRP_SORT_NO_UPDATE]
+        # ---
+        artists = index_select(Artist.all, prms, false)
+        #artists = artists.select {|x| x.status == "長期更新なし"}
+        artists = index_select_status_include(artists)
+        #artists = artists.select {|x| !x.last_access_datetime_p(interval)}
+        artists = artists.select {|x| x.select_cond_post_date()}
 
-      # ---
-      artists = index_select(Artist.all, prms, false)
-      #artists = artists.select {|x| x.status == "長期更新なし"}
-      artists = index_select_status_include(artists)
-      #artists = artists.select {|x| !x.last_access_datetime_p(interval)}
-      artists = artists.select {|x| x.select_cond_post_date()}
+        artists_no_updated = artists.sort_by {|x| [x.last_access_datetime]}
+        #artists_no_updated = artists_no_updated.select {|x| x.status != }
+        #artists_group[prefix + "更新なし"] = artists_no_updated
 
-      artists_no_updated = artists.sort_by {|x| [x.last_access_datetime]}
-      #artists_no_updated = artists_no_updated.select {|x| x.status != }
-      #artists_group[prefix + "更新なし"] = artists_no_updated
+        tmp_group = artists_no_updated.group_by {|x| [
+            if x.reverse_status
+              x.reverse_status
+            else
+              ""
+            end
+          ]
+        }
 
-      tmp_group = artists_no_updated.group_by {|x| [
-          if x.reverse_status
-            x.reverse_status
-          else
-            ""
-          end
-        ]
-      }
-
-      #p tmp_group
-      tmp_group.each do |key, g|
-        #p key
-        #p g
-        artists_group[prefix + "更新なし:" + key.to_s] = g
+        #p tmp_group
+        tmp_group.each do |key, g|
+          #p key
+          #p g
+          artists_group[prefix + "更新なし:" + key.to_s] = g
+        end
       end
 
-      # ---
-      artists = index_select(Artist.all, prms, false)
-      artists = artists.select {|x| (x.status == ArtistsController::Status::DELETED or x.status == ArtistsController::Status::SUSPEND)}
-      #artists = artists.select {|x| !x.last_access_datetime_p(interval)}
+      if target_hash == nil or target_hash[GRP_SORT::GRP_SORT_DEL]
+        # ---
+        artists = index_select(Artist.all, prms, false)
+        artists = artists.select {|x| (x.status == ArtistsController::Status::DELETED or x.status == ArtistsController::Status::SUSPEND)}
+        #artists = artists.select {|x| !x.last_access_datetime_p(interval)}
 
-      artists_vanish = artists.sort_by {|x| [x.twtid, x.last_access_datetime]}.reverse
-      artists_group[prefix + "消滅"] = artists_vanish
+        artists_vanish = artists.sort_by {|x| [x.twtid, x.last_access_datetime]}.reverse
+        artists_group[prefix + "消滅"] = artists_vanish
+      end
       
       artists_group
     end

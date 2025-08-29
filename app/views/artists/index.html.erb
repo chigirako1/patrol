@@ -22,7 +22,8 @@
   <% end %>
   <h2>
     <%#= "#{key}(全#{artists.size}件)[#{@begin_no + 1}..#{[(@begin_no.to_i + @size_per_table), artists.size].min }]" %>
-    <%= "#{key}(#{artists.size}件)[#{@begin_no + 1}..#{[(@begin_no.to_i + @size_per_table), artists.size].min }]" %>
+    <% h2_tile = "#{key}(#{artists.size}件)[#{@begin_no + 1}..#{[(@begin_no.to_i + @size_per_table), artists.size].min }]" %>
+    <%= h2_tile %>
   </h2>
   <table border="1" rules="all">
     <tr>
@@ -42,11 +43,18 @@
       <%# end %>
       <th>nje</th>
     </tr>
-    <% artists[(@begin_no)..(@begin_no + @size_per_table - 1)].each do |artist| %>
+    <%# artists[(@begin_no)..(@begin_no + @size_per_table - 1)].each do |artist| %>
+    <% loop_cnt = 0 %>
+    <% artists.each do |artist| %>
       <% if disp_id_list.include?(artist.pxvid) %>
+        <% STDERR.puts %!表示済みなのでスキップ"(#{artist.pxvname}#{artist.pxvid})"|#{h2_tile}!%>
         <% next %>
       <% else %>
         <% disp_id_list << artist.pxvid %>
+        <% loop_cnt += 1 %>
+        <% if loop_cnt > @size_per_table %>
+          <% break %>
+        <% end %>
       <% end %>
 
       <% if true#@twt %>
@@ -79,6 +87,9 @@
           <% if artist.reverse_status.presence %>
             <br />
             [<%= artist.reverse_status %>]
+            <% if artist.reverse_status == Artist::ReverseEnum::REV_DONE %>
+              ✔
+            <% end%>
           <% end%>
         </td>
 
@@ -274,6 +285,7 @@
         selected: params[:file] 
       ) %>
       <%= f.text_field :filename, :value => params[:filename] %>
+      ("latest", "yy", "yymm", "yymmdd", )
       <br />
     <hr />
     
@@ -359,6 +371,7 @@
           ['rating'],
           ['status/rating'],
           [ArtistsController::GROUP_TYPE::GROUP_FEAT_STAT_RAT],
+          [ArtistsController::GROUP_TYPE::GROUP_STAT_RAT_R18],
           ['評価+年齢制限'],
           ['さかのぼり'],
           [ArtistsController::GROUP_TYPE::GROUP_ACCESS_OLD_TO_NEW],
