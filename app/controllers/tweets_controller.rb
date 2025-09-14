@@ -54,6 +54,11 @@ class TweetsController < ApplicationController
     end
   end
 
+  # GET /tweets/
+  def update_recods
+    @hoge = Twt::update_tweet_records_by_fs()
+  end
+
   # GET /tweets/1 or /tweets/1.json
   def show
   end

@@ -154,8 +154,14 @@
         <% if paths.size > 0 %>
           ファイルあり
         <% else %>
-          <% url2 = Twt::twt_tweet_url_dev(x) %>
-          <%= link_to_ex(url2, url2) %>
+          <%  tweet_rcd = Tweet.find_by(tweet_id: x) %>
+          <% if tweet_rcd %>
+            <% p tweet_rcd %>
+            "<%= tweet_rcd.status %>"
+          <% else %>
+            <% url2 = Twt::twt_tweet_url_dev(x) %>
+            <%= link_to_ex(url2, url2) %>
+          <% end %>
         <% end %>
         <br>
       <% end %>
@@ -334,7 +340,12 @@
  
   <div>
     <%= form.label :特徴（AI、3D、etc…）, style: "display: block" %>
-    <%= form.select :feature, [["AI", "AI"], ["3D", "3D"]], include_blank: "選択して下さい" %>
+    <%= form.select :feature,
+      [
+        ["AI", "AI"],
+        ["3D", "3D"],
+        ["小説", "小説"],
+      ], include_blank: "選択して下さい" %>
     <input type="button" value="↑" onclick="options_up('artist_feature');" class="btn" />
     <input type="button" value="↓" onclick="options_down('artist_feature');" class="btn" />
     <input type="button" value="AI" onclick="set_option('feature', 1);" class="btn" />

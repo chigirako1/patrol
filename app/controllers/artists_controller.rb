@@ -445,14 +445,18 @@ class ArtistsController < ApplicationController
       if true
         artists = Artist.all
         artists = artists.select {|x| x.rating == nil or x.rating == 0}
-
         d_thre = 365
+        artists = artists.select {|x| x.filenum != x.recent_filenum}
         artists = artists.select {|x| x.last_access_datetime_num < d_thre}
         artists = artists.sort_by {|x| [-x.prediction_up_cnt(true)]}
         group = {}
         group["未設定 予測順 #{d_thre}"] = artists
         group_list << group
+      end
 
+      if true
+        artists = Artist.all
+        artists = artists.select {|x| x.rating == nil or x.rating == 0}
         d_thre = 90
         artists = artists.select {|x| x.last_access_datetime_num < d_thre}
         #artists = artists.sort_by {|x| [-x.prediction_up_cnt(true), x.last_access_datetime]}
@@ -460,13 +464,28 @@ class ArtistsController < ApplicationController
         group = {}
         group["未設定 予測順 #{d_thre}"] = artists
         group_list << group
+      end
         
+
+      if true
+        artists = Artist.all
+        artists = artists.select {|x| x.rating == nil or x.rating == 0}
+        #artists = artists.select {|x| x.last_access_datetime_num > 90}
+        artists = artists.select {|x| x.days_elapsed_since_created < 90}
+        
+        artists = artists.sort_by {|x| [-x.filenum]}
+        group = {}
+        group["未設定 総ファイル数順 最近?"] = artists
+        group_list << group
+      end
+
+      if true
         artists = Artist.all
         artists = artists.select {|x| x.rating == nil or x.rating == 0}
         artists = artists.select {|x| x.last_access_datetime_num > 90}
         artists = artists.sort_by {|x| [-x.filenum]}
         group = {}
-        group["未設定 総ファイル数順"] = artists
+        group["未設定 総ファイル数順 全期間"] = artists
         group_list << group
       end
 
@@ -1204,7 +1223,7 @@ class ArtistsController < ApplicationController
       when "-point"
         artists = artists.sort_by {|x| [x.point, -x.priority, -x[:recent_filenum], -x[:filenum], x[:last_ul_datetime]]}
       when "予測▽"
-        artists = artists.sort_by {|x| [-x.prediction_up_cnt(true), x[:recent_filenum], -x[:filenum], x[:last_ul_datetime]]}
+        artists = artists.sort_by {|x| [-x.prediction_up_cnt(true), x.recent_filenum||0, -x.filenum||0, x.last_ul_datetime||Time.new(2001,1,1)]}
       when "予測△"
         artists = artists.sort_by {|x| [x.prediction_up_cnt(true), x[:last_ul_datetime], x[:recent_filenum], -x[:filenum]]}
       when "last_ul_date"

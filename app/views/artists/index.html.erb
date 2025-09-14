@@ -101,7 +101,7 @@
           <% au_delta = Util::get_days_date_delta(artist.last_ul_datetime, artist.last_access_datetime) if artist.last_ul_datetime and artist.last_access_datetime %>
           <% if au_delta and au_delta > 30 %>
             <br />
-            ※アクセス日と公開日が離れています(<%= au_delta %>日)
+            ※アクセス日と公開日が<%= au_delta %>日離れています。
           <% end %>
         </td>
 
@@ -451,10 +451,10 @@
     <%= f.label :表示数 %>
     <%= f.number_field :display_number, :value => params[:display_number] %>
     <br />
-    <%= f.label :step %>
+    <%= f.label :段階 %>
     <%= f.number_field :step, :value => params[:step] %>
     <br />
-    <%= f.label :num_of_times %>
+    <%= f.label :回数 %>
     <%= f.number_field :num_of_times, :value => params[:num_of_times] %>
     <br />
     <%= f.label :対象年 %>

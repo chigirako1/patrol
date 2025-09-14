@@ -13,6 +13,7 @@ class TwittersController < ApplicationController
       GRP_SORT_PRED = "予測順"
       GRP_SORT_ACCESS = "アクセス日順"
       GRP_SORT_UL = "投稿日順"
+      GRP_SORT_UL_ACCESS = "投稿日とアクセス日の差順"
       GRP_SORT_NO_UPDATE = "更新なし"
       GRP_SORT_RATE = "評価順"
       GRP_SORT_DEL = "削除"
@@ -165,11 +166,12 @@ class TwittersController < ApplicationController
 
       twitters_bak = twitters
 
+=begin
       if false#true
         group = {}
         
         twitters = twitters.select {|x| x.drawing_method == params[:target]}
-        twitters = twitters.select {|x| x.status == "TWT巡回"}
+        twitters = twitters.select {|x| x.status == Twitter::TWT_STATUS::STATUS_PATROL}
         twitters = twitters.sort_by {|x| [x.last_access_datetime, -(x.rating||0), -x.prediction]}
         
         r = 85
@@ -183,6 +185,17 @@ class TwittersController < ApplicationController
         twitters = twitters.sort_by {|x| [-x.prediction, -(x.rating||0), x.last_access_datetime]}
         group["#{r}A:予測数順"] = twitters
 
+        group_list << group
+      end
+=end
+      if true
+        twitters_wk = twitters
+        twitters_wk = twitters_wk.select {|x| x.status == Twitter::TWT_STATUS::STATUS_PATROL}
+        twitters_wk = twitters_wk.select {|x| x.drawing_method == params[:target]}
+        twitters_wk = twitters_wk.select {|x| (x.rating||0) >= 85 }
+        twitters_wk = twitters_wk.sort_by {|x| [x.last_access_datetime, -(x.rating||0), -x.prediction]}
+        group = {}
+        group["xxx:アクセス日順"] = twitters_wk
         group_list << group
       end
 
@@ -243,11 +256,24 @@ class TwittersController < ApplicationController
       end
 
       if true
+        nday = 90
+        twitters_w = twitters.select {|x| !x.last_access_datetime_p(-nday)}
+        twitters_w = twitters_w.select {|x| x.filenum||0 > 10}
+        twitters_w = twitters_w.select {|x| x.status != Twitter::TWT_STATUS::STATUS_NOT_EXIST}
+        twitters_w = twitters_w.sort_by {|x| [-x.prediction, x.last_access_datetime]}
+        group = {}
+        group["未設定 #{nday}d"] = twitters_w
+        group_list << group
+      end
+
+      if true
+        nday = 90
         twitters_w = twitters
-        twitters_w = twitters.select {|x| !x.last_access_datetime_p(-90) and !x.last_access_datetime_p(7)}
+        twitters_w = twitters_w.select {|x| !x.last_access_datetime_p(-(nday))}
+        twitters_w = twitters_w.select {|x| !x.last_access_datetime_p(30) or x.prediction > 10}
         twitters_w = twitters_w.sort_by {|x| [-(x.filenum||0), x.last_access_datetime]}
         group = {}
-        group["未設定 総ファイル数↑"] = twitters_w
+        group["未設定 総ファイル数↑ #{nday}"] = twitters_w
         group_list << group
       end
 
@@ -321,7 +347,7 @@ class TwittersController < ApplicationController
     when "dl_nil"
       twitters = twitters.select {|x| x.last_dl_datetime == nil}
     when "not_patrol"
-      twitters = twitters.select {|x| x.status != "TWT巡回"}
+      twitters = twitters.select {|x| x.status != Twitter::TWT_STATUS::STATUS_PATROL}
       twitters = twitters.select {|x| x.drawing_method != nil and (x.drawing_method == "AI")}
     when "patrol3"
       twitters = twitters.select {|x| x.drawing_method != nil}
@@ -367,7 +393,7 @@ class TwittersController < ApplicationController
     when TwittersController::ModeEnum::PATROL, "patrol2", TwittersController::ModeEnum::STATS
       twitters = twitters.select {|x| x.drawing_method != nil}
       if mode == TwittersController::ModeEnum::PATROL
-        twitters = twitters.select {|x| x.status == "TWT巡回"}
+        twitters = twitters.select {|x| x.status == Twitter::TWT_STATUS::STATUS_PATROL}
       elsif mode == TwittersController::ModeEnum::STATS
       else
         twitters = twitters.select {|x|
@@ -433,7 +459,7 @@ class TwittersController < ApplicationController
 =end
     when "hand"
       twitters = twitters.select {|x| !x.last_access_datetime_p(@hide_within_days)}
-      twitters = twitters.select {|x| x.status == "TWT巡回"}
+      twitters = twitters.select {|x| x.status == Twitter::TWT_STATUS::STATUS_PATROL}
       twitters = twitters.select {|x| x.drawing_method != nil and (x.drawing_method == "手描き")}
       if rating_gt != 0
         twitters = twitters.select {|x| x.rating != nil and x.rating >= rating_gt }
@@ -470,7 +496,7 @@ class TwittersController < ApplicationController
       twitters = twitters.sort_by {|x| [-x.prediction, x.last_access_datetime]}
     when "no_pxv"
       twitters = twitters.select {|x| !x.last_access_datetime_p(@hide_within_days)}
-      twitters = twitters.select {|x| x.status == "TWT巡回"}
+      twitters = twitters.select {|x| x.status == Twitter::TWT_STATUS::STATUS_PATROL}
       twitters = twitters.select {|x| x.drawing_method != nil and (x.drawing_method == "手描き")}
       if rating_gt != 0
         twitters = twitters.select {|x| x.rating != nil and x.rating >= rating_gt }
@@ -497,7 +523,7 @@ class TwittersController < ApplicationController
       if rating_gt != 0
         twitters = twitters.select {|x| x.rating == nil or x.rating == 0 or x.rating >= rating_gt }
       end
-      #twitters = twitters.select {|x| x.status == "TWT巡回"}
+      #twitters = twitters.select {|x| x.status == Twitter::TWT_STATUS::STATUS_PATROL}
 
       #pxv_id_list, twt_urls, misc_urls = UrlTxtReader::get_url_list([], false)
       #known_ids = twt_urls.keys
@@ -531,22 +557,9 @@ class TwittersController < ApplicationController
       return
     when "更新不可"
       twitters = twitters.select {|x| !x.last_access_datetime_p(@hide_within_days)}
-      twitters = twitters.select {|x| x.status != "TWT巡回"}
+      twitters = twitters.select {|x| x.status != Twitter::TWT_STATUS::STATUS_PATROL}
       @twitters_group = twitters.group_by {|x| [x.status, x.r18]}
       return
-=begin
-      ["TWT巡回", "TWT巡回"],
-      ["TWT巡回不要", "TWT巡回不要"],
-      ["長期更新なし★", "長期更新なし"], 
-      ["TWT巡回不要(PXVチェック)", "TWT巡回不要(PXVチェック)"],
-      ["最近更新してない？", "最近更新してない？"], 
-      ["アカウント削除", "削除"],
-      ["存在しない", "存在しない"],
-      ["凍結", "凍結"],
-      ["非公開アカウント", "非公開アカウント"],
-      ["別アカウントに移行（存在はするが更新していない？）", "別アカウントに移行"],
-      ["アカウントID変更", "アカウントID変更"],
-=end
 
     when "all"
       twitters = twitters.sort_by {|x| [-x.prediction, x.last_access_datetime, (x.last_post_datetime || "2000-01-01")]}
@@ -717,7 +730,7 @@ class TwittersController < ApplicationController
       ### ↑↑↑↑↑↑
 
       ####
-      twitters = twitters.select {|x| x.status == "TWT巡回"}
+      twitters = twitters.select {|x| x.status == Twitter::TWT_STATUS::STATUS_PATROL}
 
       twitters_group = {}
 
@@ -744,6 +757,11 @@ class TwittersController < ApplicationController
       if target_hash == nil or target_hash[GRP_SORT::GRP_SORT_UL]
         twitters = twitters.sort_by {|x| [(x.last_post_datetime || "2000-01-01"), -(x.rating||0), x.prediction]}
         twitters_group["#{rating_gt}:投稿日順"] = twitters
+      end
+
+      if target_hash == nil or target_hash[GRP_SORT::GRP_SORT_UL_ACCESS]
+        twitters = twitters.sort_by {|x| [-((x.last_access_datetime||"2000-01-01") - (x.last_post_datetime||"2000-01-01")), -(x.rating||0), x.prediction]}
+        twitters_group["#{rating_gt}:#{GRP_SORT::GRP_SORT_UL_ACCESS}"] = twitters
       end
 
       if target_hash == nil or target_hash[GRP_SORT::GRP_SORT_NO_UPDATE]
@@ -779,7 +797,7 @@ class TwittersController < ApplicationController
       group = {}
 
       twitters = twitters.select {|x| x.drawing_method == params[:target]}
-      twitters = twitters.select {|x| x.status == "TWT巡回"}
+      twitters = twitters.select {|x| x.status == Twitter::TWT_STATUS::STATUS_PATROL}
       
       twitters = twitters.sort_by {|x| [x.last_access_datetime, -(x.rating||0), -x.prediction]}
 

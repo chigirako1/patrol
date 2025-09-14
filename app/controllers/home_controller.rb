@@ -8,6 +8,39 @@ class HomeController < ApplicationController
     @menus = [
       # =====================================
       { :label => "unified t [ai]", :path => "" },
+      { :label => "Twitter [AI] 87 (+3 * 3) 予測/アクセス [3]",
+        :path => twitters_path(
+          target: "AI",
+          page_title: "Twitter [AI] 87 (+3 * 3) 予測/アクセス [3]",
+          rating: 87,
+          #hide_within_days: 0, 
+          num_of_disp: 3,
+          #pred: 5,
+          #force_disp_day: 10,
+          mode: TwittersController::ModeEnum::ALL_IN_ONE,
+          aio: TwittersController::GRP_SORT::GRP_SORT_ACCESS + "|" + TwittersController::GRP_SORT::GRP_SORT_PRED,
+          step: -3,
+          num_of_times: 3,
+          ex_pxv: false,
+          thumbnail: ""
+        ) 
+      },
+      { :label => "Twitter [AI] 90 (+5ずつ * 2回)[5枚]",
+        :path => twitters_path(
+          target: "AI",
+          page_title: "AI 90 (+5 * 2)",
+          rating: 90,
+          #hide_within_days: 0, 
+          num_of_disp: 5,
+          #pred: 5,
+          #force_disp_day: 10,
+          mode: TwittersController::ModeEnum::ALL_IN_ONE,
+          step: -5,
+          num_of_times: 2,
+          ex_pxv: false,
+          thumbnail: ""
+        ) 
+      },
       { :label => "Twitter [AI] 90 (-1 * 1)[5]",
         :path => twitters_path(
           target: "AI",
@@ -234,22 +267,6 @@ class HomeController < ApplicationController
       },
       # ----------------------------
       { :label => "-", :path => "" },
-      { :label => "Twitter [AI] 90 (-5 * 3)",
-        :path => twitters_path(
-          target: "AI",
-          page_title: "AI 90 (-5 * 3)",
-          rating: 90,
-          #hide_within_days: 0, 
-          num_of_disp: 5,
-          #pred: 5,
-          #force_disp_day: 10,
-          mode: TwittersController::ModeEnum::ALL_IN_ONE,
-          step: 5,
-          num_of_times: 3,
-          ex_pxv: false,
-          thumbnail: ""
-        ) 
-      },
       { :label => "Twitter [AI] 95 (-5 * 2)",
         :path => twitters_path(
           target: "AI",
@@ -414,8 +431,6 @@ class HomeController < ApplicationController
             #thumbnail: "t"
           )
       },
-      { :label => "-", :path => "" },
-      { :label => "twt(dir-DB更新 BY FS)", :path => artists_twt_index_path(dir: "update") },#, target:"twt") },
       # ----------------------------
       { :label => "unified p [ai]", :path => "" },
       { :label => "-", :path => "" },
@@ -435,23 +450,7 @@ class HomeController < ApplicationController
             thumbnail: false,
           )
       },
-      { :label => "pxv [AI] 95 (0 * 1)[5]",
-          :path => artists_path(
-            file: ArtistsController::MethodEnum::ALL_IN_ONE,
-            page_title: "pxv [AI] 95 (0 * 1)",
-            exclude_ai: "",
-            ai: true,
-            status: "「長期更新なし」を除外",
-            #prediction: 6,
-            rating: 95,
-            step: 1,
-            num_of_times: 1,
-            display_number: 5,
-            last_access_datetime: 7,
-            thumbnail: false,
-          )
-      },
-      { :label => "pxv [AI] 90 (0 * 1)[8]",
+      { :label => "pxv [AI] 90 (0 * 1)[5]",
           :path => artists_path(
             file: ArtistsController::MethodEnum::ALL_IN_ONE,
             page_title: "pxv [AI] 90 (0 * 1)",
@@ -460,9 +459,9 @@ class HomeController < ApplicationController
             status: "「長期更新なし」を除外",
             #prediction: 6,
             rating: 90,
-            step: 1,
+            step: 0,
             num_of_times: 1,
-            display_number: 8,
+            display_number: 5,
             last_access_datetime: 7,
             thumbnail: false,
           )
@@ -498,7 +497,22 @@ class HomeController < ApplicationController
             thumbnail: false,
           )
       },
-
+      { :label => "pxv [AI] 95 (-5 * 3)[2]アクセス順のみ",
+          :path => artists_path(
+            file: ArtistsController::MethodEnum::ALL_IN_ONE,
+            page_title: "pxv [AI] all in one ",
+            exclude_ai: "",
+            ai: true,
+            status: "「長期更新なし」を除外",
+            aio: TwittersController::GRP_SORT::GRP_SORT_ACCESS,
+            rating: 95,
+            step: 5,
+            num_of_times: 3,
+            display_number: 2,
+            last_access_datetime: 30,
+            thumbnail: false,
+          )
+      },
       { :label => "unified p [手]", :path => "" },
       { :label => "-", :path => "" },
       { :label => "pxv [手描き] 95 (-5 * 2)[5]",
@@ -608,21 +622,24 @@ class HomeController < ApplicationController
             thumbnail: false
           )
       },
+      { :label => "DB更新", :path => "" },
       # ----------------------------
       { :label => "-", :path => "" },
+      { :label => "twt(dir-DB更新 BY FS)", :path => artists_twt_index_path(dir: "update") },#, target:"twt") },
       { :label => "pxv (dir-DB更新 BY FS)",
           :path => artists_path(
             page_title: "pxv (dir-DB更新 BY FS)", 
             file: ArtistsController::MethodEnum::TABLE_UPDATE_NEW_USER
           )
       },
+      { :label => "tweets(dir-DB更新 BY FS)", :path => tweets_update_recods_index_path() },
 
       # ----------------------------
       { :label => "url file", :path => "" },
       { :label => "最新ファイル all",
           :path => artists_twt_index_path(
             filename: "latest",
-            hide_day: 30,
+            hide_day: 90,
             rating: 80,
             #show_times: 2,
             pred: 5,
@@ -776,7 +793,7 @@ class HomeController < ApplicationController
           :path => artists_twt_index_path(
             filename: "all",
             #hide_day: 30,
-            show_times: 3,
+            show_times: 2,
             url_cnt: 2,
             target: ArtistsController::FileTarget::TWT_UNKNOWN_ONLY
           )

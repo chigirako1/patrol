@@ -50,7 +50,7 @@ class Twitter < ApplicationRecord
 
     def self.looks(target_col, search_word, match_method)
         search_word.strip!
-        puts %!#{target_col}, #{search_word}, #{match_method}!
+        puts %!["#{target_col}", "#{search_word}", "#{match_method}"]!
 
         if target_col == "(自動判断)"
             if search_word =~ /^\w+$/
@@ -58,8 +58,8 @@ class Twitter < ApplicationRecord
             elsif search_word =~ /@(\w+)/
                 target_col = "twitter_twtid"
                 search_word = $1
-            elsif search_word =~ %r!www\.twitter\.com/(\d+)! or
-                search_word =~ %r!www\.x\.com/(\d+)!
+            elsif search_word =~ %r!twitter\.com/(\w+)! or
+                search_word =~ %r!x\.com/(\w+)!
                 target_col = "twitter_twtid"
                 search_word = $1
             else
@@ -373,6 +373,10 @@ class Twitter < ApplicationRecord
 
     def group_key(count, rating_arg, add_count = false)
         
+        if drawing_method == "パクリ"
+            return drawing_method
+        end
+
         case status
         when Twitter::TWT_STATUS::STATUS_PATROL
             if rating.presence
@@ -424,11 +428,18 @@ class Twitter < ApplicationRecord
         when Twitter::TWT_STATUS::STATUS_NOT_EXIST
         when Twitter::TWT_STATUS::STATUS_FROZEN
         when Twitter::TWT_STATUS::STATUS_PRIVATE
-            key = "000:#{status}"
-            return %!#{key}!
+            key = %!000:"#{status}"!
+            #return %!#{key}!
         #when Twitter::TWT_STATUS::STATUS_SCREEN_NAME_CHANGED
+        when "", nil
+            days_accs = Util::get_date_delta(last_access_datetime)
+            if days_accs < 30
+                key = %!000:#{days_accs / 7}(総ファイル数約#{(filenum||0) / 10}0-)!
+            else
+                key = %!000:#{9}(総ファイル数約#{(filenum||0) / 10}0-)!
+            end
         else
-            key = "000:#{status}(総ファイル数約#{(filenum||0) / 10}0-)"
+            key = %!000:"#{status}"(総ファイル数約#{(filenum||0) / 10}0-)!
         end
 
         if add_count
@@ -439,6 +450,8 @@ class Twitter < ApplicationRecord
 
         if drawing_method == "手描き"
             key = %!手|#{key}!
+        elsif drawing_method == ""
+            key = %![未設定]|#{key}!
         else
             key = (drawing_method||"") + "|" + key
         end

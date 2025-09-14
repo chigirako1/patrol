@@ -175,6 +175,15 @@ module Util
     def self.words_to_remove()
         get_word_list(REMOVE_WORDS_FILE_PATH)
     end
+
+    def self.parent_dirname(path)
+        # "a/b/c.txt" => "b"
+        File.basename(File.dirname path)
+
+        # path = "a/b/c.txt"
+        # pathname = Pathname.new(path)
+        # parent_directory = pathname.parent.basename.to_s
+    end
 end
 
 

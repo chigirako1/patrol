@@ -104,10 +104,8 @@ module UrlTxtReader
     def self.txt_file_list(rgx="\\d+")
         path_list = []
         base_path = public_path(URLLIST_DIR_PATH)
-        puts %![txt_file_list] basepath="#{base_path}"!
 
         rg_filename = %r!get illust url_#{rgx}\.txt!
-        STDERR.puts %!#{rg_filename}!
 
         Dir.glob(base_path + "/*") do |path|
             if path =~ rg_filename
@@ -116,7 +114,39 @@ module UrlTxtReader
             else
            end
         end
+
+        STDERR.puts %![txt_file_list] basepath="#{base_path}"!
+        STDERR.puts %!rg_filename="#{rg_filename}"/path_list=#{path_list.size}!
+
         path_list
+    end
+
+    def self.get_ym_rgx(year, quarter)
+        # 1 => 2301-2303
+        # 2 => 2304-2306
+        # 3 => 2307-2309
+        # 4 => 2310-2312
+
+        case quarter
+        when 1
+            month_pattern = "0[1-3]"
+        when 2
+            month_pattern = "0[4-6]"
+        when 3
+            month_pattern = "0[7-9]"
+        when 4
+            month_pattern = "1[0-2]"
+        else
+            raise ArgumentError, "quarter must be between 1 and 4"
+        end
+        
+        if year == 23
+            rgx = "#{month_pattern}"
+        else
+            rgx = "#{year}#{month_pattern}"
+        end
+        STDERR.puts %!rgx="#{rgx}"!
+        rgx
     end
 
     def self.get_path(filename)
@@ -127,10 +157,17 @@ module UrlTxtReader
             path = UrlTxtReader::get_latest_txt
         when /latest\s+(\d+)/
             path = UrlTxtReader::get_latest_txt($1.to_i)
+        # year
         when /target23$/
             path = UrlTxtReader::txt_file_list("\\d{4}")
         when /target(\d{2})$/
             path = UrlTxtReader::txt_file_list($1 + "\\d{4}")
+        # 1-4quarter
+        when /target(\d{2})Q(\d)$/
+            STDERR.puts %!filename="#{filename}"!
+            rgx = get_ym_rgx($1.to_i, $2.to_i)
+            path = UrlTxtReader::txt_file_list(rgx)
+        # month
         when /target23(\d{2})/
             path = UrlTxtReader::txt_file_list($1 + "\\d{2}")
             path = nil if path.size == 0 #てきとう
@@ -142,7 +179,7 @@ module UrlTxtReader
         else
             path = ["public/#{filename}.txt"]
         end
-        puts "path='#{path}'"
+        STDERR.puts "path='#{path}'"
         path
     end
 
@@ -300,6 +337,12 @@ module UrlTxtReader
             }
         end
         txt_sum
+    end
+
+    def self.get_url_txt_contents_uniq_ary(filepath)
+        txt_sum = get_url_txt_contents(filepath)
+        txts = txt_sum.split(/\R/).sort_by{|s| [s.downcase, s]}.uniq
+        txts
     end
 
     def self.get_url_list(filepath, db_check=false)
@@ -464,7 +507,7 @@ module UrlTxtReader
                     twt_infos[twt_id].append_url(line)
                 else
                     # 新規
-                    twt_url = TWT_URL.new(twt_id)
+                    twt_url = TwtUrl.new(twt_id)
                     twt_url.append_url(line)
                     twt_infos[twt_id] = twt_url
                 end
@@ -499,15 +542,69 @@ module UrlTxtReader
     end
 end
 
-class TWT_URL
-    attr_reader :twt_id, :url_list
+class TwtUrl
+    attr_reader :twt_id, :url_list, :tweet_id_list
+
+    @@dup_cnt = 0
 
     def initialize(twtid)
         @twt_id = twtid
         @url_list = []
+        @tweet_id_list = []
     end
 
     def append_url(url)
         @url_list << url
     end
+
+    def append_tweet_id(tweet_id)
+        if @tweet_id_list.include? tweet_id
+            #STDERR.puts %!重複:#{tweet_id}!
+            @@dup_cnt += 1
+        else
+            @tweet_id_list << tweet_id
+        end
+    end
+
+    def self.dup_cnt
+        @@dup_cnt
+    end
+end
+
+class TweetList
+
+    def initialize
+        twt_infos = {}
+        tweet_id_hash = {}
+        txt_list = UrlTxtReader::get_url_txt_contents_uniq_ary([])
+        txt_list.each do |line|
+            if line =~ %r!https?://(?:x|twitter)\.com/(\w+)\/status/(\d+)!
+                screen_name = $1
+                tweet_id = $2.to_i
+                if twt_infos.has_key? screen_name
+                    # 既存
+                    twt_infos[screen_name].append_tweet_id(tweet_id)
+                else
+                    # 新規
+                    twt_url = TwtUrl.new(screen_name)
+                    twt_url.append_tweet_id(tweet_id)
+                    twt_infos[screen_name] = twt_url
+                end
+                tweet_id_hash[tweet_id] = true
+            end
+        end
+        @twt_infos = twt_infos.sort_by {|k,v| k.downcase}.to_h
+        @tweet_id_hash = tweet_id_hash
+    end
+
+    def get
+        @twt_infos
+    end
+
+    def tweet_id_exist? tweet_id
+        @tweet_id_hash[tweet_id]
+    end
+end
+
+class FileList
 end

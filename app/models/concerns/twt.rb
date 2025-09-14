@@ -2,6 +2,8 @@
 
 #require "active_support/core_ext/numeric/conversions"
 
+require_relative "url_txt_reader"
+
 # =============================================================================
 # 
 # =============================================================================
@@ -14,9 +16,6 @@ module Twt
 
     TMP_DIR_PATH = "public/d_dl/"
     
-    #TWT_CURRENT_DIR_PATH = "public/d_dl/Twitter/"
-    #TWT_TMP_DIR_PATH     = "public/d_dl/Twitter-/"
-    #TWT_TMP_DIR_PATH_A   = "public/d_dl/Twitter-/a/"
     TWT_CURRENT_DIR_PATH = TMP_DIR_PATH + "Twitter/"
     TWT_TMP_DIR_PATH     = TMP_DIR_PATH + "Twitter-/"
     TWT_TMP_DIR_PATH_A   = TMP_DIR_PATH + "Twitter-/a/"
@@ -25,17 +24,17 @@ module Twt
     TWT_DIRLIST_TXT_PATH = "#{TWT_ARCHIVE_DIR_PATH}/dirlist.txt"
 
     def self.get_twt_tweet_ids_from_txts(twtid)
-        #txt_sum = UrlTxtReader::get_url_txt_contents("")
-        txt_sum = UrlTxtReader::get_url_txt_contents([])
-        twt_ids = get_tweet_ids(txt_sum.split(/\R/).sort_by{|s| [s.downcase, s]}.uniq, twtid)
+        txts = UrlTxtReader::get_url_txt_contents_uniq_ary([])
+        twt_ids = get_tweet_ids(txts, twtid)
         twt_ids
     end
     
     def self.get_tweet_ids(txts, twtid)
         twt_ids = []
+        rgx = %r!https?://(?:x|twitter)\.com/#{twtid}/status/(\d+)!
         txts.each do |line|
             line.chomp!
-            if line =~ %r!https?://(?:x|twitter)\.com/#{twtid}/status/(\d+)!
+            if line =~ rgx
                 tweet_id = $1.to_i
                 twt_ids << tweet_id
             else
@@ -210,8 +209,6 @@ module Twt
     end
 
     def self.search_tweet(twt_pic_path_list, search_tweet_id)
-
-
         if search_tweet_id == nil
             STDERR.puts %![search_tweet]:"#{search_tweet_id}"!
         end
@@ -371,6 +368,34 @@ module Twt
     def self.db_update_dup_files_current_all()
         dir_path = TWT_CURRENT_DIR_PATH
         pic_list = UrlTxtReader::get_path_list(dir_path)
+
+        #TODO:???未実装???
+    end
+
+    def self.update_tweet_records_by_fs()
+        tweet_list = TweetList.new
+
+        dir_path = TWT_CURRENT_DIR_PATH
+        pic_list = UrlTxtReader::get_path_list(dir_path)
+
+        #STDERR.puts %!#{pic_list.size}!
+        pic_list.each do |path|
+            tweet_id, pic_no = get_tweet_info_from_filepath(path)
+            tweet_rcd = Tweet.find_by(tweet_id: tweet_id)
+            if tweet_rcd
+                # DBに登録済み
+            else
+                if tweet_list.tweet_id_exist? tweet_id
+                    # DBに登録
+                    twt_screen_name = Util.parent_dirname path
+                    Tweet::create_record(twt_screen_name, tweet_id, Tweet::StatusEnum::SAVED, pic_no)
+                    STDERR.puts %!@#{twt_screen_name}\t#{tweet_id}\t##{pic_no}\t"#{path}"!
+                end
+            end
+
+            #break
+        end
+        [pic_list, tweet_list]
     end
 
     def self.get_hash_val_hash(pic_list)

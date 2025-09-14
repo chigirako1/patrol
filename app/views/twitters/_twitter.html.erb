@@ -37,6 +37,9 @@
             @<%= twitter.old_twtid %>
         <% end %>
 
+        <strong>全画像数：</strong>
+        <%= twitter.filenum %>
+
         <strong>登録日:</strong>
         <%= twitter.get_datetime_string(twitter.created_at) %>
         (<%= Util.get_date_info(twitter.created_at) %>)

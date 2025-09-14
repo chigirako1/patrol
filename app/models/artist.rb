@@ -579,15 +579,26 @@ class Artist < ApplicationRecord
         tag
     end
 
-    def sort_cond
-        [
-            status||"", 
-            feature||"",
-            last_ul_datetime||Time.new(2001,1,1),
-            -(prediction_up_cnt(true)), 
-            rating||0, 
-            last_access_datetime,
-        ]
+    def sort_cond(pri_rating=false)
+        if pri_rating
+            [
+                status||"", 
+                feature||"",
+                -(rating||0), 
+                last_ul_datetime||Time.new(2001,1,1),
+                -(prediction_up_cnt(true)), 
+                last_access_datetime,
+            ]
+        else
+            [
+                status||"", 
+                feature||"",
+                last_ul_datetime||Time.new(2001,1,1),
+                -(prediction_up_cnt(true)), 
+                rating||0,
+                last_access_datetime,
+            ]
+        end
     end
 
     def sort_cond2
@@ -601,6 +612,15 @@ class Artist < ApplicationRecord
         ]
     end
 
+    def elapsed_time_str(days)
+        if days > 60
+            "2.#{days / 30}m"
+        else
+            w = (days + 6) / 7
+            %!1.#{w}w!
+        end
+    end
+
     def key_for_group_by
         days = last_access_datetime_num
         if days < 1
@@ -609,15 +629,17 @@ class Artist < ApplicationRecord
             d_delta = Util.get_days_date_delta(last_ul_datetime, created_at)
 
             if d_delta > 60
-                "00.更新むかし？"
+                "00.更新むかし？(レコード登録日時と公開日時が離れている)"
             elsif created_at_day_num < 60
-                "01.最近登録|#{(days + 6) / 7}"
+                w = elapsed_time_str(days)
+                "01.最近登録|#{w}"
             else
-                if last_ul_datetime_delta > 60
-                    "02.公開日むかし|#{days / 7}w"
+                if last_ul_datetime_delta > 60 and Util.get_days_date_delta(last_ul_datetime, last_access_datetime) > 30
+                    w = elapsed_time_str(days)
+                    "02.公開日むかし|#{w}"
                 else
-                    #%!09.#{(days + 6) / 7}週間以内アクセス!
-                    %!09.#{(days) / 7}週間以内アクセス!
+                    w = elapsed_time_str(days)
+                    %!09.#{w}以内アクセス!
                 end
             end
         end

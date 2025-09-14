@@ -202,6 +202,19 @@ module Pxv
         artwork_id
     end
 
+    def self.get_oldest_pxv_artwork_info(pathlist)
+        artwork_id = 0
+        date_str = ""
+        artwork_title = ""
+        pathlist.reverse.each do |path|
+            artwork_id, date_str, artwork_title = Pxv::get_pxv_artwork_info_from_path(path)
+            if artwork_id != 0
+                break
+            end
+        end
+        [artwork_id, date_str, artwork_title]
+    end
+
     def self.get_pxv_artwork_info_from_path(path)
         if path == nil
             STDERR.puts %!get_pxv_artwork_info_from_path:path is nil"!
@@ -492,22 +505,24 @@ module Pxv
         end
 
         if pxv_artist.path_list.size > pxv.filenum
+            #
+            pxv_params[:filenum] = pxv_artist.path_list.size
+            msg = %!filenum:"#{pxv_params[:filenum]}" <= #{pxv.filenum}!
+            Rails.logger.info(msg)
+
+            #
+            alist = Artist.artwork_list(pxv_artist.path_list)
+            recent_filenum = Artist.artwork_list_recent_file_num(alist)
+            pxv_params[:recent_filenum] = recent_filenum
+            msg = %!recent_filenum:"#{pxv_params[:recent_filenum]}" <= #{pxv.recent_filenum}!
+            Rails.logger.info(msg)
+            
             if pxv.filenum.presence
             else
-                pxv_params[:filenum] = pxv_artist.path_list.size
-
-                msg = %!filenum:"#{pxv_params[:filenum]}" <= #{pxv_artist.path_list.size}!
-                Rails.logger.info(msg)
             end
             
             if pxv.recent_filenum.presence
             else
-                alist = Artist.artwork_list(pxv_artist.path_list)
-                recent_filenum = Artist.artwork_list_recent_file_num(alist)
-                pxv_params[:recent_filenum] = recent_filenum
-
-                msg = %!recent_filenum:"#{pxv_params[:recent_filenum]}" <= #{recent_filenum}!
-                Rails.logger.info(msg)
             end
         end
 
@@ -584,16 +599,17 @@ module Pxv
     end
 
     def self.hash_group2(pxv_group, pxv_list_tmp)
-        key_pxv_list_from_twt_list_a = "141.twt url list high"
-        key_pxv_list_from_twt_list_a2= "142.twt url list low"
+        key_pxv_list_from_twt_list_high = "141.twt url list high"
+        key_pxv_list_from_twt_list_mid = "142.twt url list mid"
+        key_pxv_list_from_twt_list_low= "143.twt url list low"
         key_pxv_list_from_twt_list_b = "143.twt url list 状態"
         key_pxv_list_from_twt_list_z = "149.twt url list 最近アクセス"
         key_pxv_list_from_twt_list_zz = "150.twt url list 極最近アクセス"
 
         twt_list_z, tmp_ltns = pxv_list_tmp.partition {|x| x.p.last_access_datetime_p(60)}
         tmp_a, tmp_st = tmp_ltns.partition {|x| x.p.status == ""}
-        tmp_high, tmp_low = tmp_a.partition {|x| x.p.rating >= 80}
-        pxv_group[key_pxv_list_from_twt_list_a] = tmp_high.sort_by {|z|
+        tmp_high, tmp_low = tmp_a.partition {|x| x.p.rating >= 85}
+        pxv_group[key_pxv_list_from_twt_list_high] = tmp_high.sort_by {|z|
             x = z.p;
             [
                 x.rating||0,
@@ -605,7 +621,10 @@ module Pxv
         }
        
         pxv_group[key_pxv_list_from_twt_list_b] = tmp_st
-        pxv_group[key_pxv_list_from_twt_list_a2] = tmp_low
+
+        tmp_mid, tmp_low = tmp_low.partition {|x| x.p.rating >= 75}
+        pxv_group[key_pxv_list_from_twt_list_mid] = tmp_mid
+        pxv_group[key_pxv_list_from_twt_list_low] = tmp_low
 
         twt_list_zz, twt_list_z1 = twt_list_z.partition {|x| x.p.last_access_datetime_p(7)}
         pxv_group[key_pxv_list_from_twt_list_z] = twt_list_z1.sort_by {|z|
@@ -632,7 +651,7 @@ module Pxv
         }
     end
 
-    def self.hash_group(known_pxv_user_id_list, pxv_group, hide_day)
+    def self.hash_group(known_pxv_user_id_list, pxv_group, hide_day, rating, term=false)
         key_pxv_list_no_access_1y    = "101.12ヶ月(1年以上)"
         key_pxv_list_no_access_6m    = "102.6ヶ月(半年以上)"
         key_pxv_list_no_access_5m    = "103.5ヶ月以上"
@@ -646,10 +665,12 @@ module Pxv
         key_pxv_list_no_update_6m    = "902.#{ArtistsController::Status::SIX_MONTH_NO_UPDATS}"
         key_pxv_list_no_update_long  = "903.#{ArtistsController::Status::LONG_TERM_NO_UPDATS}"
         key_pxv_list_no_artworks     = "904.#{ArtistsController::Status::NO_ARTWORKS}"
+
+        key_pxv_list_rating_low      = "909. <'#{rating}'"
     
         recent_pxv_list = []
 
-        if false
+        if term
             method_proc = Proc.new {|a,b|
                 get_key_term(a, b)
             }
@@ -694,16 +715,22 @@ module Pxv
             else
             end
 
+            if p.rating < rating
+                pxv_group[key_pxv_list_rating_low] << elem
+                next
+            end
+
             if true
                 if !(p.last_access_datetime_p(365))
                     #key_str = get_key_term(p.rating, key_pxv_list_no_access_1y)
                     str = key_pxv_list_no_access_1y
-                    key_str = "!ご無沙汰" + method_proc.call(p.rating, str)
+                    key_str = "!0ご無沙汰1:" + method_proc.call(p.rating, str)
                     pxv_group[key_str] << elem
                 elsif !(p.last_access_datetime_p(180))
                     #key_str = get_key_term(p.rating, key_pxv_list_no_access_6m)
                     str = key_pxv_list_no_access_6m
-                    key_str = method_proc.call(p.rating, str)
+                    #key_str = method_proc.call(p.rating, str)
+                    key_str = "!0ご無沙汰2:" + method_proc.call(p.rating, str)
                     pxv_group[key_str] << elem
                 elsif !(p.last_access_datetime_p(150))
                     #key_str = get_key_term(p.rating, key_pxv_list_no_access_5m)
@@ -823,15 +850,23 @@ class PxvArtist
 
         @latest_artwork_id, date_str, _ = Pxv::get_pxv_artwork_info_from_path(@path_list[0])
         @last_ul_datetime = Time.parse(date_str)
-        @oldest_artwork_id, date_str, _ = Pxv::get_pxv_artwork_info_from_path(@path_list[-1])
-        @earliest_ul_date = Time.parse(date_str)
+        #@oldest_artwork_id, date_str, _ = Pxv::get_pxv_artwork_info_from_path(@path_list[-1])
+        @oldest_artwork_id, date_str, _ = Pxv::get_oldest_pxv_artwork_info(@path_list)
+        begin
+            @earliest_ul_date = Time.parse(date_str)
+        rescue Date::Error => ex
+            msg = %!time parse erro. "#{date_str}"!
+            Rails.logger.warn(msg)
+        end
 
         if @last_ul_datetime < @earliest_ul_date
-            STDERR.puts %!????#{@last_ul_datetime}|#{@earliest_ul_date}!
+            msg = %!????#{@last_ul_datetime} < #{@earliest_ul_date}!
+            Rails.logger.warn(msg)
         end
 
         if @latest_artwork_id < @oldest_artwork_id
-            STDERR.puts %!????#{@latest_artwork_id}|#{@oldest_artwork_id}!
+            msg = %!????#{@latest_artwork_id} < #{@oldest_artwork_id}!
+            Rails.logger.warn(msg)
         end
     end
 

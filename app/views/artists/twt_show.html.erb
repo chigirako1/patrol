@@ -1,4 +1,5 @@
-<% provide(:title, %!画像一覧 - #{@twtid}!) %>
+<% title = %!@#{@twtid}:画像一覧! %>
+<% provide(:title, title) %>
 
 <h3 id="twt_pic_list">twt pic (<%= link_to "@#{@twtid}", Twt::twt_user_url(@twtid), target: :_blank, rel: "noopener noreferrer" %>)</h3>
 
@@ -76,6 +77,9 @@
     <% paths = Twt::search_tweet(@twt_pic_path_list, x) %>
     <% if paths.size > 0 %>
         ファイルあり
+    <% else %>
+        <% url2 = Twt::twt_tweet_url_dev(x) %>
+        <%= link_to_ex(url2, url2) %>
     <% end %>
     <br>
 <% end %>
