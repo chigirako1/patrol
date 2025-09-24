@@ -143,7 +143,7 @@ textarea {
         <h3>すべての画像が表示されていない可能性があります(<%= twt_pic_list.size %>/<%= twitter.filenum %>)</h3>
         <% if twt_pic_list.size == 0 %>
             <% if twitter.latest_tweet_id %>
-                最新tweetid:
+                最新tweet id:
                 <b><%= Twt::tweet_id_with_comma(twitter.latest_tweet_id) %></b>
                 (公開日時：<%= Twt::date_info(twitter.latest_tweet_id) %>)
                 <br />

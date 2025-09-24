@@ -177,7 +177,8 @@ module UrlTxtReader
         when ""
             path = UrlTxtReader::get_latest_txt
         else
-            path = ["public/#{filename}.txt"]
+            #path = ["public/urllist/#{filename}.txt"]
+            path = ["#{UrlTxtReader::URLLIST_DIR_PATH}/#{filename}.txt"]
         end
         STDERR.puts "path='#{path}'"
         path

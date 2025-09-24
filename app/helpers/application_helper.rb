@@ -59,7 +59,7 @@ module ApplicationHelper
     def pred_bg_color(pred)
         if pred < 1
             bgcolor = "grey"
-        elsif pred > 15
+        elsif pred > 10
             #bgcolor = "khaki"
             bgcolor = yellow_shade(pred)
         else

@@ -49,7 +49,7 @@ class Artist < ApplicationRecord
         search_word.strip!
         puts %!#{target_col}, #{search_word}, #{match_method}!
 
-        if target_col == "(自動判断)"
+        if target_col == C_ARTIST_TARGET_AUTO
             if search_word =~ /^\d+$/
                 target_col = "pxvid"
             #elsif search_word =~ %r!www\.pixiv\.net/users/(\d+)!
@@ -368,6 +368,10 @@ class Artist < ApplicationRecord
         days_elapsed(created_at, Date.today)
     end
 
+    def days_ul_to_created()
+        days_elapsed(last_ul_datetime||"2000-01-01", created_at)
+    end
+
     def last_access_datetime_num
         delta_d = get_date_delta(last_access_datetime)
     end
@@ -614,10 +618,10 @@ class Artist < ApplicationRecord
 
     def elapsed_time_str(days)
         if days > 60
-            "2.#{days / 30}m"
+            "2.#{days / 30}月"
         else
             w = (days + 6) / 7
-            %!1.#{w}w!
+            %!1:#{w}週!
         end
     end
 
@@ -634,12 +638,17 @@ class Artist < ApplicationRecord
                 w = elapsed_time_str(days)
                 "01.最近登録|#{w}"
             else
-                if last_ul_datetime_delta > 60 and Util.get_days_date_delta(last_ul_datetime, last_access_datetime) > 30
+                if last_ul_datetime_delta > 60 and Util.get_days_date_delta(last_ul_datetime, last_access_datetime) > 50
                     w = elapsed_time_str(days)
                     "02.公開日むかし|#{w}"
                 else
-                    w = elapsed_time_str(days)
-                    %!09.#{w}以内アクセス!
+                    pred_cnt = prediction_up_cnt(true)
+                    if pred_cnt > 8
+                        %!10.予測多め!
+                    else
+                        w = elapsed_time_str(days)
+                        %!09.#{w}以内アクセス!
+                    end
                 end
             end
         end

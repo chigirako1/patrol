@@ -32,4 +32,25 @@ module TwittersHelper
 
         tag.html_safe
     end
+
+    def twitter_show_page_title(twitter)
+        title = %!【#{twitter.rating}!
+        if twitter.r18 == "R18"
+            title += "🔞"
+        end
+        if twitter.pxvid.presence
+            title += "🅿️"
+        end
+        title += %!】!
+        title += %!#{twitter.twtname} @#{twitter.twtid}!
+        title
+    end
+
+    def twitter_show_header_str(twitter)
+        str = %![#{twitter.rating}|#{twitter.r18}] #{twitter.twtname} (@#{twitter.twtid})!
+        if twitter.old_twtid.presence
+            str += %!←#{twitter.old_twtid}!
+        end
+        str
+    end
 end

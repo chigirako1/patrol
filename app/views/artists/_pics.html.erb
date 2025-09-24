@@ -52,7 +52,8 @@
         (<%= Util::get_date_info(@artist.last_ul_datetime) %>)
       <% end %>
       <br />
-      <b>↓最新のファイルでない可能性があります</b>。
+      <b>↓最新のファイルでない可能性があります。</b>
+      <br />
     <% end %>
   <% else %>
     最新投稿日(DB):<%= artist.get_datetime_string(artist.last_ul_datetime, true) %>
@@ -129,6 +130,8 @@
   <% end %>
 
   <% if artist.filenum > file_num or show_oldest %>
+    <!-- TODO:ファイルとTSVとDB -->
+    
     <h3>一部のみ表示？(<%= file_num %>/<%= artist.filenum %>)</h3>
 
     <% latest_artwork_id, oldest_artwork_id = artist.get_artwork_id_from_file() %>

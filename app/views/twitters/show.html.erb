@@ -1,20 +1,10 @@
 
-<% title = %!【#{@twitter.rating}! %>
-<% if @twitter.r18 == "R18" %>
-  <% title += "🔞" %>
-<% end %>
-<% if @twitter.pxvid.presence %>
-  <% title += "🅿️" %>
-<% end %>
-<% title += %!】#{@twitter.twtname} @#{@twitter.twtid}! %>
-
+<% title = twitter_show_page_title(@twitter) %>
 <% provide(:title, title) %>
 <p style="color: green"><%= notice %></p>
 
 <h1>
-    [<%= @twitter.rating %>|<%= @twitter.r18 %>]
-    <%= %!#{@twitter.twtname}! %>
-    (@<%= @twitter.twtid %>)
+    <%= twitter_show_header_str(@twitter) %>
 </h1>
 
 <% if @twitter.status.presence and @twitter.status != Twitter::TWT_STATUS::STATUS_PATROL %>

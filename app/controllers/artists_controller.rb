@@ -331,6 +331,7 @@ class ArtistsController < ApplicationController
     SORT_RATING = "RATING"
     SORT_ACCESS_OLD_TO_NEW = "ACCESS旧→新"
     SORT_ACCESS_NEW_TO_OLD = "ACCESS新→旧"
+    SORT_PXV_USER_ID_ASC = "pxv-user-id(古い順)"
   end
 
   module GROUP_TYPE
@@ -397,6 +398,7 @@ class ArtistsController < ApplicationController
       Pxv::name_test()
       #return
     when ArtistsController::MethodEnum::SEARCH
+      #TODO: SQLいんじぇくしょんたいさく？
       artists = Artist.looks(params[:target_col], params[:search_word], params[:match_method])
       @artists_group = index_group_by(artists, prms)
       return
@@ -665,7 +667,8 @@ class ArtistsController < ApplicationController
       artists = artists.select {|x| unassociated_twt_screen_names.include?(x.twtid)}
       #@unassociated_twt_screen_names = unassociated_twt_screen_names
     elsif prms.param_file == ArtistsController::MethodEnum::REGIST_UL_DIFF
-      artists = artists.select {|x| (x.created_at.to_date - x.last_ul_datetime.to_date).to_i > 365}
+      #artists = artists.select {|x| (x.created_at.to_date - x.last_ul_datetime.to_date).to_i > 365}
+      artists = artists.select {|x| x.days_ul_to_created > 365}
     elsif prms.param_file == ArtistsController::MethodEnum::ACCESS_UL_DIFF_FAR
       artists = artists.select {|x| (x.last_access_datetime.to_date - x.last_ul_datetime.to_date).to_i > 60}
     elsif prms.param_file == ArtistsController::MethodEnum::SAME_FILENUM
@@ -1238,6 +1241,8 @@ class ArtistsController < ApplicationController
         artists = artists.sort_by {|x| [-x.id]}
       when "pxv-user-id"
         artists = artists.sort_by {|x| [-x.pxvid]}
+      when SORT_TYPE::SORT_PXV_USER_ID_ASC
+        artists = artists.sort_by {|x| [x.pxvid]}
       when SORT_TYPE::SORT_RATING
         #artists = artists.sort_by {|x| [-(x.rating||0), x.last_access_datetime||"", x.last_ul_datetime||""]}
         artists = artists.sort_by {|x| [-(x.rating||0)]}
@@ -1391,7 +1396,7 @@ class ArtistsController < ApplicationController
         artists = index_select(Artist.all, prms)
         artists = index_select_status_exclude(artists)
 
-        artists_sort_pred = artists.sort_by {|x| [-x.prediction_up_cnt(true), x[:recent_filenum], -x[:filenum], x[:last_ul_datetime]]}
+        artists_sort_pred = artists.sort_by {|x| [-x.prediction_up_cnt(true), x.recent_filenum||0, -x.filenum||0, (x.last_ul_datetime||"")]}
         artists_group[prefix + "予測順"] = artists_sort_pred
 
       end
@@ -1417,16 +1422,19 @@ class ArtistsController < ApplicationController
       end
 
       if target_hash == nil or target_hash[GRP_SORT::GRP_SORT_NO_UPDATE]
-        # ---
+        status_bak = prms.status
+        prms.status = "(全て)"
         artists = index_select(Artist.all, prms, false)
-        #artists = artists.select {|x| x.status == "長期更新なし"}
+        prms.status = status_bak
+
         artists = index_select_status_include(artists)
-        #artists = artists.select {|x| !x.last_access_datetime_p(interval)}
+        #STDERR.puts %!GRP_SORT_NO_UPDATE = #{artists.size}, "#{prms.status}"!
+
         artists = artists.select {|x| x.select_cond_post_date()}
+        #STDERR.puts %!GRP_SORT_NO_UPDATE = #{artists.size}!
 
         artists_no_updated = artists.sort_by {|x| [x.last_access_datetime]}
-        #artists_no_updated = artists_no_updated.select {|x| x.status != }
-        #artists_group[prefix + "更新なし"] = artists_no_updated
+        STDERR.puts %!GRP_SORT_NO_UPDATE=#{artists_no_updated.size}!
 
         tmp_group = artists_no_updated.group_by {|x| [
             if x.reverse_status
@@ -1437,10 +1445,8 @@ class ArtistsController < ApplicationController
           ]
         }
 
-        #p tmp_group
         tmp_group.each do |key, g|
-          #p key
-          #p g
+          STDERR.puts %!tmp_group[#{key}]=#{g.size}!
           artists_group[prefix + "更新なし:" + key.to_s] = g
         end
       end

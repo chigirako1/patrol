@@ -341,7 +341,7 @@ module Twt
         end
 
         if twt_params.size > 0
-            msg = "@#{key}:更新内容 =>\t#{twt_params}"
+            msg = "更新内容 => #{twt_params}\t@#{key}(#{twt.twtname})"
             #STDERR.puts msg
             Rails.logger.info(msg)
 

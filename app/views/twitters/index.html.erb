@@ -29,13 +29,14 @@
   検索ワード：「<b><%= search_word %></b>」
 <% end %>
 
-<% if @twitters_group.size == 0 and params[:mode] == "search" %>
+<% if @twitters_group.size == 0 and params[:mode] == TwittersController::ModeEnum::SEARCH %>
   <% user_exist = Twt::user_exist?(search_word) %>
   <% if user_exist %>
     <h3>DB未登録だがフォルダあり:"@<%= search_word %>"</h3>
     <%= link_to_ex %!☆twt☆:@#{search_word}!, artist_twt_path(search_word) %>
   <% else %>
     <h3>twt:"<%= search_word %>" not found</h3>
+    <%= link_to_ex %!☆twt☆:@#{search_word}!, artist_twt_path(search_word) %>
     <% pt = Artist.find_by(twtid: search_word) %>
     <% if pt %>
       PXVには登録あり:"<%= pt.pxvname %>"[<%= link_to_ex "■pxv■", pt %>](@<%= pt.twtid %>)
@@ -273,10 +274,22 @@ button.horizontal {
     <%= f.submit("検索", name: nil, class: 'subtmi-btn') %>
     検索：<%= f.text_field :search_word, :value => params[:search_word] %>
     <br />
+    <%= f.select :match_method, options_for_select([
+      ["(自動判断)", "auto"],
+      ["を含む", "partial_match"],
+      ["完全一致","perfect_match"],
+      ["から始まる","begin_match"],
+      ["で終わる","end_match"]]) %>
+    検索対象：
+    <%= f.select :target_col, options_for_select(
+      [[Twitter::SEARCH_TARGET::AUTO],
+      [Twitter::SEARCH_TARGET::TWT_TWTID],
+      [Twitter::SEARCH_TARGET::TWT_TWTNAME]]) %>
     <!-- 
     <input type="button" value="select" onclick="select_text();" />
     <br />
     -->
+    <br />
     モード：<%= f.text_field :mode, :value => params[:mode] %>
     <br />
     <%= f.label :page_title %>
@@ -313,6 +326,10 @@ button.horizontal {
     <br />
     <%= f.check_box :thumbnail, {checked: params[:thumbnail] == "true"}, true, false %>
     <%= f.label :サムネイル表示 %>
+    <br />
+
+    <%= f.check_box :tgt_access, {checked: params[:tgt_access] == "true"}, true, false %>
+    <%= f.label :アクセス日順 %>
     <br />
 
   <% end %>

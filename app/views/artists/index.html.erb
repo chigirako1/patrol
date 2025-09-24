@@ -315,6 +315,7 @@
     <br />
     -->
     <%= f.select :match_method, options_for_select([["(自動判断)","auto"], ["を含む","partial_match"], ["完全一致","perfect_match"], ["から始まる","begin_match"],  ["で終わる","end_match"]]) %>
+    検索対象：
     <%= f.select :target_col, options_for_select([['(自動判断)'], ['pxvname'], ['pxvid']]) %>
     <br />
     <hr />
@@ -327,7 +328,8 @@
       options_for_select(
         [
           ['id'], 
-          ['pxv-user-id'], 
+          ['pxv-user-id'],
+          [ArtistsController::SORT_TYPE::SORT_PXV_USER_ID_ASC],
           [ArtistsController::SORT_TYPE::SORT_RATING],
           ['point'], 
           ['-point'], 

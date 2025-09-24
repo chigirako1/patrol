@@ -27,6 +27,20 @@ class Twitter < ApplicationRecord
         DM_REPRINT = "パクリ"
     end
 
+    module SEARCH_TARGET
+        AUTO = "(自動判断)"
+        TWT_TWTID = "twitter_twtid"
+        TWT_TWTNAME = "twtname"
+    end
+
+    module MATCH_METHOD
+        AUTO = "auto"
+        PARTIAL_MATCH = "partial_match"
+        PERFECT_MATCH = "perfect_match"
+        BEGIN_MATCH = "begin_match"
+        END_MATCH = "end_match"
+    end
+
     def self.find_by_twtid_ignore_case(twtid, ignore=true)
         if twtid == nil
             return nil
@@ -52,28 +66,28 @@ class Twitter < ApplicationRecord
         search_word.strip!
         puts %!["#{target_col}", "#{search_word}", "#{match_method}"]!
 
-        if target_col == "(自動判断)"
+        if target_col == SEARCH_TARGET::AUTO
             if search_word =~ /^\w+$/
-                target_col = "twitter_twtid"
+                target_col = SEARCH_TARGET::TWT_TWTID
             elsif search_word =~ /@(\w+)/
-                target_col = "twitter_twtid"
+                target_col = SEARCH_TARGET::TWT_TWTID
                 search_word = $1
             elsif search_word =~ %r!twitter\.com/(\w+)! or
                 search_word =~ %r!x\.com/(\w+)!
-                target_col = "twitter_twtid"
+                target_col = SEARCH_TARGET::TWT_TWTID
                 search_word = $1
             else
-                target_col = "twtname"
+                target_col = SEARCH_TARGET::TWT_TWTNAME
             end
         end
 
-        if match_method == "auto"
+        if match_method == MATCH_METHOD::AUTO
             case target_col
-            when "twitter_twtid"
+            when SEARCH_TARGET::TWT_TWTID
                 #match_method = "perfect_match"
-                match_method = "partial_match"
+                match_method = MATCH_METHOD::PARTIAL_MATCH
             else
-                match_method = "partial_match"
+                match_method = MATCH_METHOD::PARTIAL_MATCH
             end
         end
 
@@ -81,18 +95,22 @@ class Twitter < ApplicationRecord
 
         search_word_p = ""
         case match_method
-        when "perfect_match"
+        when MATCH_METHOD::PERFECT_MATCH
             search_word_p = search_word
-        when "begin_match"
+        when MATCH_METHOD::BEGIN_MATCH
             search_word_p = "#{search_word}%"
-        when "end_match"
+        when MATCH_METHOD::END_MATCH
             search_word_p = "%#{search_word}"
-        when "partial_match"
+        when MATCH_METHOD::PARTIAL_MATCH
             search_word_p = "%#{search_word}%"
         else
             search_word_p = search_word
         end
-        ["#{target_col} LIKE?", search_word_p]
+        col = "#{target_col} LIKE?"
+        puts %!対象="#{col}"\t検索ワード="#{search_word_p}"!
+        [col, search_word_p]
+
+        #[%!#{SEARCH_TARGET::TWT_TWTID} LIKE? OR #{SEARCH_TARGET::TWT_TWTNAME} LIKE?!, [search_word, search_word]]
     end
 
     def self.all_twt_id_list()
@@ -241,6 +259,10 @@ class Twitter < ApplicationRecord
         get_date_info(last_access_datetime)
     end
 
+    def last_access_datetime_days_elapsed
+        get_date_delta(last_access_datetime)
+    end
+
     def twt_user_url
         Twt::twt_user_url(twtid)
     end
@@ -321,6 +343,39 @@ class Twitter < ApplicationRecord
         end
     end
 
+    COND_DATA = [
+        [99, [30, 10]],
+        [98, [35, 15]],
+        [95, [40, 20]],
+        [90, [45, 25]],
+        [87, [50, 30]],
+        [85, [50, 40]],
+        [80, [60, 50]],
+        [75, [100, 75]],
+        [70, [150, 90]],
+        [60, [150, 120]],
+        [50, [150, 150]],
+        [10, [100, 360]],
+        [0,  [200, 360]],
+    ]
+    def select_cond_aio
+        COND_DATA.each do |x|
+            rat = x[0]
+            if rating >= rat
+                pred = x[1][0]
+                days = x[1][1]
+                if prediction > pred
+                    STDERR.puts %!#{rating}:"#{twtname}(@#{twtid})":#{prediction}/#{last_access_datetime_days_elapsed}|#{pred}/#{days}!
+                    return true
+                elsif last_access_datetime_days_elapsed > days
+                    STDERR.puts %!#{rating}:"#{twtname}(@#{twtid})":#{prediction}/#{last_access_datetime_days_elapsed}|#{pred}/#{days}!
+                    return true
+                end
+            end
+        end
+        false
+    end
+
     def select_cond_post_date
         num_of_days_elapased = get_date_delta(last_post_datetime)
 
@@ -380,11 +435,6 @@ class Twitter < ApplicationRecord
         case status
         when Twitter::TWT_STATUS::STATUS_PATROL
             if rating.presence
-                if rating_arg > 0 and rating < rating_arg
-                    key = "!評価規定以下|#{rating}"
-                    return key
-                end
-
                 case drawing_method
                 when "AI"
                     #method = "102:AI"
@@ -454,6 +504,11 @@ class Twitter < ApplicationRecord
             key = %![未設定]|#{key}!
         else
             key = (drawing_method||"") + "|" + key
+        end
+
+        if rating and rating_arg > 0 and rating < rating_arg
+            #key = "!評価規定以下|#{rating}|#{key}"
+            key = "!評価規定以下|#{key}|#{rating}"
         end
 
         key

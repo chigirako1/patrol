@@ -158,7 +158,15 @@
           <% if tweet_rcd %>
             <% p tweet_rcd %>
             "<%= tweet_rcd.status %>"
+
+            <% if tweet_rcd.status == Tweet::StatusEnum::UNACCESSIBLE %>
+              <% show_link = true %>
+            <% end %>
           <% else %>
+            <% show_link = true %>
+          <% end %>
+
+          <% if show_link %>
             <% url2 = Twt::twt_tweet_url_dev(x) %>
             <%= link_to_ex(url2, url2) %>
           <% end %>
