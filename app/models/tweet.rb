@@ -21,6 +21,7 @@ class Tweet < ApplicationRecord
         twt = Tweet.new(twt_params)
         twt.save
         #puts %!new. "#{twt}"!
+        twt
     end
 
     def self.update_record(tweet_id, status=StatusEnum::SAVED)

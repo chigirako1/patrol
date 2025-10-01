@@ -248,8 +248,8 @@ textarea {
                         <% end %>
                     <% else %>
                         <!-- DBになければDBに登録 -->
-                        <% Tweet::create_record(@twitter.twtid, tweet_id) %>
-                        |DBレコード新規登録
+                        <% tweet = Tweet::create_record(@twitter.twtid, tweet_id) %>
+                        |DBレコード新規登録(=>"<%= tweet.status %>")
                     <% end %>
                     <br />
                     <% break %>

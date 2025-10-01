@@ -41,6 +41,12 @@ class Artist < ApplicationRecord
         REV_DONE = "さかのぼり済"
     end
 
+    module FEATURE
+        HAND = ''
+        AI = 'AI'
+        F3D = '3D'
+    end
+
     #--------------------------------------------------------------------------
     # クラスメソッド
     #--------------------------------------------------------------------------
@@ -652,6 +658,53 @@ class Artist < ApplicationRecord
                 end
             end
         end
+    end
+
+    COND_DATA_HB = [
+        #r, [pred, day, intvl]
+        [95, [5, 60, 30]],
+        [90, [5, 75, 30]],
+        [80, [10, 90, 60]],
+        [70, [30, 120, 90]],
+        [50, [50, 180, 180]],
+        [0,  [100, 360, 240]],
+    ]
+    COND_DATA_AI = [
+        #r, [pred, day, intvl]
+        [90, [10, 30, 15]],
+        [80, [20, 60, 30]],
+        [70, [40, 90, 60]],
+        [50, [100, 360, 90]],
+        [0,  [200, 360, 180]],
+    ]
+
+    def select_cond_aio
+        if feature == FEATURE::AI
+            cond_data = COND_DATA_AI
+        else
+            cond_data = COND_DATA_HB
+        end
+
+        cond_data.each do |x|
+            rat = x[0]
+            if rating >= rat
+                pred = x[1][0]
+                days = x[1][1]
+                min_intvl = x[1][2]
+                elapsed = last_access_datetime_num
+                if min_intvl > elapsed
+                    #STDERR.puts %!#{rating}:"#{pxvname}(#{pxvid})":#{min_intvl} > #{elapsed}!
+                    return false
+                elsif prediction_up_cnt(true) > pred
+                    #STDERR.puts %!#{rating}:"#{twtname}(@#{twtid})":#{prediction}/#{last_access_datetime_days_elapsed}|#{pred}/#{days}!
+                    return true
+                elsif elapsed > days
+                    #STDERR.puts %!#{rating}:"#{twtname}(@#{twtid})":#{prediction}/#{last_access_datetime_days_elapsed}|#{pred}/#{days}!
+                    return true
+                end
+            end
+        end
+        false
     end
 
     def select_cond_post_date

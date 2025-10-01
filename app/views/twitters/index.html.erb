@@ -48,7 +48,11 @@
   <% done_id_hash = {} %>
   <% @twitters_group.each do |key, twitters| %>
   <h2>
-    <%= key %>(<%= twitters.size %>件)
+    <% h2_txt = %!#{key}(#{twitters.size}件)! %>
+    <% if twitters.size > @num_of_disp %>
+      <% h2_txt += %!(のこり#{twitters.size - @num_of_disp}件)! %>
+    <% end %>
+    <%= h2_txt %>
   </h2>
   <table border="1" rules="all">
     <tr>
@@ -298,30 +302,41 @@ button.horizontal {
     <%= f.label :target %>
     <%= f.text_field :target, :value => params[:target] %>
     <br />
+    <%= f.label :評価lt %>
+    <%= f.number_field :rating_lt, :value => params[:rating_lt] %>以下
+    <br />
+    <%= f.label :評価 %>
+    <%= f.number_field :rating, :value => params[:rating] %>以上
+    <br />
+    <%= f.label :非表示日数 %>
+    <%= f.number_field :hide_within_days, :value => params[:hide_within_days] %>日以内にアクセスがあれば対象外
+    <br />
+    <%= f.label :強制表示日数 %>
+    <%= f.number_field :force_disp_day, :value => params[:force_disp_day] %>
+    <br />
+    <%= f.label :予測 %>
+    <%= f.number_field :pred, :value => params[:pred] %>以上
+    <br />
+    <hr />
+
+    <!-- ##################################### -->
     <%= f.label :表示数 %>
     <%= f.number_field :num_of_disp, :value => params[:num_of_disp] %>
     <br />
-    <%= f.label :rating %>
-    <%= f.number_field :rating, :value => params[:rating] %>
+    <%= f.label :sort_by %>
+    <%= f.text_field :sort_by, :value => params[:sort_by] %>
     <br />
     <%= f.label :step %>
     <%= f.number_field :step, :value => params[:step] %>
     <br />
-    <%= f.label :num_of_times %>
+    <%= f.label :回数 %>
     <%= f.number_field :num_of_times, :value => params[:num_of_times] %>
     <br />
 
-    <%= f.label :hide_within_days %>
-    <%= f.number_field :hide_within_days, :value => params[:hide_within_days] %>
-    <br />
-    <%= f.label :pred %>
-    <%= f.number_field :pred, :value => params[:pred] %>
-    <br />
-    <%= f.label :force_disp_day %>
-    <%= f.number_field :force_disp_day, :value => params[:force_disp_day] %>
-    <br />
-
     <%= f.check_box :ex_pxv, {checked: params[:ex_pxv] == "true"}, true, false %>
+    <%= f.label :pxv除外 %>
+    <br />
+    <%= f.check_box :no_pxv, {checked: params[:no_pxv] == "t"}, true, false %>
     <%= f.label :pxv除外 %>
     <br />
     <%= f.check_box :thumbnail, {checked: params[:thumbnail] == "true"}, true, false %>

@@ -344,19 +344,24 @@ class Twitter < ApplicationRecord
     end
 
     COND_DATA = [
-        [99, [30, 10]],
-        [98, [35, 15]],
-        [95, [40, 20]],
-        [90, [45, 25]],
-        [87, [50, 30]],
-        [85, [50, 40]],
-        [80, [60, 50]],
-        [75, [100, 75]],
-        [70, [150, 90]],
-        [60, [150, 120]],
-        [50, [150, 150]],
-        [10, [100, 360]],
-        [0,  [200, 360]],
+        #r, [pred, day, intvl]
+        [99, [30, 10, 1]],
+        [98, [35, 15, 2]],
+        [95, [40, 20, 3]],
+        [90, [40, 25, 5]],
+        [89, [55, 30, 7]],
+        [88, [60, 30, 7]],
+        [87, [60, 30, 7]],
+        [85, [65, 40, 10]],
+        [83, [75, 45, 15]],
+        [82, [80, 50, 20]],
+        [80, [90, 60, 20]],
+        [75, [100, 75, 25]],
+        [70, [150, 90, 30]],
+        [60, [150, 120, 40]],
+        [50, [150, 150, 50]],
+        [10, [100, 360, 90]],
+        [0,  [200, 360, 100]],
     ]
     def select_cond_aio
         COND_DATA.each do |x|
@@ -364,11 +369,16 @@ class Twitter < ApplicationRecord
             if rating >= rat
                 pred = x[1][0]
                 days = x[1][1]
-                if prediction > pred
-                    STDERR.puts %!#{rating}:"#{twtname}(@#{twtid})":#{prediction}/#{last_access_datetime_days_elapsed}|#{pred}/#{days}!
+                min_intvl = x[1][2]
+                elapsed = last_access_datetime_days_elapsed
+                if min_intvl > elapsed
+                    STDERR.puts %!#{rating}:"#{twtname}(@#{twtid})":#{min_intvl} > #{elapsed}!
+                    return false
+                elsif prediction > pred
+                    #STDERR.puts %!#{rating}:"#{twtname}(@#{twtid})":#{prediction}/#{last_access_datetime_days_elapsed}|#{pred}/#{days}!
                     return true
-                elsif last_access_datetime_days_elapsed > days
-                    STDERR.puts %!#{rating}:"#{twtname}(@#{twtid})":#{prediction}/#{last_access_datetime_days_elapsed}|#{pred}/#{days}!
+                elsif elapsed > days
+                    #STDERR.puts %!#{rating}:"#{twtname}(@#{twtid})":#{prediction}/#{last_access_datetime_days_elapsed}|#{pred}/#{days}!
                     return true
                 end
             end

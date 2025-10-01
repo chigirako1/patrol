@@ -253,6 +253,7 @@
           [ArtistsController::MethodEnum::UPDATE_RECORD],
           [ArtistsController::MethodEnum::DUP_USER_ID_CHK],
           [ArtistsController::MethodEnum::NAME_TEST],
+          [ArtistsController::MethodEnum::ALL_IN_1],
           [ArtistsController::MethodEnum::ALL_IN_ONE],
           [ArtistsController::MethodEnum::SEARCH],
           ['urllist'], 
@@ -366,14 +367,14 @@
           ['recent_filenum'],
           ['pxvname_fl'],
           ['pxvname'],
-          ['status'],
+          [ArtistsController::GROUP_TYPE::GROUP_STAT],
+          [ArtistsController::GROUP_TYPE::GROUP_STAT_RAT],
+          [ArtistsController::GROUP_TYPE::GROUP_STAT_RAT_R18],
           ['r18'],
           ['priority'],
           ['予測'],
           ['rating'],
-          ['status/rating'],
           [ArtistsController::GROUP_TYPE::GROUP_FEAT_STAT_RAT],
-          [ArtistsController::GROUP_TYPE::GROUP_STAT_RAT_R18],
           ['評価+年齢制限'],
           ['さかのぼり'],
           [ArtistsController::GROUP_TYPE::GROUP_ACCESS_OLD_TO_NEW],
@@ -398,6 +399,7 @@
           ["最新追っかけ中", "最新追っかけ中"], 
           ['彼岸'], 
           ['更新頻度低'], 
+          [ArtistsController::Status::ADJUSTMENT]
         ],
         selected: params[:status] 
       ) %>

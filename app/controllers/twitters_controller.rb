@@ -11,6 +11,13 @@ class TwittersController < ApplicationController
     SEARCH = "search"
   end
 
+  module SORT_BY
+    ID = "id"
+    PRED = "pred"
+    ACCESS = "access"
+    RATING = "rating"
+  end
+
   module GRP_SORT
       GRP_SORT_PRED = "予測順"
       GRP_SORT_ACCESS = "アクセス日順"
@@ -162,6 +169,14 @@ class TwittersController < ApplicationController
       return
     when TwittersController::ModeEnum::ALL_IN_1
       twitters = twitters.select {|x| x.rating == nil or x.rating >= rating_gt }
+      if @hide_within_days > 0
+        twitters = twitters.select {|x| !x.last_access_datetime_p(@hide_within_days)}
+      end
+
+      if pred_cond_gt > 0
+        twitters = twitters.select {|x| x.prediction >= pred_cond_gt}
+      end
+      
       tmp = twitters
       group = index_all_in_1(tmp, params)
       @twitters_total_count = 0
@@ -366,9 +381,9 @@ class TwittersController < ApplicationController
         twitters = twitters.select {|x| x.rating == nil or x.rating == rating_gt}
       end
 
-      if sort_by == "id"
+      if sort_by == SORT_BY::ID
         twitters = twitters.sort_by {|x| [x.id]}.reverse
-      elsif  sort_by == "pred"
+      elsif  sort_by == SORT_BY::PRED
         twitters = twitters.sort_by {|x| [-x.prediction, x.last_access_datetime]}
       end
 
@@ -447,7 +462,7 @@ class TwittersController < ApplicationController
       end
 
       case sort_by
-      when "access"
+      when SORT_BY::ACCESS
         twitters = twitters.sort_by {|x| [x.last_access_datetime]}
       else
         twitters = twitters.sort_by {|x| [-x.prediction, x.last_access_datetime]}
@@ -501,10 +516,10 @@ class TwittersController < ApplicationController
       end
 
       case sort_by
-      when "access"
+      when SORT_BY::ACCESS
         #twitters = twitters.sort_by {|x| [-x.rating, x.last_access_datetime, (x.last_dl_datetime)]}#.reverse
         twitters = twitters.sort_by {|x| [x.last_access_datetime, (x.last_dl_datetime)]}#.reverse
-      when "pred"
+      when SORT_BY::PRED
         twitters = twitters.sort_by {|x| [-x.prediction, x.last_access_datetime]}
       else
         twitters = twitters.sort_by {|x| [-(x.rating||0), -x.prediction, x.last_access_datetime]}
@@ -786,10 +801,15 @@ class TwittersController < ApplicationController
 
         twitters_wk = twitters_wk.select {|x| x.select_cond_aio}
 
-        twitters_wk = twitters_wk.sort_by {|x| [-(x.rating||0), -x.prediction, x.last_access_datetime]}
+        case params[:sort_by]
+        when SORT_BY::ACCESS
+          twitters_wk = twitters_wk.sort_by {|x| [x.last_access_datetime, -(x.rating||0), -x.prediction]}
+        when SORT_BY::RATING
+        else
+          twitters_wk = twitters_wk.sort_by {|x| [-(x.rating||0), -x.prediction, x.last_access_datetime]}
+        end
 
-        #twitters_group = twitters_wk.group_by {|x| %!#{x.drawing_method}|#{x.rating}|#{x.r18}! }
-        twitters_group = twitters_wk.group_by {|x| %!#{x.rating}|#{x.last_access_datetime_days_elapsed / 30}! }
+        twitters_group = twitters_wk.group_by {|x| %!#{x.rating}|#{x.last_access_datetime_days_elapsed / 30}!}#.sort_by {|k, v| k}.reverse.to_h
       end
 
       twitters_group

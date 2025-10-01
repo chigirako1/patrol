@@ -277,6 +277,7 @@ class ArtistsController < ApplicationController
     UNASSOCIATED_TWT_ACNT = '未紐づけTWTアカウント' #PXV DBにはTWT IDが登録されているがTWT DBにはPXV IDが登録されていない
     TWT_DUP_TWTID = 'same_twtid'
     ALL_IN_ONE = 'all in one'
+    ALL_IN_1 = 'all in 1'
     URL_LIST = 'urllist'
     URL_LIST_PXV_ONLY_LATEST = "urllist-pxv-only(latest)"
     DUP_USER_ID_CHK = '重複ユーザーIDチェック'
@@ -316,6 +317,8 @@ class ArtistsController < ApplicationController
     SIX_MONTH_NO_UPDATS = "半年以上更新なし"
     ACCOUNT_MIGRATION = "別アカウントに移行"
     NO_ARTWORKS = "作品ゼロ"
+
+    ADJUSTMENT = "(整理対象)"
   end
 
   module ShowMode
@@ -337,6 +340,8 @@ class ArtistsController < ApplicationController
   module GROUP_TYPE
     GROUP_ACCESS_OLD_TO_NEW = "ACCESS旧→新"
     GROUP_FEAT_STAT_RAT = "feature/status/rating"
+    GROUP_STAT = "status"
+    GROUP_STAT_RAT = "status/rating"
     GROUP_STAT_RAT_R18 = "status/rating/r18"
   end
 
@@ -402,6 +407,9 @@ class ArtistsController < ApplicationController
       artists = Artist.looks(params[:target_col], params[:search_word], params[:match_method])
       @artists_group = index_group_by(artists, prms)
       return
+    when MethodEnum::ALL_IN_1
+      artists = Artist.all
+      artists = artists.select {|x| x.select_cond_aio}
     when MethodEnum::ALL_IN_ONE
       if params[:aio].presence
         keys = params[:aio].split("|")
@@ -704,7 +712,7 @@ class ArtistsController < ApplicationController
     if artists.size > 5
       @artists_group = index_group_by(artists, prms)
     else
-      @artists_group[""] = artists
+      @artists_group["すくないのでひとまとめ"] = artists
     end
   end
 
@@ -1101,16 +1109,19 @@ class ArtistsController < ApplicationController
         puts %!nje="#{prms.nje}"!
       end
 
-      if prms.status == "(全て)"
-      elsif prms.status == "「長期更新なし」を除外"
+      case prms.status
+      when "(全て)"
+      when "「長期更新なし」を除外"
         artists = index_select_status_exclude(artists)
-      elsif prms.status == "長期更新なし"
+      when Status::LONG_TERM_NO_UPDATS #"長期更新なし"
         artists = index_select_status_include(artists)
+      when Status::ADJUSTMENT
+        artists = index_select_status_adjust(artists)
       else
         artists = artists.select {|x| x.status == prms.status}
         puts %!status="#{prms.status}"!
       end
-      #puts %!artists.size=#{artists.size}!
+      STDERR.puts %![sts] artists.size=#{artists.size}!
 
       if prms.reverse_status == ""
       elsif prms.reverse_status == "「さかのぼり済」を除く"
@@ -1197,6 +1208,18 @@ class ArtistsController < ApplicationController
         "3ヶ月以上更新なし",
         "1ヶ月以上更新なし",
         "作品ゼロ",
+      ]
+      index_select_status_include_arg(artists, excl_list)
+    end
+
+    def index_select_status_adjust(artists)
+      excl_list = [
+        Status::DELETED,
+        Status::LONG_TERM_NO_UPDATS,
+        Status::ACCOUNT_MIGRATION,
+        Status::NO_ARTWORKS,
+        #Status::SUSPEND,
+        #Status::SIX_MONTH_NO_UPDATS,
       ]
       index_select_status_include_arg(artists, excl_list)
     end
@@ -1301,8 +1324,6 @@ class ArtistsController < ApplicationController
         artists_group = artists.group_by {|x| x.select_group(x[:pxvname])}.sort.to_h
       when "pxvname"
         artists_group = artists.group_by {|x| x.pxvname}.sort.to_h
-      when "status"
-        artists_group = artists.group_by {|x| x.status}.sort.to_h
       when "r18"
         artists_group = artists.group_by {|x| x.r18}.sort.to_h
       when "priority"
@@ -1311,10 +1332,12 @@ class ArtistsController < ApplicationController
         artists_group = artists.group_by {|x| x.prediction_up_cnt(true) / 10 * 10 }.sort.to_h
       when "rating"
         artists_group = artists.group_by {|x| -x.rating}.sort.to_h
-      when "status/rating"
-        artists_group = artists.group_by {|x| [x.status, -x.rating]}.sort.to_h
       when GROUP_TYPE::GROUP_FEAT_STAT_RAT
         artists_group = artists.group_by {|x| [x.feature, x.status, -x.rating]}.sort.to_h
+      when GROUP_TYPE::GROUP_STAT
+        artists_group = artists.group_by {|x| x.status}.sort.to_h
+      when GROUP_TYPE::GROUP_STAT_RAT
+        artists_group = artists.group_by {|x| [x.status, -x.rating]}.sort.to_h
       when GROUP_TYPE::GROUP_STAT_RAT_R18
         artists_group = artists.group_by {|x| [x.status, -x.rating, x.r18]}.sort.to_h
       when "評価+年齢制限"
@@ -1379,7 +1402,7 @@ class ArtistsController < ApplicationController
         artists = index_select(Artist.all, prms, false)
         artists = index_select_status_exclude(artists)
 
-        artists_sort_access = artists.sort_by {|x| [x.last_access_datetime, -x.recent_filenum, -x.filenum]}
+        artists_sort_access = artists.sort_by {|x| [x.last_access_datetime||Time.new(2001,1,1), -(x.recent_filenum||0), -(x.filenum||0)]}
 
         if false
           artists_group[prefix + "アクセス日順"] = artists_sort_access
@@ -1407,7 +1430,7 @@ class ArtistsController < ApplicationController
 
         prms.last_access_datetime = interval
         artists = artists.select {|x| !x.last_access_datetime_p(interval)}
-        artists_sort_high = artists.sort_by {|x| [-x.rating, -x.prediction_up_cnt(true), x.last_access_datetime]}
+        artists_sort_high = artists.sort_by {|x| [-x.rating, -x.prediction_up_cnt(true), x.last_access_datetime||Time.new(2001,1,1)]}
 
         artists_group[prefix + "評価順"] = artists_sort_high
       end
@@ -1417,7 +1440,7 @@ class ArtistsController < ApplicationController
         artists = index_select_status_exclude(artists)
 
         artists2 = artists.select {|x| x.select_cond_post_date()}
-        artists_sort_ul = artists2.sort_by {|x| [x.last_ul_datetime]}
+        artists_sort_ul = artists2.sort_by {|x| [x.last_ul_datetime||Time.new(2001,1,1)]}
         artists_group[prefix + "公開日順"] = artists_sort_ul
       end
 
@@ -1433,7 +1456,7 @@ class ArtistsController < ApplicationController
         artists = artists.select {|x| x.select_cond_post_date()}
         #STDERR.puts %!GRP_SORT_NO_UPDATE = #{artists.size}!
 
-        artists_no_updated = artists.sort_by {|x| [x.last_access_datetime]}
+        artists_no_updated = artists.sort_by {|x| [x.last_access_datetime||Time.new(2001,1,1)]}
         STDERR.puts %!GRP_SORT_NO_UPDATE=#{artists_no_updated.size}!
 
         tmp_group = artists_no_updated.group_by {|x| [

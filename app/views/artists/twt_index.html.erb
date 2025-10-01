@@ -9,9 +9,21 @@
 <h1><%= title %></h1>
 
 <% if params[:show_times].presence %>
+    <br />
     <% show_times = params[:show_times].to_i %>
     ・<%= show_times %>回以上のURLのみ
 <% end %>
+
+<% if @pred %>
+    <br />
+    ・予測<%= @pred %>以上
+<% end %>
+
+<% if @hide_day %>
+    <br />
+    ・<%= @hide_day %>日以上経過
+<% end %>
+
 
 <% thumb_disp = false %>
 
@@ -627,17 +639,15 @@
 
         <% user_name = Pxv::user_name(dirlist, elem.pxvid) %>
         <%= idx %>.
+        [<%= elem.cnt %>]
         <% if user_name.presence %>
             <%= user_name %>(<%= elem.pxvid %>)
-            [<%= link_to_ex "☆pxv☆", artist_pxv_path(elem.pxvid) %>]
-            [<%= elem.cnt %>]
         <% else %>
-            [<%= elem.cnt %>]
             <% pxvurl = Pxv::pxv_user_url(elem.pxvid) %>
             <%= link_to_ex(elem.pxvid, pxvurl) %>
-            <%#= link_to_ex "show", artist_pxv_path(elem.pxvid) %>
-            [<%= link_to_ex "新規作成", new_artist_path(pxvid: elem.pxvid) %>]
         <% end %>
+        [<%= link_to_ex "新規作成", new_artist_path(pxvid: elem.pxvid) %>]
+        [<%= link_to_ex "☆pxv☆", artist_pxv_path(elem.pxvid) %>]
 
         <% t = Twitter.find_by(pxvid: elem.pxvid) %>
         <% if t %>
