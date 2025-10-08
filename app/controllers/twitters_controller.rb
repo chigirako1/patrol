@@ -169,18 +169,15 @@ class TwittersController < ApplicationController
       return
     when TwittersController::ModeEnum::ALL_IN_1
       twitters = twitters.select {|x| x.rating == nil or x.rating >= rating_gt }
+
       if @hide_within_days > 0
         twitters = twitters.select {|x| !x.last_access_datetime_p(@hide_within_days)}
       end
 
-      if pred_cond_gt > 0
-        twitters = twitters.select {|x| x.prediction >= pred_cond_gt}
-      end
-      
       tmp = twitters
-      group = index_all_in_1(tmp, params)
-      @twitters_total_count = 0
+      group = index_all_in_1(tmp, params, pred_cond_gt)
       @twitters_group = group
+      @twitters_total_count = @twitters_group.sum {|k,v| v.count}
       return
     when TwittersController::ModeEnum::ALL_IN_ONE
       @twitters_group = {}
@@ -793,23 +790,30 @@ class TwittersController < ApplicationController
         )
     end
 
-    def index_all_in_1(twitters, params)
+    def index_all_in_1(twitters, params, pred_cond_gt)
+      if pred_cond_gt > 0
+        twitters = twitters.select {|x| x.prediction >= pred_cond_gt}
+      end
+      
       if true
         twitters_wk = twitters
         twitters_wk = twitters_wk.select {|x| x.status == Twitter::TWT_STATUS::STATUS_PATROL}
         twitters_wk = twitters_wk.select {|x| x.drawing_method == params[:target]}
 
-        twitters_wk = twitters_wk.select {|x| x.select_cond_aio}
+        twitters_wk = twitters_wk.select {|x| x.select_cond_aio(pred_cond_gt)}
 
         case params[:sort_by]
         when SORT_BY::ACCESS
           twitters_wk = twitters_wk.sort_by {|x| [x.last_access_datetime, -(x.rating||0), -x.prediction]}
+          
+          twitters_group = twitters_wk.group_by {|x| %!#{x.rating}|#{x.last_access_datetime_days_elapsed / 30}!}.sort_by {|k, v| k}.reverse.to_h
         when SORT_BY::RATING
         else
           twitters_wk = twitters_wk.sort_by {|x| [-(x.rating||0), -x.prediction, x.last_access_datetime]}
+
+          twitters_group = twitters_wk.group_by {|x| %!#{x.rating}|#{x.last_access_datetime_days_elapsed / 30}!}#.sort_by {|k, v| k}.reverse.to_h
         end
 
-        twitters_group = twitters_wk.group_by {|x| %!#{x.rating}|#{x.last_access_datetime_days_elapsed / 30}!}#.sort_by {|k, v| k}.reverse.to_h
       end
 
       twitters_group

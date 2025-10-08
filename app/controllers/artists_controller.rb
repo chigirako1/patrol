@@ -332,6 +332,7 @@ class ArtistsController < ApplicationController
 
   module SORT_TYPE
     SORT_RATING = "RATING"
+    SORT_RATING_O2N = "RATING/ACCESS旧→新"
     SORT_ACCESS_OLD_TO_NEW = "ACCESS旧→新"
     SORT_ACCESS_NEW_TO_OLD = "ACCESS新→旧"
     SORT_PXV_USER_ID_ASC = "pxv-user-id(古い順)"
@@ -343,6 +344,7 @@ class ArtistsController < ApplicationController
     GROUP_STAT = "status"
     GROUP_STAT_RAT = "status/rating"
     GROUP_STAT_RAT_R18 = "status/rating/r18"
+    GROUP_RATING = "rating"
   end
 
   module GRP_SORT
@@ -409,7 +411,12 @@ class ArtistsController < ApplicationController
       return
     when MethodEnum::ALL_IN_1
       artists = Artist.all
+      artists = index_select(artists, prms, true)
       artists = artists.select {|x| x.select_cond_aio}
+
+      @artists_group = index_group_by(artists, prms)
+      @artists_total_count = @artists_group.sum {|k,v| v.count}
+      return
     when MethodEnum::ALL_IN_ONE
       if params[:aio].presence
         keys = params[:aio].split("|")
@@ -1267,8 +1274,9 @@ class ArtistsController < ApplicationController
       when SORT_TYPE::SORT_PXV_USER_ID_ASC
         artists = artists.sort_by {|x| [x.pxvid]}
       when SORT_TYPE::SORT_RATING
-        #artists = artists.sort_by {|x| [-(x.rating||0), x.last_access_datetime||"", x.last_ul_datetime||""]}
         artists = artists.sort_by {|x| [-(x.rating||0)]}
+      when SORT_TYPE::SORT_RATING_O2N
+        artists = artists.sort_by {|x| [-(x.rating||0), x.last_access_datetime||"", x.last_ul_datetime||""]}
       when SORT_TYPE::SORT_ACCESS_OLD_TO_NEW
         artists = artists.sort_by {|x| [x.last_access_datetime]}
       when SORT_TYPE::SORT_ACCESS_NEW_TO_OLD
@@ -1330,7 +1338,7 @@ class ArtistsController < ApplicationController
         artists_group = artists.group_by {|x| -x.priority}.sort.to_h
       when "予測"
         artists_group = artists.group_by {|x| x.prediction_up_cnt(true) / 10 * 10 }.sort.to_h
-      when "rating"
+      when GROUP_TYPE::GROUP_RATING
         artists_group = artists.group_by {|x| -x.rating}.sort.to_h
       when GROUP_TYPE::GROUP_FEAT_STAT_RAT
         artists_group = artists.group_by {|x| [x.feature, x.status, -x.rating]}.sort.to_h

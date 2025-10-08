@@ -624,7 +624,7 @@ class Artist < ApplicationRecord
 
     def elapsed_time_str(days)
         if days > 60
-            "2.#{days / 30}月"
+            "2:#{days / 30}月"
         else
             w = (days + 6) / 7
             %!1:#{w}週!
@@ -646,7 +646,8 @@ class Artist < ApplicationRecord
             else
                 if last_ul_datetime_delta > 60 and Util.get_days_date_delta(last_ul_datetime, last_access_datetime) > 50
                     w = elapsed_time_str(days)
-                    "02.公開日むかし|#{w}"
+                    #"02.公開日むかし|#{w}"
+                    %!02.公開日むかし|"#{status}"!
                 else
                     pred_cnt = prediction_up_cnt(true)
                     if pred_cnt > 8
@@ -671,11 +672,19 @@ class Artist < ApplicationRecord
     ]
     COND_DATA_AI = [
         #r, [pred, day, intvl]
-        [90, [10, 30, 15]],
-        [80, [20, 60, 30]],
+        [100,[ 3,  3,  0]],
+        [99, [ 5,  4,  1]],
+        [98, [ 8,  5,  3]],
+        #------------
+        [95, [10, 10,  7]],
+        [90, [10, 20, 10]],
+        #------------
+        [80, [20, 60, 15]],
+        #------------
         [70, [40, 90, 60]],
-        [50, [100, 360, 90]],
-        [0,  [200, 360, 180]],
+        #------------
+        [50, [100,360,90]],
+        [0,  [200,360,180]],
     ]
 
     def select_cond_aio
@@ -696,10 +705,10 @@ class Artist < ApplicationRecord
                     #STDERR.puts %!#{rating}:"#{pxvname}(#{pxvid})":#{min_intvl} > #{elapsed}!
                     return false
                 elsif prediction_up_cnt(true) > pred
-                    #STDERR.puts %!#{rating}:"#{twtname}(@#{twtid})":#{prediction}/#{last_access_datetime_days_elapsed}|#{pred}/#{days}!
+                    #STDERR.puts %!#{rating}:"#{pxvname}(@#{pxvid})":#{elapsed}|#{pred}/#{days}!
                     return true
                 elsif elapsed > days
-                    #STDERR.puts %!#{rating}:"#{twtname}(@#{twtid})":#{prediction}/#{last_access_datetime_days_elapsed}|#{pred}/#{days}!
+                    #STDERR.puts %!#{rating}:"#{pxvname}(@#{pxvid})":#{elapsed}|#{pred}/#{days}!
                     return true
                 end
             end

@@ -106,7 +106,7 @@
   <% file_num = 0 %>
   <% if list.presence %>
     <% file_num = Artist.artwork_list_file_num(list) %>
-    <%= file_num %>(読み込みファイル数)平均<%= (file_num.to_f / list.size.to_f).round(2) %>枚
+    読み込みファイル数=<%= file_num %> (平均<%= (file_num.to_f / list.size.to_f).round(2) %>枚)
     <br />
     <% recent_filenum = Artist.artwork_list_recent_file_num(list) %>
     <% if recent_filenum > @artist.recent_filenum %>

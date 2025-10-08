@@ -324,64 +324,6 @@
     <%= f.label :page_title %>
     <%= f.text_field :page_title, :value => params[:page_title] %>
     <br />
-    <%= f.label :sort_by, style: "display: block" %>
-    <%= f.select :sort_by, 
-      options_for_select(
-        [
-          ['id'], 
-          ['pxv-user-id'],
-          [ArtistsController::SORT_TYPE::SORT_PXV_USER_ID_ASC],
-          [ArtistsController::SORT_TYPE::SORT_RATING],
-          ['point'], 
-          ['-point'], 
-          ['priority'], 
-          ['filenum'], 
-          ['recent_filenum'], 
-          ['last_ul_date'],
-          ['pxvname'],
-          ['twtid'],
-          ['予測▽'],
-          ['予測△'],
-          [ArtistsController::SORT_TYPE::SORT_ACCESS_OLD_TO_NEW],
-          [ArtistsController::SORT_TYPE::SORT_ACCESS_NEW_TO_OLD],
-          ['access_date_X_last_ul_datetime'], 
-          ['access_date_X_recent_filenum'], 
-          ['access_date_X_recent_filenum_X_ul'], 
-          ['access_date_X_pxvname_X_recent_filenum'],
-          [''],
-        ],
-        selected: params[:sort_by] 
-      ) %>
-    <br />
-    <%= f.label :group_by, style: "display: block" %>
-    <%= f.select :group_by, 
-      options_for_select(
-        [
-          ['none'],
-          ['filenum'], 
-          ['last_ul_datetime'], 
-          ['last_ul_datetime_X_filenum'], 
-          ['last_ul_datetime_ym'],
-          ['last_ul_datetime_ym旧→新'],
-          ['last_ul_datetime_y'], 
-          ['recent_filenum'],
-          ['pxvname_fl'],
-          ['pxvname'],
-          [ArtistsController::GROUP_TYPE::GROUP_STAT],
-          [ArtistsController::GROUP_TYPE::GROUP_STAT_RAT],
-          [ArtistsController::GROUP_TYPE::GROUP_STAT_RAT_R18],
-          ['r18'],
-          ['priority'],
-          ['予測'],
-          ['rating'],
-          [ArtistsController::GROUP_TYPE::GROUP_FEAT_STAT_RAT],
-          ['評価+年齢制限'],
-          ['さかのぼり'],
-          [ArtistsController::GROUP_TYPE::GROUP_ACCESS_OLD_TO_NEW],
-        ],
-        selected: params[:group_by] 
-      ) %>
-    <br />
     <%= f.label :status, style: "display: block" %>
     <%= f.select :status, 
       options_for_select(
@@ -451,6 +393,68 @@
     <br />
     <%= f.label :最終アクセス日がn日以上経過した場合は強制表示 %>
     <%= f.number_field :force_disp_day, :value => params[:force_disp_day] %>
+    <br />
+
+    <hr />
+
+    <%= f.label :sort_by, style: "display: block" %>
+    <%= f.select :sort_by, 
+      options_for_select(
+        [
+          ['id'], 
+          ['pxv-user-id'],
+          [ArtistsController::SORT_TYPE::SORT_PXV_USER_ID_ASC],
+          [ArtistsController::SORT_TYPE::SORT_RATING],
+          [ArtistsController::SORT_TYPE::SORT_RATING_O2N],
+          ['point'], 
+          ['-point'], 
+          ['priority'], 
+          ['filenum'], 
+          ['recent_filenum'], 
+          ['last_ul_date'],
+          ['pxvname'],
+          ['twtid'],
+          ['予測▽'],
+          ['予測△'],
+          [ArtistsController::SORT_TYPE::SORT_ACCESS_OLD_TO_NEW],
+          [ArtistsController::SORT_TYPE::SORT_ACCESS_NEW_TO_OLD],
+          ['access_date_X_last_ul_datetime'], 
+          ['access_date_X_recent_filenum'], 
+          ['access_date_X_recent_filenum_X_ul'], 
+          ['access_date_X_pxvname_X_recent_filenum'],
+          [''],
+        ],
+        selected: params[:sort_by] 
+      ) %>
+    <br />
+    <%= f.label :group_by, style: "display: block" %>
+    <%= f.select :group_by, 
+      options_for_select(
+        [
+          ['none'],
+          ['filenum'], 
+          ['last_ul_datetime'], 
+          ['last_ul_datetime_X_filenum'], 
+          ['last_ul_datetime_ym'],
+          ['last_ul_datetime_ym旧→新'],
+          ['last_ul_datetime_y'], 
+          ['recent_filenum'],
+          ['pxvname_fl'],
+          ['pxvname'],
+          [ArtistsController::GROUP_TYPE::GROUP_STAT],
+          [ArtistsController::GROUP_TYPE::GROUP_STAT_RAT],
+          [ArtistsController::GROUP_TYPE::GROUP_STAT_RAT_R18],
+          ['r18'],
+          ['priority'],
+          ['予測'],
+          ['rating'],
+          [ArtistsController::GROUP_TYPE::GROUP_FEAT_STAT_RAT],
+          ['評価+年齢制限'],
+          ['さかのぼり'],
+          [ArtistsController::GROUP_TYPE::GROUP_ACCESS_OLD_TO_NEW],
+        ],
+        selected: params[:group_by] 
+      ) %>
     <br />
     <%= f.label :表示数 %>
     <%= f.number_field :display_number, :value => params[:display_number] %>

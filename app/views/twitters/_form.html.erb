@@ -71,6 +71,7 @@
   <div>
     <%= form.label "更新頻度(100日間での投稿数)", style: "display: block" %>
     <%= form.number_field :update_frequency %>
+    <input type="button" value="/2" onclick="div_val('update_frequency', 2);" class="btn_s" />
   </div>
 
   <div>
@@ -180,6 +181,10 @@
       <% else %>
         <%= form.number_field :pxvid %>
       <% end %>
+
+      ←
+      <input type="button" value="取り出し" onclick="get_pxv_user_id();" />
+      <input type=”text” id="pxv_user_id_work" value="" />
     <% end %>
 
     <% if pxv.presence and twitter.pxvid == "" %>
@@ -306,11 +311,7 @@
     <%= link_to_ex "@#{@twitter.old_twtid}", Twt::twt_user_url(@twitter.old_twtid) if @twitter.old_twtid.presence %>
     <% old_twt = Twitter.find_by_twtid_ignore_case(@twitter.old_twtid) %>
     <% if old_twt.presence %>
-      <%= old_twt.twtname %>
-      【<%= old_twt.rating %>|<%= old_twt.drawing_method %>|<%= old_twt.status %>】
-      [<%= link_to_ex "■twt■", old_twt %>]
-      |<%= old_twt.last_access_datetime_disp %>|
-      <%= %!|PXVID:#{old_twt.pxvid}! if old_twt.pxvid.presence %>
+      <%= twitter_info_tag(old_twt) %>
     <% end %>
   </div>
 
@@ -474,5 +475,31 @@
     let elem = document.getElementById("twitter_" + elem_id);
     let prio_val = parseInt(elem.value);
     elem.value = prio_val + point;
+  }
+
+  function div_val(elem_id, val) {
+    let elem = document.getElementById("twitter_" + elem_id);
+    let prio_val = parseInt(elem.value);
+    elem.value = prio_val / val | 0;//整数にしたい
+  }
+
+  function get_pxv_user_id() {
+      let text_box = document.getElementById("pxv_user_id_work");
+      let text = text_box.value;
+
+      let datetxt = ""
+      let regex = /pixiv\.net\/\/users\/(\d+)/;
+      if (regex.test(text)) {
+          let r = text.match(regex)
+          let n = Number(r[1]);
+          datetxt = n;
+      } else {
+          let r = text.match(/(\d+)/)
+          let n = Number(r[0]);
+          datetxt = n;
+      }
+      
+      const result = document.getElementById('twitter_pxvid');
+      result.value = datetxt;
   }
 </script>

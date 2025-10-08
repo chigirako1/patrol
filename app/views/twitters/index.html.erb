@@ -11,8 +11,10 @@
 
 <% if twitters_total_count < 0 %>
   <% page_title = "#{params[:page_title]} - TWT一覧" %>
+<% elsif @twitters_total_count %>
+  <% page_title = "#{params[:page_title]} (全#{@twitters_total_count}件) - TWT一覧" %>
 <% else %>
-  <% page_title = "#{params[:page_title]} (全#{twitters_total_count}件#{rem_str}) - TWT一覧" %>
+  <% page_title = "#{params[:page_title]} (全#{twitters_total_count}件#{rem_str}) - TWT一覧 a" %>
 <% end %>
 
 <% provide(:title, page_title) %>
@@ -22,7 +24,7 @@
 
 <%= link_to "Return", root_path %>
 
-<h1>Twitters <%= "#{page_title}" %></h1>
+<h1><%= "#{page_title}" %></h1>
 
 <% search_word = params[:search_word] %>
 <% if search_word.presence %>
@@ -323,8 +325,15 @@ button.horizontal {
     <%= f.label :表示数 %>
     <%= f.number_field :num_of_disp, :value => params[:num_of_disp] %>
     <br />
-    <%= f.label :sort_by %>
-    <%= f.text_field :sort_by, :value => params[:sort_by] %>
+    <%= f.label :ソート %>
+    <%= f.select :sort_by, options_for_select(
+        [
+          ["予測▽順", "pred"],
+          ["アクセス日順（旧→新）", "access"],
+        ],
+        selected: params[:sort_by] 
+      ) %>
+
     <br />
     <%= f.label :step %>
     <%= f.number_field :step, :value => params[:step] %>

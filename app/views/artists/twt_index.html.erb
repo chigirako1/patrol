@@ -789,7 +789,22 @@
 <% if @misc_urls and @misc_urls.size != 0 %>
     <h2>misc url list(<%= @misc_urls.size %>)</h2>
     <% @misc_urls.sort.uniq.each do |url| %>
-        <%= link_to_ex url, url %>
+        <% if url =~ %r!https://www.pixiv.net/artworks/(\d+)! %>
+            <% artwork_id = $1.to_i %>
+            <%= link_to_ex url, url %>(<%= $1 %>)
+            <% pa = PxvArtwork.find_by(artwork_id: artwork_id) %>
+            <% if pa %>
+                <!-- <%= pa.state %>/<%= pa.release_date %>/user_id:<%= pa.user_id %>/「<%= pa.title %>」 -->
+                <%= pa.info_txt %>
+                [<%= link_to_ex("★Edit★", edit_pxv_artwork_path(pa)) %>]
+            <% else %>
+                [<%= link_to_ex("★New★", new_pxv_artwork_path(artwork_id: artwork_id)) %>]
+            <% end %>
+        <% elsif url =~ /^\https?:/ %>
+            <%= link_to_ex url, url %>
+        <% else %>
+            <%= url %>
+        <% end %>
         <br />
     <% end %>
 <% end %>
