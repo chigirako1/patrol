@@ -168,16 +168,19 @@ class TwittersController < ApplicationController
     when TwittersController::ModeEnum::URL_TXT
       return
     when TwittersController::ModeEnum::ALL_IN_1
-      twitters = twitters.select {|x| x.rating == nil or x.rating >= rating_gt }
-
-      if @hide_within_days > 0
-        twitters = twitters.select {|x| !x.last_access_datetime_p(@hide_within_days)}
-      end
 
       tmp = twitters
-      group = index_all_in_1(tmp, params, pred_cond_gt)
+      group = index_all_in_1(tmp, params, rating_gt, pred_cond_gt)
       @twitters_group = group
       @twitters_total_count = @twitters_group.sum {|k,v| v.count}
+
+      if true
+        @twitters_group.each do |k,v|
+          v.each do |x|
+            puts %!#{x.twtname}(@#{x.twtid})!
+          end
+        end
+      end
       return
     when TwittersController::ModeEnum::ALL_IN_ONE
       @twitters_group = {}
@@ -790,15 +793,22 @@ class TwittersController < ApplicationController
         )
     end
 
-    def index_all_in_1(twitters, params, pred_cond_gt)
-      if pred_cond_gt > 0
-        twitters = twitters.select {|x| x.prediction >= pred_cond_gt}
+    def index_all_in_1(twitters, params, rating_gt, pred_cond_gt)
+      twitters = twitters.select {|x| x.rating == nil or x.rating >= rating_gt }
+      twitters = twitters.select {|x| x.drawing_method == params[:target]}
+
+      if @hide_within_days > 0
+        twitters = twitters.select {|x| !x.last_access_datetime_p(@hide_within_days)}
       end
       
       if true
         twitters_wk = twitters
+
+        if pred_cond_gt > 0
+          twitters_wk = twitters_wk.select {|x| x.prediction >= pred_cond_gt}
+        end
+
         twitters_wk = twitters_wk.select {|x| x.status == Twitter::TWT_STATUS::STATUS_PATROL}
-        twitters_wk = twitters_wk.select {|x| x.drawing_method == params[:target]}
 
         twitters_wk = twitters_wk.select {|x| x.select_cond_aio(pred_cond_gt)}
 
@@ -813,7 +823,21 @@ class TwittersController < ApplicationController
 
           twitters_group = twitters_wk.group_by {|x| %!#{x.rating}|#{x.last_access_datetime_days_elapsed / 30}!}#.sort_by {|k, v| k}.reverse.to_h
         end
+      end
 
+      if true
+        twitters_check = twitters.select {|x| x.update_chk?}
+        #STDERR.puts %!|xxx|[#{rating_gt}](twitters_check.size)=#{twitters_check.size}!
+        twitters_check = twitters_check.select {|x| x.select_cond_post_date}
+        twitters_check = twitters_check.select {|x| x.status != Twitter::TWT_STATUS::STATUS_WAITING}
+        twitters_check = twitters_check.sort_by {|x| [-(x.rating||0), x.last_access_datetime, -x.prediction]}
+        if twitters_check.size > 0
+          #twitters_group["#{rating_gt}:更新なし"] = twitters_check
+          tmp_grp = twitters_check.group_by {|x| x.status}
+          twitters_group.merge!(tmp_grp)
+        else
+          STDERR.puts %!|xxx|更新なしゼロ件!
+        end
       end
 
       twitters_group

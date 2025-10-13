@@ -72,6 +72,7 @@
     <%= form.label "更新頻度(100日間での投稿数)", style: "display: block" %>
     <%= form.number_field :update_frequency %>
     <input type="button" value="/2" onclick="div_val('update_frequency', 2);" class="btn_s" />
+    <input type="button" value="-100" onclick="plus_rate('update_frequency', -100);" class="btn_s" />
   </div>
 
   <div>
@@ -322,6 +323,7 @@
     <%= form.select :warning,
       [
         ["パクリ", "パクリ"],
+        ["重複投稿", "重複投稿"],
       ],
       include_blank: "選択して下さい" %>
   </div>

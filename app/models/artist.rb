@@ -465,6 +465,10 @@ class Artist < ApplicationRecord
 
     def self.artwork_list(path_list)
         artworks = {}
+        
+        unless path_list
+            return artworks
+        end
 
         #puts path_list.size
         path_list.reverse.each do |path|

@@ -56,4 +56,17 @@ class Tweet < ApplicationRecord
             STDERR.puts %!@#{tweet_id}の更新に失敗しました。未登録のIDです!
         end
     end
+
+    def self.hoge(url_list)
+        exsit = 0
+
+        url_list.each do |x|
+            tweet_id = Twt::get_tweet_id_from_url(x)
+            tweet = Tweet.find_by(tweet_id: tweet_id)
+            if tweet
+                exsit += 1
+            end
+        end
+        exsit
+    end
 end

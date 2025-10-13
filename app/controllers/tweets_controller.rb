@@ -31,7 +31,15 @@ class TweetsController < ApplicationController
     mode = params[:mode].presence
     case mode
     when ModeEnum::SUMMARY
+      @tweet_sum_hash = {}
       @tweet_cnt_list = Tweet.group("screen_name").count.sort_by {|x| x[1]}.reverse
+
+      @tweet_cnt_list.each do |e|
+        screen_name = e[0]
+        t = Tweet.where(screen_name: screen_name)
+        a = t.group(:status).count
+        @tweet_sum_hash[screen_name] = a
+      end
     when ModeEnum::URL_LIST
       filename = "all"
       filename = "target2507"
@@ -40,6 +48,7 @@ class TweetsController < ApplicationController
       _, twt_url_infos, _ = UrlTxtReader::get_url_txt_info(path)
       pxv_chk = false
       @known_twt_url_list, @unknown_twt_url_list, _ = Twitter::twt_user_classify(twt_url_infos, pxv_chk)
+      #@twt_url_infos = twt_url_infos
     else
       if params[:screen_name].presence
         scrn_name = params[:screen_name]

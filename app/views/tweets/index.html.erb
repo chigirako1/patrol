@@ -5,19 +5,31 @@
 <h1>Tweets</h1>
 
 <div id="tweets">
-    <%  %>
-    <% @tweet_cnt_list.each.with_index(1) do |e, idx| %>
-        <% screen_name = e[0] %>
-        <% cnt = e[1] %>
-        <%= idx %>.
-        "<%= screen_name %>"
+    <% if @tweet_cnt_list and @tweet_cnt_list.size > 0 %>
+        <h2>@tweet_cnt_list</h2>
+        <% @tweet_cnt_list.each.with_index(1) do |e, idx| %>
+            <% screen_name = e[0] %>
+            <% cnt = e[1] %>
+            <%= idx %>.
 
-        <% twt = Twitter.find_by_twtid_ignore_case(screen_name) %>
-        [<%= link_to_ex("■twt■", twt) %>]
+            <% twt = Twitter.find_by_twtid_ignore_case(screen_name) %>
+            <% if twt %>
+                <%= twt.twtname %>
+                (@<%= screen_name %>)
+                [<%= link_to_ex("■twt■", twt) %>]
+            <% else %>
+                <% STDERR.puts %!miss:"#{screen_name}"! %>
+            <% end %>
 
-        <%= cnt %>
-        <br />
-        <%# puts idx %>
+            <% tmp_ary = [] %>
+            <%= cnt %>
+            <% @tweet_sum_hash[screen_name].each do |k,v| %>
+                <% tmp_ary << %!#{k}:#{v}(#{ v * 100 / cnt}%)! %>
+            <% end %>
+            [<%= tmp_ary.join(",") %>]
+            <br />
+            <%# puts idx %>
+        <% end %>
     <% end %>
 
     <h2>@known_twt_url_list</h2>
@@ -33,7 +45,7 @@
             <th>cnt</th>
             <th>twtname(twtid)</th>
             <th>status</th>
-            <th>a</th>
+            <th>twt</th>
             <th>b</th>
             <th>c</th>
         </tr>
@@ -95,7 +107,7 @@
                     <%= twt.status %>
                 </td>
                 <td>
-                    <%= url_list.size %>
+                    <%= url_list.size %>[<%= Tweet.hoge(url_list) %>]
                 </td>
                 <td>
                     <%= twt.twtname %>(@<%= screen_name %>)
@@ -108,6 +120,9 @@
                 </td>
                 <td>
                     <%= twt.last_access_datetime_disp %>
+                </td>
+                <td>
+                    
                 </td>
             </tr>
         <% end %>

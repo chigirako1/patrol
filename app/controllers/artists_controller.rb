@@ -414,6 +414,8 @@ class ArtistsController < ApplicationController
       artists = index_select(artists, prms, true)
       artists = artists.select {|x| x.select_cond_aio}
 
+      artists = index_sort(artists, prms)
+
       @artists_group = index_group_by(artists, prms)
       @artists_total_count = @artists_group.sum {|k,v| v.count}
       return

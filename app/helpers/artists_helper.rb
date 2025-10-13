@@ -124,6 +124,8 @@ module ArtistsHelper
     def date_bg_color(dayn)
         if dayn < 7
             bgcolor = "palegreen"
+        elsif dayn < 30
+            bgcolor = "Lime"
         elsif dayn > 365 * 2
             bgcolor = "darkred"
         elsif dayn > 365

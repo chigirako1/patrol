@@ -14,6 +14,8 @@ module Twt
     TWT_DOMAIN_NAME_ELON = %!x.com!
     TWT_DOMAIN_NAME = TWT_DOMAIN_NAME_ELON
 
+    TWT_RGX_URL = %r!https?://(?:x|twitter)\.com/\w+/status/(\d+)!
+
     TMP_DIR_PATH = "public/d_dl/"
     
     TWT_CURRENT_DIR_PATH = TMP_DIR_PATH + "Twitter/"
@@ -27,6 +29,14 @@ module Twt
         txts = UrlTxtReader::get_url_txt_contents_uniq_ary([])
         twt_ids = get_tweet_ids(txts, twtid)
         twt_ids
+    end
+
+    def self.get_tweet_id_from_url(url)
+        tweet_id = nil
+        if url =~ TWT_RGX_URL
+            tweet_id = $1.to_i
+        end
+        tweet_id
     end
     
     def self.get_tweet_ids(txts, twtid)
@@ -354,6 +364,7 @@ module Twt
     def self.db_update_by_newdir()
         twt_id_list = twt_user_list("new")
 
+        STDERR.puts %!db_update_by_newdir:xx!
         twt_id_list.each do |key, val|
             twt = Twitter.find_by_twtid_ignore_case(key)
             if twt == nil
@@ -384,6 +395,7 @@ module Twt
             tweet_rcd = Tweet.find_by(tweet_id: tweet_id)
             if tweet_rcd
                 # DBに登録済み
+                STDERR.puts %!登録済み => #{tweet_id}\t##{pic_no}\t"#{path}"!
             else
                 if tweet_list.tweet_id_exist? tweet_id
                     # DBに登録

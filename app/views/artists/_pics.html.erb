@@ -44,7 +44,7 @@
     (<%= Util::get_date_info(pub_date) %>)
     <br />
 
-    <% if artist.last_ul_datetime > pub_date %>
+    <% if artist.last_ul_datetime and artist.last_ul_datetime > pub_date %>
       <% if @artist.latest_artwork_id.presence %>
         <% url = artist.pxv_artwork_url(@artist.latest_artwork_id) %>
         最新(DB)：(<%= link_to_ex(@artist.latest_artwork_id, url) %>)
@@ -86,7 +86,7 @@
     <% if path =~ /(\d\d-\d\d-\d\d)/ #@path_list[-1] =~ /(\d\d-\d\d-\d\d)/ %>
       <% pub_date = Date.parse($1) %>
 
-      <% if artist.earliest_ul_date.to_date < pub_date %>
+      <% if artist.earliest_ul_date and artist.earliest_ul_date.to_date < pub_date %>
         <% if artist.reverse_status != "さかのぼり済" %>
           <b>↑最古のファイルでない可能性があります(<%= %!#{pub_date}!%>)</b> > <%= %!#{artist.earliest_ul_date.to_date}! %>(登録されている日付)
           <% STDERR.puts %!path:"#{list[-1]}/#{path}"! %>
@@ -109,12 +109,14 @@
     読み込みファイル数=<%= file_num %> (平均<%= (file_num.to_f / list.size.to_f).round(2) %>枚)
     <br />
     <% recent_filenum = Artist.artwork_list_recent_file_num(list) %>
-    <% if recent_filenum > @artist.recent_filenum %>
-      <% eq_symbol = ">" %>
-    <% elsif recent_filenum == @artist.recent_filenum %>
-      <% eq_symbol = "" %>
-    <% else %>
-      <% eq_symbol = "<" %>
+    <% if @artist.recent_filenum %>
+      <% if recent_filenum > @artist.recent_filenum %>
+        <% eq_symbol = ">" %>
+      <% elsif recent_filenum == @artist.recent_filenum %>
+        <% eq_symbol = "=" %>
+      <% else %>
+        <% eq_symbol = "<" %>
+      <% end %>
     <% end %>
   <% end %>
 

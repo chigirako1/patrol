@@ -9,9 +9,11 @@
 <h1><%= title %></h1>
 
 <% if params[:show_times].presence %>
-    <br />
     <% show_times = params[:show_times].to_i %>
-    ・<%= show_times %>回以上のURLのみ
+    <% if show_times > 1 %>
+        <br />
+        ・<%= show_times %>回以上のURLのみ
+    <% end %>
 <% end %>
 
 <% if @pred %>
@@ -61,6 +63,16 @@
         <% end %>
 
         <% twt_account = Twitter.find_by_twtid_ignore_case(key) %>
+
+        <% if @pred %>
+            <% pred = @pred %>
+        <% else %>
+            <% pred = 0 %>
+        <% end %>
+        <% unless twt_account.select_cond_aio(pred) %>
+            <%# next %>
+        <% end %>
+
         <% key_twt = twt_account.group_key(url_list.size, @rating) %>
         <% twt_group[key_twt] << [twt_account, url_list] %>
     <% end %>
@@ -538,10 +550,10 @@
                 <th>最新投稿日</th>
                 <th>予測</th>
                 <th>pxv</th>
+                <th>twt</th>
+                <th>t予測</th>
                 <th>twt access</th>
                 <th>twt post</th>
-                <th>予測</th>
-                <th>twt</th>
                 <th>@</th>
             </tr>
             <% list = list.sort_by {|z| z.p.sort_cond} %>
@@ -591,20 +603,26 @@
 
                     <% twt = Twitter.find_by_twtid_ignore_case(p.twtid) %>
                     <% if twt %>
+                        <td>
+                            【<%= twt.rating %>】|<%= twt.status if twt.status %>
+                            <%= link_to_ex "■twt■", twt %>
+                        </td>
+
+                        <!-- 予測 -->
+                        <td align="right"><%= twt.prediction %></td>
+
+                        <!--  -->
                         <% acs_delta = twt.get_date_delta(twt.last_access_datetime) %>
                         <% acs_bg_color = date_bg_color(acs_delta) %>
                         <td bgcolor="<%= acs_bg_color %>">
                             <%= twt.last_access_datetime_disp %>
                         </td>
+                        
+                        <!--  -->
                         <% post_delta = twt.get_date_delta(twt.last_post_datetime) %>
                         <% post_bg_color = date_bg_color(post_delta) %>
                         <td bgcolor="<%= post_bg_color %>">
                             <%= Util.get_date_info(twt.last_post_datetime) %>
-                        </td>
-                        <td align="right"><%= twt.prediction %></td>
-                        <td>
-                            【<%= twt.rating %>】|<%= twt.status if twt.status %>
-                            <%= link_to_ex "■twt■", twt %>
                         </td>
                         <td></td>
                     <% else %>

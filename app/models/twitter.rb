@@ -345,10 +345,12 @@ class Twitter < ApplicationRecord
 
     COND_DATA_HD = [
         #r, [pred, day, intvl]
-        [90, [10, 30, 10]],
-        [80, [20, 60, 30]],
-        [70, [30, 90, 50]],
-        [ 0, [60,180,100]],
+        [95, [10,  40, 10]],
+        [90, [10,  60, 20]],
+        [85, [20,  90, 30]],
+        [80, [30, 120, 40]],
+        [70, [30, 150, 50]],
+        [ 0, [60, 180,100]],
     ]
     COND_DATA_AI = [
         #r, [pred, day, intvl]
@@ -377,6 +379,10 @@ class Twitter < ApplicationRecord
         [0,  [200, 360, 100]],
     ]
     def select_cond_aio(pred_cond_gt)
+        if rating == nil
+            return true
+        end
+
         if drawing_method == DRAWING_METHOD::DM_AI
             cond_data = COND_DATA_AI
         else

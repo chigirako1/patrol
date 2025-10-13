@@ -450,12 +450,14 @@
   <div>
     <%= form.label :ファイル数, style: "display: block" %>
 
-    <% if artist.filenum.presence %>
-      <% if artist.filenum < @path_list.size %>
+    <% if @path_list %>
+      <% if artist.filenum.presence %>
+        <% if artist.filenum < @path_list.size %>
+          <% filenum = @path_list.size %>
+        <% end %>
+      <% else %>
         <% filenum = @path_list.size %>
       <% end %>
-    <% else %>
-      <% filenum = @path_list.size %>
     <% end %>
 
     <% if filenum %>
@@ -547,7 +549,11 @@
   <div>
     <%= form.label :最新PXVアートワークID, style: "display: block" %>
     <% latest_artwork_id = @artist.latest_artwork_id %>
-    <% artwork_id, _, _ = Pxv::get_pxv_artwork_info_from_path(@path_list[0]) %>
+
+    <% if @path_list %>
+      <% artwork_id, _, _ = Pxv::get_pxv_artwork_info_from_path(@path_list[0]) %>
+    <% end %>
+
     <% if (latest_artwork_id == nil and artwork_id.presence) or (artwork_id.presence and latest_artwork_id < artwork_id) %>
       "<%= latest_artwork_id %>"↓<font color='red'>更新あり</font><br />
       <% latest_artwork_id = artwork_id %>
@@ -572,14 +578,14 @@
   <!-- artwork date -->
   <div>
     <%= form.label :last_ul_datetime, style: "display: block" %>
-    <% if @path_list[0] =~ /(\d\d-\d\d-\d\d)/ %>
+    <% if @path_list and @path_list[0] =~ /(\d\d-\d\d-\d\d)/ %>
       <% #upl_date = Date.parse($1).beginning_of_day.strftime('%Y-%m-%dT%T %z') %>
       <% #upl_date = Date.parse($1).strftime('%Y-%m-%dT%T') %>
       <% upl_date = Time.parse($1).in_time_zone("Asia/Tokyo") %>
       <% #upl_date = Date.parse($1).strftime('%Y-%m-%dT%T') %>
       <% #STDERR.puts %!["#{$1}"=>"#{upl_date}"] >< "#{@artist.last_ul_datetime}"! %>
       <% #STDERR.puts %!#{upl_date.class}/#{@artist.last_ul_datetime.class}! %>
-      <% if upl_date > @artist.last_ul_datetime %>
+      <% if @artist.last_ul_datetime and upl_date > @artist.last_ul_datetime %>
         <%= l @artist.last_ul_datetime %>↓<font color='red'>更新あり</font>
         <br />
         <%= form.datetime_field :last_ul_datetime, :value => upl_date %>
@@ -593,14 +599,14 @@
 
   <div>
     <%= form.label :earliest_ul_date, style: "display: block" %>
-    <% if @path_list[-1] =~ /(\d\d-\d\d-\d\d)/ %>
+    <% if @path_list and @path_list[-1] =~ /(\d\d-\d\d-\d\d)/ %>
       <% e_upl_date = Date.parse($1).beginning_of_day.strftime('%Y-%m-%dT%T') %>
       <% #STDERR.puts %![$1=#{$1}|e_upl_date=#{e_upl_date}] >=< @artist.earliest_ul_date=#{@artist.earliest_ul_date}}! %>
       <% #e_upl_date = Date.parse($1).strftime('%Y-%m-%dT%T') %>
-      <% if e_upl_date >= @artist.earliest_ul_date %>
+      <% if @artist.earliest_ul_date and e_upl_date >= @artist.earliest_ul_date %>
         <%= form.datetime_field :earliest_ul_date %>
       <% else %>
-        <%= l @artist.earliest_ul_date %>↓<font color='red'>更新あり</font>
+        <%= l @artist.earliest_ul_date if @artist.earliest_ul_date%>↓<font color='red'>更新あり</font>
         <br />
         <%= form.datetime_field :earliest_ul_date, :value => e_upl_date %>
       <% end %>

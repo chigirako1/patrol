@@ -17,6 +17,7 @@
   <% if pxv_artist %>
     <% if pxv_artwork.artwork_id %>
       <% artwork_info = Pxv::get_artwork_info(pxv_artist.pxvid, pxv_artwork.artwork_id) %>
+      <% STDERR.puts %!*** #{artwork_info}/"#{artwork_info.title}" ***! if artwork_info.presence %>
     <% end %>
 
     <br />
@@ -32,6 +33,8 @@
     <% ratio = '15%' %>
     <%= link_to_ex(image_tag(artwork_path, width: ratio, height: ratio), artwork_path) %>
     <%= artwork_path %>
+  <% else %>
+    <h3>※作品が見つかりませんでした。</h3>
   <% end %>
 
   <div>

@@ -143,6 +143,7 @@ module Pxv
     def self.get_artwork_info(pxv_user_id, pxv_artwork_id)
         artwork_info = nil
         path_list = get_pathlist(pxv_user_id)
+        STDERR.puts %![path_list]:#{path_list.size}(#{pxv_user_id}/#{pxv_artwork_id})!
         path_list.each do |path|
             artwork_id, date_str, artwork_title = get_pxv_artwork_info_from_path(path)
             if get_pxv_art_id(path) == pxv_artwork_id
@@ -158,8 +159,16 @@ module Pxv
 
                     artwork_info = PxvArtworkInfo.new(artwork_id, artwork_title, date, path)
                 end
+            else
+                #STDERR.puts %!*** "#{path}"(#{}) ***!
             end
         end
+
+        if artwork_info == nil
+            msg = %!no hit #{pxv_user_id}/#{pxv_artwork_id}!
+            Rails.logger.warn(msg)
+        end
+
         artwork_info
     end
 
@@ -193,6 +202,10 @@ module Pxv
 
     def self.get_oldest_pxv_artwork_id(pathlist)
         artwork_id = 0
+        unless pathlist
+            return artwork_id
+        end
+
         pathlist.reverse.each do |path|
             artwork_id, _, _ = Pxv::get_pxv_artwork_info_from_path(path)
             if artwork_id != 0
@@ -532,13 +545,13 @@ module Pxv
         end
 
         #STDERR.print %!最終UL日:\t#{pxv.last_ul_datetime.strftime("%Y-%m-%d")} => #{pxv_artist.last_ul_datetime.strftime("%Y-%m-%d")}!
-        if pxv_artist.last_ul_datetime > pxv.last_ul_datetime
+        if (pxv_artist.last_ul_datetime and pxv.last_ul_datetime) and pxv_artist.last_ul_datetime > pxv.last_ul_datetime
             pxv_params[:last_ul_datetime] = pxv_artist.last_ul_datetime
         end
 
         #STDERR.print %!最新DL日:\t#{pxv.last_dl_datetime.strftime("%Y-%m-%d")} => #{pxv_artist.last_dl_datetime.strftime("%Y-%m-%d")}!
         #if pxv_artist.last_dl_datetime > pxv.last_dl_datetime
-        if pxv_artist.last_dl_datetime.round > pxv.last_dl_datetime.round
+        if (pxv_artist.last_dl_datetime and pxv.last_dl_datetime) and pxv_artist.last_dl_datetime.round > pxv.last_dl_datetime.round
             #STDERR.puts %!"#{pxv_artist.last_dl_datetime}"\t"#{pxv.last_dl_datetime}"!
             puts pxv_artist.last_dl_datetime.strftime("%Y-%m-%d %H:%M:%S.%L %z")
             puts pxv.last_dl_datetime.strftime("%Y-%m-%d %H:%M:%S.%L %z")
