@@ -4,7 +4,7 @@
 
 <%= link_to "Return", root_path %>
 
-<h1>Artists [<%= page_title %>]<%= %!(全#{@artists_total_count}件)!%></h1>
+<h1>Artists [<%= page_title %>]<%= %!(#{@artists_total_count}件)!%></h1>
 
 <% if @twt_urls.size > 0 %>
   <a href="#twt_url_list">twt_url_list</a>
@@ -195,7 +195,7 @@
   <h2>author name list</h2>
   <% @authors_list.each do |elem| %>
     <% name = elem[0] %>
-    <% url = Util::google_search_url(name)#%!https://www.google.com/search?q=#{name}! %>
+    <% url = Util::google_search_url(name)
     「<%= link_to_ex name, url %>」<%= ":#{elem[1]}" %><br />
     <ul>
     <% elem[2].each do |x| %>

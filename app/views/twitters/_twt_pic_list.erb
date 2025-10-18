@@ -242,7 +242,7 @@ textarea {
                     <% if tweet.presence %>
                         <% if tweet.status != Tweet::StatusEnum::SAVED %>
                             <% Tweet::update_record(tweet_id, Tweet::StatusEnum::SAVED) %>
-                            【レコード更新】"<%= tweet.status %>"" => "<%= Tweet::StatusEnum::SAVED %>"
+                            【レコード更新】"<%= tweet.status %>" => "<%= Tweet::StatusEnum::SAVED %>"
                         <% else %>
                             "<%= tweet.status %>"
                         <% end %>
@@ -292,6 +292,14 @@ textarea {
                 <% end %>
                 <br />
             <% end %>
+        <% end %>
+        
+        <% tmp_ary = Tweet.get_summary_str(@twitter.twtid) %>
+        <% if tmp_ary.size > 0 %>
+            <h2>db</h2>
+            [<%= tmp_ary.join(",") %>]
+            <br />
+            <%= link_to_ex("tweets db", tweets_path(screen_name: @twitter.twtid)) %>
         <% end %>
     <% end %>
 

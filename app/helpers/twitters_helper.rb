@@ -34,7 +34,18 @@ module TwittersHelper
     end
 
     def twitter_show_page_title(twitter)
-        title = %!【#{twitter.rating}!
+        title = ""
+
+        case twitter.drawing_method
+        when Twitter::DRAWING_METHOD::DM_AI
+            title += "🤖"
+        when Twitter::DRAWING_METHOD::DM_HAND
+            #title += twitter.drawing_method[0]
+            title += "✍️"
+        else
+        end
+
+        title += %!【#{twitter.rating}!
         if twitter.r18 == "R18"
             title += "🔞"
         end
@@ -42,14 +53,18 @@ module TwittersHelper
             title += "🅿️"
         end
         title += %!】!
-        title += %!#{twitter.twtname} @#{twitter.twtid}!
+        title += %!#{twitter.twtname}(@#{twitter.twtid})!
         title
     end
 
     def twitter_show_header_str(twitter)
-        str = %![#{twitter.rating}|#{twitter.r18}] #{twitter.twtname} (@#{twitter.twtid})!
+        #str = %![#{twitter.rating}|#{twitter.r18}] #{twitter.twtname} (@#{twitter.twtid})!
+        str = twitter_show_page_title(twitter)
         if twitter.old_twtid.presence
             str += %!←#{twitter.old_twtid}!
+        end
+        if twitter.new_twtid.presence
+            str += %!→#{twitter.new_twtid}!
         end
         str
     end

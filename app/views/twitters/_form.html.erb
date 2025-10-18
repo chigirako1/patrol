@@ -28,7 +28,7 @@
   <% end %>
 
   <% if @twitter.twtid %>
-    <h3>TWTを開く→<%= link_to_ex %!@#{@twitter.twtid}!, Twt::twt_user_url(@twitter.twtid) %></h3>
+    <h3>TWTを開く→<%= link_to_ex(%!@#{@twitter.twtid}!, Twt::twt_user_media_url(@twitter.twtid)) %></h3>
   <% end %>
 
   <div>
@@ -242,6 +242,7 @@
             ※フォルダなし？
           <% end %>
         <% elsif @twitter.twtname.presence %>
+          <br />
           google検索→
           <% url = Util::google_search_url(@twitter.twtname) %>
           「<%= link_to_ex(@twitter.twtname, url) %>」

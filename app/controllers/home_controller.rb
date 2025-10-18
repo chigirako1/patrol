@@ -25,6 +25,25 @@ class HomeController < ApplicationController
       },
       # =====================================
       { :label => "ai1", :path => "" },
+      { :label => "T|AI|all in 1 84△access pred:55",
+        :path => twitters_path(
+          target: "AI",
+          #page_title: "Twitter [AI] 85△",
+          #rating_lt: 100
+          rating: 84,
+          pred: 55,
+          hide_within_days: 7,
+          num_of_disp: 5,
+          #force_disp_day: 10,
+          mode: TwittersController::ModeEnum::ALL_IN_1,
+          sort_by: TwittersController::SORT_BY::ACCESS,
+          #aio: TwittersController::GRP_SORT::GRP_SORT_ACCESS + "|" + TwittersController::GRP_SORT::GRP_SORT_PRED,
+          #step: -3,
+          #num_of_times: 4,
+          #ex_pxv: false,
+          thumbnail: ""
+        ) 
+      },
       { :label => "T|AI|all in 1 84△pred",
         :path => twitters_path(
           target: "AI",
@@ -55,7 +74,7 @@ class HomeController < ApplicationController
           num_of_disp: 5,
           #force_disp_day: 10,
           mode: TwittersController::ModeEnum::ALL_IN_1,
-          sort_by: TwittersController::SORT_BY::PRED,
+          sort_by: TwittersController::SORT_BY::ACCESS,
           #aio: TwittersController::GRP_SORT::GRP_SORT_ACCESS + "|" + TwittersController::GRP_SORT::GRP_SORT_PRED,
           #step: -3,
           #num_of_times: 4,
@@ -86,7 +105,7 @@ class HomeController < ApplicationController
       { :label => "-", :path => "" },
       { :label => "T/手/all in 1 85",
         :path => twitters_path(
-          target: "手描き",
+          target: Twitter::DRAWING_METHOD::DM_HAND,#"手描き",
           page_title: "twt/手 85 ",
           #rating_lt: 100
           rating: 85,
@@ -567,14 +586,15 @@ class HomeController < ApplicationController
       { :label => "twt(dir-DB更新 BY FS)", :path => artists_twt_index_path(dir: "update") },#, target:"twt") },
       { :label => "tweets(dir-DB更新 BY FS)", :path => tweets_update_recods_index_path() },
       { :label => "-", :path => "" },
-      { :label => "Twitter 未設定 予測数順",
+      { :label => "twt 未設定 予測数順",
         :path => twitters_path(
           page_title: "未設定 id",
           mode: "id",
           sort_by: TwittersController::SORT_BY::PRED,#"pred",
-          no_pxv: true,
+          #no_pxv: true,
           rating: 0,
           hide_within_days: -30,
+          #created_at: 90
           num_of_disp: NUM_OF_DISP,
           pred: 0,
           target: "",
@@ -1227,20 +1247,30 @@ class HomeController < ApplicationController
       # ----------------------------
       { :label => "Tweet", :path => "" },
       { :label => "Tweet", :path => tweets_path },
-      { :label => "Tweet cond",
+      { :label => "Tweet url list",
           :path => tweets_path(
-            page_title: "Tweets",
+            #page_title: "Tweets",
             mode: TweetsController::ModeEnum::URL_LIST,
-            filename: "latest",
-            hide_within_days: 180,
+            filename: "latest 5",
+            hide_within_days: 7,
             rating: 85,
+            target: "AI",
           )
       },
       { :label => "Tweet summary",
           :path => tweets_path(
             #page_title: "Tweets",
             mode: TweetsController::ModeEnum::SUMMARY,
-            filename: "all",
+            #filename: "all",
+            #hide_within_days: 180,
+            #rating: 85,
+          )
+      },
+      { :label => "Tweet url list summary",
+          :path => tweets_path(
+            #page_title: "Tweets",
+            mode: TweetsController::ModeEnum::URL_LIST_SUMMARY,
+            filename: "latest",
             #hide_within_days: 180,
             #rating: 85,
           )

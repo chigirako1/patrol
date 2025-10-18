@@ -318,6 +318,10 @@
   <h2>その他</h2>
 
   <div>
+    最新投稿日(DB):<%= artist.get_datetime_string(artist.last_ul_datetime, true) %>
+    (<%= Util::get_date_info(artist.last_ul_datetime) %>)
+    <br />
+
     <%= form.label :status, style: "display: block" %>
     <%= form.select :status,
       [

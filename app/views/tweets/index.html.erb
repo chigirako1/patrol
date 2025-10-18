@@ -5,6 +5,7 @@
 <h1>Tweets</h1>
 
 <div id="tweets">
+    <!-- ############# -->
     <% if @tweet_cnt_list and @tweet_cnt_list.size > 0 %>
         <h2>@tweet_cnt_list</h2>
         <% @tweet_cnt_list.each.with_index(1) do |e, idx| %>
@@ -21,33 +22,49 @@
                 <% STDERR.puts %!miss:"#{screen_name}"! %>
             <% end %>
 
-            <% tmp_ary = [] %>
-            <%= cnt %>
-            <% @tweet_sum_hash[screen_name].each do |k,v| %>
-                <% tmp_ary << %!#{k}:#{v}(#{ v * 100 / cnt}%)! %>
-            <% end %>
+            全<%= cnt %>件
+            <% tmp_ary = Tweet.summary_str(@tweet_sum_hash, screen_name) %>
             [<%= tmp_ary.join(",") %>]
             <br />
             <%# puts idx %>
         <% end %>
     <% end %>
 
+    <!-- ############# -->
+    <% if @url_list_summary and @url_list_summary.size > 0 %>
+        <h2>@url_list_summary</h2>
+        <% @url_list_summary.each.with_index(1) do |e, idx| %>
+            <% if e.todo_cnt == 0 %>
+                <% next %>
+            <% end %>
+
+            [残<%= e.todo_cnt %>(全<%= e.url_cnt%>)]
+            <% twt = Twitter.find_by_twtid_ignore_case(e.screen_name) %>
+            [<%= link_to_ex("■twt■", twt) %>]
+            <%= twt.twtname %>(@<%= e.screen_name %>)
+            <br />
+        <% end %>
+    <% end %>
+
+    <!-- ############# -->
     <h2>@known_twt_url_list</h2>
     <table border="1" rules="all">
         <tr>
             <th>#</th>
-            <th>pxv</th>
-            <th>pxv</th>
-            <th>pxv</th>
-            <th>pxv</th>
-            <th>pxv</th>
-            <th>pxv</th>
+            <th>name</th>
+            <th>rat</th>
+            <th>link</th>
+            <th>予測</th>
+            <th>stat</th>
+            <th>access</th>
+            <th>ul</th>
+            <th>twt</th>
             <th>cnt</th>
             <th>twtname(twtid)</th>
             <th>status</th>
-            <th>twt</th>
-            <th>b</th>
-            <th>c</th>
+            <th>link</th>
+            <th>予測</th>
+            <th>アクセス</th>
         </tr>
         <% twt_group = Twitter::twt_build_group(@known_twt_url_list) %>
         <% twt_group.each.with_index(1) do |(screen_name, url_list, twt, pxv), idx| %>
@@ -61,8 +78,13 @@
                 <% next %>
             <% end %>
 
-            <% if pxv and pxv.last_access_date_within?(@hide_within_days) %>
+            <% if pxv and pxv.last_access_date_within?(3) %>
                 <% next %>
+            <% elsif pxv and pxv.last_access_date_within?(@hide_within_days) %>
+                <% if Util::get_date_delta(pxv.last_ul_datetime) < 30 %>
+                    <% next %>
+                <% else %>
+                <% end %>
             <% end %>
 
             <% if pxv and pxv.rating and pxv.rating < @rating_gt %>
@@ -77,12 +99,16 @@
                         <%= pxv.pxvname %>
                     </td>
                     <td>
-                        [<%= link_to_ex(%!■pxv■!, pxv) %>]
                         【<%= pxv.feature %>|<%= pxv.rating %>|<%= pxv.r18 %>】
                     </td>
                     <td>
+                        [<%= link_to_ex(%!■pxv■!, pxv) %>]
+                    </td>
+                    <td>
+                        <%= pxv.prediction_up_cnt() %>
+                    </td>
+                    <td>
                         <%= pxv.status %>
-                       
                     </td>
                     <td>
                         <%= pxv.last_access_datetime_disp %>
@@ -102,14 +128,19 @@
                     </td>
                     <td>
                     </td>
+                    <td>
+                    </td>
+                    <td>
+                    </td>
                 <% end %>
                 <td>
                     <%= twt.status %>
                 </td>
                 <td>
-                    <%= url_list.size %>[<%= Tweet.hoge(url_list) %>]
+                    <%= url_list.size %>[<%= Tweet.check_registered_record(url_list) %>]
                 </td>
                 <td>
+                    <%= twt.drawing_method %>
                     <%= twt.twtname %>(@<%= screen_name %>)
                 </td>
                 <td>
@@ -119,19 +150,21 @@
                     [<%= link_to_ex("■twt■", twt) %>]
                 </td>
                 <td>
-                    <%= twt.last_access_datetime_disp %>
+                    <%= twt.prediction %>
                 </td>
                 <td>
-                    
+                    <%= twt.last_access_datetime_disp %>
                 </td>
             </tr>
         <% end %>
     </table>
 
-    <h2>@unknown_twt_url_list</h2>
-    <% @unknown_twt_url_list.each.with_index(1) do |(key, url_list), idx| %>
-        <% break %>
-        <%= key %><%= url_list.size %><br />
+    <% if @unknown_twt_url_list and @unknown_twt_url_list.size > 0 %>
+        <h2>@unknown_twt_url_list</h2>
+        <% @unknown_twt_url_list.each.with_index(1) do |(key, url_list), idx| %>
+            <%# break %>
+            <%= key %><%= url_list.size %><br />
+        <% end %>
     <% end %>
 
     <% @tweets.each do |tweet| %>

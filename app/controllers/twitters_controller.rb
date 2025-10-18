@@ -70,6 +70,14 @@ class TwittersController < ApplicationController
     end
     puts %!force_disp_day="#{force_disp_day}"!
 
+    if params[:created_at].presence
+      created_at = params[:created_at].to_i
+    else
+      created_at = 0
+    end
+    puts %!created_at="#{created_at}"!
+    
+
     if params[:rating] == ""
       rating_gt = 0
     else
@@ -125,8 +133,8 @@ class TwittersController < ApplicationController
       match_method = Twitter::MATCH_METHOD::AUTO unless match_method
       
       col, word = Twitter.looks(target_col, params[:search_word], match_method)
-      p col
-      p word
+      #p col
+      #p word
       twitters = Twitter.joins(
         sql_query
       ).select("artists.id AS artist_id,
@@ -136,7 +144,12 @@ class TwittersController < ApplicationController
             artists.status AS artist_status,
             artists.rating AS artist_rating,
             artists.last_access_datetime AS artists_last_access_datetime,
-            artists.*, twitters.*").where(col, word)
+            artists.*, twitters.*")
+      if col
+        twitters = twitters.where(col, word)
+      else
+        twitters = twitters.where(word)
+      end
       #puts twitters.size
       #if 
       #twitters = twitters.where(col, word)
@@ -156,6 +169,13 @@ class TwittersController < ApplicationController
 
     if no_pxv
       twitters = twitters.select {|x| !(x.pxvid.presence) and x.artist_pxvid == nil or x.artist_status == "長期更新なし" or x.artist_status == "半年以上更新なし"}
+    end
+
+    if created_at != 0
+      twitters = twitters.select {|x|
+          delta = Util::get_date_delta(x.created_at);
+          delta <= created_at
+        }
     end
 
     case mode
@@ -805,7 +825,7 @@ class TwittersController < ApplicationController
         twitters_wk = twitters
 
         if pred_cond_gt > 0
-          twitters_wk = twitters_wk.select {|x| x.prediction >= pred_cond_gt}
+          #twitters_wk = twitters_wk.select {|x| x.prediction >= pred_cond_gt}
         end
 
         twitters_wk = twitters_wk.select {|x| x.status == Twitter::TWT_STATUS::STATUS_PATROL}

@@ -12,9 +12,9 @@
 <% if twitters_total_count < 0 %>
   <% page_title = "#{params[:page_title]} - TWT一覧" %>
 <% elsif @twitters_total_count %>
-  <% page_title = "#{params[:page_title]} (全#{@twitters_total_count}件) - TWT一覧" %>
+  <% page_title = "#{params[:page_title]} (#{@twitters_total_count}件) - TWT一覧" %>
 <% else %>
-  <% page_title = "#{params[:page_title]} (全#{twitters_total_count}件#{rem_str}) - TWT一覧 a" %>
+  <% page_title = "#{params[:page_title]} (#{twitters_total_count}件#{rem_str}) - TWT一覧 a" %>
 <% end %>
 
 <% provide(:title, page_title) %>
@@ -315,6 +315,9 @@ button.horizontal {
     <br />
     <%= f.label :強制表示日数 %>
     <%= f.number_field :force_disp_day, :value => params[:force_disp_day] %>
+    <br />
+    <%= f.label :DB登録日 %>
+    <%= f.number_field :created_at, :value => params[:created_at] %>日以内にDB登録されたレコード
     <br />
     <%= f.label :予測 %>
     <%= f.number_field :pred, :value => params[:pred] %>以上

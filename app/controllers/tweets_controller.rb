@@ -4,6 +4,7 @@ class TweetsController < ApplicationController
   module ModeEnum
     SUMMARY = 'summary'
     URL_LIST = 'urllist'
+    URL_LIST_SUMMARY = 'urllist_summary'
   end
 
   # GET /tweets or /tweets.json
@@ -31,24 +32,14 @@ class TweetsController < ApplicationController
     mode = params[:mode].presence
     case mode
     when ModeEnum::SUMMARY
-      @tweet_sum_hash = {}
-      @tweet_cnt_list = Tweet.group("screen_name").count.sort_by {|x| x[1]}.reverse
-
-      @tweet_cnt_list.each do |e|
-        screen_name = e[0]
-        t = Tweet.where(screen_name: screen_name)
-        a = t.group(:status).count
-        @tweet_sum_hash[screen_name] = a
-      end
-    when ModeEnum::URL_LIST
-      filename = "all"
-      filename = "target2507"
+      @tweet_cnt_list, @tweet_sum_hash = Tweet.summary
+    when ModeEnum::URL_LIST_SUMMARY
       filename = params[:filename]
-      path = UrlTxtReader::get_path(filename)
-      _, twt_url_infos, _ = UrlTxtReader::get_url_txt_info(path)
-      pxv_chk = false
-      @known_twt_url_list, @unknown_twt_url_list, _ = Twitter::twt_user_classify(twt_url_infos, pxv_chk)
-      #@twt_url_infos = twt_url_infos
+      known_twt_url_list, _ = url_list(filename)
+      @url_list_summary = Tweet::url_list_summary(known_twt_url_list)
+    when ModeEnum::URL_LIST
+      filename = params[:filename]
+      @known_twt_url_list, @unknown_twt_url_list = url_list(filename)
     else
       if params[:screen_name].presence
         scrn_name = params[:screen_name]
@@ -128,5 +119,16 @@ class TweetsController < ApplicationController
     # Only allow a list of trusted parameters through.
     def tweet_params
       params.require(:tweet).permit(:tweet_id, :screen_name, :status, :rating, :num)
+    end
+
+    def url_list(filename)
+      #filename = "all"
+      #filename = "target2507"
+      path = UrlTxtReader::get_path(filename)
+      _, twt_url_infos, _ = UrlTxtReader::get_url_txt_info(path)
+      pxv_chk = false
+      known_twt_url_list, unknown_twt_url_list, _ = Twitter::twt_user_classify(twt_url_infos, pxv_chk)
+      #STDERR.puts %!#{path}/#{twt_url_infos.size}/#{known_twt_url_list.size}!
+      [known_twt_url_list, unknown_twt_url_list]
     end
 end

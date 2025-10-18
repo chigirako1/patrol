@@ -807,7 +807,8 @@
 <% if @misc_urls and @misc_urls.size != 0 %>
     <h2>misc url list(<%= @misc_urls.size %>)</h2>
     <% @misc_urls.sort.uniq.each do |url| %>
-        <% if url =~ %r!https://www.pixiv.net/artworks/(\d+)! %>
+        <%# if url =~ %r!https://www.pixiv.net/artworks/(\d+)! %>
+        <% if url =~ %r!#{Pxv::PXV_HTTP_ARTWORKS_BASE}/(\d+)! %>
             <% artwork_id = $1.to_i %>
             <%= link_to_ex url, url %>(<%= $1 %>)
             <% pa = PxvArtwork.find_by(artwork_id: artwork_id) %>

@@ -57,7 +57,7 @@ class Tweet < ApplicationRecord
         end
     end
 
-    def self.hoge(url_list)
+    def self.check_registered_record(url_list)
         exsit = 0
 
         url_list.each do |x|
@@ -68,5 +68,61 @@ class Tweet < ApplicationRecord
             end
         end
         exsit
+    end
+
+    def self.summary()
+        tweet_cnt_list = Tweet.group("screen_name").count.sort_by {|x| x[1]}.reverse
+
+        tweet_sum_hash = {}
+        tweet_cnt_list.each do |e|
+            screen_name = e[0]
+            t = Tweet.where(screen_name: screen_name)
+            a = t.group(:status).count
+            tweet_sum_hash[screen_name] = a
+        end
+        [tweet_cnt_list, tweet_sum_hash]
+    end
+
+    def self.url_list_summary(known_twt_url_list)
+        url_List_Summary = Struct.new(:screen_name, :url_cnt, :todo_cnt)
+
+        url_list_summary = []
+        known_twt_url_list.each do |key, url_list|
+            exist_cnt = check_registered_record(url_list)
+            url_list_summary << url_List_Summary.new(key, url_list.size, url_list.size - exist_cnt)
+            #STDERR.puts %!"@#{key}":#{}!
+        end
+        url_list_summary.sort_by {|x| [x.todo_cnt, x.url_cnt, x.screen_name]}.reverse
+    end
+
+    def self.summary_str(tweet_sum_hash, screen_name)
+        tmp_ary = []
+        hash = tweet_sum_hash[screen_name]
+        unless hash
+            return tmp_ary
+        end
+
+        cnt = hash.sum {|k,v| v}
+        hash.each do |k,v|
+            tmp_ary << %!#{k}:#{v}(#{ v * 100 / cnt}%)!
+        end
+        tmp_ary
+    end
+
+    def self.get_summary_str(screen_name)
+        tmp_ary = []
+
+        t = Tweet.where(screen_name: screen_name)
+        hash = t.group(:status).count
+
+        cnt = hash.sum {|k,v| v}
+        hash.each do |k,v|
+            tmp_ary << %!#{k}:#{v}(#{ v * 100 / cnt}%)!
+        end
+        tmp_ary
+    end
+    
+    def self.summary_cnt(tweet_sum_hash, screen_name, status)
+        tweet_sum_hash[screen_name][status]
     end
 end

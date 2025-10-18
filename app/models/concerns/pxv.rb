@@ -23,12 +23,16 @@ module Pxv
     ARCHIVE_PATH = "D:/r18/dlPic"
     PXV_TMP_PATH = "D:/data/src/ror/myapp/public"
 
-    def self.pxv_user_url(pxvid)
-        %!https://www.pixiv.net/users/#{pxvid}!
+    PXV_DOMANIN_NAME = "www.pixiv.net"
+    PXV_HTTP_BASE = %!https://#{PXV_DOMANIN_NAME}!
+    PXV_HTTP_ARTWORKS_BASE = %!#{PXV_HTTP_BASE}/artworks!
+
+    def self.pxv_user_url(pxv_user_id)
+        %!#{PXV_HTTP_BASE}/users/#{pxv_user_id}!
     end
 
     def self.pxv_artwork_url(artwork_id)
-        %!https://www.pixiv.net/artworks/#{artwork_id}!
+        %!#{PXV_HTTP_ARTWORKS_BASE}/#{artwork_id}!
     end
 
     def self.get_path_from_dirlist(pxvid)
@@ -270,8 +274,6 @@ module Pxv
             artwork_title = "(*不明*)"
         # 22-08-05 100x3x4x5_p0.png
         elsif artwork_str =~ /(\d\d-\d\d-\d\d)\s+.*(\d{8,9})_p\d/
-            #https://www.pixiv.net/artworks/8235311x
-            #                               8083357x
             date_str = $1
             artwork_id = $2.to_i
             artwork_title = "(*不明*)"

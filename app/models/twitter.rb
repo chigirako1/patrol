@@ -31,6 +31,7 @@ class Twitter < ApplicationRecord
         AUTO = "(自動判断)"
         TWT_TWTID = "twitter_twtid"
         TWT_TWTNAME = "twtname"
+        TWT_ID_AND_NAME = "(both)"
     end
 
     module MATCH_METHOD
@@ -68,7 +69,8 @@ class Twitter < ApplicationRecord
 
         if target_col == SEARCH_TARGET::AUTO
             if search_word =~ /^\w+$/
-                target_col = SEARCH_TARGET::TWT_TWTID
+                #target_col = SEARCH_TARGET::TWT_TWTID
+                target_col = SEARCH_TARGET::TWT_ID_AND_NAME
             elsif search_word =~ /@(\w+)/
                 target_col = SEARCH_TARGET::TWT_TWTID
                 search_word = $1
@@ -106,11 +108,16 @@ class Twitter < ApplicationRecord
         else
             search_word_p = search_word
         end
-        col = "#{target_col} LIKE?"
-        puts %!対象="#{col}"\t検索ワード="#{search_word_p}"!
-        [col, search_word_p]
 
-        #[%!#{SEARCH_TARGET::TWT_TWTID} LIKE? OR #{SEARCH_TARGET::TWT_TWTNAME} LIKE?!, [search_word, search_word]]
+        if target_col != SEARCH_TARGET::TWT_ID_AND_NAME
+            col = "#{target_col} LIKE?"
+            puts %!対象="#{col}"\t検索ワード="#{search_word_p}"!
+            [col, search_word_p]
+        else
+            col = nil
+            where_phrase = %!#{SEARCH_TARGET::TWT_TWTID} LIKE "#{search_word_p}" OR #{SEARCH_TARGET::TWT_TWTNAME} LIKE "#{search_word_p}"!
+            [col, where_phrase]
+        end
     end
 
     def self.all_twt_id_list()
@@ -225,11 +232,14 @@ class Twitter < ApplicationRecord
             #pxv_e = [pxv.status||"", pxv.last_access_datetime||""] if pxv;
             pxv_e = [pxv.status||"", -(pxv.rating||0)] if pxv;
             pxv_status = pxv.status if pxv;
+            pxv_feature = pxv.feature if pxv;
 
             [
                 pxv_exist,
+                pxv_feature,
                 pxv_status||"",
                 pxv_e,
+                twt.drawing_method||"",
                 twt.status||"",
                 -url_list.size,
                 -(twt.rating || 0),
@@ -344,7 +354,7 @@ class Twitter < ApplicationRecord
     end
 
     COND_DATA_HD = [
-        #r, [pred, day, intvl]
+        #r, [pred, max, min-intvl]
         [95, [10,  40, 10]],
         [90, [10,  60, 20]],
         [85, [20,  90, 30]],
@@ -353,7 +363,7 @@ class Twitter < ApplicationRecord
         [ 0, [60, 180,100]],
     ]
     COND_DATA_AI = [
-        #r, [pred, day, intvl]
+        #r, [pred, max, min]
         [99, [30, 10, 1]],
         [98, [35, 15, 2]],
         [95, [40, 20, 3]],
@@ -366,6 +376,7 @@ class Twitter < ApplicationRecord
         [87, [60, 30, 7]],
         [85, [65, 35, 10]],
         #------------
+        [84, [70, 40, 14]],
         [83, [75, 45, 15]],
         [82, [80, 50, 20]],
         [80, [90, 60, 20]],
@@ -393,27 +404,31 @@ class Twitter < ApplicationRecord
             rat = x[0]
             if rating >= rat
                 pred = x[1][0]
-                days = x[1][1]
+                max_intvl = x[1][1]
                 min_intvl = x[1][2]
                 elapsed = last_access_datetime_days_elapsed
 
+                # インターバル
                 if min_intvl > elapsed
                     STDERR.puts %!#{rating}:"#{twtname}(@#{twtid})":#{min_intvl} > #{elapsed}!
                     return false
                 end
 
+                if elapsed > max_intvl
+                    #STDERR.puts %!#{rating}:"#{twtname}(@#{twtid})":#{prediction}/#{elapsed}|#{pred}/#{max_intvl}!
+                    return true
+                end
+
                 if pred_cond_gt > 0 and prediction < pred_cond_gt
+                    STDERR.puts %!#{rating}:"#{twtname}(@#{twtid})":#{prediction}/#{elapsed}|#{pred}/#{max_intvl}!
+                    return false
                 end
 
                 if prediction > pred
-                    #STDERR.puts %!#{rating}:"#{twtname}(@#{twtid})":#{prediction}/#{last_access_datetime_days_elapsed}|#{pred}/#{days}!
+                    #STDERR.puts %!#{rating}:"#{twtname}(@#{twtid})":#{prediction}/#{elapsed}|#{pred}/#{max_intvl}!
                     return true
                 end
 
-                if elapsed > days
-                    #STDERR.puts %!#{rating}:"#{twtname}(@#{twtid})":#{prediction}/#{last_access_datetime_days_elapsed}|#{pred}/#{days}!
-                    return true
-                end
             end
         end
         false

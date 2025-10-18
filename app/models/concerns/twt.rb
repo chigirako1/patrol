@@ -14,6 +14,11 @@ module Twt
     TWT_DOMAIN_NAME_ELON = %!x.com!
     TWT_DOMAIN_NAME = TWT_DOMAIN_NAME_ELON
 
+    TWT_HTTP_URL = %!https://#{TWT_DOMAIN_NAME}!
+
+    TWT_USER_DEV = "TwitterDev"
+
+    TWT_RGX_URL_BASE = 
     TWT_RGX_URL = %r!https?://(?:x|twitter)\.com/\w+/status/(\d+)!
 
     TMP_DIR_PATH = "public/d_dl/"
@@ -195,16 +200,20 @@ module Twt
         return list.include? twtid.downcase
     end
 
-    def self.twt_user_url(twtid)
-        %!https://x.com/#{twtid}!
+    def self.twt_user_url(screen_name)
+        %!#{TWT_HTTP_URL}/#{screen_name}!
+    end
+
+    def self.twt_user_media_url(screen_name)
+        %!#{TWT_HTTP_URL}/#{screen_name}/media!
     end
 
     def self.twt_tweet_url(screen_name, tweet_id)
-        %!https://x.com/#{screen_name}/status/#{tweet_id}!
+        %!#{TWT_HTTP_URL}/#{screen_name}/status/#{tweet_id}!
     end
 
     def self.twt_tweet_url_dev(tweet_id)
-        twt_tweet_url("TwitterDev", tweet_id)
+        twt_tweet_url(TWT_USER_DEV, tweet_id)
     end
 
     def self.get_tweet_id_from_url(url)

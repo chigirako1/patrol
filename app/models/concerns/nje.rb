@@ -1,5 +1,8 @@
 # coding: utf-8
 
+#------------------------------------------------------------------------------
+# :
+#------------------------------------------------------------------------------
 module Nje
     extend ActiveSupport::Concern
     #include Util
@@ -51,15 +54,21 @@ module Nje
         user
     end
 
+    NJE_DOMAIN_NAME = "nijie.info"
+    NJE_HTTP_BASE = "https://#{NJE_DOMAIN_NAME}"
+
     def self.nje_member_url(nje_id)
-        %!https://nijie.info/members.php?id=#{nje_id}!
+        %!#{NJE_HTTP_BASE}/members.php?id=#{nje_id}!
     end
 
     def self.nje_artwork_url(art_id)
-        %!https://nijie.info/view.php?id=#{art_id}!
+        %!#{NJE_HTTP_BASE}/view.php?id=#{art_id}!
     end
 end
 
+#------------------------------------------------------------------------------
+# class:
+#------------------------------------------------------------------------------
 class NjeArtist
     attr_accessor :nje_id, :nje_name, :path_list, :artwork_list
 
@@ -141,6 +150,9 @@ class NjeArtist
     end
 end
 
+#------------------------------------------------------------------------------
+# class:
+#------------------------------------------------------------------------------
 class NjeArtwork
     attr_accessor :art_id, :date, :title, :path_list
 
