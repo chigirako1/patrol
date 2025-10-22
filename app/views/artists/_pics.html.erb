@@ -34,9 +34,6 @@
     <% pub_date = Date.parse($1) %>
   <% end %>
 
-  【DB】
-  ファイル数:<%= artist.filenum %>(<%= artist.recent_filenum %>)
-  <hr />
     
   <% if pub_date %>
     最新投稿日(FS):
@@ -102,11 +99,22 @@
       yy
     <% end %>
   <% end %>
+  
+  <% if artist.earliest_ul_date.presence %>
+    最初期投稿日(DB):<%= artist.get_datetime_string(artist.earliest_ul_date, true) %>
+    (<%= artist.get_date_info(artist.earliest_ul_date) %>)
+    <br />
+  <% end %>
+
+  <hr />
+  【DB】
+  ファイル数:<%= artist.filenum %>(<%= artist.recent_filenum %>)
+  <br />
 
   <% file_num = 0 %>
   <% if list.presence %>
     <% file_num = Artist.artwork_list_file_num(list) %>
-    読み込みファイル数=<%= file_num %> (平均<%= (file_num.to_f / list.size.to_f).round(2) %>枚)
+    【FS】読み込みファイル数=<%= file_num %> (平均<%= (file_num.to_f / list.size.to_f).round(2) %>枚)
     <br />
     <% recent_filenum = Artist.artwork_list_recent_file_num(list) %>
     <% if @artist.recent_filenum %>
@@ -120,14 +128,7 @@
     <% end %>
   <% end %>
 
-  <% if artist.earliest_ul_date.presence %>
-    最初期投稿日(DB):<%= artist.get_datetime_string(artist.earliest_ul_date, true) %>
-    (<%= artist.get_date_info(artist.earliest_ul_date) %>)
-    <br />
-  <% end %>
-
   <% if eq_symbol %>
-    <hr />
     【最近のファイル数】計算:<%= recent_filenum %><%= eq_symbol %>DB:<%= @artist.recent_filenum %>
   <% end %>
 

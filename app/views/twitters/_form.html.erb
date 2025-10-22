@@ -63,6 +63,7 @@
     <input type="button" value="-5" onclick="plus_rate('rating', -5);" class="btn_s" />
     <input type="button" value="-1" onclick="plus_rate('rating', -1);" class="btn_s" />
     <br />
+    <input type="button" value="90" onclick="set_rate('rating', 90);" class="btn_s" />
     <input type="button" value="85" onclick="set_rate('rating', 85);" class="btn_s" />
     <input type="button" value="80" onclick="set_rate('rating', 80);" class="btn_s" />
     <input type="button" value="75" onclick="set_rate('rating', 75);" class="btn_s" />
@@ -72,7 +73,11 @@
     <%= form.label "更新頻度(100日間での投稿数)", style: "display: block" %>
     <%= form.number_field :update_frequency %>
     <input type="button" value="/2" onclick="div_val('update_frequency', 2);" class="btn_s" />
+    <input type="button" value="*2" onclick="multiple_val('update_frequency', 2);" class="btn_s" />
+    <input type="button" value="+100" onclick="plus_rate('update_frequency', 100);" class="btn_s" />
+    <input type="button" value="+10" onclick="plus_rate('update_frequency', 10);" class="btn_s" />
     <input type="button" value="-100" onclick="plus_rate('update_frequency', -100);" class="btn_s" />
+    <input type="button" value="-10" onclick="plus_rate('update_frequency', -10);" class="btn_s" />
   </div>
 
   <div>
@@ -478,6 +483,12 @@
     let elem = document.getElementById("twitter_" + elem_id);
     let prio_val = parseInt(elem.value);
     elem.value = prio_val + point;
+  }
+
+  function multiple_val(elem_id, val) {
+    let elem = document.getElementById("twitter_" + elem_id);
+    let prio_val = parseInt(elem.value);
+    elem.value = prio_val * val;
   }
 
   function div_val(elem_id, val) {

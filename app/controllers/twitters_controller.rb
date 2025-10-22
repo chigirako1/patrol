@@ -5,6 +5,7 @@ class TwittersController < ApplicationController
     UNASSOCIATED_TWT_ACNT = '未紐づけTWTアカウント' #PXV DBにはTWT IDが登録されているがTWT DBにはPXV IDが登録されていない
     ALL_IN_ONE = 'all in one'
     ALL_IN_1 = 'all in 1'
+    FILE = 'file'
     URL_TXT = 'url txt'
     PATROL = 'patrol'
     STATS = 'stats'
@@ -167,10 +168,6 @@ class TwittersController < ApplicationController
             artists.*, twitters.*")
     end
 
-    if no_pxv
-      twitters = twitters.select {|x| !(x.pxvid.presence) and x.artist_pxvid == nil or x.artist_status == "長期更新なし" or x.artist_status == "半年以上更新なし"}
-    end
-
     if created_at != 0
       twitters = twitters.select {|x|
           delta = Util::get_date_delta(x.created_at);
@@ -178,23 +175,37 @@ class TwittersController < ApplicationController
         }
     end
 
+    twitters_bak = twitters
+    if no_pxv
+      twitters = twitters.select {|x|
+        !(x.pxvid.presence) and
+        (x.artist_pxvid == nil or x.artist_status == "長期更新なし" or x.artist_status == "半年以上更新なし")
+      }
+    end
+
     case mode
     when TwittersController::ModeEnum::UNASSOCIATED_TWT_ACNT
       unassociated_twt_screen_names = Twitter::unassociated_twt_screen_names()
       twitters = twitters.select {|x| unassociated_twt_screen_names.include?(x.twtid)}
       @twitters_group = {}
-      @twitters_group[""] = twitters
-      return
-    when TwittersController::ModeEnum::URL_TXT
+      @twitters_group[mode] = twitters
       return
     when TwittersController::ModeEnum::ALL_IN_1
 
+      group_list = []
       tmp = twitters
       group = index_all_in_1(tmp, params, rating_gt, pred_cond_gt)
-      @twitters_group = group
+      group_list << group
+
+      group = index_unset(twitters_bak, 30)
+      group_list << group
+
+      @twitters_group = group_list[0].merge(*group_list)
+      #@twitters_group = group
       @twitters_total_count = @twitters_group.sum {|k,v| v.count}
 
-      if true
+      do_puts = false
+      if do_puts
         @twitters_group.each do |k,v|
           v.each do |x|
             puts %!#{x.twtname}(@#{x.twtid})!
@@ -618,7 +629,8 @@ class TwittersController < ApplicationController
       twitters = twitters.sort_by {|x| [-(x.artist_pxvid || 0), x.last_access_datetime, (x.last_ul_datetime || "2000-01-01")]}.reverse
       @twitters_group = twitters.group_by {|x| x.status}
       return
-    when "file"
+    #when TwittersController::ModeEnum::URL_TXT #"file"と一緒？
+    when TwittersController::ModeEnum::FILE
       twitters = twitters.select {|x| !x.last_access_datetime_p(@hide_within_days)}
       if rating_gt != 0
         twitters = twitters.select {|x| x.rating == nil or x.rating == 0 or x.rating >= rating_gt }
@@ -664,8 +676,8 @@ class TwittersController < ApplicationController
     when "all"
       twitters = twitters.sort_by {|x| [-x.prediction, x.last_access_datetime, (x.last_post_datetime || "2000-01-01")]}
     when TwittersController::ModeEnum::SEARCH
-      @twitters_group = twitters.group_by {|x| x.rating}
-      @twitters_total_count = twitters.size
+      #@twitters_group = twitters.group_by {|x| x.rating}
+      #@twitters_total_count = 
     else
       #twitters = twitters.select {|x| x.last_dl_datetime.year >= 2023}
       #twitters = twitters.select {|x| x.last_dl_datetime.month >= 11}
@@ -861,6 +873,24 @@ class TwittersController < ApplicationController
       end
 
       twitters_group
+    end
+
+    def index_unset(twitters, nday)
+      twitters_w = twitters
+      if true
+        twitters_w = twitters_w.select {|x| x.rating == nil or x.rating == 0}
+        #twitters_w = twitters_w.select {|x| !x.last_access_datetime_p(-nday)}
+        twitters_w = twitters_w.select {|x| Util::get_date_delta(x.created_at) <= nday}
+        twitters_w = twitters_w.select {|x| x.status == nil}
+        twitters_w = twitters_w.sort_by {|x| [-x.prediction, x.last_access_datetime]}
+
+        group = {}
+        group["未設定 最近登録(#{nday}d) 予測順"] = twitters_w
+
+        twitters_w = twitters_w.sort_by {|x| [-(x.filenum||0), x.last_access_datetime]}
+        group["未設定 最近登録(#{nday}d) ファイル数順"] = twitters_w
+      end
+      group
     end
 
     def index_all_in_one(twitters, params, rating_gt, rating_lt, target_hash)

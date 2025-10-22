@@ -9,6 +9,7 @@ class HomeController < ApplicationController
     lat_no = 5
     @menus = [
       # =====================================
+      { :label => "std", :path => "" },
       { :label => "pxv",
         :path => artists_path
       },
@@ -25,25 +26,6 @@ class HomeController < ApplicationController
       },
       # =====================================
       { :label => "ai1", :path => "" },
-      { :label => "T|AI|all in 1 84△access pred:55",
-        :path => twitters_path(
-          target: "AI",
-          #page_title: "Twitter [AI] 85△",
-          #rating_lt: 100
-          rating: 84,
-          pred: 55,
-          hide_within_days: 7,
-          num_of_disp: 5,
-          #force_disp_day: 10,
-          mode: TwittersController::ModeEnum::ALL_IN_1,
-          sort_by: TwittersController::SORT_BY::ACCESS,
-          #aio: TwittersController::GRP_SORT::GRP_SORT_ACCESS + "|" + TwittersController::GRP_SORT::GRP_SORT_PRED,
-          #step: -3,
-          #num_of_times: 4,
-          #ex_pxv: false,
-          thumbnail: ""
-        ) 
-      },
       { :label => "T|AI|all in 1 84△pred",
         :path => twitters_path(
           target: "AI",
@@ -56,6 +38,25 @@ class HomeController < ApplicationController
           #force_disp_day: 10,
           mode: TwittersController::ModeEnum::ALL_IN_1,
           sort_by: TwittersController::SORT_BY::PRED,
+          #aio: TwittersController::GRP_SORT::GRP_SORT_ACCESS + "|" + TwittersController::GRP_SORT::GRP_SORT_PRED,
+          #step: -3,
+          #num_of_times: 4,
+          #ex_pxv: false,
+          thumbnail: ""
+        ) 
+      },
+      { :label => "T|AI|all in 1 84△access pred:55",
+        :path => twitters_path(
+          target: "AI",
+          #page_title: "Twitter [AI] 85△",
+          #rating_lt: 100
+          rating: 84,
+          pred: 55,
+          hide_within_days: 5,#7,
+          num_of_disp: 5,
+          #force_disp_day: 10,
+          mode: TwittersController::ModeEnum::ALL_IN_1,
+          sort_by: TwittersController::SORT_BY::ACCESS,
           #aio: TwittersController::GRP_SORT::GRP_SORT_ACCESS + "|" + TwittersController::GRP_SORT::GRP_SORT_PRED,
           #step: -3,
           #num_of_times: 4,
@@ -179,6 +180,108 @@ class HomeController < ApplicationController
             thumbnail: false,
           )
       },
+      { :label => "-", :path => "" },
+      { :label => "Twitter url list",
+          :path => twitters_path(
+            #page_title: "url list 80",
+            mode: "file",
+            filename: "all",
+            rating: 85,
+            hide_within_days: 60,
+            num_of_disp: 3,
+            #pred: 4,
+            no_pxv: true,
+            #thumbnail: "t"
+          )
+      },
+      { :label => "pxv url list (all)",
+          :path => artists_path(
+            page_title: "pxv url list (all)",
+            file: ArtistsController::MethodEnum::URL_LIST,
+            sort_by: "予測▽", 
+            group_by: ArtistsController::GROUP_TYPE::GROUP_STAT_RAT_R18,
+            #exclude_ai: "true",
+            #status: "「長期更新なし」を除外",
+            #point: 1, 
+            prediction: 5,
+            #recent_filenum: 5,
+            rating: 86,
+            last_access_datetime: 30,
+            force_disp_day: 150,
+            display_number: 11,
+            #year: 2023,
+            thumbnail: false
+          )
+      },
+      { :label => "pxv url list txt(latest)",
+          :path => artists_path(
+            page_title: "pxv url list txt", 
+            file: ArtistsController::MethodEnum::URL_LIST,
+            filename: "latest",
+            sort_by: "予測▽", 
+            group_by: ArtistsController::GROUP_TYPE::GROUP_FEAT_STAT_RAT,
+            #exclude_ai: "true",
+            #status: "「長期更新なし」を除外",
+            #point: 1, 
+            prediction: 11,
+            #recent_filenum: 5,
+            rating: 85,
+            last_access_datetime: 30,
+            force_disp_day: 90,
+            display_number: 11,
+            #year: 2023,
+            thumbnail: false
+          )
+      },
+      # =====================================
+      { :label => "DB更新", :path => "" },
+      # ----------------------------
+      { :label => "pxv (dir-DB更新 BY FS)",
+          :path => artists_path(
+            page_title: "pxv (dir-DB更新 BY FS)", 
+            file: ArtistsController::MethodEnum::TABLE_UPDATE_NEW_USER,
+            display_number: 11
+          )
+      },
+      { :label => "-", :path => "" },
+      { :label => "twt(dir-DB更新 BY FS)", :path => artists_twt_index_path(dir: "update") },#, target:"twt") },
+      { :label => "tweets(dir-DB更新 BY FS)", :path => tweets_update_recods_index_path() },
+      { :label => "-", :path => "" },
+      { :label => "twt 未設定 予測数順",
+        :path => twitters_path(
+          page_title: "未設定 id",
+          mode: "id",
+          sort_by: TwittersController::SORT_BY::PRED,#"pred",
+          #no_pxv: true,
+          rating: 0,
+          #hide_within_days: -30,
+          created_at: 90,
+          num_of_disp: NUM_OF_DISP,
+          pred: 0,
+          target: "",
+          thumbnail: "t"
+        )
+      },
+      { :label => "pxv 未設定 更新数[多]予測",
+          :path => artists_path(
+            page_title: "pxv 未設定 更新数[多]予測", 
+            #sort_by: "id",
+            sort_by: "予測▽",
+            #group_by: "",
+            #exclude_ai: "true",
+            #status: "「長期更新なし」を除外",
+            #point: 1, 
+            prediction: 0, 
+            #recent_filenum: 5,
+            rating: 0, 
+            #last_access_datetime: -100,#7,
+            created_at: 90,
+            display_number: 7,
+            #year: 2023, 
+            thumbnail: true
+          )
+      },
+
       # =====================================
       { :label => "unified t [ai]", :path => "" },
       { :label => "Twitter [AI] 90 (1回)[5]",
@@ -385,20 +488,6 @@ class HomeController < ApplicationController
       },
       # ----------------------------
       { :label => "-", :path => "" },
-      { :label => "-", :path => "" },
-      { :label => "Twitter url list",
-          :path => twitters_path(
-            #page_title: "url list 80",
-            mode: "file",
-            filename: "all",
-            rating: 85,
-            hide_within_days: 60,
-            num_of_disp: 3,
-            #pred: 4,
-            no_pxv: true,
-            #thumbnail: "t"
-          )
-      },
       # ----------------------------
       { :label => "unified p [ai]", :path => "" },
       { :label => "🅿️ [AI] 90 (-1ずつ5回)[2個]アクセス順のみ",
@@ -534,93 +623,6 @@ class HomeController < ApplicationController
       { :label => "-", :path => "" },
       # ----------------------------
       { :label => "-", :path => "" },
-      { :label => "pxv url list (all)",
-          :path => artists_path(
-            page_title: "pxv url list (all)",
-            file: ArtistsController::MethodEnum::URL_LIST,
-            sort_by: "予測▽", 
-            group_by: ArtistsController::GROUP_TYPE::GROUP_STAT_RAT_R18,
-            #exclude_ai: "true",
-            #status: "「長期更新なし」を除外",
-            #point: 1, 
-            prediction: 5,
-            #recent_filenum: 5,
-            rating: 86,
-            last_access_datetime: 30,
-            force_disp_day: 150,
-            display_number: 11,
-            #year: 2023,
-            thumbnail: false
-          )
-      },
-      { :label => "pxv url list txt(latest)",
-          :path => artists_path(
-            page_title: "pxv url list txt", 
-            file: ArtistsController::MethodEnum::URL_LIST,
-            filename: "latest",
-            sort_by: "予測▽", 
-            group_by: ArtistsController::GROUP_TYPE::GROUP_FEAT_STAT_RAT,
-            #exclude_ai: "true",
-            #status: "「長期更新なし」を除外",
-            #point: 1, 
-            prediction: 11,
-            #recent_filenum: 5,
-            rating: 85,
-            last_access_datetime: 30,
-            force_disp_day: 90,
-            display_number: 11,
-            #year: 2023,
-            thumbnail: false
-          )
-      },
-      { :label => "DB更新", :path => "" },
-      # ----------------------------
-      { :label => "pxv (dir-DB更新 BY FS)",
-          :path => artists_path(
-            page_title: "pxv (dir-DB更新 BY FS)", 
-            file: ArtistsController::MethodEnum::TABLE_UPDATE_NEW_USER,
-            display_number: 11
-          )
-      },
-      { :label => "-", :path => "" },
-      { :label => "twt(dir-DB更新 BY FS)", :path => artists_twt_index_path(dir: "update") },#, target:"twt") },
-      { :label => "tweets(dir-DB更新 BY FS)", :path => tweets_update_recods_index_path() },
-      { :label => "-", :path => "" },
-      { :label => "twt 未設定 予測数順",
-        :path => twitters_path(
-          page_title: "未設定 id",
-          mode: "id",
-          sort_by: TwittersController::SORT_BY::PRED,#"pred",
-          #no_pxv: true,
-          rating: 0,
-          hide_within_days: -30,
-          #created_at: 90
-          num_of_disp: NUM_OF_DISP,
-          pred: 0,
-          target: "",
-          thumbnail: "t"
-        )
-      },
-      { :label => "pxv 未設定 更新数[多]予測",
-          :path => artists_path(
-            page_title: "pxv 未設定 更新数[多]予測", 
-            #sort_by: "id",
-            sort_by: "予測▽",
-            #group_by: "",
-            #exclude_ai: "true",
-            #status: "「長期更新なし」を除外",
-            #point: 1, 
-            prediction: 0, 
-            #recent_filenum: 5,
-            rating: 0, 
-            #last_access_datetime: -100,#7,
-            created_at: 90,
-            display_number: 7,
-            #year: 2023, 
-            thumbnail: true
-          )
-      },
-
       # ----------------------------
       { :label => "url file", :path => "" },
       { :label => "最新ファイル all",
@@ -1270,8 +1272,9 @@ class HomeController < ApplicationController
           :path => tweets_path(
             #page_title: "Tweets",
             mode: TweetsController::ModeEnum::URL_LIST_SUMMARY,
-            filename: "latest",
-            #hide_within_days: 180,
+            filename: "latest 5",
+            hide_within_days: 30,
+            pred: 50,
             #rating: 85,
           )
       },

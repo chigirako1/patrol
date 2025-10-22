@@ -41,7 +41,22 @@
             [残<%= e.todo_cnt %>(全<%= e.url_cnt%>)]
             <% twt = Twitter.find_by_twtid_ignore_case(e.screen_name) %>
             [<%= link_to_ex("■twt■", twt) %>]
+            <%= twt.prediction %>|
+
+            <% if twt.last_access_datetime_p(@hide_within_days) %>
+                A:<%= twt.last_access_datetime_disp %>
+                <br />
+                <% next %>
+            <% end %>
+
+            <% if @pred > 0 and @pred > twt.prediction %>
+                <br />
+                <% next %>
+            <% end %>
+            
+            【<%= twt.rating %>|<%= twt.status %>|】
             <%= twt.twtname %>(@<%= e.screen_name %>)
+            A:<%= twt.last_access_datetime_disp %>
             <br />
         <% end %>
     <% end %>

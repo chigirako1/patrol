@@ -7,9 +7,20 @@ class TweetsController < ApplicationController
     URL_LIST_SUMMARY = 'urllist_summary'
   end
 
+  def get_param_num(symbol, def_val=0)
+    if params[symbol] == ""
+      value = def_val
+    else
+      value = params[symbol].to_i
+    end
+    puts %!#{symbol}="#{value}"!
+    value
+  end
+
   # GET /tweets or /tweets.json
   def index
 
+=begin
     if params[:hide_within_days] == ""
       @hide_within_days = 0
     else
@@ -23,6 +34,10 @@ class TweetsController < ApplicationController
       @rating_gt = params[:rating].to_i
     end
     puts %!rating_gt="#{@rating_gt}"!
+=end
+    @hide_within_days = get_param_num(:hide_within_days)
+    @rating_gt = get_param_num(:rating)
+    @pred = get_param_num(:pred)
 
     @tweet_cnt_list = []
     @known_twt_url_list = []
