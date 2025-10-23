@@ -173,6 +173,16 @@ class Twitter < ApplicationRecord
         unassociated_twt_screen_names
     end
 
+    def self.url_list(filename)
+        STDERR.puts %!Twitter::url_list="#{filename}"!
+        path = UrlTxtReader::get_path(filename)
+        _, twt_url_infos, _ = UrlTxtReader::get_url_txt_info(path)
+        
+        pxv_chk = false
+        known_twt_url_list, unknown_twt_url_list, _ = Twitter::twt_user_classify(twt_url_infos, pxv_chk)
+        [known_twt_url_list, unknown_twt_url_list]
+    end
+
     def self.twt_user_classify(twt_url_infos, pxv_chk=true)
         pxvid_list = []
         registered_twt_acnt_list = {}

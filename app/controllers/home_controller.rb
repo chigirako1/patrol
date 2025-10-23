@@ -194,6 +194,21 @@ class HomeController < ApplicationController
             #thumbnail: "t"
           )
       },
+      { :label => "Twitter url list [AI]",
+          :path => twitters_path(
+            #page_title: "url list 80",
+            mode: "file",
+            target: "AI",
+            filename: "thismonth",
+            rating: 80,
+            hide_within_days: 1,
+            num_of_disp: 3,
+            #pred: 4,
+            #no_pxv: true,
+            #thumbnail: "t"
+          )
+      },
+      { :label => "-", :path => "" },
       { :label => "pxv url list (all)",
           :path => artists_path(
             page_title: "pxv url list (all)",
@@ -1272,6 +1287,7 @@ class HomeController < ApplicationController
           :path => tweets_path(
             #page_title: "Tweets",
             mode: TweetsController::ModeEnum::URL_LIST_SUMMARY,
+            sort_by: TwittersController::SORT_BY::PRED,
             filename: "latest 5",
             hide_within_days: 30,
             pred: 50,

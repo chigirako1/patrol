@@ -137,6 +137,7 @@ class TweetsController < ApplicationController
     end
 
     def url_list(filename)
+=begin
       #filename = "all"
       #filename = "target2507"
       path = UrlTxtReader::get_path(filename)
@@ -145,5 +146,7 @@ class TweetsController < ApplicationController
       known_twt_url_list, unknown_twt_url_list, _ = Twitter::twt_user_classify(twt_url_infos, pxv_chk)
       #STDERR.puts %!#{path}/#{twt_url_infos.size}/#{known_twt_url_list.size}!
       [known_twt_url_list, unknown_twt_url_list]
+=end
+      Twitter::url_list(filename)
     end
 end

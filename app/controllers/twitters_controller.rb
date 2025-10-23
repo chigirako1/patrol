@@ -631,6 +631,10 @@ class TwittersController < ApplicationController
       return
     #when TwittersController::ModeEnum::URL_TXT #"file"と一緒？
     when TwittersController::ModeEnum::FILE
+      if params[:target].presence
+        twitters = twitters.select {|x| x.drawing_method == params[:target]}
+      end
+
       twitters = twitters.select {|x| !x.last_access_datetime_p(@hide_within_days)}
       if rating_gt != 0
         twitters = twitters.select {|x| x.rating == nil or x.rating == 0 or x.rating >= rating_gt }
@@ -640,6 +644,7 @@ class TwittersController < ApplicationController
       #pxv_id_list, twt_urls, misc_urls = UrlTxtReader::get_url_list([], false)
       #known_ids = twt_urls.keys
 
+=begin
       case params[:filename]
       when "", nil
         filepaths = UrlTxtReader::get_latest_txt
@@ -647,6 +652,8 @@ class TwittersController < ApplicationController
         filepaths = UrlTxtReader::txt_file_list($1 + "\\d+")
       when /(\d{2})/
         filepaths = UrlTxtReader::txt_file_list($1 + "\\d{4}")
+      when "thismonth"
+        filepaths = UrlTxtReader::txt_file_list("2510" + "\\d+")
       when "all"
         filepaths = []
       else
@@ -657,6 +664,13 @@ class TwittersController < ApplicationController
       #p known_ids
       twitters = twitters.select {|x| known_ids.include?(x.twtid) }
       STDERR.puts %!size=#{twitters.size}!
+=end
+      filename = params[:filename]
+      known_twt_url_list, _ = Twitter::url_list(filename)
+      @url_list_summary = Tweet::url_list_summary(known_twt_url_list)
+      known_ids = @url_list_summary.map {|x| x.screen_name if x.todo_cnt > 0}.compact
+      twitters = twitters.select {|x| known_ids.include?(x.twtid) }
+      
       twitters = twitters.sort_by {|x| [-(x.rating||0), -x.prediction, x.last_access_datetime]}
       @twitters_group = twitters.group_by {|x| x.key_for_group_by()}.sort_by {|k, v| k}.reverse.to_h
       return

@@ -176,6 +176,8 @@ module UrlTxtReader
         when nil
         when ""
             path = UrlTxtReader::get_latest_txt
+        when "thismonth"
+            path = UrlTxtReader::txt_file_list("2510" + "\\d+")
         else
             #path = ["public/urllist/#{filename}.txt"]
             path = ["#{UrlTxtReader::URLLIST_DIR_PATH}/#{filename}.txt"]

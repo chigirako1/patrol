@@ -93,6 +93,10 @@
           <%= twitter.id %>
         </td>
         <td>
+          <% if @url_list_summary %>
+            <% ele = @url_list_summary.find {|x| x.screen_name == twitter.twtid} %>
+            [<%= ele.todo_cnt %>件]
+          <% end %>
           <%= twitter.drawing_method %>【<%= twitter.rating %>】<%= twitter.r18 %>
           <% if twitter.r18 == "R18" %>
             🔞
@@ -297,6 +301,8 @@ button.horizontal {
     -->
     <br />
     モード：<%= f.text_field :mode, :value => params[:mode] %>
+    <br />
+    filename：<%= f.text_field :filename, :value => params[:filename] %>
     <br />
     <%= f.label :page_title %>
     <%= f.text_field :page_title, :value => params[:page_title] %>
