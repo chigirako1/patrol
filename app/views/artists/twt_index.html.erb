@@ -781,8 +781,7 @@
         <% url_p_k = artists_twt_index_path(filename: file, hide_day: 30, pred: 5, target:"known_pxv", force_disp_day: 90) %>
 
         <%= file %>
-        (<%= FileTest.size(filename) / 1024  %> KB)
-        <%#= Util::formatFileSize(FileTest.size(filename)) %>
+        (<%= Util::formatFileSize(FileTest.size(filename)) %>)
         | <%= link_to_ex("all", url_a) %>
         |■
         | <%= link_to_ex("twt未知", url_tu) %>

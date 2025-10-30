@@ -321,6 +321,13 @@ class ArtistsController < ApplicationController
     ADJUSTMENT = "(整理対象)"
   end
 
+  module DIR_TYPE
+    UPDATE = "update"
+    REG_DUP_FILES = "register_dup_files"
+    NEW_LIST = "new-list"
+    ARCHIVE_CHECK = "archive-check"
+  end
+
   module ShowMode
     SHOW_NORAML = "normal"
     SHOW_VIEWER = "viewer"
@@ -829,16 +836,20 @@ class ArtistsController < ApplicationController
     filename = params[:filename]
     if filename == nil
       dir = params[:dir]
-      if dir == nil
+      case dir
+      when nil
         dir = ""
         @known_twt_url_list = Twt::twt_user_list(dir)
         puts %!@known_twt_url_list.size=#{@known_twt_url_list.size}!
-      elsif dir == "update"
+      when DIR_TYPE::UPDATE
         Twt::db_update_by_newdir()
-      elsif dir == "register_dup_files"
+      when DIR_TYPE::REG_DUP_FILES
         Twt::db_update_dup_files_current_all()
-      elsif dir == "new-list"
+      when DIR_TYPE::NEW_LIST
         @twt_user_infos = Twt::twt_user_infos()
+      when DIR_TYPE::ARCHIVE_CHECK
+        Twt::archive_check()
+      else
       end
     elsif filename == ""
       @url_file_list = UrlTxtReader::txt_file_list()

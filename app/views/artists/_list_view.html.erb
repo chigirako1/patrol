@@ -34,12 +34,24 @@
 
     <% prev_start_idx = start_idx - num_elem %>
     <% next_start_idx = start_idx + num_elem %>
+
     <% if prev_start_idx >= 0 %>
-        <%= link_to("前", artist_path(@artist, mode: ArtistsController::ShowMode::SHOW_LIST_VIEW, start_idx: prev_start_idx, num_elem: num_elem, thumbnail: "yes")) %>
+        <% if no_pics %>
+            <% prev_link = artist_path(@artist, mode: ArtistsController::ShowMode::SHOW_LIST_VIEW, start_idx: prev_start_idx, num_elem: num_elem, thumbnail: "yes", no_pic: "t") %>
+        <% else %>
+            <% prev_link = artist_path(@artist, mode: ArtistsController::ShowMode::SHOW_LIST_VIEW, start_idx: prev_start_idx, num_elem: num_elem, thumbnail: "yes") %>
+        <% end %>
+        <%= link_to("前", prev_link) %>
     <% else %>
     <% end %>
+
     <% if next_start_idx < @path_list.size %>
-        <%= link_to("次", artist_path(@artist, mode: ArtistsController::ShowMode::SHOW_LIST_VIEW, start_idx: next_start_idx, num_elem: num_elem, thumbnail: "yes")) %>
+        <% if no_pics %>
+            <% next_link = artist_path(@artist, mode: ArtistsController::ShowMode::SHOW_LIST_VIEW, start_idx: next_start_idx, num_elem: num_elem, thumbnail: "yes", no_pic: "t") %>
+        <% else %>
+            <% next_link = artist_path(@artist, mode: ArtistsController::ShowMode::SHOW_LIST_VIEW, start_idx: next_start_idx, num_elem: num_elem, thumbnail: "yes") %>
+        <% end %>
+        <%= link_to("次", next_link) %>
     <% else %>
     <% end %>
     <hr />

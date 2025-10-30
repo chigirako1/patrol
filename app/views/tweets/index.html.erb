@@ -34,42 +34,57 @@
     <% if @url_list_summary and @url_list_summary.size > 0 %>
         <% url_list_work = [] %>
         <% @url_list_summary.each.with_index(1) do |e, idx| %>
-            <% if e.todo_cnt == 0 %>
+            <% if e.todo_cnt < @todo_cnt %>
                 <% next %>
             <% end %>
 
             <% twt = Twitter.find_by_twtid_ignore_case(e.screen_name) %>
+            <% if @target.presence and twt.drawing_method != @target %>
+                <%# STDERR.puts %!"#{@target}/#{twt.drawing_method}"! %>
+                <% next %>
+            <% end %>
             <% url_list_work << [e, twt] %>
         <% end %>
     <% end %>
     
     <% if url_list_work %>
         <% if params[:sort_by] == TwittersController::SORT_BY::PRED %>
-            <% url_list_work = url_list_work.sort_by {|x| [-(x[1].prediction), x[1].last_access_datetime]} %>
+            <% url_list_work = url_list_sort_by_pred(url_list_work) %>
+        <% elsif params[:sort_by] == TwittersController::SORT_BY::ACCESS %>
+            <% url_list_work = url_list_sort_by_access(url_list_work) %>
         <% else %>
-            <% url_list_work = url_list_work.sort_by {|x| [x[1].last_access_datetime]} %>
         <% end %>
 
         <h2>@url_list_summary</h2>
         <% url_list_work.each.with_index(1) do |(e, twt), idx| %>
-            <% if e.todo_cnt == 0 %>
+
+            <% if twt.last_access_datetime_p(@hide_within_days) %>
                 <% next %>
             <% end %>
 
+            <%= twt.status %>|<%= twt.drawing_method %>
             [残<%= e.todo_cnt %>(全<%= e.url_cnt%>)]
             [<%= link_to_ex("■twt■", twt) %>]
-            <%= twt.prediction %>|
 
-            <% if twt.last_access_datetime_p(@hide_within_days) or (@pred > 0 and @pred > twt.prediction) %>
-                <%= twt.twtname %>(@<%= e.screen_name %>)
-                A:<%= twt.last_access_datetime_disp %>
+            
+            【<%= twt.rating %>|予測<%= twt.prediction %>】
+
+            <%= twt.twtname %>(@<%= e.screen_name %>)[<%= twt.filenum %>]
+            A:<%= twt.last_access_datetime_disp %>
+
+            <% if !twt.select_cond_aio(@pred) %>
                 <br />
                 <% next %>
             <% end %>
-            
-            【<%= twt.drawing_method %>|<%= twt.rating %>|<%= twt.status %>|】
-            <%= twt.twtname %>(@<%= e.screen_name %>)
-            A:<%= twt.last_access_datetime_disp %>
+
+            <% if twt.last_access_datetime_p(@hide_within_days) or (@pred > 0 and @pred > twt.prediction) %>
+            <% end %>
+
+            <% %>
+            <% pxv = Artist.find_by(twtid: e.screen_name) %>
+            <% if pxv %>    
+                <%= pxv.pxvname %>[<%= link_to_ex(%!■pxv■!, pxv) %>]A:<%= pxv.last_access_datetime_disp %>
+            <% end %>
             <br />
             <br />
         <% end %>

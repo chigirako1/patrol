@@ -17,6 +17,7 @@ class TwittersController < ApplicationController
     PRED = "pred"
     ACCESS = "access"
     RATING = "rating"
+    FILENUM = "filenum"
   end
 
   module GRP_SORT
@@ -412,10 +413,14 @@ class TwittersController < ApplicationController
         twitters = twitters.select {|x| x.rating == nil or x.rating == rating_gt}
       end
 
-      if sort_by == SORT_BY::ID
+      case sort_by
+      when SORT_BY::ID
         twitters = twitters.sort_by {|x| [x.id]}.reverse
-      elsif  sort_by == SORT_BY::PRED
+      when SORT_BY::PRED
         twitters = twitters.sort_by {|x| [-x.prediction, x.last_access_datetime]}
+      when SORT_BY::FILENUM
+        twitters = twitters.sort_by {|x| [-(x.filenum||0)]}
+      else
       end
 
       if pred_cond_gt != 0
@@ -644,31 +649,16 @@ class TwittersController < ApplicationController
       #pxv_id_list, twt_urls, misc_urls = UrlTxtReader::get_url_list([], false)
       #known_ids = twt_urls.keys
 
-=begin
-      case params[:filename]
-      when "", nil
-        filepaths = UrlTxtReader::get_latest_txt
-      when /(\d{4})/
-        filepaths = UrlTxtReader::txt_file_list($1 + "\\d+")
-      when /(\d{2})/
-        filepaths = UrlTxtReader::txt_file_list($1 + "\\d{4}")
-      when "thismonth"
-        filepaths = UrlTxtReader::txt_file_list("2510" + "\\d+")
-      when "all"
-        filepaths = []
-      else
-        filepaths = params[:filename]
-      end
-      known_ids = UrlTxtReader::get_twt_id_list(filepaths)
-      STDERR.puts %!size=#{known_ids.size}!
-      #p known_ids
-      twitters = twitters.select {|x| known_ids.include?(x.twtid) }
-      STDERR.puts %!size=#{twitters.size}!
-=end
       filename = params[:filename]
       known_twt_url_list, _ = Twitter::url_list(filename)
       @url_list_summary = Tweet::url_list_summary(known_twt_url_list)
-      known_ids = @url_list_summary.map {|x| x.screen_name if x.todo_cnt > 0}.compact
+
+      if params[:todo_cnt].presence
+        todo_cnt = params[:todo_cnt].to_i
+      else
+        todo_cnt = 0
+      end
+      known_ids = @url_list_summary.map {|x| x.screen_name if x.todo_cnt >= todo_cnt}.compact
       twitters = twitters.select {|x| known_ids.include?(x.twtid) }
       
       twitters = twitters.sort_by {|x| [-(x.rating||0), -x.prediction, x.last_access_datetime]}

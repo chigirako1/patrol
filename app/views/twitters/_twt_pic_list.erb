@@ -91,7 +91,7 @@ textarea {
         <hr />
     <% end %>
 
-    <% fsize_sum = 0 %>
+    <% fsize_list = [] %>
     <!-- サムネイル -->
     <% if true #@twt_ids == nil %>
         <% twt_pic_list.first(show_pic_num).each.with_index(1) do |elem, idx| %>
@@ -107,7 +107,7 @@ textarea {
 
             <% phys_path = Util::get_public_path(elem[1]) %>
             <% filesize = FileTest.size(phys_path) %>
-            <% fsize_sum += filesize %>
+            <% fsize_list << filesize %>
 
             <%= link_to_ex(image_tag(path, width: d_ratio, height: d_ratio, :alt => path), path) %>
             <% if corr != 0 and corr == idx %>
@@ -191,12 +191,25 @@ textarea {
         計算結果"<%= avg %>"
         (<%= freq_90d %>/<%= freq_30d %>/<%= freq_15d %>)
         <% if show_pic_num > 0 %>
-            ファイルサイズ平均：<%= (fsize_sum / show_pic_num) / 1024 %> KB
-            合計：<%= (fsize_sum) / 1024 / 1024 %> MB
+            <br />
+            <% avg = fsize_list.sum / fsize_list.size %>
+            <b>ファイルサイズ平均：</b><%= Util.formatFileSize(avg) %>
+            <% if avg > 1024 * 1024 %>
+                <font color="red">←★大★</font>
+            <% elsif avg > 750 * 1024 %>
+                <font color="red">←★大きめ★</font>
+            <% elsif avg > 500 * 1024 %>
+                <font color="red">←★少し大きめ★</font>
+            <% elsif avg > 400 * 1024 %>
+                <font color="red">←★中★</font>
+            <% else %>
+            <% end %>
+            <b>合計：</b><%= Util.formatFileSize(fsize_list.sum) %>
         <% end %>
         (<%= show_pic_num %> files)
         <% tweet_id_list = twt_pic_list.map {|x| x[2]} %>
-        1投稿あたりの平均画像数:<%= Twt::image_num_a_post(tweet_id_list) %>
+        <b>1投稿あたりの平均画像数:</b>
+        <%= Twt::image_num_a_post(tweet_id_list) %>
     <% end %>
     <br />
 

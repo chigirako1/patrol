@@ -164,7 +164,6 @@ module UrlTxtReader
             path = UrlTxtReader::txt_file_list($1 + "\\d{4}")
         # 1-4quarter
         when /target(\d{2})Q(\d)$/
-            STDERR.puts %!filename="#{filename}"!
             rgx = get_ym_rgx($1.to_i, $2.to_i)
             path = UrlTxtReader::txt_file_list(rgx)
         # month
@@ -176,12 +175,29 @@ module UrlTxtReader
         when nil
         when ""
             path = UrlTxtReader::get_latest_txt
+        when /thismonth\s+(\d+)/
+            opt = $1.to_i
+
+            start_m = Date.today.months_ago(opt)
+            end_m = Date.today
+
+            ary = []
+            me = Util::month_enumrator(start_m, end_m)
+            me.each do |x|
+                ary << x.strftime("%y%m")
+            end
+            rgx_str = %!(#{ary.join("|")})!
+
+            path = UrlTxtReader::txt_file_list(rgx_str + "\\d+")
         when "thismonth"
-            path = UrlTxtReader::txt_file_list("2510" + "\\d+")
+            yymmm = Date.today.strftime("%y%m")
+            path = UrlTxtReader::txt_file_list(yymmm + "\\d+")
         else
+            STDERR.puts %!"#{filename}"!
             #path = ["public/urllist/#{filename}.txt"]
             path = ["#{UrlTxtReader::URLLIST_DIR_PATH}/#{filename}.txt"]
         end
+        STDERR.puts %!filename="#{filename}"!
         STDERR.puts "path='#{path}'"
         path
     end

@@ -500,6 +500,7 @@ class Twitter < ApplicationRecord
             return drawing_method
         end
 
+        filenum_str = %!(総ファイル数#{zero_padding(filenum)}↑)!
         case status
         when Twitter::TWT_STATUS::STATUS_PATROL
             if rating.presence
@@ -516,10 +517,13 @@ class Twitter < ApplicationRecord
                 end
                 
                 days_accs = Util::get_date_delta(last_access_datetime)
-                if days_accs < 2
+                if days_accs <= 2
                     key = %!080:2日以内!
                     add_count = false
-                elsif days_accs < 7
+                elsif days_accs <= 4
+                    key = %!080:4日以内!
+                    add_count = false
+                elsif days_accs <= 7
                     #key = %!080:#{days_accs}日以内!
                     key = %!080:7日以内!
                     add_count = false
@@ -540,8 +544,10 @@ class Twitter < ApplicationRecord
                     key = "901:評価#{rating}"
                 end
                 #key = %!#{method}|#{key}!
+                unit = 10
+                key = %!#{key}|予測#{prediction / unit * unit}↑!
             else
-                key = "999.未設定(総ファイル数約#{(filenum||0) / 10}0-)"
+                key = "999.未設定#{filenum_str}"
             end
         when Twitter::TWT_STATUS::STATUS_NOT_EXIST
         when Twitter::TWT_STATUS::STATUS_FROZEN
@@ -551,13 +557,15 @@ class Twitter < ApplicationRecord
         #when Twitter::TWT_STATUS::STATUS_SCREEN_NAME_CHANGED
         when "", nil
             days_accs = Util::get_date_delta(last_access_datetime)
-            if days_accs < 30
-                key = %!000:#{days_accs / 7}(総ファイル数約#{(filenum||0) / 10}0-)!
+            if true
+                key = %!000:#{days_accs / 30}#{filenum_str}!
+            elsif days_accs < 30
+                key = %!000:#{days_accs / 7}#{filenum_str}!
             else
-                key = %!000:#{9}(総ファイル数約#{(filenum||0) / 10}0-)!
+                key = %!000:#{9}#{filenum_str}!
             end
         else
-            key = %!000:"#{status}"(総ファイル数約#{(filenum||0) / 10}0-)!
+            key = %!000:"#{status}"#{filenum_str}!
         end
 
         if add_count
@@ -576,9 +584,14 @@ class Twitter < ApplicationRecord
 
         if rating and rating_arg > 0 and rating < rating_arg
             #key = "!評価規定以下|#{rating}|#{key}"
-            key = "!評価規定以下|#{key}|#{rating}"
+            key = "!評価規定以下|#{key}|#{rating / 5 * 5}"
         end
 
         key
+    end
+
+    def zero_padding(number, unit=25)
+        w = (number||0) / unit
+        sprintf("%03d", w * unit)
     end
 end

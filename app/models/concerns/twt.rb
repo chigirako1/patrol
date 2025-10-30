@@ -169,28 +169,59 @@ module Twt
         end
     end
 
+    def self.get_twtid_list(path_list)
+        id_list = {}
+        path_list.flatten.each do |path|
+            if FileTest.file? path
+                STDERR.puts %!not direcotry. "#{path}"!
+                next
+            end
+
+            dirname = File.basename path
+            if dirname =~ /^(\w+)/
+                #TODO:同じIDが複数あったときの対応
+                twtid = $1
+                id_list[twtid] = path
+            else
+                STDERR.puts %!invalid format:"#{dirname}"\t"#{path}"\t(#{__FILE__}:#{__LINE__})!
+            end
+        end
+        id_list
+    end
+
+    def self.archive_check()
+        path_list = []
+        path_list << Util::glob("#{TWT_ARCHIVE_DIR_PATH}/", "*/*")
+        
+        twtid_list = get_twtid_list(path_list.flatten)
+        twtid_list.each do |twtid, path|
+
+            twt = Twitter.find_by_twtid_ignore_case(twtid)
+            if twt
+            else
+                STDERR.puts %!unknonw id:"#{twtid}"|"#{path}"!
+            end
+        end
+    end
+
     def self.twt_user_infos()
         path_list = []
         path_list << Util::glob(TWT_CURRENT_DIR_PATH)
 
         artist_hash = {}
-        path_list.flatten.each do |path|
-            dirname = File.basename path
-            if dirname =~ /^(\w+)$/
-                twtid = $1
 
-                twt = Twitter.find_by_twtid_ignore_case(twtid)
-                if twt.presence and (twt.rating != nil and twt.rating != 0)
-                    #puts %!known @#{twtid}!
-                    next
-                end
-
-                artist_hash[twtid] = TwtArtist.new(twtid, "", path)
-                artist_hash[twtid].set_filenum
-            else
-                puts %!invalid format:"#{path}" (#{__FILE__}:#{__LINE__})!
+        twtid_list = get_twtid_list(path_list.flatten)
+        twtid_list.each do |twtid, path|
+            twt = Twitter.find_by_twtid_ignore_case(twtid)
+            if twt.presence and (twt.rating != nil and twt.rating != 0)
+                #puts %!known @#{twtid}!
+                next
             end
+
+            artist_hash[twtid] = TwtArtist.new(twtid, "", path)
+            artist_hash[twtid].set_filenum
         end
+
         artist_hash.sort_by{|_, v| -v.num_of_files}.to_h
     end
 

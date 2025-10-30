@@ -13,31 +13,28 @@ class TweetsController < ApplicationController
     else
       value = params[symbol].to_i
     end
-    puts %!#{symbol}="#{value}"!
+    STDERR.puts %!#{symbol}="#{value}"!
+    value
+  end
+
+  def get_param_str(symbol, def_val="")
+    if params[symbol]
+      value = params[symbol]
+    else
+      value = def_val
+    end
+    STDERR.puts %!#{symbol}="#{value}"!
     value
   end
 
   # GET /tweets or /tweets.json
   def index
 
-=begin
-    if params[:hide_within_days] == ""
-      @hide_within_days = 0
-    else
-      @hide_within_days = params[:hide_within_days].to_i
-    end
-    puts %!hide_within_days="#{@hide_within_days}"!
-
-    if params[:rating] == ""
-      @rating_gt = 0
-    else
-      @rating_gt = params[:rating].to_i
-    end
-    puts %!rating_gt="#{@rating_gt}"!
-=end
     @hide_within_days = get_param_num(:hide_within_days)
     @rating_gt = get_param_num(:rating)
     @pred = get_param_num(:pred)
+    @target = get_param_str(:target)
+    @todo_cnt = 0
 
     @tweet_cnt_list = []
     @known_twt_url_list = []
@@ -137,16 +134,6 @@ class TweetsController < ApplicationController
     end
 
     def url_list(filename)
-=begin
-      #filename = "all"
-      #filename = "target2507"
-      path = UrlTxtReader::get_path(filename)
-      _, twt_url_infos, _ = UrlTxtReader::get_url_txt_info(path)
-      pxv_chk = false
-      known_twt_url_list, unknown_twt_url_list, _ = Twitter::twt_user_classify(twt_url_infos, pxv_chk)
-      #STDERR.puts %!#{path}/#{twt_url_infos.size}/#{known_twt_url_list.size}!
-      [known_twt_url_list, unknown_twt_url_list]
-=end
       Twitter::url_list(filename)
     end
 end

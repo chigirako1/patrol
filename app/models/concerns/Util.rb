@@ -129,7 +129,17 @@ module Util
         uri = URI.parse(url)
         uri.host
     end
+    
+=begin
+        public static string FormatFileSize(long bytes)
+        {
+            var unit = 1024;
+            if (bytes < unit) { return $"{bytes} B"; }
 
+            var exp = (int)(Math.Log(bytes) / Math.Log(unit));
+            return $"{bytes / Math.Pow(unit, exp):F2} {("KMGTPE")[exp - 1]}B";
+        }
+=end
     def self.formatFileSize(bytes)
         unit = 1024
         if bytes < unit
@@ -138,16 +148,14 @@ module Util
     
         bytes_log = Math.log(bytes)
         unit_log = Math.log(unit)
-        exp = bytes_log / unit_log
-        #puts %!#{exp} = #{bytes_log} / #{unit_log}a!
+        exp = (bytes_log / unit_log).to_i
         p = unit.pow(exp)
         b = bytes / p
         u = "KMGTPE"[exp - 1]
-        #puts %!#{b} = #{bytes} / #{p}!
     
-        %!#{b.to_i} #{u}!
+        %!#{b} #{u}B!
     end
-   
+
     def self.google_search_url(phrase)
         %!https://www.google.com/search?q=#{phrase}!
     end

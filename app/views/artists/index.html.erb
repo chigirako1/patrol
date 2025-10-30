@@ -242,6 +242,21 @@
 
 <hr />
 
+<script>
+    function select_text() {
+        let text_field = document.getElementById("search_word");
+        text_field.select();
+        //document.execCommand("copy");
+    }
+
+    document.addEventListener("visibilitychange", function() {
+      if (document.visibilityState === "visible")
+      {
+          select_text();
+      }
+    });
+</script>
+
 <div class="view_form">
   <%= form_with url: artists_path, local: true, method: :get do |f| %>
     <%= f.label :method, style: "display: block" %>
@@ -285,41 +300,27 @@
         ],
         selected: params[:file] 
       ) %>
-      <%= f.text_field :filename, :value => params[:filename] %>
-      ("latest", "yy", "yymm", "yymmdd", )
-      <br />
-    <hr />
     
-    <%= f.submit("検索", name: nil, class: 'subtmi-btn') %>
+    ファイル名:
+    <%= f.text_field :filename, :value => params[:filename] %>
+    ("latest", "yy", "yymm", "yymmdd", )
     <hr />
-
-<script>
-    function select_text() {
-        let text_field = document.getElementById("search_word");
-        text_field.select();
-        //document.execCommand("copy");
-    }
-
-    document.addEventListener("visibilitychange", function() {
-      if (document.visibilityState === "visible")
-      {
-          select_text();
-      }
-    });
-</script>
-
+  
     検索ワード：
     <%= f.text_field :search_word, :value => params[:search_word] %>
     <br />
-    <!-- 
-    <input type="button" value="select" onclick="select_text();" />
-    <br />
-    -->
     <%= f.select :match_method, options_for_select([["(自動判断)","auto"], ["を含む","partial_match"], ["完全一致","perfect_match"], ["から始まる","begin_match"],  ["で終わる","end_match"]]) %>
     検索対象：
     <%= f.select :target_col, options_for_select([['(自動判断)'], ['pxvname'], ['pxvid']]) %>
     <br />
-    <hr />
+
+    <%= f.submit("検索", name: nil, class: 'subtmi-btn') %>
+    <br />
+
+    <!-- 
+    <input type="button" value="select" onclick="select_text();" />
+    <br />
+    -->
 
     <%= f.label :page_title %>
     <%= f.text_field :page_title, :value => params[:page_title] %>

@@ -1,9 +1,13 @@
 <style>
 .btn_s {
-  padding-left: 1em;
-  padding-right: 1em;
-  height: 2em;
-  width: 50px;
+    padding-left: 1em;
+    padding-right: 1em;
+    height: 2em;
+    width: 50px;
+}
+
+.btn_s_minus {
+    background: aqua;
 }
 </style>
 
@@ -72,12 +76,12 @@
   <div>
     <%= form.label "更新頻度(100日間での投稿数)", style: "display: block" %>
     <%= form.number_field :update_frequency %>
-    <input type="button" value="/2" onclick="div_val('update_frequency', 2);" class="btn_s" />
     <input type="button" value="*2" onclick="multiple_val('update_frequency', 2);" class="btn_s" />
+    <input type="button" value="/2" onclick="div_val('update_frequency', 2);" class="btn_s btn_s_minus" />
     <input type="button" value="+100" onclick="plus_rate('update_frequency', 100);" class="btn_s" />
     <input type="button" value="+10" onclick="plus_rate('update_frequency', 10);" class="btn_s" />
-    <input type="button" value="-100" onclick="plus_rate('update_frequency', -100);" class="btn_s" />
-    <input type="button" value="-10" onclick="plus_rate('update_frequency', -10);" class="btn_s" />
+    <input type="button" value="-100" onclick="plus_rate('update_frequency', -100);" class="btn_s btn_s_minus" />
+    <input type="button" value="-10" onclick="plus_rate('update_frequency', -10);" class="btn_s btn_s_minus" />
   </div>
 
   <div>
