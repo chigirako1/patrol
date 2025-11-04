@@ -39,54 +39,72 @@
             <% end %>
 
             <% twt = Twitter.find_by_twtid_ignore_case(e.screen_name) %>
+
             <% if @target.presence and twt.drawing_method != @target %>
                 <%# STDERR.puts %!"#{@target}/#{twt.drawing_method}"! %>
                 <% next %>
             <% end %>
+
+            <% if @created_at > 0 and twt.created_at_day_num > @created_at %>
+                <% next %>
+            <% end %>
+
             <% url_list_work << [e, twt] %>
         <% end %>
     <% end %>
     
     <% if url_list_work %>
-        <% if params[:sort_by] == TwittersController::SORT_BY::PRED %>
-            <% url_list_work = url_list_sort_by_pred(url_list_work) %>
-        <% elsif params[:sort_by] == TwittersController::SORT_BY::ACCESS %>
-            <% url_list_work = url_list_sort_by_access(url_list_work) %>
-        <% else %>
-        <% end %>
+        <% url_list_work = url_list_sort_by(url_list_work, params[:sort_by]) %>
+        <% group_hash = Twitter::url_list_work_to_hash(url_list_work, @hide_within_days, @rating_gt) %>
+        <% group_hash.each do |k,v| %>
 
-        <h2>@url_list_summary</h2>
-        <% url_list_work.each.with_index(1) do |(e, twt), idx| %>
+            <h2><%= %!#{k}(#{v.size})! %></h2>
 
-            <% if twt.last_access_datetime_p(@hide_within_days) %>
-                <% next %>
-            <% end %>
+            <% v.each.with_index(1) do |(e, twt), idx| %>
 
-            <%= twt.status %>|<%= twt.drawing_method %>
-            [残<%= e.todo_cnt %>(全<%= e.url_cnt%>)]
-            [<%= link_to_ex("■twt■", twt) %>]
+                <% if twt.last_access_datetime_p(@hide_within_days) %>
+                    <%# next %>
+                <% end %>
 
-            
-            【<%= twt.rating %>|予測<%= twt.prediction %>】
+                <%= twt.status %>|<%= twt.drawing_method %>
+                [残<%= e.todo_cnt %>(全<%= e.url_cnt%>)]
+                <% prediction = twt.prediction %>
+                <% if prediction > 50 %>
+                    ★★★
+                <% end %>
+                [<%= link_to_ex("■twt■", twt) %>|P:<%= prediction %>|A:<%= twt.last_access_datetime_disp %>]
+                <% if prediction > 50 %>
+                    ★★★
+                <% end %>
 
-            <%= twt.twtname %>(@<%= e.screen_name %>)[<%= twt.filenum %>]
-            A:<%= twt.last_access_datetime_disp %>
+                【<%= twt.rating %>】
 
-            <% if !twt.select_cond_aio(@pred) %>
+                <%= twt.twtname %>(@<%= e.screen_name %>)[<%= twt.filenum %>]
+                
+                <% if twt.status == Twitter::TWT_STATUS::STATUS_SCREEN_NAME_CHANGED %>
+                    <% if twt.new_twtid %>
+                        ★新アカウント→
+                        <% n_twt = Twitter.find_by_twtid_ignore_case(twt.new_twtid) %>
+                        <%= link_to_ex("■twt■", twt) %>
+                    <% end %>
+                <% end %>
+
+                <% if !twt.select_cond_aio(@pred) %>
+                    <br />
+                    <% next %>
+                <% end %>
+
+                <% if twt.last_access_datetime_p(@hide_within_days) or (@pred > 0 and @pred > twt.prediction) %>
+                <% end %>
+
+                <% %>
+                <% pxv = Artist.find_by(twtid: e.screen_name) %>
+                <% if pxv %>    
+                    <%= pxv.pxvname %>[<%= link_to_ex(%!■pxv■!, pxv) %>]A:<%= pxv.last_access_datetime_disp %>
+                <% end %>
                 <br />
-                <% next %>
+                <br />
             <% end %>
-
-            <% if twt.last_access_datetime_p(@hide_within_days) or (@pred > 0 and @pred > twt.prediction) %>
-            <% end %>
-
-            <% %>
-            <% pxv = Artist.find_by(twtid: e.screen_name) %>
-            <% if pxv %>    
-                <%= pxv.pxvname %>[<%= link_to_ex(%!■pxv■!, pxv) %>]A:<%= pxv.last_access_datetime_disp %>
-            <% end %>
-            <br />
-            <br />
         <% end %>
     <% end %>
 
@@ -211,6 +229,7 @@
         <% end %>
     <% end %>
 
+    <h2>@tweets</h2>
     <% @tweets.each do |tweet| %>
         <%= render tweet %>
         <p>
@@ -224,10 +243,12 @@
         <% @tweet_ids.each do |x| %>
             [<%= Twt::timestamp_str(x) %>]
             <% url = Twt::twt_tweet_url(scrn_name, x) %>
+            🅿️
             <%= link_to_ex(x, url) %>
             <% tweet = Tweet.find_by(tweet_id: x) %>
             <% if tweet %>
                 【<%= tweet.status %>】
+                <%= link_to_ex("■tweet■", tweet) %>
             <% else %>
                 [DB登録なし]
             <% end %>

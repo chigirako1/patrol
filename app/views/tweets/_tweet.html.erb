@@ -1,15 +1,27 @@
 <div id="<%= dom_id tweet %>">
-  <p>
-    <strong>Tweet:</strong>
-    <%= tweet.tweet_id %>
-    <strong>Screen name:</strong>
-    <%= tweet.screen_name %>
-    <strong>Status:</strong>
-    <%= tweet.status %>
-    <strong>Rating:</strong>
-    <%= tweet.rating %>
-    <strong>Num:</strong>
-    <%= tweet.num %>
-  </p>
+    <p>
+        <strong>Tweet:</strong>
+        <%= tweet.tweet_id %>
+        <strong>Screen name:</strong>
+        <%= tweet.screen_name %>
+        <strong>Status:</strong>
+        <%= tweet.status %>
+        <strong>Rating:</strong>
+        <%= tweet.rating %>
+        <strong>Num:</strong>
+        <%= tweet.num %>
+    </p>
 
+    <% twt = Twitter.find_by(twtid: tweet.screen_name) %>
+    <% if twt %>
+        [<%= link_to "■twt■(@#{tweet.screen_name})", twitter_path(twt) %>]
+        <br />
+    <% end %>
+
+    <% @pic_list.each do |path| %>
+        <% if path.include? tweet.tweet_id.to_s %>
+            <%= link_to_ex image_tag(path, width: '10%', height: '10%', :alt => path), path %>
+        <% else %>
+        <% end %>
+    <% end %>
 </div>

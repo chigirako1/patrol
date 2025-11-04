@@ -18,9 +18,11 @@ class TwittersController < ApplicationController
     ACCESS = "access"
     RATING = "rating"
     FILENUM = "filenum"
+
+    AUTO = "(auto)"
   end
 
-  module GRP_SORT
+  module GRP_SORT #なんでSORT?
       GRP_SORT_PRED = "予測順"
       GRP_SORT_ACCESS = "アクセス日順"
       GRP_SORT_UL = "投稿日順"
@@ -32,7 +34,6 @@ class TwittersController < ApplicationController
       #
       GRP_SPLIT_STR = "|"
   end
-
 
   # GET /twitters or /twitters.json
   def index
@@ -851,14 +852,37 @@ class TwittersController < ApplicationController
         case params[:sort_by]
         when SORT_BY::ACCESS
           twitters_wk = twitters_wk.sort_by {|x| [x.last_access_datetime, -(x.rating||0), -x.prediction]}
-          
-          twitters_group = twitters_wk.group_by {|x| %!#{x.rating}|#{x.last_access_datetime_days_elapsed / 30}!}.sort_by {|k, v| k}.reverse.to_h
+        when SORT_BY::RATING, SORT_BY::PRED
+          twitters_wk = twitters_wk.sort_by {|x| [-(x.rating||0), -x.prediction, x.last_access_datetime]}
+        else
+          STDERR.puts %!sort_by=#{params[:sort_by]}!
+        end
+
+        grp_sort = 0
+        case params[:grp_sort_by]
+        when SORT_BY::AUTO
+          twitters_group = twitters_wk.group_by {|x| %!#{x.last_access_datetime_days_elapsed / 30}|#{x.rating / 5 * 5}|#{x.predic_str(10)}!}
+          grp_sort = -1
+          #twitters_group = {}
+          #twitters_group["!test!"] = twitters_wk
+        when SORT_BY::ACCESS
+          twitters_group = twitters_wk.group_by {|x| %!#{x.rating}|#{x.last_access_datetime_days_elapsed / 30}!}
+          grp_sort = -1
+        when SORT_BY::PRED
+          #twitters_group = twitters_wk.group_by {|x| %!#{x.prediction / 10 * 10}|#{x.rating}!}
+          twitters_group = twitters_wk.group_by {|x| %!#{x.predic_str(10)}!}
+          grp_sort = 1
         when SORT_BY::RATING
         else
-          twitters_wk = twitters_wk.sort_by {|x| [-(x.rating||0), -x.prediction, x.last_access_datetime]}
-
-          twitters_group = twitters_wk.group_by {|x| %!#{x.rating}|#{x.last_access_datetime_days_elapsed / 30}!}#.sort_by {|k, v| k}.reverse.to_h
+          twitters_group = twitters_wk.group_by {|x| %!#{x.rating}|#{x.last_access_datetime_days_elapsed / 30}!}
         end
+
+        if grp_sort > 0
+          twitters_group = twitters_group.sort_by {|k, v| k}.to_h
+        elsif grp_sort < 0
+          twitters_group = twitters_group.sort_by {|k, v| k}.reverse.to_h
+        end
+
       end
 
       if true
@@ -892,6 +916,7 @@ class TwittersController < ApplicationController
         group["未設定 最近登録(#{nday}d) 予測順"] = twitters_w
 
         twitters_w = twitters_w.sort_by {|x| [-(x.filenum||0), x.last_access_datetime]}
+        group["未設定 最近登録(#{nday}d) ファイル数順+"] = twitters_w.select {|x| x.prediction >= 5}
         group["未設定 最近登録(#{nday}d) ファイル数順"] = twitters_w
       end
       group

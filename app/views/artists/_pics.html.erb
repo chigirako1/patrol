@@ -107,14 +107,13 @@
   <% end %>
 
   <hr />
-  【DB】
-  ファイル数:<%= artist.filenum %>(<%= artist.recent_filenum %>)
+  【DB】ファイル数:<%= artist.filenum %> (<%= artist.recent_filenum %>)
   <br />
 
   <% file_num = 0 %>
   <% if list.presence %>
     <% file_num = Artist.artwork_list_file_num(list) %>
-    【FS】読み込みファイル数=<%= file_num %> (平均<%= (file_num.to_f / list.size.to_f).round(2) %>枚)
+    【FS】ファイル数:<%= file_num %> (平均<%= (file_num.to_f / list.size.to_f).round(2) %>枚／1投稿)
     <br />
     <% recent_filenum = Artist.artwork_list_recent_file_num(list) %>
     <% if @artist.recent_filenum %>

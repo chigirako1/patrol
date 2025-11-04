@@ -74,8 +74,9 @@ class Twitter < ApplicationRecord
             elsif search_word =~ /@(\w+)/
                 target_col = SEARCH_TARGET::TWT_TWTID
                 search_word = $1
-            elsif search_word =~ %r!twitter\.com/(\w+)! or
-                search_word =~ %r!x\.com/(\w+)!
+            #elsif search_word =~ %r!twitter\.com/(\w+)! or
+            #    search_word =~ %r!x\.com/(\w+)!
+            elsif search_word =~ TWT::TWT_URL_SCREEN_NAME_RGX
                 target_col = SEARCH_TARGET::TWT_TWTID
                 search_word = $1
             else
@@ -301,6 +302,11 @@ class Twitter < ApplicationRecord
         list = list.map {|x| [Twt::twt_path_str(x), x]}.sort.reverse
         list = list.map {|x| x[1]}
         list
+    end
+
+    def predic_str(unit)
+        pred = self.prediction()
+        sprintf("%3d", pred / unit * unit)
     end
 
     def prediction(datetime_arg=nil)
@@ -593,5 +599,105 @@ class Twitter < ApplicationRecord
     def zero_padding(number, unit=25)
         w = (number||0) / unit
         sprintf("%03d", w * unit)
+    end
+
+    def self.access_str(lad_n)
+        tbl = [
+            #1,
+            3,
+            #7,
+            14,
+            20,
+            30,
+        ]
+
+        i = 0
+        tbl.each do |x|
+            i += 1
+            if lad_n < x
+                return "#{tbl.size - i}:#{x}日以内"
+            end
+        end
+
+        month = lad_n / 30
+        return "0:(#{99 - month})#{month}ヶ月"
+    end
+
+    def group_key2(hide_within_days, rating_gt)
+        
+        if created_at_day_num > 60
+            created_at_str = "0旧"
+        else
+            created_at_str = "1新"
+        end
+
+=begin
+        if last_access_datetime_p(hide_within_days)
+            accs = "1:最近アクセス(#{hide_within_days}日)"
+        else
+            accs = "0:日数経過"
+        end
+=end
+        accs = ""
+
+        if rating >= rating_gt * 1.05
+            rat_str = "0高"
+        elsif rating >= rating_gt
+            rat_str = "5中"
+        else
+            rat_str = "9低"
+        end
+
+        accs_rec = Twitter::access_str(last_access_day_num)
+
+        if self.select_cond_aio(0)
+            obj = "0対象"
+            pred_str = ""
+        else
+            obj = "1対象外"
+            if prediction >= 50
+                pred_str = "0かなり多い"
+            elsif prediction >= 40
+                pred_str = "1多"
+            elsif prediction >= 30
+                pred_str = "2多め"
+            elsif prediction >= 20
+                pred_str = "3若干多め"
+            elsif prediction >= 10
+                pred_str = "4中"
+            elsif prediction >= 5
+                pred_str = "8少"
+            else
+                pred_str = "9極少"
+            end
+        end
+
+        if self.status == Twitter::TWT_STATUS::STATUS_PATROL
+            [
+                rat_str,
+                self.status||"",
+                self.drawing_method||"",
+                obj,
+                accs_rec,
+                pred_str,
+                created_at_str,
+            ].join("-")
+        else
+            [
+                self.status||"",
+                self.drawing_method||"",
+                #accs_rec,
+                #obj,
+            ].join("-")
+        end
+    end
+
+    def self.url_list_work_to_hash(url_list_work, hide_within_days, rating_gt)
+        hash = {}
+        hash = url_list_work.group_by {|x|
+            twt = x[1];
+            twt.group_key2(hide_within_days, rating_gt)
+        }
+        hash.sort_by {|k,v| k}.to_h
     end
 end

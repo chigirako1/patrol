@@ -194,22 +194,38 @@ textarea {
             <br />
             <% avg = fsize_list.sum / fsize_list.size %>
             <b>ファイルサイズ平均：</b><%= Util.formatFileSize(avg) %>
-            <% if avg > 1024 * 1024 %>
-                <font color="red">←★大★</font>
+            <% if avg > 2 * 1024 * 1024 %>
+                <font color="red"></font>
+                <% cmnt = "かなり大" %>
+            <% elsif avg > 1024 * 1024 %>
+                <font color="red"></font>
+                <% cmnt = "大" %>
             <% elsif avg > 750 * 1024 %>
-                <font color="red">←★大きめ★</font>
+                <font color="red"></font>
+                <% cmnt = "大きめ" %>
             <% elsif avg > 500 * 1024 %>
-                <font color="red">←★少し大きめ★</font>
+                <font color="red"></font>
+                <% cmnt = "少し大きめ" %>
             <% elsif avg > 400 * 1024 %>
-                <font color="red">←★中★</font>
+                <% cmnt = "中" %>
             <% else %>
+            <% end %>
+            <% if cmnt %>
+                <font color="red">←★<%= cmnt %>★</font>
             <% end %>
             <b>合計：</b><%= Util.formatFileSize(fsize_list.sum) %>
         <% end %>
         (<%= show_pic_num %> files)
         <% tweet_id_list = twt_pic_list.map {|x| x[2]} %>
-        <b>1投稿あたりの平均画像数:</b>
-        <%= Twt::image_num_a_post(tweet_id_list) %>
+        <% pnum = Twt::image_num_a_post(tweet_id_list) %>
+        <% if pnum > 1 %>
+            <b>1投稿あたりの平均画像数:</b>
+            <%= pnum %>
+            <font color="orange">★複数★</font>
+        <% end %>
+
+        <%# pic_info = Twt::load_pic_info_tsv(twitter.twtid) %>
+        <%#= Util::formatFileSize(v.avg) %>
     <% end %>
     <br />
 
@@ -275,8 +291,8 @@ textarea {
                 <%= %!#{Twt::timestamp_str tweet_id}(#{tweet_id}))! %> no hit...
                 <%= link_to_ex(tweet_id, Twt::twt_tweet_url(@twitter.twtid, tweet_id)) %>
                 <% if tweet.presence %>
-                    <% if tweet.status == Tweet::StatusEnum::UNACCESSIBLE %>
-                        <b><%= Tweet::StatusEnum::UNACCESSIBLE %></b>
+                    <% if tweet.status == Tweet::StatusEnum::UNACCESSIBLE or @twitter.status == Twitter::TWT_STATUS::STATUS_NOT_EXIST %>
+                        <b><%= tweet.status %></b>
                         (id変わったとき用→)
                         <%= link_to_ex(tweet_id, Twt::twt_tweet_url_dev(tweet_id)) %>
                     <% elsif params[:tweet_id].to_i == tweet_id and params[:tweet_st] == Tweet::StatusEnum::DELETED %>

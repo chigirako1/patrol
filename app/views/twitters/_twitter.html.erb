@@ -1,44 +1,45 @@
 <div id="<%= dom_id twitter %>">
     <p>
         <%= twitter.drawing_method %>
-        (<%= twitter.filenum %>)
+
+        <strong>全画像数：</strong>
+        <%= twitter.filenum %>
 
         <%= %!「#{twitter.comment}」! if twitter.comment.presence %>
         <%= %!|「#{twitter.remarks}」! if twitter.remarks.presence %>
         <%= %!|「#{twitter.warning}」! if twitter.warning.presence %>
 
+        【
         <% if twitter.pxvid.presence %>
             <strong>Pxvid:</strong>
             <%= twitter.pxvid %>
         <% end %>
 
         <% if twitter.main_twtid.presence %>
-            <strong>main:</strong>
+            <strong>主:</strong>
             @<%= twitter.main_twtid %>
         <% end %>
 
         <% if twitter.sub_twtid.presence %>
-            <strong>sub:</strong>
+            <strong>副:</strong>
             @<%= twitter.sub_twtid %>
         <% end %>
 
         <% if twitter.alt_twtid.presence %>
-            <strong>alt:</strong>
+            <strong>別:</strong>
             @<%= twitter.alt_twtid %>
         <% end %>
 
         <% if twitter.new_twtid.presence %>
-            <strong>new:</strong>
+            <strong>新:</strong>
             @<%= twitter.new_twtid %>
         <% end %>
 
         <% if twitter.old_twtid.presence %>
-            <strong>old:</strong>
+            <strong>旧:</strong>
             @<%= twitter.old_twtid %>
         <% end %>
-
-        <strong>全画像数：</strong>
-        <%= twitter.filenum %>
+        】
 
         <strong>登録日:</strong>
         <%= twitter.get_datetime_string(twitter.created_at) %>

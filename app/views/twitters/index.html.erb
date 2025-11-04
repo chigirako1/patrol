@@ -49,207 +49,210 @@
 <div id="twitters">
   <% done_id_hash = {} %>
   <% @twitters_group.each do |key, twitters| %>
-  <h2>
-    <% h2_txt = %!#{key}(#{twitters.size}件)! %>
-    <% if twitters.size > @num_of_disp %>
-      <% h2_txt += %!(のこり#{twitters.size - @num_of_disp}件)! %>
-    <% end %>
-    <%= h2_txt %>
-  </h2>
-  <table border="1" rules="all">
-    <tr>
-      <th>#</th>
-      <th>ID</th>
-      <th>twtname(twtid)</th>
-      <th>
-        予測/最終アクセス日
-      </th>
-      <th>Twt post date</th>
-      <th>pxvid</th>
-      <th>PXV最終アクセス日</th>
-      <th>PXV最終UL日</th>
-      <th>サムネイル</th>
-    </tr>
-    <% cnt = 0 %>
-    <%# twitters.first(@num_of_disp).each.with_index(1) do |twitter, idx| %>
-    <% twitters.each.with_index(1) do |twitter, idx| %>
-      <% if cnt >= @num_of_disp %>
-        <% break %>
+    <h2>
+      <% h2_txt = %!#{key}(#{twitters.size}件)! %>
+      <% if twitters.size > @num_of_disp %>
+        <% h2_txt += %!(のこり#{twitters.size - @num_of_disp}件)! %>
       <% end %>
-
-      <% if done_id_hash.has_key?(twitter.id) %>
-        <% next %>
-      <% end %>
-
-      <% done_id_hash[twitter.id] = true %>
-      <% cnt += 1 %>
-
-      <% twt_url = Twt::twt_user_url(twitter.twtid) %>
-
+      <%= h2_txt %>
+    </h2>
+    <table border="1" rules="all">
       <tr>
-        <td><%= idx %></td>
-        <td>
-          <%#= link_to twitter["id"], twitter %>
-          <%= twitter.id %>
-        </td>
-        <td>
-          <% if @url_list_summary %>
-            <% ele = @url_list_summary.find {|x| x.screen_name == twitter.twtid} %>
-            [<%= ele.todo_cnt %>件]
-          <% end %>
-          <%= twitter.drawing_method %>【<%= twitter.rating %>】<%= twitter.r18 %>
-          <% if twitter.r18 == "R18" %>
-            🔞
-          <% end %>
-          <br />
-          <b><%= twitter.twtname %></b>
-          (@<%= twitter.twtid %>)
-          <br />
-          [<%= twitter.status %>]
-          <br />
-         
-          <% if twitter.comment.presence %>
-            <b><%= %!※#{twitter.comment}! %></b>
-          <% end %>
-          <%= twitter.remarks %>
-        </td>
-
-        <% prediction = twitter.prediction %>
-        <% pred_2 = (twitter.update_frequency||0) / 100 %>
-        <% pred = prediction + pred_2 %>
-        <% pred_bg_clr = pred_bg_color(pred) %>
-        <td bgcolor="<%= pred_bg_clr %>">
-          <%= prediction %><%= %!(#{pred})! if pred - prediction > 5  %>
-          <br />
-          [<%= link_to_ex "■twt■", twitter %>]
-          <br />
-          <%= twitter.get_date_info(twitter.last_access_datetime) if twitter.last_access_datetime.presence %>
-          <br />
-          [頻度：<%= twitter.update_frequency %>]
-        </td>
-
-        <% if twitter.last_post_datetime %>
-          <% ul_delta = twitter.get_date_delta(twitter.last_post_datetime) %>
-          <% # ul_bg_color = "beige" %>
-          <% ul_bg_color = td_date_bg_color(ul_delta) %>
-          <td bgcolor="<%= ul_bg_color %>">
-            <%= Util.get_date_info(twitter.last_post_datetime) %>
-          </td>
-        <% else %>
-          <td></td>
-        <% end %>
-
-        <% pxv = Artist.find_by(pxvid: twitter.pxvid) %>
-        <% if twitter.artist_pxvid.presence and twitter.pxvid != twitter.artist_pxvid %>
-          <% pxv2 = Artist.find_by(id: twitter.artist_id) %>
-        <% end %>
-
-        <!-- pxv id -->
-        <td bgcolor="pink">
-          <% if pxv2.presence %>
-            <%= %!#{pxv2.feature}【#{pxv2.rating}】! %>
-            <%= twitter.pxvname if twitter.twtname != twitter.pxvname %>
-            (<%= link_to_ex pxv2.pxvid, pxv2.pxv_user_url %>)
-            [<%= link_to_ex("■pxv■x", artist_path(pxv2, access_dt_update: "yes")) %>]
-          <% elsif pxv.presence %>
-            <%= %!#{pxv.feature}【#{pxv.rating}】! %>
-            <%= twitter.pxvname if twitter.twtname != twitter.pxvname %>
-            (<%= link_to_ex pxv.pxvid, pxv.pxv_user_url %>)
-            [<%= link_to_ex("■pxv■", artist_path(pxv, access_dt_update: "yes")) %>]
-          <% end %>
-        </td>
-
-        <!-- pxv access -->
-        <td bgcolor="pink">
-          <% if pxv.presence %>
-            予測：<%= pxv.prediction_up_cnt(true) %>
-            <% if twitter.artist_status.presence %>
-              PXVID:<%= %!#{twitter.artist_pxvid}! %>
-              <br />
-              <font color="red">
-                <b><%= %!※#{twitter.artist_status}! %></b>
-              </font>
-            <% end %>
-            <br />
-
-            <% if pxv2.presence %>
-              [<%= link_to_ex("■pxv■(#{pxv2.id})", artist_path(pxv2, access_dt_update: "yes")) %>]
-              (@<%= pxv2.twtid %>)
-              <br />
-              <font color="red">
-                <b><%= %!※#{pxv2.status}! if pxv2.status.presence %></b>
-              </font>
-            <% else %>
-              [<%= link_to_ex("■pxv■(#{pxv.id})", artist_path(pxv, access_dt_update: "yes")) %>]
-              <%= twitter.artist_id %>
-              (@<%= pxv.twtid %>)
-              <br />
-              <font color="red">
-                <b><%= %!※#{pxv.status}! if pxv.status.presence %></b>
-              </font>
-            <% end %>
-            <br />
-
-            <% if twitter.artists_last_access_datetime.presence %>
-              <%= %!(#{twitter.get_date_info(twitter.artists_last_access_datetime)})! %>
-            <% end %>
-            <%= pxv.filenum %>(<%= pxv.recent_filenum %>)
-            <% if pxv.twtid != twitter.twtid %>
-              <hr />
-              @<%= pxv.twtid %><br />
-              [<%= link_to_ex("■pxv■(#{pxv.id})", artist_path(pxv, access_dt_update: "yes")) %>]
-              <br />
-              <%= %!(#{pxv.last_access_datetime_disp})! %>
-            <% else %>
-            <% end %>
-          <% elsif pxv2.presence %>
-            <%= %!(#{pxv2.last_access_datetime_disp})! %>
-          <% end %>
-        </td>
-
-        <!-- pxv ul -->
-        <td bgcolor="pink">
-          <% if twitter.last_ul_datetime.presence %>
-            <% d = Date.parse(twitter.last_ul_datetime) %><!-- なぜかわからないがstring"22-11-31"になってる -->
-            <%#= twitter.get_datetime_string(twitter.last_ul_datetime, true) %>
-            <%#= twitter.get_datetime_string(d, true) %>
-            <br />
-            <%= %!(#{twitter.get_date_info(d)})! %>
-            <% if pxv2.presence and pxv2.reverse_status.presence %>
-              <br />
-              <%= %![#{pxv2.reverse_status}]! %>
-            <% end %>
-          <% end %>
-        </td>
-
-        <!-- サムネイル -->
-        <td>
-          <% if @thumbnail or !twitter.status.presence %>
-            <% list = twitter.get_pic_filelist() %>
-            <% if list.size < 500 %>
-              <% thumbnail = true %>
-            <% end %>
-          <% end %>
-
-          <% if thumbnail %>
-              <% twt_pic_list = list.map {|x| [Twt::twt_path_str(x), x]}.sort.reverse %>
-
-              <!-- -->
-              <%= twitter.filenum %><%= %!(#{twt_pic_list.size})! if twitter.filenum != twt_pic_list.size %>
-
-              <!-- -->
-              <% fnum = 3 %>
-              <% list = twt_pic_list.map {|x| x[1]}.first(fnum) %>
-              <% list.each do |filepath| %>
-                <%= link_to image_tag(filepath, width: pic_disp_mag, height: pic_disp_mag), filepath, target: :_blank, rel: "noopener noreferrer" if filepath.presence %>
-              <% end %>
-          <% else %>
-            <%= twitter.filenum %>
-          <% end %>
-        </td>
+        <th>#</th>
+        <th>ID</th>
+        <th>twtname(twtid)</th>
+        <th>
+          予測/最終アクセス日
+        </th>
+        <th>Twt post date</th>
+        <th>pxvid</th>
+        <th>PXV最終アクセス日</th>
+        <th>PXV最終UL日</th>
+        <th>サムネイル</th>
       </tr>
+      <% cnt = 0 %>
+      <%# twitters.first(@num_of_disp).each.with_index(1) do |twitter, idx| %>
+      <% twitters.each.with_index(1) do |twitter, idx| %>
+        <% if cnt >= @num_of_disp %>
+          <% break %>
+        <% end %>
+
+        <% if done_id_hash.has_key?(twitter.id) %>
+          <% next %>
+        <% end %>
+
+        <% done_id_hash[twitter.id] = true %>
+        <% cnt += 1 %>
+
+        <% twt_url = Twt::twt_user_url(twitter.twtid) %>
+
+        <tr>
+          <td><%= idx %></td>
+          <td>
+            <%#= link_to twitter["id"], twitter %>
+            <%= twitter.id %>
+          </td>
+          <td>
+            <% if @url_list_summary %>
+              <% ele = @url_list_summary.find {|x| x.screen_name == twitter.twtid} %>
+              [<%= ele.todo_cnt %>件]
+            <% end %>
+            <%= twitter.drawing_method %>【<%= twitter.rating %>】<%= twitter.r18 %>
+            <% if twitter.r18 == "R18" %>
+              🔞
+            <% end %>
+            <br />
+            <b><%= twitter.twtname %></b>
+            (@<%= twitter.twtid %>)
+            <br />
+            [<%= twitter.status %>]
+            <br />
+          
+            <% if twitter.comment.presence %>
+              <b><%= %!※#{twitter.comment}! %></b>
+            <% end %>
+            <%= twitter.remarks %>
+          </td>
+
+          <% prediction = twitter.prediction %>
+          <% pred_2 = (twitter.update_frequency||0) / 100 %>
+          <% pred = prediction + pred_2 %>
+          <% pred_bg_clr = pred_bg_color(pred) %>
+          <td bgcolor="<%= pred_bg_clr %>">
+            <%= prediction %><%= %!(#{pred})! if pred - prediction > 5  %>
+            <br />
+            [<%= link_to_ex "■twt■", twitter %>]
+            <br />
+            <%= twitter.get_date_info(twitter.last_access_datetime) if twitter.last_access_datetime.presence %>
+            <br />
+            [頻度：<%= twitter.update_frequency %>]
+          </td>
+
+          <% if twitter.last_post_datetime %>
+            <% ul_delta = twitter.get_date_delta(twitter.last_post_datetime) %>
+            <% # ul_bg_color = "beige" %>
+            <% ul_bg_color = td_date_bg_color(ul_delta) %>
+            <td bgcolor="<%= ul_bg_color %>">
+              <%= Util.get_date_info(twitter.last_post_datetime) %>
+            </td>
+          <% else %>
+            <td></td>
+          <% end %>
+
+          <% pxv = Artist.find_by(pxvid: twitter.pxvid) %>
+          <% if twitter.artist_pxvid.presence and twitter.pxvid != twitter.artist_pxvid %>
+            <% pxv2 = Artist.find_by(id: twitter.artist_id) %>
+          <% end %>
+
+          <!-- pxv id -->
+          <td bgcolor="pink">
+            <% if pxv2.presence %>
+              <%= %!#{pxv2.feature}【#{pxv2.rating}】! %>
+              <%= twitter.pxvname if twitter.twtname != twitter.pxvname %>
+              (<%= link_to_ex pxv2.pxvid, pxv2.pxv_user_url %>)
+              [<%= link_to_ex("■pxv■x", artist_path(pxv2, access_dt_update: "yes")) %>]
+            <% elsif pxv.presence %>
+              <%= %!#{pxv.feature}【#{pxv.rating}】! %>
+              <%= twitter.pxvname if twitter.twtname != twitter.pxvname %>
+              (<%= link_to_ex pxv.pxvid, pxv.pxv_user_url %>)
+              [<%= link_to_ex("■pxv■", artist_path(pxv, access_dt_update: "yes")) %>]
+            <% end %>
+          </td>
+
+          <!-- pxv access -->
+          <td bgcolor="pink">
+            <% if pxv.presence %>
+              予測：<%= pxv.prediction_up_cnt(true) %>
+              <% if twitter.artist_status.presence %>
+                PXVID:<%= %!#{twitter.artist_pxvid}! %>
+                <br />
+                <font color="red">
+                  <b><%= %!※#{twitter.artist_status}! %></b>
+                </font>
+              <% end %>
+              <br />
+
+              <% if pxv2.presence %>
+                [<%= link_to_ex("■pxv■(#{pxv2.id})", artist_path(pxv2, access_dt_update: "yes")) %>]
+                (@<%= pxv2.twtid %>)
+                <br />
+                <font color="red">
+                  <b><%= %!※#{pxv2.status}! if pxv2.status.presence %></b>
+                </font>
+              <% else %>
+                [<%= link_to_ex("■pxv■(#{pxv.id})", artist_path(pxv, access_dt_update: "yes")) %>]
+                <%= twitter.artist_id %>
+                (@<%= pxv.twtid %>)
+                <br />
+                <font color="red">
+                  <b><%= %!※#{pxv.status}! if pxv.status.presence %></b>
+                </font>
+              <% end %>
+              <br />
+
+              <% if twitter.artists_last_access_datetime.presence %>
+                <%= %!(#{twitter.get_date_info(twitter.artists_last_access_datetime)})! %>
+              <% end %>
+              <%= pxv.filenum %>(<%= pxv.recent_filenum %>)
+              <% if pxv.twtid != twitter.twtid %>
+                <hr />
+                @<%= pxv.twtid %><br />
+                [<%= link_to_ex("■pxv■(#{pxv.id})", artist_path(pxv, access_dt_update: "yes")) %>]
+                <br />
+                <%= %!(#{pxv.last_access_datetime_disp})! %>
+              <% else %>
+              <% end %>
+            <% elsif pxv2.presence %>
+              <%= %!(#{pxv2.last_access_datetime_disp})! %>
+            <% end %>
+          </td>
+
+          <!-- pxv ul -->
+          <td bgcolor="pink">
+            <% if twitter.last_ul_datetime.presence %>
+              <% d = Date.parse(twitter.last_ul_datetime) %><!-- なぜかわからないがstring"22-11-31"になってる -->
+              <%#= twitter.get_datetime_string(twitter.last_ul_datetime, true) %>
+              <%#= twitter.get_datetime_string(d, true) %>
+              <br />
+              <%= %!(#{twitter.get_date_info(d)})! %>
+              <% if pxv2.presence and pxv2.reverse_status.presence %>
+                <br />
+                <%= %![#{pxv2.reverse_status}]! %>
+              <% end %>
+            <% end %>
+          </td>
+
+          <!-- サムネイル -->
+          <td>
+            <% if @thumbnail or !twitter.status.presence %>
+              <% list = twitter.get_pic_filelist() %>
+              <% if list.size < 500 %>
+                <% thumbnail = true %>
+              <% end %>
+            <% end %>
+
+            <% if thumbnail %>
+                <% twt_pic_list = list.map {|x| [Twt::twt_path_str(x), x]}.sort.reverse %>
+
+                <!-- -->
+                <%= twitter.filenum %><%= %!(#{twt_pic_list.size})! if twitter.filenum != twt_pic_list.size %>
+
+                <!-- -->
+                <% fnum = 3 %>
+                <% list = twt_pic_list.map {|x| x[1]}.first(fnum) %>
+                <% list.each do |filepath| %>
+                  <%= link_to image_tag(filepath, width: pic_disp_mag, height: pic_disp_mag), filepath, target: :_blank, rel: "noopener noreferrer" if filepath.presence %>
+                <% end %>
+            <% else %>
+              <%= twitter.filenum %>
+            <% end %>
+          </td>
+        </tr>
+      <% end %>
+    </table>
+    <% if twitters.size > @num_of_disp %>
+      <%= %!(のこり#{twitters.size - @num_of_disp}件)! %>
     <% end %>
-  </table>
   <% end %>
 </div>
 
@@ -334,16 +337,32 @@ button.horizontal {
     <%= f.label :表示数 %>
     <%= f.number_field :num_of_disp, :value => params[:num_of_disp] %>
     <br />
+
     <%= f.label :ソート %>
     <%= f.select :sort_by, options_for_select(
         [
-          ["予測▽順", "pred"],
-          ["アクセス日順（旧→新）", "access"],
+          ["予測▽順", TwittersController::SORT_BY::PRED],
+          ["アクセス日順（旧→新）", TwittersController::SORT_BY::ACCESS],
+          ["評価順", TwittersController::SORT_BY::RATING],
         ],
         selected: params[:sort_by] 
-      ) %>
-
+      )
+    %>
     <br />
+
+    <%= f.label :grpソート %>
+    <%= f.select :grp_sort_by, options_for_select(
+        [
+          ["予測▽順", TwittersController::SORT_BY::PRED],
+          ["アクセス日順（旧→新）", TwittersController::SORT_BY::ACCESS],
+          ["評価順", TwittersController::SORT_BY::RATING],
+          ["自動(おまかせ)", TwittersController::SORT_BY::AUTO],
+        ],
+        selected: params[:grp_sort_by] 
+      )
+    %>
+    <br />
+
     <%= f.label :step %>
     <%= f.number_field :step, :value => params[:step] %>
     <br />

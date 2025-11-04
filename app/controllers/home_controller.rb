@@ -5,7 +5,7 @@ class HomeController < ApplicationController
   NUM_OF_DISP = 5
 
   def index
-    rating_std = 85
+    rating_std = 80#85
     lat_no = 5
     @menus = [
       # =====================================
@@ -38,6 +38,7 @@ class HomeController < ApplicationController
           #force_disp_day: 10,
           mode: TwittersController::ModeEnum::ALL_IN_1,
           sort_by: TwittersController::SORT_BY::PRED,
+          grp_sort_by: TwittersController::SORT_BY::PRED,
           #aio: TwittersController::GRP_SORT::GRP_SORT_ACCESS + "|" + TwittersController::GRP_SORT::GRP_SORT_PRED,
           #step: -3,
           #num_of_times: 4,
@@ -56,7 +57,8 @@ class HomeController < ApplicationController
           num_of_disp: 5,
           #force_disp_day: 10,
           mode: TwittersController::ModeEnum::ALL_IN_1,
-          sort_by: TwittersController::SORT_BY::ACCESS,
+          grp_sort_by: TwittersController::SORT_BY::AUTO,
+          sort_by: TwittersController::SORT_BY::RATING,
           #aio: TwittersController::GRP_SORT::GRP_SORT_ACCESS + "|" + TwittersController::GRP_SORT::GRP_SORT_PRED,
           #step: -3,
           #num_of_times: 4,
@@ -76,6 +78,7 @@ class HomeController < ApplicationController
           #force_disp_day: 10,
           mode: TwittersController::ModeEnum::ALL_IN_1,
           sort_by: TwittersController::SORT_BY::ACCESS,
+          grp_sort_by: TwittersController::SORT_BY::ACCESS,
           #aio: TwittersController::GRP_SORT::GRP_SORT_ACCESS + "|" + TwittersController::GRP_SORT::GRP_SORT_PRED,
           #step: -3,
           #num_of_times: 4,
@@ -95,6 +98,7 @@ class HomeController < ApplicationController
           #force_disp_day: 10,
           mode: TwittersController::ModeEnum::ALL_IN_1,
           sort_by: TwittersController::SORT_BY::ACCESS,
+          grp_sort_by: TwittersController::SORT_BY::ACCESS,
           #aio: TwittersController::GRP_SORT::GRP_SORT_ACCESS + "|" + TwittersController::GRP_SORT::GRP_SORT_PRED,
           #step: -3,
           #num_of_times: 4,
@@ -263,6 +267,7 @@ class HomeController < ApplicationController
       { :label => "-", :path => "" },
       { :label => "twt(dir-DB更新 BY FS)", :path => artists_twt_index_path(dir: ArtistsController::DIR_TYPE::UPDATE) },
       { :label => "tweets(dir-DB更新 BY FS)", :path => tweets_update_recods_index_path() },
+      { :label => "-", :path => "" },
       { :label => "twt(dir-archive fsチェック)", :path => artists_twt_index_path(dir: ArtistsController::DIR_TYPE::ARCHIVE_CHECK) },
       { :label => "-", :path => "" },
       { :label => "twt 未設定 予測数順",
@@ -658,7 +663,7 @@ class HomeController < ApplicationController
       { :label => "-", :path => "" },
       # ----------------------------
       { :label => "url file", :path => "" },
-      { :label => "最新ファイル all",
+      { :label => "最新ファイル 全",
           :path => artists_twt_index_path(
             filename: "latest",
             hide_day: 90,
@@ -1308,7 +1313,7 @@ class HomeController < ApplicationController
             mode: TweetsController::ModeEnum::SUMMARY,
             #filename: "all",
             #hide_within_days: 180,
-            #rating: 85,
+            #rating: rating_std,
           )
       },
       { :label => "Tweet url list summary",
@@ -1318,8 +1323,9 @@ class HomeController < ApplicationController
             sort_by: TwittersController::SORT_BY::PRED,
             filename: "thismonth",
             hide_within_days: 15,
+            created_at: 30,
             pred: 30,
-            rating: 85,
+            rating: rating_std,
             todo_cnt: 1,
             target: Twitter::DRAWING_METHOD::DM_AI,
           )

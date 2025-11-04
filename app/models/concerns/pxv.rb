@@ -3,6 +3,9 @@
 module Pxv
     extend ActiveSupport::Concern
 
+    # PxDl/${userName}(${userId})/${YY}-${MM}-${DD} ${title}(${id})
+    # AnkPixiv/Twitter/<userid>/<tweetid> <imageindex> <year>-<month>-<day>.<ext>
+
     PXV_ARCHIVE_DIR_PATH = "public/pxv/"
     #PXV_DIRLIST_PATH = "public/pxv/dirlist.txt"
     PXV_DIRLIST_PATH = PXV_ARCHIVE_DIR_PATH + "dirlist.txt"

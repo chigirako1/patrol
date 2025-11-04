@@ -363,9 +363,9 @@ class Artist < ApplicationRecord
         Util.get_days_date_delta(from, to)
     end
 
-    def created_at_day_num
-        get_date_delta(created_at)
-    end
+    #def created_at_day_num
+    #    get_date_delta(created_at)
+    #end
 
     def days_within?()
     end
@@ -674,6 +674,7 @@ class Artist < ApplicationRecord
         [50, [50, 180, 180]],
         [0,  [100, 360, 240]],
     ]
+=begin
     COND_DATA_AI = [
         #r, [pred, day, intvl]
         [100,[ 3,  3,  0]],
@@ -689,6 +690,13 @@ class Artist < ApplicationRecord
         #------------
         [50, [100,360,90]],
         [0,  [200,360,180]],
+    ]
+=end
+    Cond_struct = Struct.new(:min_pred, :max_interval, :min_interval)
+    COND_DATA_AI = [
+        [98, Cond_struct.new( 8,  5,  3)],
+        [95, Cond_struct.new(10, 10,  7)],
+        [90, Cond_struct.new(10, 20, 10)],
     ]
 
     def select_cond_aio

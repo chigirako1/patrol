@@ -33,8 +33,9 @@
 </div>
 
 <div>
+    <hr />
     <%= link_to_ex("tweets", tweets_path(screen_name: @twitter.twtid)) %>
-    <br />
+    <hr />
     <%= link_to "Back to twitters", twitters_path %>
     <%= button_to "Destroy this twitter", @twitter, method: :delete %>
 </div>

@@ -18,11 +18,12 @@ module Twt
 
     TWT_USER_DEV = "TwitterDev"
 
-    TWT_RGX_URL_BASE = 
+    TWT_RGX_URL_BASE = ""
     TWT_RGX_URL = %r!https?://(?:x|twitter)\.com/\w+/status/(\d+)!
+    TWT_URL_SCREEN_NAME_RGX = %r!(?:x|twitter)\.com/(\w+)!
 
     TMP_DIR_PATH = "public/d_dl/"
-    
+
     TWT_CURRENT_DIR_PATH = TMP_DIR_PATH + "Twitter/"
     TWT_TMP_DIR_PATH     = TMP_DIR_PATH + "Twitter-/"
     TWT_TMP_DIR_PATH_A   = TMP_DIR_PATH + "Twitter-/a/"
@@ -680,14 +681,18 @@ module Twt
     end
 
     def self.get_screen_name(str)
-        if str =~ /(\w+)/
+        if str =~ TWT_URL_SCREEN_NAME_RGX
+            screen_name = $1
+            return screen_name
+        elsif str =~ /(\w+)/
             result = $1
             if result != str
                 puts %![LOG] "#{$1}" <= "#{str}"!
                 return result
             end
+        else
+            return str
         end
-        return str
     end
 
     def self.sanitize_filename(filename)
@@ -712,6 +717,144 @@ module Twt
         end
 
         sanitized_name
+    end
+
+    def self.get_pic_info_path_list()
+        base_path = UrlTxtReader::public_path(TWT_CURRENT_DIR_PATH)
+        rg_filename = %r%!pic_infos!.*\.tsv%
+
+        STDERR.puts %!"#{base_path}"/"#{rg_filename}"!
+
+        path_list = []
+        Dir.glob(base_path + "*") do |path|
+            if path =~ rg_filename
+                path_list << path
+                #break
+            else
+           end
+        end
+        path_list
+    end
+
+    def self.get_pic_infos(path_list, scrn_name=nil)
+        exist_chk = false
+        twtdirs = TwtDirs.new
+        hash = Hash.new { |h, k| h[k] = [] }
+        path_list.each do |fpath|
+            STDERR.puts %!=== "#{fpath}" ===>!
+            tsv = CSV.read(fpath, headers: false, col_sep: "\t")
+            tsv.each do |row|
+                path = row[0]
+                screen_name = Util::parent_dirname(path)
+
+                if scrn_name and screen_name != scrn_name
+                    next
+                end
+
+                if exist_chk
+                    user_exist = twtdirs.user_exist?(screen_name)
+                    if user_exist
+                        do_proc = true
+                    else
+                        do_proc = false
+                    end
+                else
+                    do_proc = true
+                end
+
+                #TODO: 1pixelあたりのバイトサイズ計算
+                
+                if do_proc
+                    picpath = row[0]
+                    filesize = row[1].to_i
+                    width = row[2].to_i
+                    height = row[3].to_i
+                    hash_val = row[4]
+
+                    #tinfo = get_tweet_info_from_filepath(path)
+                    #STDERR.puts %!@#{screen_name} #{tinfo}!
+                    hash[screen_name] << filesize
+                end
+            end
+        end
+        hash
+    end
+
+    def self.map_pic_infos(hash)
+        tmp_struct = Struct.new(:avg, :max, :min, :cnt)
+
+        hash2 = hash.map {|k,v|
+            [
+                k,
+                #[v.sum / v.size, v.max, v.min]
+                tmp_struct.new(v.sum / v.size, v.max, v.min, v.size)
+            ]
+        }.select {|x|
+            x[1].cnt > 30 and x[1].avg > 750 * 1024
+        }.map {|x|
+            [
+                x[0],
+                [
+                    x[1],
+                    Twitter.find_by(twtid: x[0])
+                ]
+            ]
+        }.to_h
+
+        hash2
+    end
+
+    def self.list_pic_infos(hash2)
+        hash2.each do |k,val|
+            v = val[0]
+            #twt = Twitter.find_by(twtid: k)
+            twt = val[1]
+            if twt
+                if twt.status != Twitter::TWT_STATUS::STATUS_PATROL
+                    next
+                end
+
+                if twt.drawing_method and twt.drawing_method != Twitter::DRAWING_METHOD::DM_AI
+                    next
+                end
+
+                if (twt.rating||0) < 80
+                    next
+                end
+
+                pred_str = sprintf(%!%3d!, twt.update_frequency)
+                postdate = twt.last_post_datetime.in_time_zone('Tokyo').strftime("%y/%m/%d")
+                dayn = sprintf("%3d", Util::get_date_delta(twt.last_post_datetime))
+                inf = %![#{pred_str}] #{postdate}(#{dayn})【#{twt.rating}/#{twt.r18}】#{twt.twtname}(@#{k})!
+            else
+                inf = %!"@#{k}"!
+            end
+=begin
+            msg = sprintf(%!%10s/%10s(%10s) %10s [%5d]%s!,
+                Util::formatFileSize(v.max),
+                Util::formatFileSize(v.min),
+                Util::formatFileSize(v.max - v.min),
+                Util::formatFileSize(v.avg),
+                v.cnt,
+                inf)
+=end
+            msg = sprintf(%!%5d %10s %s!,
+                v.cnt,
+                Util::formatFileSizeKB(v.avg),
+                inf)
+            STDERR.puts(msg)
+        end
+    end
+
+    def self.load_pic_info_tsv(screen_name)
+        path_list = get_pic_info_path_list
+
+        hash = get_pic_infos(path_list)
+        hash2 = map_pic_infos(hash)
+        hash3 = hash2.sort_by {|k, x| (x[1].rating||0)}.to_h
+        list_pic_infos(hash3)
+
+        hash2[screen_name]
     end
 
     # =========================================================================

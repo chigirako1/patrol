@@ -34,6 +34,7 @@ class TweetsController < ApplicationController
     @rating_gt = get_param_num(:rating)
     @pred = get_param_num(:pred)
     @target = get_param_str(:target)
+    @created_at = get_param_num(:created_at)
     @todo_cnt = 0
 
     @tweet_cnt_list = []
@@ -73,6 +74,7 @@ class TweetsController < ApplicationController
 
   # GET /tweets/1 or /tweets/1.json
   def show
+    @pic_list = Twt::get_pic_filelist(@tweet.screen_name)
   end
 
   # GET /tweets/new

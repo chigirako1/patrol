@@ -15,6 +15,14 @@ module UrlTxtReader
     def get_year_delta(date)
         Util::get_date_delta(date) / 365
     end
+    
+    def created_at_day_num
+        get_date_delta(created_at)
+    end
+
+    def last_access_day_num
+        get_date_delta(last_access_datetime)
+    end
 
     def last_access_datetime_p(day = 13)
         delta = Util::get_date_delta(last_access_datetime)
@@ -152,7 +160,7 @@ module UrlTxtReader
     def self.get_path(filename)
         case filename
         when "all"
-            path = []
+            path = nil
         when "latest"
             path = UrlTxtReader::get_latest_txt
         when /latest\s+(\d+)/
@@ -196,6 +204,12 @@ module UrlTxtReader
             STDERR.puts %!"#{filename}"!
             #path = ["public/urllist/#{filename}.txt"]
             path = ["#{UrlTxtReader::URLLIST_DIR_PATH}/#{filename}.txt"]
+        end
+
+        if path == nil
+            path = []
+        elsif path.size == 0
+            path = path = UrlTxtReader::get_latest_txt
         end
         STDERR.puts %!filename="#{filename}"!
         STDERR.puts "path='#{path}'"

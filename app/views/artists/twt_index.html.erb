@@ -273,8 +273,12 @@
         <!-- pxv -->
         <% pxv_artist = Artist.find_by_twtid_ignore_case(key) %>
         <% if pxv_artist %>
-
+            <!-- PXVに登録済み -->
             <% pxv_list_tmp << PxvInfo.new(pxv_artist.pxvid, url_list.size, pxv_artist) %>
+            <!--
+            <%= pxv_artist.pxvname %>[<%= link_to_ex("■pxv■", artist_path(pxv_artist, access_dt_update: "yes")) %>]
+            <br />
+            -->
             <% next %>
         <% end %>
 
