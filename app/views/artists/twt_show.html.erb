@@ -8,7 +8,7 @@
     <%= link_to "New Twt", new_twitter_path(twtid: @twtid, status: "TWT巡回") %>
     <br />
 <% else %>
-    twt:<%= twt_acnt.twt_screen_name %>[<%= link_to "show", twt_acnt, target: :_blank, rel: "noopener noreferrer" %>]
+    twt:<%= twt_acnt.twtname %>[<%= link_to "show", twt_acnt, target: :_blank, rel: "noopener noreferrer" %>]
     <%#= twt_acnt.last_access_datetime_disp %>
     <%= twt_acnt.status %>,<%= twt_acnt.drawing_method %>
     <br />

@@ -229,8 +229,29 @@
           <br />
         <% end %>
       <% else %>
-        <% pxv3 = Artist.looks("pxvname", twtname, "partial_match") %>
-        <% if pxv3.presence and @twitter.twtname.presence and @twitter.twtname.size > 2 %>
+        <% if @twitter.pxvid.presence %>
+          <% dirlist = Pxv::stock_dir_list %>
+          <% user_name = Pxv::user_name(dirlist, twitter.pxvid) %>
+          <br />
+          <% if user_name.presence %>
+            "<%= user_name %>"(DB未登録。フォルダはあり。)
+            <%= link_to_ex %!☆pxv☆:@#{user_name}!, artist_pxv_path(twitter.pxvid) %>
+            <% dir_exist = true %>
+          <% else %>
+            ※フォルダなし？
+          <% end %>
+        <% end %>
+
+        <% unless dir_exist %>
+          <% pxv3 = Artist.looks("pxvname", twtname, "partial_match") %>
+          <% if pxv3.presence and @twitter.twtname.presence and @twitter.twtname.size > 2 %>
+            <% ruiji = true %>
+          <% elsif @twitter.twtname.presence %>
+            <% go_google = true %>
+          <% end %>
+        <% end %>
+
+        <% if ruiji %>
           <br />
           類似名あり：<br />
           <% pxv3.each do |pxv_n| %>
@@ -244,17 +265,9 @@
             <%= link_to_ex("■pxv■", artist_path(pxv_n.id, access_dt_update: "yes")) %>
             <br />
           <% end %>
-        <% elsif twitter.pxvid %>
-          <br />
-          <% dirlist = Pxv::stock_dir_list %>
-          <% user_name = Pxv::user_name(dirlist, twitter.pxvid) %>
-          <% if user_name.presence %>
-            "<%= user_name %>"(DB未登録。フォルダはあり。)
-            <%= link_to_ex %!☆pxv☆:@#{user_name}!, artist_pxv_path(twitter.pxvid) %>
-          <% else %>
-            ※フォルダなし？
-          <% end %>
-        <% elsif @twitter.twtname.presence %>
+        <% end %>
+
+        <% if go_google %>
           <br />
           google検索→
           <% url = Util::google_search_url(@twitter.twtname) %>

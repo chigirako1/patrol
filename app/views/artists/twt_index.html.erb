@@ -88,6 +88,9 @@
     <h2>登録済みtwt (<%= known_twt_url_list_size %>)</h2>
 <% end %>
 
+<% filesize_list = Twt::get_pic_filesize_list %>
+<% STDERR.puts %!filesize_list=#{filesize_list.size}! %>
+
 <% if twt_group.presence %>
     <% twt_group = twt_group.sort.reverse.to_h #twt_group = twt_group.sort.to_h %>
     <% twt_group.each do |key, val| %>
@@ -144,7 +147,7 @@
                     </td>
                     <td>
                         <b>
-                            <%= twt_account.twt_screen_name %>
+                            <%= twt_account.twtname %>
                         </b>
                         (@<%= twt_account.twtid %>)
                     </td>
@@ -155,7 +158,12 @@
                     </td>
                     <td>
                         <%= link_to_ex "■twt■", twt_account %>
-                        
+                        <% if filesize_list[twt_account.twtid] %>
+                            <% kb = filesize_list[twt_account.twtid] / 1024 %>
+                            <%= sprintf("[%4d KB]", kb) if kb > Twt::THRESHOLD_KB %>
+                        <% else %>
+                            (未登録)
+                        <% end %>
                     </td>
                     <td>
                         <%= twt_account.last_access_datetime_disp %>
@@ -613,7 +621,11 @@
                         </td>
 
                         <!-- 予測 -->
-                        <td align="right"><%= twt.prediction %></td>
+                        <% pred = twt.prediction %>
+                        <% bgcolor = pred_bg_color(pred) %>
+                        <td align="right" bgcolor="<%= bgcolor %>">
+                            <%= pred %>
+                        </td>
 
                         <!--  -->
                         <% acs_delta = twt.get_date_delta(twt.last_access_datetime) %>
@@ -803,6 +815,20 @@
         <%= value.num_of_files %>:@<%= twtid %>
         <% twt_account = Twitter.find_by_twtid_ignore_case(twtid) %>
         (<%= link_to_ex "■twt■", twt_account %>)
+        <br />
+    <% end %>
+<% end %>
+
+<% if @sp_dirs.presence %>
+    <h2>a</h2>
+    <% @sp_dirs.each.with_index(1) do |elem, idx| %>
+        <%= idx %>."<%= elem.dirname %>"
+        <% if elem.twt %>
+            (@<%= elem.screen_name %>)[<%= link_to_ex("■twt■", elem.twt) %>]
+        <% else %>
+            <% url = twitters_path(mode: TwittersController::ModeEnum::SEARCH, search_word: elem.dirname) %>
+            [<%= link_to_ex("■検索■", url) %>]
+        <% end %>
         <br />
     <% end %>
 <% end %>

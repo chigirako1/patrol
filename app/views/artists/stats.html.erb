@@ -60,4 +60,7 @@
 
 <h1>stats</h1>
 
-<%= Twt::load_pic_info_tsv("") %>
+<% ids = Twt::load_pic_info_tsv() %>
+<% ids.each do |screen_name| %>
+    <%= screen_name %><br />
+<% end %>

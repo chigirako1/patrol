@@ -32,14 +32,15 @@
 <% end %>
 
 <% if @twitters_group.size == 0 and params[:mode] == TwittersController::ModeEnum::SEARCH %>
-  <% user_exist = Twt::user_exist?(search_word) %>
+  <% scrn_name = Twt::get_screen_name(search_word) %>
+  <% user_exist = Twt::user_exist?(scrn_name) %>
   <% if user_exist %>
-    <h3>DB未登録だがフォルダあり:"@<%= search_word %>"</h3>
-    <%= link_to_ex %!☆twt☆:@#{search_word}!, artist_twt_path(search_word) %>
+    <h3>DB未登録だがフォルダあり:"@<%= scrn_name %>"</h3>
+    <%= link_to_ex %!☆twt☆:@#{scrn_name}!, artist_twt_path(scrn_name) %>
   <% else %>
-    <h3>twt:"<%= search_word %>" not found</h3>
-    <%= link_to_ex %!☆twt☆:@#{search_word}!, artist_twt_path(search_word) %>
-    <% pt = Artist.find_by(twtid: search_word) %>
+    <h3>twt:"<%= scrn_name %>" not found</h3>
+    <%= link_to_ex %!☆twt☆:@#{scrn_name}!, artist_twt_path(scrn_name) %>
+    <% pt = Artist.find_by(twtid: scrn_name) %>
     <% if pt %>
       PXVには登録あり:"<%= pt.pxvname %>"[<%= link_to_ex "■pxv■", pt %>](@<%= pt.twtid %>)
     <% end %>
@@ -47,6 +48,9 @@
 <% end %>
 
 <div id="twitters">
+  <!-- TODO:DBにカラムを追加する(KB) -->
+  <% filesize_list = Twt::get_pic_filesize_list %>
+
   <% done_id_hash = {} %>
   <% @twitters_group.each do |key, twitters| %>
     <h2>
@@ -120,7 +124,15 @@
           <% pred_bg_clr = pred_bg_color(pred) %>
           <td bgcolor="<%= pred_bg_clr %>">
             <%= prediction %><%= %!(#{pred})! if pred - prediction > 5  %>
+            
+            <% if filesize_list[twitter.twtid] %>
+              <% kb = filesize_list[twitter.twtid] / 1024 %>
+              <font color="red">
+                <%= sprintf("[%4d KB]", kb) if kb > Twt::THRESHOLD_KB %>
+              </font>
+            <% end %>
             <br />
+
             [<%= link_to_ex "■twt■", twitter %>]
             <br />
             <%= twitter.get_date_info(twitter.last_access_datetime) if twitter.last_access_datetime.presence %>
@@ -353,10 +365,15 @@ button.horizontal {
     <%= f.label :grpソート %>
     <%= f.select :grp_sort_by, options_for_select(
         [
-          ["予測▽順", TwittersController::SORT_BY::PRED],
-          ["アクセス日順（旧→新）", TwittersController::SORT_BY::ACCESS],
-          ["評価順", TwittersController::SORT_BY::RATING],
-          ["自動(おまかせ)", TwittersController::SORT_BY::AUTO],
+          ["予測△順", TwittersController::GRP_SORT::GRP_SORT_PRED],
+          ["予測▽順", TwittersController::GRP_SORT::GRP_SORT_PRED_DESC],
+          ["アクセス日順（旧→新）", TwittersController::GRP_SORT::GRP_SORT_ACCESS],
+          ["評価順", TwittersController::GRP_SORT::GRP_SORT_RATE],
+          [TwittersController::GRP_SORT::GRP_SORT_UL, TwittersController::GRP_SORT::GRP_SORT_UL],
+          [TwittersController::GRP_SORT::GRP_SORT_UL_ACCESS, TwittersController::GRP_SORT::GRP_SORT_UL_ACCESS],
+          [TwittersController::GRP_SORT::GRP_SORT_NO_UPDATE, TwittersController::GRP_SORT::GRP_SORT_NO_UPDATE],
+          [TwittersController::GRP_SORT::GRP_SORT_DEL, TwittersController::GRP_SORT::GRP_SORT_DEL],
+          ["自動(おまかせ)", TwittersController::GRP_SORT::GRP_SORT_AUTO],
         ],
         selected: params[:grp_sort_by] 
       )

@@ -52,7 +52,9 @@ module Util
             weeks = days / 7
             "#{weeks}週間以上前"
         elsif days == 0
-            "24時間以内"
+            now = Time.zone.now
+            hour = now.hour - date.hour
+            "#{hour}時間以内"
         else
             "#{days}日以内"
         end
@@ -74,10 +76,10 @@ module Util
         path_list = []
 
         root_path = Rails.root.join(ipath).to_s + glob_param
-        puts %!Util::glob:"#{root_path}", param="#{glob_param}"!
         Dir.glob(root_path).each do |path|
             path_list << path 
         end
+        STDERR.puts %!Util::glob():"#{root_path}", param="#{glob_param}", path_list.size=#{path_list.size}!
         path_list
     end
 
@@ -128,6 +130,10 @@ module Util
     def self.get_host_name_from_uri(url)
         uri = URI.parse(url)
         uri.host
+    end
+
+    def self.num_to_str_f(val, unit)
+        sprintf("%3d", val / unit * unit)
     end
     
     def self.formatFileSize(bytes)

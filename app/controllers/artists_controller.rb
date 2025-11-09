@@ -326,6 +326,7 @@ class ArtistsController < ApplicationController
     REG_DUP_FILES = "register_dup_files"
     NEW_LIST = "new-list"
     ARCHIVE_CHECK = "archive-check"
+    SMARTPHONE = "SMARTPHONE"
   end
 
   module ShowMode
@@ -849,6 +850,8 @@ class ArtistsController < ApplicationController
         @twt_user_infos = Twt::twt_user_infos()
       when DIR_TYPE::ARCHIVE_CHECK
         Twt::archive_check()
+      when DIR_TYPE::SMARTPHONE
+        @sp_dirs = Twt::sp_dirs()
       else
       end
     elsif filename == ""

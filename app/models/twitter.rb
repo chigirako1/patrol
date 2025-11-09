@@ -76,7 +76,7 @@ class Twitter < ApplicationRecord
                 search_word = $1
             #elsif search_word =~ %r!twitter\.com/(\w+)! or
             #    search_word =~ %r!x\.com/(\w+)!
-            elsif search_word =~ TWT::TWT_URL_SCREEN_NAME_RGX
+            elsif search_word =~ Twt::TWT_URL_SCREEN_NAME_RGX
                 target_col = SEARCH_TARGET::TWT_TWTID
                 search_word = $1
             else
@@ -261,16 +261,16 @@ class Twitter < ApplicationRecord
         }
     end
 
+=begin
     def twt_screen_name
         twtname
-=begin
         if twtname == ""
             return ""
         else
             return twtname
         end
-=end
     end
+=end
 
     def last_dl_datetime_disp
         get_date_info(last_dl_datetime)
@@ -304,9 +304,9 @@ class Twitter < ApplicationRecord
         list
     end
 
-    def predic_str(unit)
-        pred = self.prediction()
-        sprintf("%3d", pred / unit * unit)
+    def num_to_str_f(val, unit)
+        sprintf("%3d", val / unit * unit)
+        Util::num_to_str_f(val, unit)
     end
 
     def prediction(datetime_arg=nil)
@@ -426,7 +426,7 @@ class Twitter < ApplicationRecord
 
                 # インターバル
                 if min_intvl > elapsed
-                    STDERR.puts %!#{rating}:"#{twtname}(@#{twtid})":#{min_intvl} > #{elapsed}!
+                    #STDERR.puts %!#{rating}:"#{twtname}(@#{twtid})":#{min_intvl} > #{elapsed}!
                     return false
                 end
 
@@ -436,7 +436,7 @@ class Twitter < ApplicationRecord
                 end
 
                 if pred_cond_gt > 0 and prediction < pred_cond_gt
-                    STDERR.puts %!#{rating}:"#{twtname}(@#{twtid})":#{prediction}/#{elapsed}|#{pred}/#{max_intvl}!
+                    #STDERR.puts %!#{rating}:"#{twtname}(@#{twtid})":#{prediction}/#{elapsed}|#{pred}/#{max_intvl}!
                     return false
                 end
 
@@ -523,9 +523,14 @@ class Twitter < ApplicationRecord
                 end
                 
                 days_accs = Util::get_date_delta(last_access_datetime)
-                if days_accs <= 2
+                if days_accs <= 1
+                    key = %!080:1日以内!
+                    add_count = false
+=begin
+                elsif days_accs <= 2
                     key = %!080:2日以内!
                     add_count = false
+=end
                 elsif days_accs <= 4
                     key = %!080:4日以内!
                     add_count = false
@@ -550,8 +555,18 @@ class Twitter < ApplicationRecord
                     key = "901:評価#{rating}"
                 end
                 #key = %!#{method}|#{key}!
-                unit = 10
-                key = %!#{key}|予測#{prediction / unit * unit}↑!
+                pred = prediction
+                if pred == 0
+                    key = %!#{key}|予測0!
+                elsif pred > 10
+                    unit = 10
+                    p = prediction / unit * unit
+                    key = %!#{key}|予測#{p}↑!
+                else
+                    unit = 5
+                    p = prediction / unit * unit
+                    key = %!#{key}|予測#{p}↑!
+                end
             else
                 key = "999.未設定#{filenum_str}"
             end
@@ -603,9 +618,9 @@ class Twitter < ApplicationRecord
 
     def self.access_str(lad_n)
         tbl = [
-            #1,
+            1,
             3,
-            #7,
+            7,
             14,
             20,
             30,
@@ -640,8 +655,10 @@ class Twitter < ApplicationRecord
 =end
         accs = ""
 
-        if rating >= rating_gt * 1.05
-            rat_str = "0高"
+        if rating >= rating_gt * 1.1
+            rat_str = "0V高"
+        elsif rating >= rating_gt * 1.05
+            rat_str = "1高"
         elsif rating >= rating_gt
             rat_str = "5中"
         else
@@ -649,6 +666,17 @@ class Twitter < ApplicationRecord
         end
 
         accs_rec = Twitter::access_str(last_access_day_num)
+        if last_access_day_num < 1
+            top_s = "9:今日"
+        elsif last_access_day_num < 7
+            top_s = "8:今週"
+        elsif last_access_day_num > 360
+            top_s = "0:大昔"
+        elsif last_access_day_num > 30
+            top_s = "1:昔"
+        else
+            top_s = "2:中間"
+        end
 
         if self.select_cond_aio(0)
             obj = "0対象"
@@ -674,6 +702,7 @@ class Twitter < ApplicationRecord
 
         if self.status == Twitter::TWT_STATUS::STATUS_PATROL
             [
+                top_s,
                 rat_str,
                 self.status||"",
                 self.drawing_method||"",
@@ -692,11 +721,30 @@ class Twitter < ApplicationRecord
         end
     end
 
+    def a1o_auto_group_key()
+=begin
+        lad_n = self.last_access_datetime_days_elapsed / 30
+        unit = 3
+        #rat_n = self.rating / unit * unit
+        pred_n = self.predic_str(10)
+        #ary = [rat_n, lad_n, pred_n]
+        #ary = [%!#{lad_n}月!, pred_n, self.rating]
+        #ary.join("|")
+        %!%#{lad_n}月|予測#{pred_n}|評価#{self.rating}!
+=end
+        lad_n = self.last_access_datetime_days_elapsed / 7
+        pred_n = num_to_str_f(self.prediction, 10)
+        rate_n = num_to_str_f(self.rating, 3)
+        %!#{lad_n}週|予測#{pred_n}～|評価#{rate_n}～!
+    end
+
+
     def self.url_list_work_to_hash(url_list_work, hide_within_days, rating_gt)
         hash = {}
         hash = url_list_work.group_by {|x|
+            e = x[0];
             twt = x[1];
-            twt.group_key2(hide_within_days, rating_gt)
+            sprintf("[%2d(%d)]", 100 - e.todo_cnt, e.todo_cnt) + twt.group_key2(hide_within_days, rating_gt)
         }
         hash.sort_by {|k,v| k}.to_h
     end

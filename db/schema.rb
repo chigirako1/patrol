@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.0].define(version: 2025_07_04_075937) do
+ActiveRecord::Schema[8.0].define(version: 2025_11_09_035449) do
   create_table "artists", force: :cascade do |t|
     t.string "pxvname"
     t.integer "pxvid"
@@ -62,6 +62,7 @@ ActiveRecord::Schema[8.0].define(version: 2025_07_04_075937) do
     t.integer "del_cnt"
     t.string "change_history"
     t.string "del_info"
+    t.index ["pxvid"], name: "index_artists_on_pxvid", unique: true
   end
 
   create_table "books", force: :cascade do |t|
@@ -138,6 +139,11 @@ ActiveRecord::Schema[8.0].define(version: 2025_07_04_075937) do
     t.integer "oldest_tweet_id"
     t.datetime "zipped_at"
     t.string "change_history"
+    t.integer "filesize"
+    t.integer "video_cnt"
+    t.integer "min_interval"
+    t.integer "max_interval"
+    t.index ["twtid"], name: "index_twitters_on_twtid", unique: true
   end
 
   create_table "users", force: :cascade do |t|

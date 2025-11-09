@@ -35,7 +35,7 @@ class TweetsController < ApplicationController
     @pred = get_param_num(:pred)
     @target = get_param_str(:target)
     @created_at = get_param_num(:created_at)
-    @todo_cnt = 0
+    @todo_cnt = get_param_num(:todo_cnt)
 
     @tweet_cnt_list = []
     @known_twt_url_list = []

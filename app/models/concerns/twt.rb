@@ -27,9 +27,12 @@ module Twt
     TWT_CURRENT_DIR_PATH = TMP_DIR_PATH + "Twitter/"
     TWT_TMP_DIR_PATH     = TMP_DIR_PATH + "Twitter-/"
     TWT_TMP_DIR_PATH_A   = TMP_DIR_PATH + "Twitter-/a/"
+    TWT_SP_DIR_PATH      = TMP_DIR_PATH + "twitter_sp/"
 
     TWT_ARCHIVE_DIR_PATH = "public/twt"
     TWT_DIRLIST_TXT_PATH = "#{TWT_ARCHIVE_DIR_PATH}/dirlist.txt"
+
+    THRESHOLD_KB = 600
 
     def self.get_twt_tweet_ids_from_txts(twtid)
         txts = UrlTxtReader::get_url_txt_contents_uniq_ary([])
@@ -203,6 +206,26 @@ module Twt
                 STDERR.puts %!unknonw id:"#{twtid}"|"#{path}"!
             end
         end
+    end
+
+    def self.parse_dirname(path)
+        tmp_struct = Struct.new(:path, :dirname, :screen_name, :twt)
+
+        dirname = File.basename path
+        if dirname =~ /\(@(\w+)\)/
+            screen_name = $1
+            twt = Twitter.find_by_twtid_ignore_case(screen_name)
+        else
+        end
+        tmp_struct.new(path, dirname, screen_name, twt)
+    end
+
+    def self.sp_dirs()
+        path_list = Util::glob("#{TWT_SP_DIR_PATH}")
+        #path_list.each do |path|
+        #    STDERR.puts %!"#{path}"!
+        #end
+        path_list.map {|path| parse_dirname path}
     end
 
     def self.twt_user_infos()
@@ -683,16 +706,25 @@ module Twt
     def self.get_screen_name(str)
         if str =~ TWT_URL_SCREEN_NAME_RGX
             screen_name = $1
-            return screen_name
+        elsif str =~ /^@(\w+)/ #/(\w+)/ではだめ？？？
+            result = $1
+            screen_name = result
         elsif str =~ /(\w+)/
             result = $1
             if result != str
-                puts %![LOG] "#{$1}" <= "#{str}"!
-                return result
+                screen_name = result
+            else
+                screen_name = str
             end
         else
-            return str
+            screen_name = str
         end
+
+        if str != screen_name
+            puts %![LOG]変更あり "#{screen_name}" <= "#{str}"!
+        end
+
+        return screen_name
     end
 
     def self.sanitize_filename(filename)
@@ -737,11 +769,12 @@ module Twt
     end
 
     def self.get_pic_infos(path_list, scrn_name=nil)
+
         exist_chk = false
         twtdirs = TwtDirs.new
         hash = Hash.new { |h, k| h[k] = [] }
         path_list.each do |fpath|
-            STDERR.puts %!=== "#{fpath}" ===>!
+            STDERR.puts %!get_pic_infos:=== "#{fpath}" ===>!
             tsv = CSV.read(fpath, headers: false, col_sep: "\t")
             tsv.each do |row|
                 path = row[0]
@@ -752,35 +785,59 @@ module Twt
                 end
 
                 if exist_chk
+                    # TODO:毎回チェックするのは無駄
                     user_exist = twtdirs.user_exist?(screen_name)
                     if user_exist
-                        do_proc = true
                     else
-                        do_proc = false
+                        next
                     end
-                else
-                    do_proc = true
                 end
 
                 #TODO: 1pixelあたりのバイトサイズ計算
                 
-                if do_proc
-                    picpath = row[0]
-                    filesize = row[1].to_i
-                    width = row[2].to_i
-                    height = row[3].to_i
-                    hash_val = row[4]
+                picpath = row[0]
+                filesize = row[1].to_i
+                width = row[2].to_i
+                height = row[3].to_i
+                hash_val = row[4]
 
-                    #tinfo = get_tweet_info_from_filepath(path)
-                    #STDERR.puts %!@#{screen_name} #{tinfo}!
-                    hash[screen_name] << filesize
-                end
+                #tinfo = get_tweet_info_from_filepath(path)
+                #STDERR.puts %!@#{screen_name} #{tinfo}!
+                hash[screen_name] << filesize
             end
         end
+
+        STDERR.puts %!get_pic_infos: size=#{hash.size}!
+
         hash
     end
 
-    def self.map_pic_infos(hash)
+    @@hoge = nil #controllerからだと毎回初期化される？？？よくわからん。DBに保存しないとだめぽい
+
+    def self.get_pic_infos_ex()
+=begin
+        AppData::FILESIZE_HASH.each do |k,v|
+            puts %!@#{k}:#{v}!
+        end
+=end
+        #AppData::FILESIZE_HASH
+
+        if @@hoge == nil or @@hoge.size == 0
+            @@hoge = init_pic_infos
+        else
+            STDERR.puts "get_pic_infos_ex(): #{@@hoge.size}"
+        end
+        @@hoge
+    end
+
+    def self.init_pic_infos()
+        STDERR.puts "init_pic_infos()"
+        path_list = get_pic_info_path_list
+        hash = get_pic_infos(path_list)
+        hash
+    end
+
+    def self.map_pic_infos(hash, threshold_kb)
         tmp_struct = Struct.new(:avg, :max, :min, :cnt)
 
         hash2 = hash.map {|k,v|
@@ -790,7 +847,7 @@ module Twt
                 tmp_struct.new(v.sum / v.size, v.max, v.min, v.size)
             ]
         }.select {|x|
-            x[1].cnt > 30 and x[1].avg > 750 * 1024
+            x[1].cnt > 30 and x[1].avg > threshold_kb
         }.map {|x|
             [
                 x[0],
@@ -800,6 +857,8 @@ module Twt
                 ]
             ]
         }.to_h
+
+        STDERR.puts %!#{hash.size} => #{hash2.size}!
 
         hash2
     end
@@ -846,15 +905,143 @@ module Twt
         end
     end
 
-    def self.load_pic_info_tsv(screen_name)
-        path_list = get_pic_info_path_list
+    def self.output_pic_info_csv(hash)
+        list = Hash.new { |h, k| h[k] = [] }
+        key11 = "11.日数経過"
+        key21 = "21.更新頻度-h"
+        key25 = "25.更新頻度-m"
+        #key29 = "29.更新頻度-l"
+        key31 = "31.平均サイズL"
+        key99 = "99.その他"
 
-        hash = get_pic_infos(path_list)
-        hash2 = map_pic_infos(hash)
-        hash3 = hash2.sort_by {|k, x| (x[1].rating||0)}.to_h
-        list_pic_infos(hash3)
+        hash.each do |k,val|
+            v = val[0]
+            twt = val[1]
+            if twt
+                if twt.status != Twitter::TWT_STATUS::STATUS_PATROL
+                    next
+                end
 
-        hash2[screen_name]
+                if twt.drawing_method and twt.drawing_method != Twitter::DRAWING_METHOD::DM_AI
+                    next
+                end
+
+                if (twt.rating||0) < 80
+                    next
+                end
+
+                postdate = twt.last_post_datetime.in_time_zone('Tokyo').strftime("%y/%m/%d %H:%M")
+                dayn = Util::get_date_delta(twt.last_post_datetime)
+                #inf = %![#{pred_str}] #{postdate}(#{dayn})【#{twt.rating}/#{twt.r18}】#{twt.twtname}(@#{k})!
+                avg = v.avg / 1024
+                pred = twt.prediction
+
+                elem = []
+                elem << k
+                elem << %!"#{twt.twtname}"!
+                elem << twt.update_frequency
+                elem << postdate
+                elem << dayn
+                elem << twt.rating
+                elem << twt.r18
+                elem << avg
+                elem << v.cnt
+                elem << pred
+
+=begin
+                if dayn >= 30
+                    list[key11] << elem
+                elsif twt.update_frequency > 200
+                    list[key21] << elem
+                elsif twt.update_frequency > 100
+                    list[key25] << elem
+                elsif avg >= 1024
+                    list[key31] << elem
+                else
+                    list[key99] << elem
+                end
+=end
+                d_unit =15
+                elapse = dayn / d_unit
+                unit = 10
+                if pred >= unit
+                    pr = pred / unit * unit
+                else
+                    pr = pred / 5 * 5
+                    if pr == 0 and pred > 0
+                        pr = 1
+                    end
+                end
+
+                if dayn > 60
+                    key_h = "9大昔"
+                elsif dayn > 30
+                    key_h = "8昔"
+                elsif twt.update_frequency > 300
+                    key_h = "6更新頻度:高"
+                elsif pred == 0
+                    key_h = "0予測:0"
+                elsif pred < 10
+                    key_h = "2予測:少"
+                elsif twt.update_frequency < 50
+                    key_h = "4更新頻度:低"
+                elsif dayn <= 7
+                    key_h = "1最近"
+                elsif twt.update_frequency < 100
+                    key_h = "3更新頻度:低"
+                elsif twt.rating >= 87
+                    key_h = "7高評価"
+                else
+                    key_h = "5"
+                end
+                key = sprintf("%s-予測%3d↑-%3d日～", key_h, pr, elapse*d_unit)
+
+                list[key] << elem
+            end
+        end
+
+        screen_names = []
+        list2 = list.sort_by {|k,v| k}.reverse.to_h
+        list2.each do |k, v|
+            v.each do |line|
+                #puts line
+                #STDERR.puts "########################"
+                STDERR.puts(%!#{k}(#{v.size}),#{line.join(",")}!)
+                #STDERR.puts "########################"
+
+                screen_names << line[0]
+            end
+        end
+
+        screen_names
+    end
+
+    def self.load_pic_info_tsv()
+        hash = get_pic_infos_ex
+
+        threshold_kb = THRESHOLD_KB * 1024
+        hash2 = map_pic_infos(hash, threshold_kb)
+
+        if hash2
+            hash3 = hash2.sort_by {|k, x|
+                x[1]?(x[1].rating||0):0
+            }.reverse.to_h
+            keys = output_pic_info_csv(hash3)
+        end
+        keys
+    end
+
+    def self.get_pic_filesize_list()
+        hash = get_pic_infos_ex
+
+        hash2 = hash.map {|k,v|
+            [
+                k,
+                v.sum / v.size
+            ]
+        }.to_h
+
+        hash2
     end
 
     # =========================================================================

@@ -10,6 +10,7 @@ class TwittersController < ApplicationController
     PATROL = 'patrol'
     STATS = 'stats'
     SEARCH = "search"
+    FILESIZE = "filesize"
   end
 
   module SORT_BY
@@ -19,20 +20,25 @@ class TwittersController < ApplicationController
     RATING = "rating"
     FILENUM = "filenum"
 
-    AUTO = "(auto)"
+    TODO_CNT = "todo_cnt"
+
   end
 
-  module GRP_SORT #なんでSORT?
-      GRP_SORT_PRED = "予測順"
-      GRP_SORT_ACCESS = "アクセス日順"
-      GRP_SORT_UL = "投稿日順"
-      GRP_SORT_UL_ACCESS = "投稿日とアクセス日の差順"
-      GRP_SORT_NO_UPDATE = "更新なし"
-      GRP_SORT_RATE = "評価順"
-      GRP_SORT_DEL = "削除"
+  module GRP_SORT
+    GRP_SORT_PRED = "予測△順"
+    GRP_SORT_PRED_DESC = "予測▽順"
+    GRP_SORT_ACCESS = "アクセス日順"
+    GRP_SORT_RATE = "評価順"
+    GRP_SORT_UL = "投稿日順"
+    GRP_SORT_UL_ACCESS = "投稿日とアクセス日の差順"
+    GRP_SORT_NO_UPDATE = "更新なし"
+    GRP_SORT_DEL = "削除"
 
-      #
-      GRP_SPLIT_STR = "|"
+    #
+    GRP_SORT_AUTO = "(auto)"
+
+    #
+    GRP_SPLIT_STR = "|"
   end
 
   # GET /twitters or /twitters.json
@@ -186,6 +192,16 @@ class TwittersController < ApplicationController
     end
 
     case mode
+    when TwittersController::ModeEnum::FILESIZE
+      screen_names = Twt::load_pic_info_tsv()
+      twitters = twitters.select {|x| screen_names.include?(x.twtid)}
+      twitters = sort(twitters, sort_by)
+      STDERR.puts %!mode=#{mode}\t#{screen_names.size}\t#{twitters.size}!
+      #@twitters_group = {}
+      #@twitters_group[mode] = twitters
+      unit = 100
+      @twitters_group = twitters.group_by {|x| %!#{x.update_frequency / unit * unit}!}
+      return
     when TwittersController::ModeEnum::UNASSOCIATED_TWT_ACNT
       unassociated_twt_screen_names = Twitter::unassociated_twt_screen_names()
       twitters = twitters.select {|x| unassociated_twt_screen_names.include?(x.twtid)}
@@ -414,15 +430,7 @@ class TwittersController < ApplicationController
         twitters = twitters.select {|x| x.rating == nil or x.rating == rating_gt}
       end
 
-      case sort_by
-      when SORT_BY::ID
-        twitters = twitters.sort_by {|x| [x.id]}.reverse
-      when SORT_BY::PRED
-        twitters = twitters.sort_by {|x| [-x.prediction, x.last_access_datetime]}
-      when SORT_BY::FILENUM
-        twitters = twitters.sort_by {|x| [-(x.filenum||0)]}
-      else
-      end
+      twitters = sort(twitters, sort_by)
 
       if pred_cond_gt != 0
         if force_disp_day == 0
@@ -860,21 +868,28 @@ class TwittersController < ApplicationController
 
         grp_sort = 0
         case params[:grp_sort_by]
-        when SORT_BY::AUTO
-          twitters_group = twitters_wk.group_by {|x| %!#{x.last_access_datetime_days_elapsed / 30}|#{x.rating / 5 * 5}|#{x.predic_str(10)}!}
+        when GRP_SORT::GRP_SORT_AUTO
+          twitters_group = twitters_wk.group_by {|x| x.a1o_auto_group_key}
           grp_sort = -1
           #twitters_group = {}
           #twitters_group["!test!"] = twitters_wk
-        when SORT_BY::ACCESS
-          twitters_group = twitters_wk.group_by {|x| %!#{x.rating}|#{x.last_access_datetime_days_elapsed / 30}!}
+        when GRP_SORT::GRP_SORT_ACCESS
+          #twitters_group = twitters_wk.group_by {|x| %!#{x.rating}|#{x.last_access_datetime_days_elapsed / 30}!}
+          twitters_group = twitters_wk.group_by {|x| %!#{x.last_access_datetime_days_elapsed / 30}|#{x.rating}|#{x.prediction / 10 * 10}!}
           grp_sort = -1
-        when SORT_BY::PRED
+        when GRP_SORT::GRP_SORT_PRED
           #twitters_group = twitters_wk.group_by {|x| %!#{x.prediction / 10 * 10}|#{x.rating}!}
           twitters_group = twitters_wk.group_by {|x| %!#{x.predic_str(10)}!}
           grp_sort = 1
-        when SORT_BY::RATING
+        when GRP_SORT::GRP_SORT_PRED_DESC
+          twitters_group = twitters_wk.group_by {|x| %!#{x.predic_str(10)}!}
+          grp_sort = -1
+        when GRP_SORT::GRP_SORT_RATE
+          twitters_group = twitters_wk.group_by {|x| %!#{x.rating}|#{x.last_access_datetime_days_elapsed / 30}!}
+          grp_sort = -1
         else
           twitters_group = twitters_wk.group_by {|x| %!#{x.rating}|#{x.last_access_datetime_days_elapsed / 30}!}
+          grp_sort = -1
         end
 
         if grp_sort > 0
@@ -1037,5 +1052,18 @@ class TwittersController < ApplicationController
       end
 
       group
+    end
+
+    def sort(twitters, sort_by)
+      case sort_by
+      when SORT_BY::ID
+        twitters = twitters.sort_by {|x| [x.id]}.reverse
+      when SORT_BY::PRED
+        twitters = twitters.sort_by {|x| [-x.prediction, x.last_access_datetime]}
+      when SORT_BY::FILENUM
+        twitters = twitters.sort_by {|x| [-(x.filenum||0)]}
+      else
+      end
+      twitters
     end
 end

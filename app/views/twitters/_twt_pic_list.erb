@@ -194,6 +194,7 @@ textarea {
             <br />
             <% avg = fsize_list.sum / fsize_list.size %>
             <b>ファイルサイズ平均：</b><%= Util.formatFileSize(avg) %>
+            <% fcolor = "red" %>
             <% if avg > 2 * 1024 * 1024 %>
                 <font color="red"></font>
                 <% cmnt = "かなり大" %>
@@ -208,10 +209,11 @@ textarea {
                 <% cmnt = "少し大きめ" %>
             <% elsif avg > 400 * 1024 %>
                 <% cmnt = "中" %>
+                <% fcolor = "orange" %>
             <% else %>
             <% end %>
             <% if cmnt %>
-                <font color="red">←★<%= cmnt %>★</font>
+                <font color="<%= fcolor %>">←★<%= cmnt %>★</font>
             <% end %>
             <b>合計：</b><%= Util.formatFileSize(fsize_list.sum) %>
         <% end %>
@@ -291,7 +293,7 @@ textarea {
                 <%= %!#{Twt::timestamp_str tweet_id}(#{tweet_id}))! %> no hit...
                 <%= link_to_ex(tweet_id, Twt::twt_tweet_url(@twitter.twtid, tweet_id)) %>
                 <% if tweet.presence %>
-                    <% if tweet.status == Tweet::StatusEnum::UNACCESSIBLE or @twitter.status == Twitter::TWT_STATUS::STATUS_NOT_EXIST %>
+                    <% if true #tweet.status == Tweet::StatusEnum::UNACCESSIBLE or @twitter.status == Twitter::TWT_STATUS::STATUS_NOT_EXIST %>
                         <b><%= tweet.status %></b>
                         (id変わったとき用→)
                         <%= link_to_ex(tweet_id, Twt::twt_tweet_url_dev(tweet_id)) %>
