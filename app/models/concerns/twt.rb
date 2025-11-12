@@ -21,6 +21,8 @@ module Twt
     TWT_RGX_URL_BASE = ""
     TWT_RGX_URL = %r!https?://(?:x|twitter)\.com/\w+/status/(\d+)!
     TWT_URL_SCREEN_NAME_RGX = %r!(?:x|twitter)\.com/(\w+)!
+    TWT_TOP_SCREEN_NAME_RGX = /^(\w+)\s?/
+    TWT_AT_SCREEN_NAME_RGX = /\(@(\w+)\)/
 
     TMP_DIR_PATH = "public/d_dl/"
 
@@ -63,9 +65,25 @@ module Twt
         twt_ids.sort.uniq
     end
 
+    def self.get_dir_path_by_twtid(twt_root, twtid)
+        puts %!twt_root="#{twt_root}", twtid="#{twtid}"!
+        wk_twt_screen_name = twtid.downcase
+        Dir.glob(twt_root).each do |path|
+            if File.basename(path).downcase =~ TWT_TOP_SCREEN_NAME_RGX
+                #STDERR.puts %!"#{path}"!
+                id = $1
+                if wk_twt_screen_name == id
+                    puts %!get_dir_path_by_twtid("#{twtid}"):path="#{path}"!
+                    return path
+                end
+            end
+        end
+        ""
+    end
+
     def self.get_twt_user_path_list(path, wc, twtid)
         twt_root = Rails.root.join(path).to_s + wc
-        dirpath = Util::get_dir_path_by_twtid(twt_root, twtid)
+        dirpath = get_dir_path_by_twtid(twt_root, twtid)
         if dirpath != ""
             STDERR.puts %!"#{twt_root}"/@#{twtid}!
         end
@@ -89,13 +107,13 @@ module Twt
             twt_root = Rails.root.join(TWT_TMP_DIR_PATH).to_s + "*/*/"
             STDERR.puts %![get_pic_filelist] "#{TWT_TMP_DIR_PATH_A}"\ttwt_root="#{twt_root}"!
 
-            dirpath = Util::get_dir_path_by_twtid(twt_root, twtid)
+            dirpath = get_dir_path_by_twtid(twt_root, twtid)
             path_list << UrlTxtReader::get_path_list(dirpath)
         elsif Dir.exist?(TWT_TMP_DIR_PATH)
             twt_root = Rails.root.join(TWT_TMP_DIR_PATH).to_s + "*/"
             STDERR.puts %![get_pic_filelist] "#{TWT_TMP_DIR_PATH}"\ttwt_root="#{twt_root}"!
 
-            dirpath = Util::get_dir_path_by_twtid(twt_root, twtid)
+            dirpath = get_dir_path_by_twtid(twt_root, twtid)
             path_list << UrlTxtReader::get_path_list(dirpath)
         else
             STDERR.puts %![get_pic_filelist] どっちもない:"#{TWT_TMP_DIR_PATH_A}"/"#{TWT_TMP_DIR_PATH}"!
@@ -212,20 +230,72 @@ module Twt
         tmp_struct = Struct.new(:path, :dirname, :screen_name, :twt)
 
         dirname = File.basename path
-        if dirname =~ /\(@(\w+)\)/
+        if dirname =~ TWT_AT_SCREEN_NAME_RGX
             screen_name = $1
             twt = Twitter.find_by_twtid_ignore_case(screen_name)
         else
+            screen_name = ""
         end
         tmp_struct.new(path, dirname, screen_name, twt)
     end
 
     def self.sp_dirs()
         path_list = Util::glob("#{TWT_SP_DIR_PATH}")
-        #path_list.each do |path|
-        #    STDERR.puts %!"#{path}"!
-        #end
-        path_list.map {|path| parse_dirname path}
+        #path_list.map {|path| parse_dirname path}.sort_by {|x| x.screen_name}
+        path_list.map {|path| parse_dirname path}.sort_by {|x| x.twt.last_access_datetime}
+    end
+
+    def self.get_sp_path(twtid)
+        target_path = nil
+        base_path = UrlTxtReader::public_path(TWT_SP_DIR_PATH) + "*/"
+        Dir.glob(base_path).each do |path|
+            if File.basename(path) =~ TWT_AT_SCREEN_NAME_RGX
+                id = $1
+                STDERR.puts %!"#{path}", "#{id}"!
+                if twtid == id
+                    target_path = path
+                    break
+                end
+            end
+        end
+
+        STDERR.puts %!twtid=@#{twtid}, base_path="#{base_path}", target_path="#{target_path}"!
+
+        target_path
+    end
+
+    def self.get_sp_pic_filelist(target_path)
+        if target_path
+            path_list = UrlTxtReader::get_path_list(target_path)
+        end
+        STDERR.puts %!twtid="#{twtid}", target_path="#{target_path}", #{path_list.size if path_list}!
+        path_list
+    end
+
+    def self.get_tweet_info_from_path(path)
+        path_list = UrlTxtReader::get_path_list(path)
+        if path_list
+            path_list = path_list.sort
+            fpath1 = path_list.last
+            fpath2 = path_list.first
+            filename = File.basename(fpath1)
+            if filename =~ /(\d{8}_\d{6})/
+                datetime_str = $1
+                datetime = Util::string_to_datetime(datetime_str).in_time_zone('Tokyo')
+                tweet_id = time2tweet_id(datetime)
+            end
+        end
+        [tweet_id, fpath1, fpath2]
+    end
+
+    def self.sp_tweet_id_with_comma(twtid)
+        dirpath = Twt::get_sp_path(twtid)
+        if dirpath
+            tinfo = Twt::get_tweet_info_from_path(dirpath)
+            Twt::tweet_id_with_comma tinfo[0]
+        else
+            nil
+        end
     end
 
     def self.twt_user_infos()
@@ -905,8 +975,7 @@ module Twt
         end
     end
 
-    def self.output_pic_info_csv(hash)
-        list = Hash.new { |h, k| h[k] = [] }
+    def self.build_pic_info_list_obs(hash)
         key11 = "11.日数経過"
         key21 = "21.更新頻度-h"
         key25 = "25.更新頻度-m"
@@ -914,6 +983,7 @@ module Twt
         key31 = "31.平均サイズL"
         key99 = "99.その他"
 
+        list = Hash.new { |h, k| h[k] = [] }
         hash.each do |k,val|
             v = val[0]
             twt = val[1]
@@ -999,7 +1069,90 @@ module Twt
                 list[key] << elem
             end
         end
+        list
+    end
 
+    def self.get_key_elem(twt, k, v)
+        postdate = twt.last_post_datetime.in_time_zone('Tokyo').strftime("%y/%m/%d %H:%M")
+        dayn = Util::get_date_delta(twt.last_post_datetime)
+        avg = v.avg / 1024
+        pred = twt.prediction
+
+        elem = []
+        elem << k
+        elem << %!"#{twt.twtname}"!
+        elem << twt.update_frequency
+        elem << postdate
+        elem << dayn
+        elem << twt.rating
+        elem << twt.r18
+        elem << avg
+        elem << v.cnt
+        elem << pred
+
+        d_unit = 15
+        elapse = dayn / d_unit
+        unit = 10
+        if pred >= unit
+            pr = pred / unit * unit
+        else
+            pr = pred / 5 * 5
+            if pr == 0 and pred > 0
+                pr = 1
+            end
+        end
+
+        if dayn > 60
+            key_h = "9大昔"
+        elsif dayn > 30
+            key_h = "8昔"
+        elsif twt.update_frequency > 300
+            key_h = "7更新頻度:V高"
+        elsif twt.update_frequency > 200
+            key_h = "6更新頻度:高"
+        elsif twt.update_frequency < 50
+            key_h = "2更新頻度:V低"
+        elsif twt.update_frequency < 100
+            key_h = "3更新頻度:低"
+        else
+            key_h = "5-"
+        end
+        key = sprintf("%s|||予測%3d↑-%3d日～", key_h, pr, elapse*d_unit)
+
+        [key, elem]
+    end
+
+    def self.build_pic_info_list(hash)
+
+        list = Hash.new { |h, k| h[k] = [] }
+        hash.each do |k,val|
+            v = val[0]
+            twt = val[1]
+            unless twt
+                next
+            end
+
+            if twt.status != Twitter::TWT_STATUS::STATUS_PATROL
+                next
+            end
+
+            if twt.drawing_method and twt.drawing_method != Twitter::DRAWING_METHOD::DM_AI
+                next
+            end
+
+            if (twt.rating||0) < 80
+                next
+            end
+
+            key, elem = get_key_elem(twt, k, v)
+
+            list[key] << elem
+        end
+
+        list
+    end
+
+    def self.output_csv(list)
         screen_names = []
         list2 = list.sort_by {|k,v| k}.reverse.to_h
         list2.each do |k, v|
@@ -1026,7 +1179,9 @@ module Twt
             hash3 = hash2.sort_by {|k, x|
                 x[1]?(x[1].rating||0):0
             }.reverse.to_h
-            keys = output_pic_info_csv(hash3)
+            list = build_pic_info_list(hash3)
+
+            keys = output_csv(list)
         end
         keys
     end

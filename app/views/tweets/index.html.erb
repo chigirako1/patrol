@@ -57,7 +57,7 @@
         <% filesize_list = Twt::get_pic_filesize_list %>
 
         <% url_list_work = url_list_sort_by(url_list_work, params[:sort_by]) %>
-        <% group_hash = Twitter::url_list_work_to_hash(url_list_work, @hide_within_days, @rating_gt) %>
+        <% group_hash = Twitter::url_list_work_to_hash(url_list_work, @hide_within_days, @rating_gt, params[:sort_by]) %>
         <% group_hash.each do |k,v| %>
 
             <h2><%= %!#{k}(#{v.size})! %></h2>
@@ -76,11 +76,6 @@
                 【<%= twt.rating %>】
                 <%= twt.twtname %>(@<%= e.screen_name %>)
 
-                <% prediction = twt.prediction %>
-                <% if prediction > 50 %>
-                    <font color="orange">★★★予測数多い</font>
-                <% end %>
-
                 [
                 <% if filesize_list[e.screen_name] and filesize_list[e.screen_name] / 1024 > Twt::THRESHOLD_KB %>
                     <font color="red">※ファイルサイズ大※</font>
@@ -90,11 +85,15 @@
                 ]
 
                 [
+                <% prediction = twt.prediction %>
+                <% if prediction > 50 %>
+                    <font color="orange">★★★予測数多い</font>
+                <% end %>
                 予測:<%= prediction %>
-                A:<%= twt.last_access_datetime_disp %>
                 <% if prediction > 50 %>
                     ★★★
                 <% end %>
+                A:<%= twt.last_access_datetime_disp %>
                 ファイル数:<%= twt.filenum %>
                 ]
 

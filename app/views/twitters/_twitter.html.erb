@@ -42,7 +42,9 @@
         】
 
         <strong>登録日:</strong>
-        <%= twitter.get_datetime_string(twitter.created_at) %>
-        (<%= Util.get_date_info(twitter.created_at) %>)
+        <%= twitter.datetime_disp(twitter.created_at) %>
+
+        <strong>アクセス日:</strong>
+        <%= twitter.datetime_disp(twitter.last_access_datetime) %>
     </p>
 </div>

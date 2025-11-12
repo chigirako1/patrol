@@ -254,6 +254,19 @@ class HomeController < ApplicationController
             thumbnail: false
           )
       },
+      { :label => "-", :path => "" },
+      { :label => "twt(dir-sp fsチェック)", :path => artists_twt_index_path(dir: ArtistsController::DIR_TYPE::SMARTPHONE) },
+      { :label => "Twitter ファイルサイズ大 AI",
+        :path => twitters_path(
+          #page_title: "xx", 
+          num_of_disp: 333,
+          mode: TwittersController::ModeEnum::FILESIZE,
+          #thumbnail: "t"
+        )
+      },
+      # ----------------------------
+      { :label => "stats", :path => "" },
+      { :label => "Artist::stats", :path => artists_stats_index_path },
       # =====================================
       { :label => "DB更新", :path => "" },
       # ----------------------------
@@ -319,8 +332,6 @@ class HomeController < ApplicationController
       },
       { :label => "-", :path => "" },
       { :label => "twt(dir-archive fsチェック)", :path => artists_twt_index_path(dir: ArtistsController::DIR_TYPE::ARCHIVE_CHECK) },
-      { :label => "-", :path => "" },
-      { :label => "twt(dir-sp fsチェック)", :path => artists_twt_index_path(dir: ArtistsController::DIR_TYPE::SMARTPHONE) },
 
       # =====================================
       { :label => "unified t [ai]", :path => "" },
@@ -1023,14 +1034,6 @@ class HomeController < ApplicationController
           thumbnail: "t"
         )
       },
-      { :label => "Twitter ファイルサイズ大 AI",
-        :path => twitters_path(
-          #page_title: "xx", 
-          num_of_disp: 333,
-          mode: TwittersController::ModeEnum::FILESIZE,
-          #thumbnail: "t"
-        )
-      },
       { :label => "Twitter[検索]", :path => twitters_path(page_title: "検索", mode: "search", search_word: "", thumbnail: "") },
       { :label => "-", :path => "" },
       { :label => "Twitter pxv更新なし",
@@ -1296,14 +1299,14 @@ class HomeController < ApplicationController
           )
       },
       # ----------------------------
+      { :label => "Pxv artworks", :path => "" },
+      { :label => "Pxv artworks", :path => pxv_artworks_path },
+      # ----------------------------
       { :label => "nje", :path => "" },
       { :label => "nje", :path => artists_nje_index_path },
       # ----------------------------
       { :label => "djn", :path => "" },
       { :label => "djn", :path => artists_djn_index_path },
-      # ----------------------------
-      { :label => "stats", :path => "" },
-      { :label => "Artist::stats", :path => artists_stats_index_path },
       # ----------------------------
       { :label => "Tweet", :path => "" },
       { :label => "Tweet", :path => tweets_path },
@@ -1340,9 +1343,6 @@ class HomeController < ApplicationController
             target: Twitter::DRAWING_METHOD::DM_AI,
           )
       },
-      # ----------------------------
-      { :label => "Pxv artworks", :path => "" },
-      { :label => "Pxv artworks", :path => pxv_artworks_path },
       # ----------------------------
       { :label => "", :path => "" },
       { :label => "User", :path => users_path },

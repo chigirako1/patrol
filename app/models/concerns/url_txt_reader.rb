@@ -69,6 +69,10 @@ module UrlTxtReader
         datetime_str = datetime.in_time_zone('Tokyo').strftime(ym_format)
     end
 
+    def datetime_disp(datetime, day_disp = false)
+        %!#{get_datetime_string(datetime, day_disp)}(#{Util.get_date_info(datetime)})!
+    end
+
     def select_group(pxvname)
         group = ""
         fl = pxvname[0]

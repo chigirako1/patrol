@@ -31,6 +31,16 @@ module Util
         Time.current >= specified_datetime + days_to_check.days
     end
 
+    # 与えられた文字列をDateTimeオブジェクトに変換するメソッド
+    #
+    # @param datetime_string [String] "YYYYMMDD_HHMMSS"形式の文字列 (例: "20251106_202848")
+    # @return [DateTime] 変換されたDateTimeオブジェクト
+    def self.string_to_datetime(datetime_string, format = '%Y%m%d_%H%M%S')
+        # strptimeはタイムゾーン情報を指定しない場合、協定世界時 (UTC) としてDateTimeオブジェクトを作成します。
+        # ローカルタイムとして解釈したい場合は、適宜タイムゾーンの指定を追加してください。
+        DateTime.strptime(datetime_string, format)
+    end
+
     def self.get_date_info(date)
         if date == nil
             return "(未設定)"
@@ -53,11 +63,20 @@ module Util
             "#{weeks}週間以上前"
         elsif days == 0
             now = Time.zone.now
-            hour = now.hour - date.hour
+            if date.instance_of?(String)
+                hour = 24
+            else
+                hour = now.hour - date.hour
+            end
             "#{hour}時間以内"
         else
             "#{days}日以内"
         end
+    end
+
+    def self.format_num(number, unit, digit=3)
+        w = (number||0) / unit
+        sprintf("%#{digit}d", w * unit)
     end
 
     def self.get_public_path(path)
@@ -81,26 +100,6 @@ module Util
         end
         STDERR.puts %!Util::glob():"#{root_path}", param="#{glob_param}", path_list.size=#{path_list.size}!
         path_list
-    end
-
-    def self.get_dir_path_by_twtid(twt_root, twtid)
-        puts %!twt_root="#{twt_root}", twtid="#{twtid}"!
-        wk_twt_screen_name = twtid.downcase
-        Dir.glob(twt_root).each do |path|
-            #puts %!get_dir_path_by_twtid(): ath="#{path}"!
-            #if twtid == File.basename(path)
-            #if twtid.downcase == File.basename(path).downcase
-            #if File.basename(path).downcase.start_with?(twtid.downcase)
-            if File.basename(path).downcase =~ /^(\w+)\s?/
-                #STDERR.puts %!"#{path}"!
-                id = $1
-                if wk_twt_screen_name == id
-                    puts %!get_dir_path_by_twtid("#{twtid}"):path="#{path}"!
-                    return path
-                end
-            end
-        end
-        ""
     end
 
     def self.month_enumrator(head, tail)

@@ -297,26 +297,29 @@ class ArtistsController < ApplicationController
     PXV_EXPERIMENT = "pxv_experiment"
     PXV_ARTWORK_LIST = "pxv_artwork_list"
   end
+
+  module Status
+    DELETED = "退会"
+    SUSPEND = "停止"
+
+    LONG_TERM_NO_UPDATS  = "長期更新なし"
+    SIX_MONTH_NO_UPDATS  = "半年以上更新なし"
+    NO_UPDATES_3M        = "3ヶ月以上更新なし"
+    NO_UPDATES_1M        = "1ヶ月以上更新なし"
+
+    ACCOUNT_MIGRATION    = "別アカウントに移行"
+    
+    NO_ARTWORKS          = "作品ゼロ"
+    M_ARTWORKS_DISAPPEAR = "ほぼ消えた"
+    F_ARTWORKS_DISAPPEAR = "一部消えた"
+    
 =begin
-        ["3ヶ月以上更新なし", "3ヶ月以上更新なし"], 
-        ["1ヶ月以上更新なし", "1ヶ月以上更新なし"], 
-
-        ["一部消えた", "一部消えた"], 
-        ["ほぼ消えた", "ほぼ消えた"], 
-
         ["取得途中", "取得途中"], 
         ["最新から取得し直し中", "最新から取得し直し中"], 
         ["最新追っかけ中", "最新追っかけ中"], 
         ["彼岸", "彼岸"],
         ["更新頻度低", "更新頻度低"],
 =end
-  module Status
-    DELETED = "退会"
-    SUSPEND = "停止"
-    LONG_TERM_NO_UPDATS = "長期更新なし"
-    SIX_MONTH_NO_UPDATS = "半年以上更新なし"
-    ACCOUNT_MIGRATION = "別アカウントに移行"
-    NO_ARTWORKS = "作品ゼロ"
 
     ADJUSTMENT = "(整理対象)"
   end
@@ -736,18 +739,13 @@ class ArtistsController < ApplicationController
   # GET /artists/1 or /artists/1.json
   def show
     @last_access_datetime = @artist.last_access_datetime
-    if true #params[:access_dt_update].presence and params[:access_dt_update] == "yes"
-      dn = Util::get_date_delta(@artist.last_access_datetime)
-      if dn == 0
-        STDERR.puts "更新不要:#{dn}"
-      else
-        @artist.update(last_access_datetime: Time.now)
-      end
+    if @artist.last_access_datetime.presence and Util::get_date_delta(@artist.last_access_datetime) == 0
+      STDERR.puts %!更新不要:"#{@artist.last_access_datetime}"!
+    else
+      @artist.update(last_access_datetime: Time.now)
     end
 
-    if params[:mode] != nil
-      @show_mode = params[:mode]
-    end
+    @show_mode = params[:mode]
 
     if params[:number_of_display].presence
       @number_of_display = params[:number_of_display].to_i

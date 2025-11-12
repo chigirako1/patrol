@@ -9,13 +9,16 @@
   <% rem_str = %!/残り#{rem}件! %>
 <% end %>
 
-<% if twitters_total_count < 0 %>
-  <% page_title = "#{params[:page_title]} - TWT一覧" %>
+<% if params[:mode] == TwittersController::ModeEnum::SEARCH%>
+  <% page_title = "検索:「#{params[:search_word]}」" %>
+<% elsif twitters_total_count < 0 %>
+  <% page_title = "#{params[:page_title]}" %>
 <% elsif @twitters_total_count %>
-  <% page_title = "#{params[:page_title]} (#{@twitters_total_count}件) - TWT一覧" %>
+  <% page_title = "#{params[:page_title]} (#{@twitters_total_count}件)" %>
 <% else %>
-  <% page_title = "#{params[:page_title]} (#{twitters_total_count}件#{rem_str}) - TWT一覧 a" %>
+  <% page_title = "#{params[:page_title]} (#{twitters_total_count}件#{rem_str}) a" %>
 <% end %>
+<% page_title += " - TWT一覧 a" %>
 
 <% provide(:title, page_title) %>
 <p style="color: green"><%= notice %></p>

@@ -198,16 +198,10 @@ class Twitter < ApplicationRecord
             end
             twt = Twitter.find_by_twtid_ignore_case(twt_id, ignore_case)
             if twt and pxv
-                case pxv.status
-                when ArtistsController::Status::DELETED
-                when ArtistsController::Status::SUSPEND
-                when ArtistsController::Status::SIX_MONTH_NO_UPDATS
-                when ArtistsController::Status::SIX_MONTH_NO_UPDATS
-                when ArtistsController::Status::ACCOUNT_MIGRATION
-                when ArtistsController::Status::NO_ARTWORKS
-                    registered_twt_acnt_list[twt_id] = twt_url_info.url_list
-                else
+                if pxv.active?
                     pxvid_list << pxv.pxvid
+                else
+                    registered_twt_acnt_list[twt_id] = twt_url_info.url_list
                 end
             elsif pxv
                 pxvid_list << pxv.pxvid
@@ -298,7 +292,8 @@ class Twitter < ApplicationRecord
     end
 
     def get_pic_filelist_ex()
-        list = get_pic_filelist
+        #list = get_pic_filelist
+        list = get_pic_filelist(false)
         list = list.map {|x| [Twt::twt_path_str(x), x]}.sort.reverse
         list = list.map {|x| x[1]}
         list
@@ -735,16 +730,33 @@ class Twitter < ApplicationRecord
         lad_n = self.last_access_datetime_days_elapsed / 7
         pred_n = num_to_str_f(self.prediction, 10)
         rate_n = num_to_str_f(self.rating, 3)
-        %!#{lad_n}週|予測#{pred_n}～|評価#{rate_n}～!
+        #%!#{lad_n}週|予測#{pred_n}～|評価#{rate_n}～!
+        %!評価#{rate_n}～|#{lad_n}週|予測#{pred_n}～!
     end
 
 
-    def self.url_list_work_to_hash(url_list_work, hide_within_days, rating_gt)
+    def self.url_list_work_to_hash(url_list_work, hide_within_days, rating_gt, sort_by)
         hash = {}
         hash = url_list_work.group_by {|x|
-            e = x[0];
-            twt = x[1];
-            sprintf("[%2d(%d)]", 100 - e.todo_cnt, e.todo_cnt) + twt.group_key2(hide_within_days, rating_gt)
+            e = x[0]
+            twt = x[1]
+            if (twt.status||"") == Twitter::TWT_STATUS::STATUS_PATROL
+                case sort_by
+                when TwittersController::SORT_BY::PRED
+                    gkey = ""
+                when TwittersController::SORT_BY::ACCESS
+                    gkey = ""
+                when TwittersController::SORT_BY::TODO_CNT
+                    gkey = sprintf("[%2d(%d)]", 100 - e.todo_cnt, e.todo_cnt)
+                when TwittersController::SORT_BY::TOTAL_CNT
+                    gkey = sprintf("[%2d(%d)]", 100 - e.url_cnt, e.url_cnt)
+                else
+                end
+                gkey += twt.group_key2(hide_within_days, rating_gt)
+                gkey
+            else
+                twt.group_key2(hide_within_days, rating_gt)
+            end
         }
         hash.sort_by {|k,v| k}.to_h
     end

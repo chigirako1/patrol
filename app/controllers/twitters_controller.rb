@@ -21,6 +21,7 @@ class TwittersController < ApplicationController
     FILENUM = "filenum"
 
     TODO_CNT = "todo_cnt"
+    TOTAL_CNT = "total_cnt"
 
   end
 
@@ -187,7 +188,10 @@ class TwittersController < ApplicationController
     if no_pxv
       twitters = twitters.select {|x|
         !(x.pxvid.presence) and
-        (x.artist_pxvid == nil or x.artist_status == "長期更新なし" or x.artist_status == "半年以上更新なし")
+        #(x.artist_pxvid == nil or x.artist_status == "長期更新なし" or x.artist_status == "半年以上更新なし")
+        (x.artist_pxvid == nil or
+        x.artist_status == ArtistsController::Status::LONG_TERM_NO_UPDATS or
+        x.artist_status == ArtistsController::Status::SIX_MONTH_NO_UPDATS)
       }
     end
 
@@ -197,10 +201,16 @@ class TwittersController < ApplicationController
       twitters = twitters.select {|x| screen_names.include?(x.twtid)}
       twitters = sort(twitters, sort_by)
       STDERR.puts %!mode=#{mode}\t#{screen_names.size}\t#{twitters.size}!
-      #@twitters_group = {}
-      #@twitters_group[mode] = twitters
-      unit = 100
-      @twitters_group = twitters.group_by {|x| %!#{x.update_frequency / unit * unit}!}
+
+      max = twitters.max {|a, b| a.update_frequency <=> b.update_frequency}
+      digit = Math.log10(max.update_frequency).to_i + 1
+
+      if twitters.size > 100
+        unit = 50
+      else
+        unit = 100
+      end
+      @twitters_group = twitters.group_by {|x| Util::format_num(x.update_frequency, unit, digit)}.sort_by {|k,v| k}.reverse.to_h
       return
     when TwittersController::ModeEnum::UNASSOCIATED_TWT_ACNT
       unassociated_twt_screen_names = Twitter::unassociated_twt_screen_names()

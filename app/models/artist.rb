@@ -277,6 +277,31 @@ class Artist < ApplicationRecord
         end
     end
 
+    def active?
+        ary = [
+            ArtistsController::Status::DELETED,
+            ArtistsController::Status::SUSPEND,
+
+            ArtistsController::Status::LONG_TERM_NO_UPDATS,
+            ArtistsController::Status::SIX_MONTH_NO_UPDATS,
+            ArtistsController::Status::NO_UPDATES_3M,
+            ArtistsController::Status::NO_UPDATES_1M,
+
+            ArtistsController::Status::ACCOUNT_MIGRATION,
+
+            ArtistsController::Status::NO_ARTWORKS,
+            ArtistsController::Status::M_ARTWORKS_DISAPPEAR,
+            ArtistsController::Status::F_ARTWORKS_DISAPPEAR,
+        ]
+        
+        case self.status
+        when *ary
+            false
+        else
+            true
+        end
+    end
+
     def point
 
         pred_cnt = prediction_up_cnt(true)
