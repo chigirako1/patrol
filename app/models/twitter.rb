@@ -2,8 +2,9 @@ class Twitter < ApplicationRecord
     include UrlTxtReader
 
     validates :twtid, uniqueness: true
-
     belongs_to :artists, :class_name => 'Artist', optional: true
+
+    TWT_H_SEPARATOR = "::"
 
     module TWT_STATUS
         STATUS_PATROL = "TWT巡回"
@@ -18,6 +19,11 @@ class Twitter < ApplicationRecord
         STATUS_WAITING = "フォロー許可待ち"
         STATUS_ANOTHER = "別アカウントに移行"
         STATUS_SCREEN_NAME_CHANGED = "アカウントID変更"
+    end
+
+    module TWT_VISIBILITY
+        TV_OPEN = "公開"
+        TV_PRIVATE = "非公開"
     end
 
     module DRAWING_METHOD
@@ -278,6 +284,14 @@ class Twitter < ApplicationRecord
         get_date_delta(last_access_datetime)
     end
 
+    def filesize_huge?
+        if filesize > Twt::FILESIZE_THRESHOLD
+            true
+        else
+            false
+        end
+    end
+
     def twt_user_url
         Twt::twt_user_url(twtid)
     end
@@ -300,7 +314,7 @@ class Twitter < ApplicationRecord
     end
 
     def num_to_str_f(val, unit)
-        sprintf("%3d", val / unit * unit)
+        #sprintf("%3d", val / unit * unit)
         Util::num_to_str_f(val, unit)
     end
 
@@ -555,11 +569,13 @@ class Twitter < ApplicationRecord
                     key = %!#{key}|予測0!
                 elsif pred > 10
                     unit = 10
-                    p = prediction / unit * unit
+                    #p = prediction / unit * unit
+                    p = Util::num_to_str_f(pred, unit)
                     key = %!#{key}|予測#{p}↑!
                 else
                     unit = 5
-                    p = prediction / unit * unit
+                    #p = prediction / unit * unit
+                    p = Util::num_to_str_f(pred, unit)
                     key = %!#{key}|予測#{p}↑!
                 end
             else
@@ -650,11 +666,12 @@ class Twitter < ApplicationRecord
 =end
         accs = ""
 
-        if rating >= rating_gt * 1.1
+        rating_w = rating||0
+        if rating_w >= rating_gt * 1.1
             rat_str = "0V高"
-        elsif rating >= rating_gt * 1.05
+        elsif rating_w >= rating_gt * 1.05
             rat_str = "1高"
-        elsif rating >= rating_gt
+        elsif rating_w >= rating_gt
             rat_str = "5中"
         else
             rat_str = "9低"
@@ -747,10 +764,11 @@ class Twitter < ApplicationRecord
                 when TwittersController::SORT_BY::ACCESS
                     gkey = ""
                 when TwittersController::SORT_BY::TODO_CNT
-                    gkey = sprintf("[%2d(%d)]", 100 - e.todo_cnt, e.todo_cnt)
+                    gkey = sprintf("[%2d(%d)]#{TWT_H_SEPARATOR}", 100 - e.todo_cnt, e.todo_cnt)
                 when TwittersController::SORT_BY::TOTAL_CNT
-                    gkey = sprintf("[%2d(%d)]", 100 - e.url_cnt, e.url_cnt)
+                    gkey = sprintf("[%2d(%d)]#{TWT_H_SEPARATOR}", 100 - e.url_cnt, e.url_cnt)
                 else
+                    gkey = ""
                 end
                 gkey += twt.group_key2(hide_within_days, rating_gt)
                 gkey

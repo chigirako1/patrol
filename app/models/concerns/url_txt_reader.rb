@@ -184,8 +184,7 @@ module UrlTxtReader
             path = nil if path.size == 0 #てきとう
         when /target(\d{4})/
             path = UrlTxtReader::txt_file_list($1 + "\\d+")
-        when nil
-        when ""
+        when nil, ""
             path = UrlTxtReader::get_latest_txt
         when /thismonth\s+(\d+)/
             opt = $1.to_i
@@ -202,8 +201,11 @@ module UrlTxtReader
 
             path = UrlTxtReader::txt_file_list(rgx_str + "\\d+")
         when "thismonth"
-            yymmm = Date.today.strftime("%y%m")
-            path = UrlTxtReader::txt_file_list(yymmm + "\\d+")
+            yymm = Date.today.strftime("%y%m")
+            path = UrlTxtReader::txt_file_list(yymm + "\\d+")
+        when "thisyear"
+            yy = Date.today.strftime("%y")
+            path = UrlTxtReader::txt_file_list(yy + "\\d{4}")
         else
             STDERR.puts %!"#{filename}"!
             #path = ["public/urllist/#{filename}.txt"]

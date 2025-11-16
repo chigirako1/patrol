@@ -29,8 +29,11 @@ class TwittersController < ApplicationController
     GRP_SORT_PRED = "予測△順"
     GRP_SORT_PRED_DESC = "予測▽順"
     GRP_SORT_ACCESS = "アクセス日順"
+    GRP_SORT_ACCESS_W = "アクセス日順(週)"
+    GRP_SORT_R_A_P = "評価|アクセス日|予想数順"
     GRP_SORT_RATE = "評価順"
     GRP_SORT_UL = "投稿日順"
+    GRP_SORT_REGISTERED = "登録日順"
     GRP_SORT_UL_ACCESS = "投稿日とアクセス日の差順"
     GRP_SORT_NO_UPDATE = "更新なし"
     GRP_SORT_DEL = "削除"
@@ -199,6 +202,8 @@ class TwittersController < ApplicationController
     when TwittersController::ModeEnum::FILESIZE
       screen_names = Twt::load_pic_info_tsv()
       twitters = twitters.select {|x| screen_names.include?(x.twtid)}
+      twitters = twitters.select {|x| x.last_access_day_num >= @hide_within_days}
+
       twitters = sort(twitters, sort_by)
       STDERR.puts %!mode=#{mode}\t#{screen_names.size}\t#{twitters.size}!
 
@@ -844,7 +849,11 @@ class TwittersController < ApplicationController
         :latest_tweet_id,
         :oldest_tweet_id,
         :zipped_at,
-        :change_history
+        :change_history,
+        :filesize,
+        :video_cnt,
+        :min_interval,
+        :max_interval
         )
     end
 
@@ -887,13 +896,21 @@ class TwittersController < ApplicationController
           #twitters_group = twitters_wk.group_by {|x| %!#{x.rating}|#{x.last_access_datetime_days_elapsed / 30}!}
           twitters_group = twitters_wk.group_by {|x| %!#{x.last_access_datetime_days_elapsed / 30}|#{x.rating}|#{x.prediction / 10 * 10}!}
           grp_sort = -1
+        when GRP_SORT::GRP_SORT_ACCESS_W
+          twitters_group = twitters_wk.group_by {|x| %!#{x.last_access_datetime_days_elapsed / 7}|#{x.rating}|#{x.prediction / 10 * 10}!}
+          grp_sort = -1
+        when GRP_SORT::GRP_SORT_R_A_P
+          twitters_group = twitters_wk.group_by {|x| %!#{x.rating / 5 * 5}#{Twitter::TWT_H_SEPARATOR}#{x.last_access_datetime_days_elapsed / 7}週|#{Util::format_num(x.prediction, 10)}!}
+          grp_sort = -1
         when GRP_SORT::GRP_SORT_PRED
-          #twitters_group = twitters_wk.group_by {|x| %!#{x.prediction / 10 * 10}|#{x.rating}!}
-          twitters_group = twitters_wk.group_by {|x| %!#{x.predic_str(10)}!}
+          twitters_group = twitters_wk.group_by {|x| %!#{x.num_to_str_f(x.prediction, 10)}!}
           grp_sort = 1
         when GRP_SORT::GRP_SORT_PRED_DESC
-          twitters_group = twitters_wk.group_by {|x| %!#{x.predic_str(10)}!}
+          twitters_group = twitters_wk.group_by {|x| %!#{x.num_to_str_f(x.prediction, 10)}!}
           grp_sort = -1
+        when GRP_SORT::GRP_SORT_REGISTERED
+          twitters_group = twitters_wk.group_by {|x| %!#{Util::format_num(x.created_at_day_num / 30, 1)}!}
+          grp_sort = 1
         when GRP_SORT::GRP_SORT_RATE
           twitters_group = twitters_wk.group_by {|x| %!#{x.rating}|#{x.last_access_datetime_days_elapsed / 30}!}
           grp_sort = -1
@@ -918,7 +935,7 @@ class TwittersController < ApplicationController
         twitters_check = twitters_check.sort_by {|x| [-(x.rating||0), x.last_access_datetime, -x.prediction]}
         if twitters_check.size > 0
           #twitters_group["#{rating_gt}:更新なし"] = twitters_check
-          tmp_grp = twitters_check.group_by {|x| x.status}
+          tmp_grp = twitters_check.group_by {|x| %!更新チェック#{Twitter::TWT_H_SEPARATOR}#{x.status}!}
           twitters_group.merge!(tmp_grp)
         else
           STDERR.puts %!|xxx|更新なしゼロ件!
@@ -938,11 +955,11 @@ class TwittersController < ApplicationController
         twitters_w = twitters_w.sort_by {|x| [-x.prediction, x.last_access_datetime]}
 
         group = {}
-        group["未設定 最近登録(#{nday}d) 予測順"] = twitters_w
+        group["未設定#{Twitter::TWT_H_SEPARATOR}最近登録(#{nday}d) 予測順"] = twitters_w
 
         twitters_w = twitters_w.sort_by {|x| [-(x.filenum||0), x.last_access_datetime]}
-        group["未設定 最近登録(#{nday}d) ファイル数順+"] = twitters_w.select {|x| x.prediction >= 5}
-        group["未設定 最近登録(#{nday}d) ファイル数順"] = twitters_w
+        group["未設定#{Twitter::TWT_H_SEPARATOR}最近登録(#{nday}d) ファイル数順+"] = twitters_w.select {|x| x.prediction >= 5}
+        group["未設定#{Twitter::TWT_H_SEPARATOR}最近登録(#{nday}d) ファイル数順"] = twitters_w
       end
       group
     end
@@ -995,8 +1012,9 @@ class TwittersController < ApplicationController
       end
 
       if target_hash == nil or target_hash[GRP_SORT::GRP_SORT_UL_ACCESS]
-        twitters = twitters.sort_by {|x| [-((x.last_access_datetime||"2000-01-01") - (x.last_post_datetime||"2000-01-01")), -(x.rating||0), x.prediction]}
-        twitters_group["#{rating_gt}:#{GRP_SORT::GRP_SORT_UL_ACCESS}"] = twitters
+        twitters_tmp = twitters.select {|x| x.last_post_datetime}
+        twitters_tmp = twitters_tmp.sort_by {|x| [-((x.last_access_datetime||"2000-01-01") - (x.last_post_datetime||"2000-01-01")), -(x.rating||0), x.prediction]}
+        twitters_group["#{rating_gt}:#{GRP_SORT::GRP_SORT_UL_ACCESS}"] = twitters_tmp
       end
 
       if target_hash == nil or target_hash[GRP_SORT::GRP_SORT_NO_UPDATE]

@@ -45,7 +45,7 @@ module TweetsHelper
             [
                 x[0].todo_cnt,
                 twt.status||"",
-                twt.drawing_method,
+                twt.drawing_method||"",
                 -(twt.rating||0),
                 twt.last_access_datetime||"",
             ]

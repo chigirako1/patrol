@@ -63,7 +63,7 @@ module Util
             "#{weeks}週間以上前"
         elsif days == 0
             now = Time.zone.now
-            if date.instance_of?(String)
+            if date.instance_of?(String) or date.instance_of?(Date)
                 hour = 24
             else
                 hour = now.hour - date.hour
@@ -79,6 +79,10 @@ module Util
         sprintf("%#{digit}d", w * unit)
     end
 
+    def self.num_to_str_f(val, unit)
+        sprintf("%3d", val / unit * unit)
+    end
+    
     def self.get_public_path(path)
         Rails.root.join("public" + path).to_s
     end
@@ -131,10 +135,6 @@ module Util
         uri.host
     end
 
-    def self.num_to_str_f(val, unit)
-        sprintf("%3d", val / unit * unit)
-    end
-    
     def self.formatFileSize(bytes)
         unit = 1024
         if bytes < unit

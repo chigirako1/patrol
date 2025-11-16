@@ -93,8 +93,8 @@
     <h2>登録済みtwt (<%= known_twt_url_list_size %>)</h2>
 <% end %>
 
-<% filesize_list = Twt::get_pic_filesize_list %>
-<% STDERR.puts %!filesize_list=#{filesize_list.size}! %>
+<%# filesize_list = Twt::get_pic_filesize_list %>
+<%# STDERR.puts %!filesize_list=#{filesize_list.size}! %>
 
 <% if twt_group.presence %>
     <% twt_group = twt_group.sort.reverse.to_h #twt_group = twt_group.sort.to_h %>
@@ -163,11 +163,10 @@
                         <%= pred %>
                     </td>
                     <td>
-                        <% if filesize_list[twt_account.twtid] %>
-                            <% kb = filesize_list[twt_account.twtid] / 1024 %>
-                            <% if kb > Twt::THRESHOLD_KB %>
+                        <% if twt_account.filesize %>
+                            <% if twt_account.filesize_huge? %>
                                 <font color="red">
-                                    <%= sprintf("[%4d KB]", kb) %>
+                                    <%= sprintf("[%4d KB]", twt_account.filesize / 1024) %>
                                 </font>
                             <% end %>
                         <% else %>
@@ -834,24 +833,17 @@
 <% if @sp_dirs.presence %>
     <h2>sp(<%= @sp_dirs.size %>)</h2>
     <% @sp_dirs.each.with_index(1) do |elem, idx| %>
-        <%= idx %>."<%= elem.dirname %>"<%= elem.twt.last_access_datetime_disp %>
+        <%= idx %>."<%= elem.dirname %>"
         <% if elem.twt %>
+            アクセス日：<%= elem.twt.last_access_datetime_disp %>
             (@<%= elem.screen_name %>)[<%= link_to_ex("■twt■", elem.twt) %>]
+            【<%= elem.twt.rating %>|<%= elem.twt.r18 %>】
+            <%= elem.twt.update_frequency %>
         <% else %>
             <% url = twitters_path(mode: TwittersController::ModeEnum::SEARCH, search_word: elem.dirname) %>
             [<%= link_to_ex("■検索■", url) %>]
         <% end %>
 
-        <% path_list = UrlTxtReader::get_path_list(elem.path) %>
-        <% if path_list %>
-            <%= path_list.size %> files
-            <br />
-            <% tinfo = Twt::get_tweet_info_from_path(elem.path) %>
-            <b><%= Twt::tweet_id_with_comma tinfo[0] %></b>
-            <br />
-            <%= link_to_ex(image_tag(tinfo[1], width: pic_mag_twt_b, height: pic_mag_twt_b), tinfo[1]) if tinfo[1].presence %>
-            <%= link_to_ex(image_tag(tinfo[2], width: pic_mag_twt_b, height: pic_mag_twt_b), tinfo[2]) if tinfo[2].presence %>
-        <% end %>
         <hr />
     <% end %>
 <% end %>

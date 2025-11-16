@@ -144,28 +144,24 @@ textarea {
     <% if twt_pic_list.size > 0 %>
         <% if show_pic_num > 0 %>
             <% fsize_avg = fsize_list.sum / fsize_list.size %>
-            <b>ファイルサイズ平均：</b><%= Util.formatFileSize(fsize_avg) %>
+            <b>ファイルサイズ平均：</b>
             <% fcolor = "red" %>
             <% if fsize_avg > 2 * 1024 * 1024 %>
-                <font color="red"></font>
                 <% cmnt = "かなり大" %>
             <% elsif fsize_avg > 1024 * 1024 %>
-                <font color="red"></font>
                 <% cmnt = "大" %>
             <% elsif fsize_avg > 750 * 1024 %>
-                <font color="red"></font>
                 <% cmnt = "大きめ" %>
             <% elsif fsize_avg > 500 * 1024 %>
-                <font color="red"></font>
                 <% cmnt = "少し大きめ" %>
             <% elsif fsize_avg > 400 * 1024 %>
                 <% cmnt = "中" %>
                 <% fcolor = "orange" %>
             <% else %>
+                <% cmnt = nil %>
+                <% fcolor = "black" %>
             <% end %>
-            <% if cmnt %>
-                <font color="<%= fcolor %>">←★<%= cmnt %>★</font>
-            <% end %>
+            <font color="<%= fcolor %>"><%= Util.formatFileSize(fsize_avg) %><%= %!←★#{cmnt}★! if cmnt %></font>
             <b>合計：</b><%= Util.formatFileSize(fsize_list.sum) %>
         <% end %>
         (<%= show_pic_num %> files)
@@ -192,7 +188,7 @@ textarea {
                 <% tweet_id_c = Twt::sp_tweet_id_with_comma(@twitter.twtid) %>
                 <% if tweet_id_c %>
                     <br />
-                    <b><%= tweet_id_c %></b>
+                    <b><%= tweet_id_c %></b>(DL日時からの推測)
                 <% end %>
 
                 <br />
@@ -266,10 +262,14 @@ textarea {
         <% #end %>
         <br />
         
-        <% tweet_id_c = Twt::sp_tweet_id_with_comma(@twitter.twtid) %>
-        <% if tweet_id_c %>
+        <% filelist = Twt::get_sp_pic_filelist_by_twtid(@twitter.twtid) %>
+        <% if filelist.presence %>
+            <b><%= Twt::tweet_id_with_comma(Twt::get_sp_tweet_id_from_filepath(filelist.last)) %></b>(DL日時からの推測)(<%= filelist.size %>)
             <br />
-            <b><%= tweet_id_c %></b>
+            <% pic_mag_twt_b = '10%' %>
+            <% filelist.reverse.first(4).each do |fpath| %>
+                <%= link_to_ex(image_tag(fpath, width: pic_mag_twt_b, height: pic_mag_twt_b), fpath) %>
+            <% end %>
         <% end %>
     <% end %>
 

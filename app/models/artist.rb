@@ -664,7 +664,7 @@ class Artist < ApplicationRecord
         days = last_access_datetime_num
         if days < 1
             "00.今日アクセス"
-        else
+        elsif last_ul_datetime
             d_delta = Util.get_days_date_delta(last_ul_datetime, created_at)
 
             if d_delta > 60
@@ -687,6 +687,8 @@ class Artist < ApplicationRecord
                     end
                 end
             end
+        else
+            "00.(公開日不明)"
         end
     end
 

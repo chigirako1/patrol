@@ -9,8 +9,8 @@
   <% rem_str = %!/残り#{rem}件! %>
 <% end %>
 
-<% if params[:mode] == TwittersController::ModeEnum::SEARCH%>
-  <% page_title = "検索:「#{params[:search_word]}」" %>
+<% if params[:mode] == TwittersController::ModeEnum::SEARCH %>
+  <% page_title = "twt検索:「#{params[:search_word]}」" %>
 <% elsif twitters_total_count < 0 %>
   <% page_title = "#{params[:page_title]}" %>
 <% elsif @twitters_total_count %>
@@ -52,17 +52,31 @@
 
 <div id="twitters">
   <!-- TODO:DBにカラムを追加する(KB) -->
-  <% filesize_list = Twt::get_pic_filesize_list %>
+  <% filesize_list = {} %>
+  <% if params[:mode] == TwittersController::ModeEnum::SEARCH %>
+  <% elsif @twitters_group %>
+    <% filesize_list = Twt::get_pic_filesize_list %>
+  <% end %>
 
+  <% ha_bak = "" %>
   <% done_id_hash = {} %>
   <% @twitters_group.each do |key, twitters| %>
-    <h2>
-      <% h2_txt = %!#{key}(#{twitters.size}件)! %>
+
+    <% h_a, h_b = key.split(Twitter::TWT_H_SEPARATOR) if key.instance_of?(String) %>
+    <% if h_b == nil %>
+      <% h_b = key %>
+    <% elsif h_a != ha_bak %>
+      <h2><%= h_a %></h2>
+      <% ha_bak = h_a %>
+    <% end %>
+
+    <h3>
+      <% h2_txt = %!#{h_b}(#{twitters.size}件)! %>
       <% if twitters.size > @num_of_disp %>
         <% h2_txt += %!(のこり#{twitters.size - @num_of_disp}件)! %>
       <% end %>
       <%= h2_txt %>
-    </h2>
+    </h3>
     <table border="1" rules="all">
       <tr>
         <th>#</th>
@@ -129,10 +143,14 @@
             <%= prediction %><%= %!(#{pred})! if pred - prediction > 5  %>
             
             <% if filesize_list[twitter.twtid] %>
-              <% kb = filesize_list[twitter.twtid] / 1024 %>
-              <font color="red">
-                <%= sprintf("[%4d KB]", kb) if kb > Twt::THRESHOLD_KB %>
-              </font>
+              <% if kb > Twt::FILESIZE_THRESHOLD %>
+                <font color="red">
+                  <%= sprintf("[%4d KB]", kb) %>
+                  <% if twitter.update_frequency < Twt::UL_FREQUECNTY_THRESHOLD %>
+                    ただし低頻度
+                  <% end %>
+                </font>
+              <% end %>
             <% end %>
             <br />
 
@@ -371,9 +389,12 @@ button.horizontal {
           ["予測△順", TwittersController::GRP_SORT::GRP_SORT_PRED],
           ["予測▽順", TwittersController::GRP_SORT::GRP_SORT_PRED_DESC],
           ["アクセス日順（旧→新）", TwittersController::GRP_SORT::GRP_SORT_ACCESS],
+          ["アクセス日順W（旧→新）", TwittersController::GRP_SORT::GRP_SORT_ACCESS_W],
+          [TwittersController::GRP_SORT::GRP_SORT_R_A_P, TwittersController::GRP_SORT::GRP_SORT_R_A_P],
           ["評価順", TwittersController::GRP_SORT::GRP_SORT_RATE],
           [TwittersController::GRP_SORT::GRP_SORT_UL, TwittersController::GRP_SORT::GRP_SORT_UL],
           [TwittersController::GRP_SORT::GRP_SORT_UL_ACCESS, TwittersController::GRP_SORT::GRP_SORT_UL_ACCESS],
+          [TwittersController::GRP_SORT::GRP_SORT_REGISTERED, TwittersController::GRP_SORT::GRP_SORT_REGISTERED],
           [TwittersController::GRP_SORT::GRP_SORT_NO_UPDATE, TwittersController::GRP_SORT::GRP_SORT_NO_UPDATE],
           [TwittersController::GRP_SORT::GRP_SORT_DEL, TwittersController::GRP_SORT::GRP_SORT_DEL],
           ["自動(おまかせ)", TwittersController::GRP_SORT::GRP_SORT_AUTO],

@@ -330,6 +330,7 @@ class ArtistsController < ApplicationController
     NEW_LIST = "new-list"
     ARCHIVE_CHECK = "archive-check"
     SMARTPHONE = "SMARTPHONE"
+    REG_FILESIZE = "ファイルサイズ登録"
   end
 
   module ShowMode
@@ -364,6 +365,8 @@ class ArtistsController < ApplicationController
       GRP_SORT_UL = "投稿日順"
       GRP_SORT_NO_UPDATE = "更新なし"
       GRP_SORT_RATE = "評価順"
+      GRP_SORT_REGISTERED = "登録日順"
+
       GRP_SORT_DEL = "削除"
   end
 
@@ -850,6 +853,8 @@ class ArtistsController < ApplicationController
         Twt::archive_check()
       when DIR_TYPE::SMARTPHONE
         @sp_dirs = Twt::sp_dirs()
+      when DIR_TYPE::REG_FILESIZE
+        @sp_dirs = Twt::reg_filesize()
       else
       end
     elsif filename == ""

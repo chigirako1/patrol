@@ -41,7 +41,6 @@ module TwittersHelper
         when Twitter::DRAWING_METHOD::DM_AI
             title += "🤖"
         when Twitter::DRAWING_METHOD::DM_HAND
-            #title += twitter.drawing_method[0]
             title += "✍️"
         else
         end
@@ -59,7 +58,6 @@ module TwittersHelper
     end
 
     def twitter_show_header_str(twitter)
-        #str = %![#{twitter.rating}|#{twitter.r18}] #{twitter.twtname} (@#{twitter.twtid})!
         str = twitter_show_page_title(twitter)
         if twitter.old_twtid.presence
             str += %!←#{twitter.old_twtid}!
@@ -68,5 +66,17 @@ module TwittersHelper
             str += %!→#{twitter.new_twtid}!
         end
         str
+    end
+
+    def tw_build_select_list(ary)
+        ary.map {|x| [x, x]}
+    end
+
+    def tw_visibility_list
+        list = [
+            Twitter::TWT_VISIBILITY::TV_OPEN,
+            Twitter::TWT_VISIBILITY::TV_PRIVATE,
+        ]
+        tw_build_select_list(list)
     end
 end

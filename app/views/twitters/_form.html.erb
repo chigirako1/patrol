@@ -346,6 +346,17 @@
   <hr />
 
   <div>
+    <%= form.label :公開範囲, style: "display: block" %>
+    <%= form.select :private_account,
+      tw_visibility_list,
+      #[
+      #  [Twitter::TWT_VISIBILITY::TV_OPEN, Twitter::TWT_VISIBILITY::TV_OPEN],
+      #  [Twitter::TWT_VISIBILITY::TV_PRIVATE, Twitter::TWT_VISIBILITY::TV_PRIVATE],
+      #],
+      include_blank: "選択して下さい" %>
+  </div>
+
+  <div>
     <%= form.label :警告, style: "display: block" %>
     <%= form.select :warning,
       [
@@ -459,6 +470,20 @@
       <%= form.number_field :filenum %>
     <% end %>
   </div>
+
+  <div>
+    <%= form.label :平均ファイルサイズ, style: "display: block" %>
+
+    <% avg_filesize = @twitter.filesize %>
+    <%= form.number_field :filesize, value: avg_filesize %>
+  </div>
+
+  <div>
+    <%= form.label :動画数, style: "display: block" %>
+    <%= form.number_field :video_cnt %>
+  </div>
+
+  <hr />
 
   <div>
     <%= form.label :zip化日時, style: "display: block" %>

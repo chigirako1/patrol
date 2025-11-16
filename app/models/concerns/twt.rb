@@ -34,7 +34,10 @@ module Twt
     TWT_ARCHIVE_DIR_PATH = "public/twt"
     TWT_DIRLIST_TXT_PATH = "#{TWT_ARCHIVE_DIR_PATH}/dirlist.txt"
 
-    THRESHOLD_KB = 600
+    UL_FREQUECNTY_THRESHOLD = 100
+
+    FILESIZE_THRESHOLD_KB = 600
+    FILESIZE_THRESHOLD = FILESIZE_THRESHOLD_KB * 1024
 
     def self.get_twt_tweet_ids_from_txts(twtid)
         txts = UrlTxtReader::get_url_txt_contents_uniq_ary([])
@@ -251,7 +254,7 @@ module Twt
         Dir.glob(base_path).each do |path|
             if File.basename(path) =~ TWT_AT_SCREEN_NAME_RGX
                 id = $1
-                STDERR.puts %!"#{path}", "#{id}"!
+                #STDERR.puts %!"#{path}", "#{id}"!
                 if twtid == id
                     target_path = path
                     break
@@ -272,18 +275,23 @@ module Twt
         path_list
     end
 
+    def self.get_sp_tweet_id_from_filepath(fpath)
+        filename = File.basename(fpath)
+        if filename =~ /(\d{8}_\d{6})/
+            datetime_str = $1
+            datetime = Util::string_to_datetime(datetime_str).in_time_zone('Tokyo')
+            tweet_id = time2tweet_id(datetime)
+        end
+        tweet_id
+    end
+    
     def self.get_tweet_info_from_path(path)
         path_list = UrlTxtReader::get_path_list(path)
-        if path_list
+        if path_list and path_list.size > 0
             path_list = path_list.sort
             fpath1 = path_list.last
             fpath2 = path_list.first
-            filename = File.basename(fpath1)
-            if filename =~ /(\d{8}_\d{6})/
-                datetime_str = $1
-                datetime = Util::string_to_datetime(datetime_str).in_time_zone('Tokyo')
-                tweet_id = time2tweet_id(datetime)
-            end
+            tweet_id = get_sp_tweet_id_from_filepath(fpath1)
         end
         [tweet_id, fpath1, fpath2]
     end
@@ -293,6 +301,15 @@ module Twt
         if dirpath
             tinfo = Twt::get_tweet_info_from_path(dirpath)
             Twt::tweet_id_with_comma tinfo[0]
+        else
+            nil
+        end
+    end
+
+    def self.get_sp_pic_filelist_by_twtid(twtid)
+        dirpath = Twt::get_sp_path(twtid)
+        if dirpath
+            path_list = UrlTxtReader::get_path_list(dirpath)
         else
             nil
         end
@@ -848,7 +865,7 @@ module Twt
             tsv = CSV.read(fpath, headers: false, col_sep: "\t")
             tsv.each do |row|
                 path = row[0]
-                screen_name = Util::parent_dirname(path)
+                screen_name = Util::parent_dirname(path) #BUG:階層が深いとだめ
 
                 if scrn_name and screen_name != scrn_name
                     next
@@ -907,14 +924,14 @@ module Twt
         hash
     end
 
+    Tmp_struct = Struct.new(:avg, :max, :min, :cnt)
+
     def self.map_pic_infos(hash, threshold_kb)
-        tmp_struct = Struct.new(:avg, :max, :min, :cnt)
 
         hash2 = hash.map {|k,v|
             [
                 k,
-                #[v.sum / v.size, v.max, v.min]
-                tmp_struct.new(v.sum / v.size, v.max, v.min, v.size)
+                Tmp_struct.new(v.sum / v.size, v.max, v.min, v.size)
             ]
         }.select {|x|
             x[1].cnt > 30 and x[1].avg > threshold_kb
@@ -958,118 +975,12 @@ module Twt
             else
                 inf = %!"@#{k}"!
             end
-=begin
-            msg = sprintf(%!%10s/%10s(%10s) %10s [%5d]%s!,
-                Util::formatFileSize(v.max),
-                Util::formatFileSize(v.min),
-                Util::formatFileSize(v.max - v.min),
-                Util::formatFileSize(v.avg),
-                v.cnt,
-                inf)
-=end
             msg = sprintf(%!%5d %10s %s!,
                 v.cnt,
                 Util::formatFileSizeKB(v.avg),
                 inf)
             STDERR.puts(msg)
         end
-    end
-
-    def self.build_pic_info_list_obs(hash)
-        key11 = "11.日数経過"
-        key21 = "21.更新頻度-h"
-        key25 = "25.更新頻度-m"
-        #key29 = "29.更新頻度-l"
-        key31 = "31.平均サイズL"
-        key99 = "99.その他"
-
-        list = Hash.new { |h, k| h[k] = [] }
-        hash.each do |k,val|
-            v = val[0]
-            twt = val[1]
-            if twt
-                if twt.status != Twitter::TWT_STATUS::STATUS_PATROL
-                    next
-                end
-
-                if twt.drawing_method and twt.drawing_method != Twitter::DRAWING_METHOD::DM_AI
-                    next
-                end
-
-                if (twt.rating||0) < 80
-                    next
-                end
-
-                postdate = twt.last_post_datetime.in_time_zone('Tokyo').strftime("%y/%m/%d %H:%M")
-                dayn = Util::get_date_delta(twt.last_post_datetime)
-                #inf = %![#{pred_str}] #{postdate}(#{dayn})【#{twt.rating}/#{twt.r18}】#{twt.twtname}(@#{k})!
-                avg = v.avg / 1024
-                pred = twt.prediction
-
-                elem = []
-                elem << k
-                elem << %!"#{twt.twtname}"!
-                elem << twt.update_frequency
-                elem << postdate
-                elem << dayn
-                elem << twt.rating
-                elem << twt.r18
-                elem << avg
-                elem << v.cnt
-                elem << pred
-
-=begin
-                if dayn >= 30
-                    list[key11] << elem
-                elsif twt.update_frequency > 200
-                    list[key21] << elem
-                elsif twt.update_frequency > 100
-                    list[key25] << elem
-                elsif avg >= 1024
-                    list[key31] << elem
-                else
-                    list[key99] << elem
-                end
-=end
-                d_unit =15
-                elapse = dayn / d_unit
-                unit = 10
-                if pred >= unit
-                    pr = pred / unit * unit
-                else
-                    pr = pred / 5 * 5
-                    if pr == 0 and pred > 0
-                        pr = 1
-                    end
-                end
-
-                if dayn > 60
-                    key_h = "9大昔"
-                elsif dayn > 30
-                    key_h = "8昔"
-                elsif twt.update_frequency > 300
-                    key_h = "6更新頻度:高"
-                elsif pred == 0
-                    key_h = "0予測:0"
-                elsif pred < 10
-                    key_h = "2予測:少"
-                elsif twt.update_frequency < 50
-                    key_h = "4更新頻度:低"
-                elsif dayn <= 7
-                    key_h = "1最近"
-                elsif twt.update_frequency < 100
-                    key_h = "3更新頻度:低"
-                elsif twt.rating >= 87
-                    key_h = "7高評価"
-                else
-                    key_h = "5"
-                end
-                key = sprintf("%s-予測%3d↑-%3d日～", key_h, pr, elapse*d_unit)
-
-                list[key] << elem
-            end
-        end
-        list
     end
 
     def self.get_key_elem(twt, k, v)
@@ -1102,22 +1013,7 @@ module Twt
             end
         end
 
-        if dayn > 60
-            key_h = "9大昔"
-        elsif dayn > 30
-            key_h = "8昔"
-        elsif twt.update_frequency > 300
-            key_h = "7更新頻度:V高"
-        elsif twt.update_frequency > 200
-            key_h = "6更新頻度:高"
-        elsif twt.update_frequency < 50
-            key_h = "2更新頻度:V低"
-        elsif twt.update_frequency < 100
-            key_h = "3更新頻度:低"
-        else
-            key_h = "5-"
-        end
-        key = sprintf("%s|||予測%3d↑-%3d日～", key_h, pr, elapse*d_unit)
+        key = "#{Util::format_num(twt.update_frequency, 300, 4)}|||更新頻度:#{Util::format_num(twt.update_frequency, 50, 4)}"
 
         [key, elem]
     end
@@ -1172,7 +1068,7 @@ module Twt
     def self.load_pic_info_tsv()
         hash = get_pic_infos_ex
 
-        threshold_kb = THRESHOLD_KB * 1024
+        threshold_kb = FILESIZE_THRESHOLD
         hash2 = map_pic_infos(hash, threshold_kb)
 
         if hash2
@@ -1197,6 +1093,42 @@ module Twt
         }.to_h
 
         hash2
+    end
+
+    def self.reg_filesize()
+        STDERR.puts "### reg_filesize >>>"
+        pic_infos = init_pic_infos
+        pic_infos.each do |k,v|
+            twt = Twitter.find_by(twtid: k)
+            if twt
+                twt_params = {}
+                avg = v.sum / v.size
+
+                if twt.filesize 
+                    if avg > twt.filesize
+                        twt_params[:filesize] = avg
+                    elsif avg == twt.filesize
+                    else
+                        msg = %!サイズが小さくなっているため保留:#{twt.filesize} -> #{avg}!
+                        Rails.logger.warn(msg)
+                    end
+                else
+                    twt_params[:filesize] = avg
+                end
+
+                if twt_params.size > 0
+                    msg = %!更新内容 => #{twt_params}\t@#{k}(#{twt.twtname})!
+                    #Rails.logger.info(msg)
+
+                    twt.update(twt_params)
+                end
+            else
+                msg = %!不明なID:"#{k}"!
+                Rails.logger.warn(msg)
+            end
+        end
+
+        STDERR.puts "### reg_filesize <<<"
     end
 
     # =========================================================================

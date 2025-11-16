@@ -26,6 +26,24 @@ class HomeController < ApplicationController
       },
       # =====================================
       { :label => "ai1", :path => "" },
+      { :label => "T|AI|all in 1 87△access",
+        :path => twitters_path(
+          target: "AI",
+          rating: 87,
+          pred: 55,
+          hide_within_days: 5,
+          num_of_disp: 5,
+          #force_disp_day: 10,
+          mode: TwittersController::ModeEnum::ALL_IN_1,
+          grp_sort_by: TwittersController::GRP_SORT::GRP_SORT_ACCESS_W,
+          sort_by: TwittersController::SORT_BY::RATING,
+          #aio: TwittersController::GRP_SORT::GRP_SORT_ACCESS + "|" + TwittersController::GRP_SORT::GRP_SORT_PRED,
+          #step: -3,
+          #num_of_times: 4,
+          #ex_pxv: false,
+          thumbnail: ""
+        ) 
+      },
       { :label => "T|AI|all in 1 87△pred",
         :path => twitters_path(
           target: "AI",
@@ -99,6 +117,26 @@ class HomeController < ApplicationController
           mode: TwittersController::ModeEnum::ALL_IN_1,
           sort_by: TwittersController::SORT_BY::ACCESS,
           grp_sort_by: TwittersController::GRP_SORT::GRP_SORT_ACCESS,
+          #aio: TwittersController::GRP_SORT::GRP_SORT_ACCESS + "|" + TwittersController::GRP_SORT::GRP_SORT_PRED,
+          #step: -3,
+          #num_of_times: 4,
+          #ex_pxv: false,
+          thumbnail: ""
+        ) 
+      },
+      { :label => "T|AI|all in 1 80△アクセス日数順、GRP:登録日",
+        :path => twitters_path(
+          target: "AI",
+          #page_title: "Twitter [AI] 80△",
+          #rating_lt: 100
+          rating: 83,
+          #hide_within_days: 30,
+          num_of_disp: 5,
+          #pred: 5,
+          #force_disp_day: 10,
+          mode: TwittersController::ModeEnum::ALL_IN_1,
+          sort_by: TwittersController::SORT_BY::ACCESS,
+          grp_sort_by: TwittersController::GRP_SORT::GRP_SORT_REGISTERED,
           #aio: TwittersController::GRP_SORT::GRP_SORT_ACCESS + "|" + TwittersController::GRP_SORT::GRP_SORT_PRED,
           #step: -3,
           #num_of_times: 4,
@@ -261,25 +299,10 @@ class HomeController < ApplicationController
           #page_title: "xx", 
           num_of_disp: 333,
           mode: TwittersController::ModeEnum::FILESIZE,
+          hide_within_days: 3,
           #thumbnail: "t"
         )
       },
-      # ----------------------------
-      { :label => "stats", :path => "" },
-      { :label => "Artist::stats", :path => artists_stats_index_path },
-      # =====================================
-      { :label => "DB更新", :path => "" },
-      # ----------------------------
-      { :label => "pxv (dir-DB更新 BY FS)",
-          :path => artists_path(
-            page_title: "pxv (dir-DB更新 BY FS)", 
-            file: ArtistsController::MethodEnum::TABLE_UPDATE_NEW_USER,
-            display_number: 11
-          )
-      },
-      { :label => "-", :path => "" },
-      { :label => "twt(dir-DB更新 BY FS)", :path => artists_twt_index_path(dir: ArtistsController::DIR_TYPE::UPDATE) },
-      { :label => "tweets(dir-DB更新 BY FS)", :path => tweets_update_recods_index_path() },
       { :label => "-", :path => "" },
       { :label => "twt 未設定 予測数順",
         :path => twitters_path(
@@ -330,8 +353,25 @@ class HomeController < ApplicationController
             thumbnail: true
           )
       },
+      # ----------------------------
+      { :label => "stats", :path => "" },
+      { :label => "Artist::stats", :path => artists_stats_index_path },
+      # =====================================
+      { :label => "DB更新", :path => "" },
+      # ----------------------------
+      { :label => "pxv (dir-DB更新 BY FS)",
+          :path => artists_path(
+            page_title: "pxv (dir-DB更新 BY FS)", 
+            file: ArtistsController::MethodEnum::TABLE_UPDATE_NEW_USER,
+            display_number: 11
+          )
+      },
+      { :label => "-", :path => "" },
+      { :label => "twt(dir-DB更新 BY FS)", :path => artists_twt_index_path(dir: ArtistsController::DIR_TYPE::UPDATE) },
+      { :label => "tweets(dir-DB更新 BY FS)", :path => tweets_update_recods_index_path() },
       { :label => "-", :path => "" },
       { :label => "twt(dir-archive fsチェック)", :path => artists_twt_index_path(dir: ArtistsController::DIR_TYPE::ARCHIVE_CHECK) },
+      { :label => "twt(ファイルサイズ登録)", :path => artists_twt_index_path(dir: ArtistsController::DIR_TYPE::REG_FILESIZE) },
 
       # =====================================
       { :label => "unified t [ai]", :path => "" },
@@ -689,6 +729,16 @@ class HomeController < ApplicationController
       { :label => "今月ファイル ",
           :path => artists_twt_index_path(
             filename: "thismonth",
+            hide_day: 30,
+            rating: rating_std,
+            #show_times: 2,
+            pred: 5,
+            target:"twt,twt既知,twt未知,known_pxv,unknown_pxv",
+          )
+      },
+      { :label => "今年ファイル all",
+          :path => artists_twt_index_path(
+            filename: "thisyear",
             hide_day: 30,
             rating: rating_std,
             #show_times: 2,
@@ -1334,7 +1384,8 @@ class HomeController < ApplicationController
             #page_title: "Tweets",
             mode: TweetsController::ModeEnum::URL_LIST_SUMMARY,
             sort_by: TwittersController::SORT_BY::TODO_CNT,#PRED,
-            filename: "thismonth",#"+3",???
+            #filename: "thismonth",#"+3",??? url encode？error?
+            filename: "thisyear",#"+3",??? url encode？error?
             #hide_within_days: 15,
             #created_at: 30,
             pred: 30,

@@ -40,9 +40,11 @@
 
             <% twt = Twitter.find_by_twtid_ignore_case(e.screen_name) %>
 
-            <% if @target.presence and twt.drawing_method != @target %>
-                <%# STDERR.puts %!"#{@target}/#{twt.drawing_method}"! %>
-                <% next %>
+            <% if @target.presence and twt.drawing_method.presence %>
+                <% if twt.drawing_method != @target %>
+                    <%# STDERR.puts %!"#{@target}/#{twt.drawing_method}"! %>
+                    <% next %>
+                <% end %>
             <% end %>
 
             <% if @created_at > 0 and twt.created_at_day_num > @created_at %>
@@ -54,13 +56,21 @@
     <% end %>
     
     <% if url_list_work %>
+        <% h1_bak = "" %>
         <% filesize_list = Twt::get_pic_filesize_list %>
 
         <% url_list_work = url_list_sort_by(url_list_work, params[:sort_by]) %>
         <% group_hash = Twitter::url_list_work_to_hash(url_list_work, @hide_within_days, @rating_gt, params[:sort_by]) %>
         <% group_hash.each do |k,v| %>
 
-            <h2><%= %!#{k}(#{v.size})! %></h2>
+            <% h1, h2 = k.split(Twitter::TWT_H_SEPARATOR) %>
+            <% if h1 != h1_bak %>
+                <h2><%= h1 %></h2>
+                <% h1_bak = h1 %>
+            <% end %>
+
+            <% header3 = %!#{h2}(#{v.size})! %>
+            <h3><%= header3 %></h3>
 
             <% v.each.with_index(1) do |(e, twt), idx| %>
 
@@ -77,9 +87,8 @@
                 <%= twt.twtname %>(@<%= e.screen_name %>)
 
                 [
-                <% if filesize_list[e.screen_name] and filesize_list[e.screen_name] / 1024 > Twt::THRESHOLD_KB %>
-                    <font color="red">※ファイルサイズ大※</font>
-                    <%= sprintf("(%4d KB)", filesize_list[e.screen_name] / 1024) %>
+                <% if filesize_list[e.screen_name] and filesize_list[e.screen_name] / 1024 > Twt::FILESIZE_THRESHOLD_KB %>
+                    <font color="red">※ファイルサイズ大<%= sprintf("(%4d KB)", filesize_list[e.screen_name] / 1024) %>※</font>
                 <% end %>
                 <%= link_to_ex("■twt■", twt) %>
                 ]
