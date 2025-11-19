@@ -35,7 +35,7 @@ class HomeController < ApplicationController
           num_of_disp: 5,
           #force_disp_day: 10,
           mode: TwittersController::ModeEnum::ALL_IN_1,
-          grp_sort_by: TwittersController::GRP_SORT::GRP_SORT_ACCESS_W,
+          grp_sort_by: TwittersController::GRP_SORT::GRP_SORT_R_A_P,
           sort_by: TwittersController::SORT_BY::RATING,
           #aio: TwittersController::GRP_SORT::GRP_SORT_ACCESS + "|" + TwittersController::GRP_SORT::GRP_SORT_PRED,
           #step: -3,
@@ -246,7 +246,7 @@ class HomeController < ApplicationController
             filename: "thismonth",
             rating: 80,
             hide_within_days: 1,
-            num_of_disp: 3,
+            num_of_disp: 4,
             #pred: 4,
             #no_pxv: true,
             #thumbnail: "t"
@@ -294,12 +294,18 @@ class HomeController < ApplicationController
       },
       { :label => "-", :path => "" },
       { :label => "twt(dir-sp fsチェック)", :path => artists_twt_index_path(dir: ArtistsController::DIR_TYPE::SMARTPHONE) },
+      { :label => "-", :path => "" },
       { :label => "Twitter ファイルサイズ大 AI",
         :path => twitters_path(
           #page_title: "xx", 
-          num_of_disp: 333,
+          num_of_disp: 55,
+          target: Twitter::DRAWING_METHOD::DM_AI,
+          rating: Twt::RATING_THRESHOLD,
           mode: TwittersController::ModeEnum::FILESIZE,
-          hide_within_days: 3,
+          sort_by: TwittersController::SORT_BY::RATING,
+          grp_sort_by: TwittersController::GRP_SORT::GRP_SORT_UL_FREQ,
+          hide_within_days: 7,
+          ul_freq: -149
           #thumbnail: "t"
         )
       },
@@ -334,6 +340,7 @@ class HomeController < ApplicationController
           thumbnail: "t"
         )
       },
+      { :label => "-", :path => "" },
       { :label => "pxv 未設定 更新数[多]予測",
           :path => artists_path(
             page_title: "pxv 未設定 更新数[多]予測", 

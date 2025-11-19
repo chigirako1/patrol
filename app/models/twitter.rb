@@ -48,6 +48,13 @@ class Twitter < ApplicationRecord
         END_MATCH = "end_match"
     end
 
+    module RESTRICT
+        R18 = "R18"
+        R15 = "R15"
+        R12 = "R12"
+        NOTHING = "全年齢"
+    end
+
     def self.find_by_twtid_ignore_case(twtid, ignore=true)
         if twtid == nil
             return nil
@@ -285,7 +292,23 @@ class Twitter < ApplicationRecord
     end
 
     def filesize_huge?
-        if filesize > Twt::FILESIZE_THRESHOLD
+        if filesize and filesize > Twt::FILESIZE_THRESHOLD
+            true
+        else
+            false
+        end
+    end
+
+    def filesize_kb
+        sprintf("(%d KB)", filesize / 1024)
+    end
+
+    def ul_freq_low?
+        unless  self.update_frequency
+            return nil
+        end
+
+        if self.update_frequency < Twt::UL_FREQUECNTY_THRESHOLD
             true
         else
             false
@@ -311,11 +334,6 @@ class Twitter < ApplicationRecord
         list = list.map {|x| [Twt::twt_path_str(x), x]}.sort.reverse
         list = list.map {|x| x[1]}
         list
-    end
-
-    def num_to_str_f(val, unit)
-        #sprintf("%3d", val / unit * unit)
-        Util::num_to_str_f(val, unit)
     end
 
     def prediction(datetime_arg=nil)
@@ -509,13 +527,70 @@ class Twitter < ApplicationRecord
         end
     end
 
+    def group_key_rap
+        r_unit = 5
+        rate_n = Util::format_num(self.rating, r_unit)
+        lad_n = sprintf("%3d", self.last_access_datetime_days_elapsed / 7)
+        pred_n = Util::format_num(self.prediction, 10)
+        %!#{rate_n}#{Twitter::TWT_H_SEPARATOR}#{lad_n}週|#{pred_n}!
+    end
+
+    def a1o_auto_group_key(r_unit=3)
+        if filesize_huge?
+            return "00.ファイルサイズ大#{Twitter::TWT_H_SEPARATOR}更新頻度#{Util::format_num(self.update_frequency, 100, 4)}"
+        end
+
+        rate_n = Util::format_num(self.rating, r_unit)
+        lad_n = sprintf("%3d", self.last_access_datetime_days_elapsed / 7)
+        pred_n = Util::format_num(self.prediction, 10)
+        key = %!評価#{rate_n}～|#{lad_n}週|予測#{pred_n}～!
+
+        if created_at_day_num <= 60
+            newcomer = "90.新規#{Twitter::TWT_H_SEPARATOR}"
+        elsif created_at_day_num > 365
+            newcomer = "01.古株#{Twitter::TWT_H_SEPARATOR}"
+        else
+            newcomer = "50.中堅#{Twitter::TWT_H_SEPARATOR}"
+        end
+
+        newcomer + key
+    end
+
     def group_key(count, rating_arg, add_count = false)
+
+        case drawing_method
+        when DRAWING_METHOD::DM_HAND
+            dm = %!901.手!
+        when DRAWING_METHOD::DM_AI
+            dm = %!902.AI!
+        when DRAWING_METHOD::DM_3D, DRAWING_METHOD::DM_3D
+            return %!997.#{drawing_method}!
+        when "", nil
+            dm = %!999.未設定!
+        else
+            dm = %!998.#{drawing_method}!
+        end
+
+        case status
+        when Twitter::TWT_STATUS::STATUS_PATROL
+            key = %!999.#{a1o_auto_group_key(3)}!
+        else
+            #lad_n = self.last_access_datetime_days_elapsed / 7
+            #pred_n = Util::format_num(self.prediction, 10)
+            #key = %!000."#{status}"#{lad_n}週|予測#{pred_n}～!
+        end
+
+        %!#{dm}::#{key}!
+    end
+
+=begin
+    def group_key_obsolete(count, rating_arg, add_count = false)
         
         if drawing_method == "パクリ"
             return drawing_method
         end
 
-        filenum_str = %!(総ファイル数#{zero_padding(filenum)}↑)!
+        filenum_str = %!(総ファイル数#{Util::zero_padding(filenum)}↑)!
         case status
         when Twitter::TWT_STATUS::STATUS_PATROL
             if rating.presence
@@ -535,11 +610,6 @@ class Twitter < ApplicationRecord
                 if days_accs <= 1
                     key = %!080:1日以内!
                     add_count = false
-=begin
-                elsif days_accs <= 2
-                    key = %!080:2日以内!
-                    add_count = false
-=end
                 elsif days_accs <= 4
                     key = %!080:4日以内!
                     add_count = false
@@ -621,11 +691,7 @@ class Twitter < ApplicationRecord
 
         key
     end
-
-    def zero_padding(number, unit=25)
-        w = (number||0) / unit
-        sprintf("%03d", w * unit)
-    end
+=end
 
     def self.access_str(lad_n)
         tbl = [
@@ -732,25 +798,6 @@ class Twitter < ApplicationRecord
             ].join("-")
         end
     end
-
-    def a1o_auto_group_key()
-=begin
-        lad_n = self.last_access_datetime_days_elapsed / 30
-        unit = 3
-        #rat_n = self.rating / unit * unit
-        pred_n = self.predic_str(10)
-        #ary = [rat_n, lad_n, pred_n]
-        #ary = [%!#{lad_n}月!, pred_n, self.rating]
-        #ary.join("|")
-        %!%#{lad_n}月|予測#{pred_n}|評価#{self.rating}!
-=end
-        lad_n = self.last_access_datetime_days_elapsed / 7
-        pred_n = num_to_str_f(self.prediction, 10)
-        rate_n = num_to_str_f(self.rating, 3)
-        #%!#{lad_n}週|予測#{pred_n}～|評価#{rate_n}～!
-        %!評価#{rate_n}～|#{lad_n}週|予測#{pred_n}～!
-    end
-
 
     def self.url_list_work_to_hash(url_list_work, hide_within_days, rating_gt, sort_by)
         hash = {}

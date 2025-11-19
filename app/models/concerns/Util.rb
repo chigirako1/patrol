@@ -8,6 +8,26 @@ module Util
     EXCEPTION_TXT_PATH = "public/exception.txt"
     REMOVE_WORDS_FILE_PATH = "public/remove_words.txt"
 
+    def self.get_param_num(params, symbol, def_val=0)
+        if params[symbol] == ""
+            value = def_val
+        else
+            value = params[symbol].to_i
+        end
+        STDERR.puts %!#{symbol}="#{value}"!
+        value
+    end
+
+    def self.get_param_str(params, symbol, def_val="")
+        if params[symbol]
+            value = params[symbol]
+        else
+            value = def_val
+        end
+        STDERR.puts %!#{symbol}="#{value}"!
+        value
+    end
+
     # よくわからないが、
     # ・"24-09-22".to_date => 0024-09-22
     # ・Date.parse("24-09-22") => 2024-09-22
@@ -79,10 +99,6 @@ module Util
         sprintf("%#{digit}d", w * unit)
     end
 
-    def self.num_to_str_f(val, unit)
-        sprintf("%3d", val / unit * unit)
-    end
-    
     def self.get_public_path(path)
         Rails.root.join("public" + path).to_s
     end

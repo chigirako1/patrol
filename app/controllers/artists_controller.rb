@@ -890,7 +890,8 @@ class ArtistsController < ApplicationController
 
         # twt
         if @target.include?("twt既知") or @target.include?("twt未知")
-          pxv_chk = true#false
+          pxv_chk = true
+          pxv_chk = false
           known_twt_url_list, unknown_twt_url_list, pxvid_list2 = Twitter::twt_user_classify(twt_url_infos, pxv_chk)
 
           if @target.include?("twt既知")
@@ -1181,7 +1182,7 @@ class ArtistsController < ApplicationController
       end
 
       if prms.recent_filenum != 0
-        artists = artists.select {|x| x[:recent_filenum] >= prms.recent_filenum}
+        artists = artists.select {|x| (x.recent_filenum||0) >= prms.recent_filenum}
       end
   
       if prms.year_since != 0 and  prms.year_until != 0

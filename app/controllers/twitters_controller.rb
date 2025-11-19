@@ -22,15 +22,16 @@ class TwittersController < ApplicationController
 
     TODO_CNT = "todo_cnt"
     TOTAL_CNT = "total_cnt"
-
   end
 
   module GRP_SORT
     GRP_SORT_PRED = "予測△順"
     GRP_SORT_PRED_DESC = "予測▽順"
+    GRP_SORT_UL_FREQ = "更新頻度"
     GRP_SORT_ACCESS = "アクセス日順"
     GRP_SORT_ACCESS_W = "アクセス日順(週)"
     GRP_SORT_R_A_P = "評価|アクセス日|予想数順"
+    GRP_SORT_R_P = "評価||予想数順"
     GRP_SORT_RATE = "評価順"
     GRP_SORT_UL = "投稿日順"
     GRP_SORT_REGISTERED = "登録日順"
@@ -47,13 +48,15 @@ class TwittersController < ApplicationController
 
   # GET /twitters or /twitters.json
   def index
-
+=begin
     if params[:mode] == ""
       mode = "id"
     else
       mode = params[:mode]
     end
     puts %!mode="#{mode}"!
+=end
+    mode = Util::get_param_str(params, :mode, "id")
 
     if params[:num_of_disp].presence
       @num_of_disp = params[:num_of_disp].to_i
@@ -69,12 +72,15 @@ class TwittersController < ApplicationController
     end
     puts %!hide_within_days="#{@hide_within_days}"!
 
+=begin
     if params[:pred] == ""
       pred_cond_gt = 0
     else
       pred_cond_gt = params[:pred].to_i
     end
     puts %!pred_cond_gt="#{pred_cond_gt}"!
+=end
+    pred_cond_gt = Util::get_param_num(params, :pred)
 
     if params[:force_disp_day].presence
       force_disp_day = params[:force_disp_day].to_i
@@ -132,6 +138,10 @@ class TwittersController < ApplicationController
       step = 3
     end
     puts %!step="#{step}"!
+
+    ul_freq = Util::get_param_num(params, :ul_freq)
+    param_target = Util::get_param_str(params, :target)
+    param_grp_sort_by = Util::get_param_str(params, :grp_sort_by)
 
     if true
       sql_query = "LEFT OUTER JOIN artists ON twitters.twtid = artists.twtid"
@@ -200,22 +210,30 @@ class TwittersController < ApplicationController
 
     case mode
     when TwittersController::ModeEnum::FILESIZE
-      screen_names = Twt::load_pic_info_tsv()
-      twitters = twitters.select {|x| screen_names.include?(x.twtid)}
+      STDERR.puts %!mode="#{mode}"aaa!
+
+      #screen_names = Twt::load_pic_info_tsv()
+      #twitters = twitters.select {|x| screen_names.include?(x.twtid)}
+      twitters = twitters.select {|x| x.status == Twitter::TWT_STATUS::STATUS_PATROL}
+      twitters = twitters.select {|x| x.drawing_method == param_target}
       twitters = twitters.select {|x| x.last_access_day_num >= @hide_within_days}
+      twitters = twitters.select {|x| x.filesize_huge?}
+      #twitters = twitters.select {|x| x.ul_freq_low? == false}
+      twitters = twitters.select {|x| (x.rating||0) >= rating_gt}
+      twitters = twitters.select {|x| x.prediction >= pred_cond_gt}
 
-      twitters = sort(twitters, sort_by)
-      STDERR.puts %!mode=#{mode}\t#{screen_names.size}\t#{twitters.size}!
-
-      max = twitters.max {|a, b| a.update_frequency <=> b.update_frequency}
-      digit = Math.log10(max.update_frequency).to_i + 1
-
-      if twitters.size > 100
-        unit = 50
+      if ul_freq < 0
+        twitters = twitters.select {|x| (x.update_frequency||0) <= -(ul_freq)}
       else
-        unit = 100
+        twitters = twitters.select {|x| (x.update_frequency||0) >= (ul_freq)}
       end
-      @twitters_group = twitters.group_by {|x| Util::format_num(x.update_frequency, unit, digit)}.sort_by {|k,v| k}.reverse.to_h
+
+      twitters = twt_sort_by(twitters, sort_by)
+      #STDERR.puts %!mode="#{mode}"\t#{screen_names.size}\t#{twitters.size}!
+
+      #@twitters_group = Twt::group_by_ul_freq(twitters, param_grp_sort_by)
+      @twitters_group = twt_group_by(twitters, param_grp_sort_by)
+      @twitters_total_count = @twitters_group.sum {|k,v| v.count}
       return
     when TwittersController::ModeEnum::UNASSOCIATED_TWT_ACNT
       unassociated_twt_screen_names = Twitter::unassociated_twt_screen_names()
@@ -230,7 +248,7 @@ class TwittersController < ApplicationController
       group = index_all_in_1(tmp, params, rating_gt, pred_cond_gt)
       group_list << group
 
-      group = index_unset(twitters_bak, 30)
+      group = index_unset(twitters_bak, 30, @hide_within_days)
       group_list << group
 
       @twitters_group = group_list[0].merge(*group_list)
@@ -445,7 +463,7 @@ class TwittersController < ApplicationController
         twitters = twitters.select {|x| x.rating == nil or x.rating == rating_gt}
       end
 
-      twitters = sort(twitters, sort_by)
+      twitters = twt_sort_by(twitters, sort_by)
 
       if pred_cond_gt != 0
         if force_disp_day == 0
@@ -661,7 +679,7 @@ class TwittersController < ApplicationController
     #when TwittersController::ModeEnum::URL_TXT #"file"と一緒？
     when TwittersController::ModeEnum::FILE
       if params[:target].presence
-        twitters = twitters.select {|x| x.drawing_method == params[:target]}
+        twitters = twitters.select {|x| x.drawing_method == params[:target] || x.drawing_method == nil}
       end
 
       twitters = twitters.select {|x| !x.last_access_datetime_p(@hide_within_days)}
@@ -686,7 +704,8 @@ class TwittersController < ApplicationController
       twitters = twitters.select {|x| known_ids.include?(x.twtid) }
       
       twitters = twitters.sort_by {|x| [-(x.rating||0), -x.prediction, x.last_access_datetime]}
-      @twitters_group = twitters.group_by {|x| x.key_for_group_by()}.sort_by {|k, v| k}.reverse.to_h
+      #@twitters_group = twitters.group_by {|x| x.key_for_group_by()}.sort_by {|k, v| k}.reverse.to_h
+      @twitters_group = twitters.group_by {|x| x.a1o_auto_group_key(3)}.sort_by {|k, v| k}.reverse.to_h
       return
     when "存在しない"
       twitters = twitters.select {|x| !x.last_access_datetime_p(@hide_within_days)}
@@ -710,6 +729,7 @@ class TwittersController < ApplicationController
       #twitters = twitters.select {|x| x.last_dl_datetime.year >= 2023}
       #twitters = twitters.select {|x| x.last_dl_datetime.month >= 11}
     end
+
     @twitters_group = twitters.group_by {|x| x.rating}
     @twitters_group = @twitters_group.sort_by {|k, v| k || 0}.reverse.to_h
   end
@@ -873,58 +893,17 @@ class TwittersController < ApplicationController
         end
 
         twitters_wk = twitters_wk.select {|x| x.status == Twitter::TWT_STATUS::STATUS_PATROL}
-
         twitters_wk = twitters_wk.select {|x| x.select_cond_aio(pred_cond_gt)}
 
         case params[:sort_by]
-        when SORT_BY::ACCESS
-          twitters_wk = twitters_wk.sort_by {|x| [x.last_access_datetime, -(x.rating||0), -x.prediction]}
-        when SORT_BY::RATING, SORT_BY::PRED
-          twitters_wk = twitters_wk.sort_by {|x| [-(x.rating||0), -x.prediction, x.last_access_datetime]}
+        when SORT_BY::PRED
+          twitters_wk = twt_sort_by(twitters_wk, SORT_BY::RATING)
         else
+          twitters_wk = twt_sort_by(twitters_wk, params[:sort_by])
           STDERR.puts %!sort_by=#{params[:sort_by]}!
         end
 
-        grp_sort = 0
-        case params[:grp_sort_by]
-        when GRP_SORT::GRP_SORT_AUTO
-          twitters_group = twitters_wk.group_by {|x| x.a1o_auto_group_key}
-          grp_sort = -1
-          #twitters_group = {}
-          #twitters_group["!test!"] = twitters_wk
-        when GRP_SORT::GRP_SORT_ACCESS
-          #twitters_group = twitters_wk.group_by {|x| %!#{x.rating}|#{x.last_access_datetime_days_elapsed / 30}!}
-          twitters_group = twitters_wk.group_by {|x| %!#{x.last_access_datetime_days_elapsed / 30}|#{x.rating}|#{x.prediction / 10 * 10}!}
-          grp_sort = -1
-        when GRP_SORT::GRP_SORT_ACCESS_W
-          twitters_group = twitters_wk.group_by {|x| %!#{x.last_access_datetime_days_elapsed / 7}|#{x.rating}|#{x.prediction / 10 * 10}!}
-          grp_sort = -1
-        when GRP_SORT::GRP_SORT_R_A_P
-          twitters_group = twitters_wk.group_by {|x| %!#{x.rating / 5 * 5}#{Twitter::TWT_H_SEPARATOR}#{x.last_access_datetime_days_elapsed / 7}週|#{Util::format_num(x.prediction, 10)}!}
-          grp_sort = -1
-        when GRP_SORT::GRP_SORT_PRED
-          twitters_group = twitters_wk.group_by {|x| %!#{x.num_to_str_f(x.prediction, 10)}!}
-          grp_sort = 1
-        when GRP_SORT::GRP_SORT_PRED_DESC
-          twitters_group = twitters_wk.group_by {|x| %!#{x.num_to_str_f(x.prediction, 10)}!}
-          grp_sort = -1
-        when GRP_SORT::GRP_SORT_REGISTERED
-          twitters_group = twitters_wk.group_by {|x| %!#{Util::format_num(x.created_at_day_num / 30, 1)}!}
-          grp_sort = 1
-        when GRP_SORT::GRP_SORT_RATE
-          twitters_group = twitters_wk.group_by {|x| %!#{x.rating}|#{x.last_access_datetime_days_elapsed / 30}!}
-          grp_sort = -1
-        else
-          twitters_group = twitters_wk.group_by {|x| %!#{x.rating}|#{x.last_access_datetime_days_elapsed / 30}!}
-          grp_sort = -1
-        end
-
-        if grp_sort > 0
-          twitters_group = twitters_group.sort_by {|k, v| k}.to_h
-        elsif grp_sort < 0
-          twitters_group = twitters_group.sort_by {|k, v| k}.reverse.to_h
-        end
-
+        twitters_group = twt_group_by(twitters_wk, params[:grp_sort_by])
       end
 
       if true
@@ -933,6 +912,7 @@ class TwittersController < ApplicationController
         twitters_check = twitters_check.select {|x| x.select_cond_post_date}
         twitters_check = twitters_check.select {|x| x.status != Twitter::TWT_STATUS::STATUS_WAITING}
         twitters_check = twitters_check.sort_by {|x| [-(x.rating||0), x.last_access_datetime, -x.prediction]}
+
         if twitters_check.size > 0
           #twitters_group["#{rating_gt}:更新なし"] = twitters_check
           tmp_grp = twitters_check.group_by {|x| %!更新チェック#{Twitter::TWT_H_SEPARATOR}#{x.status}!}
@@ -945,11 +925,14 @@ class TwittersController < ApplicationController
       twitters_group
     end
 
-    def index_unset(twitters, nday)
+    def index_unset(twitters, nday, hide_within_days)
       twitters_w = twitters
       if true
         twitters_w = twitters_w.select {|x| x.rating == nil or x.rating == 0}
+
         #twitters_w = twitters_w.select {|x| !x.last_access_datetime_p(-nday)}
+        twitters_w = twitters_w.select {|x| !x.last_access_datetime_p(hide_within_days)}
+
         twitters_w = twitters_w.select {|x| Util::get_date_delta(x.created_at) <= nday}
         twitters_w = twitters_w.select {|x| x.status == nil}
         twitters_w = twitters_w.sort_by {|x| [-x.prediction, x.last_access_datetime]}
@@ -1082,16 +1065,88 @@ class TwittersController < ApplicationController
       group
     end
 
-    def sort(twitters, sort_by)
+    def twt_sort_by(twitters, sort_by)
       case sort_by
       when SORT_BY::ID
         twitters = twitters.sort_by {|x| [x.id]}.reverse
       when SORT_BY::PRED
         twitters = twitters.sort_by {|x| [-x.prediction, x.last_access_datetime]}
+        #twitters = twitters.sort_by {|x| [-(x.rating||0), -x.prediction, x.last_access_datetime]}
+      when SORT_BY::ACCESS
+        twitters = twitters.sort_by {|x| [x.last_access_datetime, -(x.rating||0), -x.prediction]}
+      when SORT_BY::RATING
+        twitters = twitters.sort_by {|x| [-(x.rating||0), -x.prediction, x.last_access_datetime]}
       when SORT_BY::FILENUM
         twitters = twitters.sort_by {|x| [-(x.filenum||0)]}
+      when SORT_BY::TODO_CNT
+      when SORT_BY::TOTAL_CNT
       else
       end
       twitters
+    end
+
+    def twt_group_by(twitters, grp_sort_by)
+      grp_sort = 0
+      case grp_sort_by
+      when GRP_SORT::GRP_SORT_AUTO
+        twitters_group = twitters.group_by {|x| x.a1o_auto_group_key}
+        grp_sort = -1
+        #twitters_group = {}
+        #twitters_group["!test!"] = twitters
+      when GRP_SORT::GRP_SORT_ACCESS
+        #twitters_group = twitters.group_by {|x| %!#{x.rating}|#{x.last_access_datetime_days_elapsed / 30}!}
+        twitters_group = twitters.group_by {|x| %!#{x.last_access_datetime_days_elapsed / 30}|#{x.rating}|#{Util::format_num(x.prediction, 10)}!}
+        grp_sort = -1
+      when GRP_SORT::GRP_SORT_ACCESS_W
+        #twitters_group = twitters.group_by {|x| %!#{sprintf("%3d", x.last_access_datetime_days_elapsed / 7)}週#{Twitter::TWT_H_SEPARATOR}#{x.rating}|#{x.prediction / 10 * 10}!}
+        twitters_group = twitters.group_by {|x| %!#{sprintf("%3d", x.last_access_datetime_days_elapsed / 7)}週#{Twitter::TWT_H_SEPARATOR}#{Util::format_num(x.prediction, 10)}!}
+        grp_sort = -1
+      when GRP_SORT::GRP_SORT_R_P
+        twitters_group = twitters.group_by {|x| %!#{x.rating}#{Twitter::TWT_H_SEPARATOR}#{Util::format_num(x.prediction, 10)}!}
+      when GRP_SORT::GRP_SORT_R_A_P
+        #twitters_group = twitters.group_by {|x| %!#{x.rating / 5 * 5}#{Twitter::TWT_H_SEPARATOR}#{x.last_access_datetime_days_elapsed / 7}週|#{Util::format_num(x.prediction, 10)}!}
+        #twitters_group = twitters.group_by {|x| x.group_key_rap}
+        twitters_group = twitters.group_by {|x| x.a1o_auto_group_key(3)}
+        grp_sort = -1
+      when GRP_SORT::GRP_SORT_PRED
+        twitters_group = twitters.group_by {|x| %!#{Util::format_num(x.prediction, 10)}!}
+        grp_sort = 1
+      when GRP_SORT::GRP_SORT_PRED_DESC
+        twitters_group = twitters.group_by {|x| %!#{Util::format_num(x.prediction, 10)}!}
+        grp_sort = -1
+      when GRP_SORT::GRP_SORT_REGISTERED
+        twitters_group = twitters.group_by {|x| %!#{Util::format_num(x.created_at_day_num / 30, 1)}!}
+        grp_sort = 1
+      when GRP_SORT::GRP_SORT_RATE
+        twitters_group = twitters.group_by {|x| %!#{x.rating}|#{x.last_access_datetime_days_elapsed / 30}!}
+        grp_sort = -1
+      when GRP_SORT::GRP_SORT_UL_FREQ
+        if twitters.size < 100
+          unit = 25
+        else
+          unit = 50
+        end
+        max = twitters.max {|a, b| (a.update_frequency||0) <=> (b.update_frequency||0)}
+        if max
+          digit = Math.log10(max.update_frequency).to_i + 1
+        else
+          digit = 1
+        end
+
+        twitters_group = twitters.group_by {|x| Util::format_num(x.update_frequency, unit, digit)}.sort_by {|k,v| k}.reverse.to_h
+        STDERR.puts %!unit=#{unit}/digit=#{digit}!
+      else
+        twitters_group = twitters.group_by {|x| %!#{x.rating}|#{x.last_access_datetime_days_elapsed / 30}!}
+        grp_sort = -1
+      end
+
+      if grp_sort > 0
+        twitters_group = twitters_group.sort_by {|k, v| k}.to_h
+      elsif grp_sort < 0
+        twitters_group = twitters_group.sort_by {|k, v| k}.reverse.to_h
+      else
+      end
+
+      twitters_group
     end
 end

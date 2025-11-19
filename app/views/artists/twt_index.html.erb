@@ -46,7 +46,6 @@
 
 
 <!-- twt -->
-<% pxv_artist_id_list = [] %> <!-- TODO:なんだこれ？ -->
 <% twt_group = Hash.new { |h, k| h[k] = [] } %>
 
 <% if params[:target] == ArtistsController::FileTarget::TWT_EXPERIMENT %>
@@ -97,13 +96,37 @@
 <%# STDERR.puts %!filesize_list=#{filesize_list.size}! %>
 
 <% if twt_group.presence %>
+    <% h_grp1_bak = "" %>
     <% twt_group = twt_group.sort.reverse.to_h #twt_group = twt_group.sort.to_h %>
     <% twt_group.each do |key, val| %>
         <% list = val %>
         <% unless list.presence %>
             <% next %>
         <% end %>
-        <h3>twt[<%= key %>] (<%= list.size %>)</h3>
+
+        <% h_ary = key.split(Twitter::TWT_H_SEPARATOR) if key.instance_of?(String) %>
+        <% if h_ary.size == 1 %>
+            <% h_grp2 = h_ary[0] %>
+            <h3><%= h_grp2 %></h3>
+        <% elsif h_ary.size == 2 %>
+            <% h_grp1, h_grp2 = h_ary %>
+        <% elsif h_ary.size == 3 %>
+            <% h_grp1 = h_ary[0..1].join(Twitter::TWT_H_SEPARATOR) %>
+            <% h_grp2 = h_ary[2] %>
+        <% elsif h_ary.size >= 4 %>
+            <% h_grp1 = h_ary[0..1].join(Twitter::TWT_H_SEPARATOR) %>
+            <% h_grp2 = h_ary[2..-1].join(Twitter::TWT_H_SEPARATOR) %>
+        <% else %>
+            <% h_grp2 = key %>
+        <% end %>
+
+        <% if h_grp1 != h_grp1_bak %>
+            <h2><%= h_grp1 %></h2>
+            <% h_grp1_bak = h_grp1 %>
+        <% end %>
+
+        <%# puts %!"#{key}"! %>
+        <h3><%= h_grp2 %>(<%= list.size %>)</h3>
         <table border="1" rules="all">
             <tr>
                 <th>#</th>
@@ -369,9 +392,6 @@
 <% end %>
 
 <!-- 登録済みPXV -->
-<% unless @known_pxv_user_id_list.presence %>
-    <% @known_pxv_user_id_list, unknown_pxv_user_id_list = Artist::pxv_user_id_classify(pxv_artist_id_list) %>
-<% end %>
 
 <% if params[:target] == ArtistsController::FileTarget::PXV_EXPERIMENT %>
     <% @known_pxv_user_id_list.each do |elem| %>
@@ -389,7 +409,7 @@
 
 
 <% recent_pxv_list = [] %>
-<% if @known_pxv_user_id_list.size > 0 %>
+<% if @known_pxv_user_id_list and @known_pxv_user_id_list.size > 0 %>
     <% if show_times.presence %>
         <% STDERR.puts %!"#{show_times}" #{@known_pxv_user_id_list.size}=>! %>
         <% @known_pxv_user_id_list.delete_if {|x| x.cnt < show_times} %>

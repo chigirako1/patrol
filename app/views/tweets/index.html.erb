@@ -57,7 +57,6 @@
     
     <% if url_list_work %>
         <% h1_bak = "" %>
-        <% filesize_list = Twt::get_pic_filesize_list %>
 
         <% url_list_work = url_list_sort_by(url_list_work, params[:sort_by]) %>
         <% group_hash = Twitter::url_list_work_to_hash(url_list_work, @hide_within_days, @rating_gt, params[:sort_by]) %>
@@ -87,8 +86,8 @@
                 <%= twt.twtname %>(@<%= e.screen_name %>)
 
                 [
-                <% if filesize_list[e.screen_name] and filesize_list[e.screen_name] / 1024 > Twt::FILESIZE_THRESHOLD_KB %>
-                    <font color="red">※ファイルサイズ大<%= sprintf("(%4d KB)", filesize_list[e.screen_name] / 1024) %>※</font>
+                <% if twt.filesize_huge? %>
+                    <font color="red">※ファイルサイズ大<%= twt.filesize_kb %>※</font>
                 <% end %>
                 <%= link_to_ex("■twt■", twt) %>
                 ]

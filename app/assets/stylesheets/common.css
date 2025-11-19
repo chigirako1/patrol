@@ -1,11 +1,16 @@
 body { background-color: beige; color: black; padding: .8rem; }
+
 h1 { background-color: black; color: white; padding: .8rem; }
 h2 { background-color: navy; color: white; padding: .3rem; }
-h3 { background-color: pink; color: black; padding: .3rem; }
+h3 { background-color: lightblue; color: black; padding: .3rem; }
+h4 { background-color: pink; color: black; padding: .3rem; }
+
 a { color: #339; }
 a:visited { color:purple;  }
+
 input { height: 1.2rem; width: 25rem; margin-bottom: .5rem; }
 textarea { height: 3rem; width: 25rem; }
+
 button, input[type=submit] { height: 1.4rem; width: 10rem; margin-bottom: .5rem; }
 
 .subtmi-btn {
@@ -19,4 +24,4 @@ button, input[type=submit] { height: 1.4rem; width: 10rem; margin-bottom: .5rem;
     opacity: 1.0;
     background: orange;
 }
- 
+

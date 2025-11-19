@@ -231,7 +231,7 @@ textarea {
         設定値：<%= %!#{current_val_freq}! %>
         <% tval = [current_val_freq / 10, 100].max %>
         <% if (avg - current_val_freq).abs >= tval %>
-            [※現在の設定値との差が大きい]
+            <font color="red">[※現在の設定値との差が大きい]</font>
         <% end %>
         →
     <% elsif twt_acnt.update_frequency %>

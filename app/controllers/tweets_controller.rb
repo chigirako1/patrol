@@ -7,24 +7,12 @@ class TweetsController < ApplicationController
     URL_LIST_SUMMARY = 'urllist_summary'
   end
 
-  def get_param_num(symbol, def_val=0)
-    if params[symbol] == ""
-      value = def_val
-    else
-      value = params[symbol].to_i
-    end
-    STDERR.puts %!#{symbol}="#{value}"!
-    value
+  def get_param_num(symbol)
+    Util::get_param_num(params, symbol)
   end
 
-  def get_param_str(symbol, def_val="")
-    if params[symbol]
-      value = params[symbol]
-    else
-      value = def_val
-    end
-    STDERR.puts %!#{symbol}="#{value}"!
-    value
+  def get_param_str(symbol)
+    Util::get_param_str(params, symbol)
   end
 
   # GET /tweets or /tweets.json

@@ -51,12 +51,6 @@
 <% end %>
 
 <div id="twitters">
-  <!-- TODO:DBにカラムを追加する(KB) -->
-  <% filesize_list = {} %>
-  <% if params[:mode] == TwittersController::ModeEnum::SEARCH %>
-  <% elsif @twitters_group %>
-    <% filesize_list = Twt::get_pic_filesize_list %>
-  <% end %>
 
   <% ha_bak = "" %>
   <% done_id_hash = {} %>
@@ -118,9 +112,10 @@
               <% ele = @url_list_summary.find {|x| x.screen_name == twitter.twtid} %>
               [<%= ele.todo_cnt %>件]
             <% end %>
+            <%= TwittersHelper::PRIVATE_ICON if twitter.private_account == Twitter::TWT_VISIBILITY::TV_PRIVATE %>
             <%= twitter.drawing_method %>【<%= twitter.rating %>】<%= twitter.r18 %>
-            <% if twitter.r18 == "R18" %>
-              🔞
+            <% if twitter.r18 == Twitter::RESTRICT::R18 %>
+              <%= TwittersHelper::R18_ICON %>
             <% end %>
             <br />
             <b><%= twitter.twtname %></b>
@@ -142,11 +137,11 @@
           <td bgcolor="<%= pred_bg_clr %>">
             <%= prediction %><%= %!(#{pred})! if pred - prediction > 5  %>
             
-            <% if filesize_list[twitter.twtid] %>
-              <% if kb > Twt::FILESIZE_THRESHOLD %>
+            <% if twitter.filesize %>
+              <% if twitter.filesize_huge? %>
                 <font color="red">
-                  <%= sprintf("[%4d KB]", kb) %>
-                  <% if twitter.update_frequency < Twt::UL_FREQUECNTY_THRESHOLD %>
+                  <%= twitter.filesize_kb %>
+                  <% if twitter.ul_freq_low? %>
                     ただし低頻度
                   <% end %>
                 </font>
@@ -257,7 +252,7 @@
 
           <!-- サムネイル -->
           <td>
-            <% if @thumbnail or !twitter.status.presence %>
+            <% if @thumbnail or (!twitter.status.presence and (twitter.filenum||0) < 100) %>
               <% list = twitter.get_pic_filelist() %>
               <% if list.size < 500 %>
                 <% thumbnail = true %>
@@ -340,9 +335,10 @@ button.horizontal {
     <br />
     filename：<%= f.text_field :filename, :value => params[:filename] %>
     <br />
-    <%= f.label :page_title %>
+    <%= f.label :ページタイトル %>
     <%= f.text_field :page_title, :value => params[:page_title] %>
-    <br />
+    <hr />
+
     <%= f.label :target %>
     <%= f.text_field :target, :value => params[:target] %>
     <br />
@@ -363,6 +359,9 @@ button.horizontal {
     <br />
     <%= f.label :予測 %>
     <%= f.number_field :pred, :value => params[:pred] %>以上
+    <br />
+    <%= f.label :更新頻度 %>
+    <%= f.number_field :ul_freq, :value => params[:ul_freq] %>以上
     <br />
     <hr />
 
@@ -388,9 +387,11 @@ button.horizontal {
         [
           ["予測△順", TwittersController::GRP_SORT::GRP_SORT_PRED],
           ["予測▽順", TwittersController::GRP_SORT::GRP_SORT_PRED_DESC],
+          [TwittersController::GRP_SORT::GRP_SORT_UL_FREQ, TwittersController::GRP_SORT::GRP_SORT_UL_FREQ],
           ["アクセス日順（旧→新）", TwittersController::GRP_SORT::GRP_SORT_ACCESS],
           ["アクセス日順W（旧→新）", TwittersController::GRP_SORT::GRP_SORT_ACCESS_W],
           [TwittersController::GRP_SORT::GRP_SORT_R_A_P, TwittersController::GRP_SORT::GRP_SORT_R_A_P],
+          [TwittersController::GRP_SORT::GRP_SORT_R_P, TwittersController::GRP_SORT::GRP_SORT_R_P],
           ["評価順", TwittersController::GRP_SORT::GRP_SORT_RATE],
           [TwittersController::GRP_SORT::GRP_SORT_UL, TwittersController::GRP_SORT::GRP_SORT_UL],
           [TwittersController::GRP_SORT::GRP_SORT_UL_ACCESS, TwittersController::GRP_SORT::GRP_SORT_UL_ACCESS],

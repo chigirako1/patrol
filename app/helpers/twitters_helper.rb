@@ -1,5 +1,11 @@
 
 module TwittersHelper
+    DM_AI_ICON = "🤖"
+    DM_HAND_ICON ="✍️"
+    R18_ICON = "🔞"
+    PXV_ICON = "🅿️"
+    PRIVATE_ICON = "🔒️"
+
     def twitter_status_tag(twt)
         tag = ""
 
@@ -34,23 +40,32 @@ module TwittersHelper
         tag.html_safe
     end
 
+    def dm_icon(dm)
+        case dm
+        when Twitter::DRAWING_METHOD::DM_AI
+            icon = DM_AI_ICON
+        when Twitter::DRAWING_METHOD::DM_HAND
+            icon = DM_HAND_ICON
+        else
+            icon = ""
+        end
+    end
+
     def twitter_show_page_title(twitter)
         title = ""
 
-        case twitter.drawing_method
-        when Twitter::DRAWING_METHOD::DM_AI
-            title += "🤖"
-        when Twitter::DRAWING_METHOD::DM_HAND
-            title += "✍️"
-        else
+        if twitter.private_account == Twitter::TWT_VISIBILITY::TV_PRIVATE
+            title += PRIVATE_ICON
         end
 
+        title += dm_icon(twitter.drawing_method)
         title += %!【#{twitter.rating}!
-        if twitter.r18 == "R18"
-            title += "🔞"
+
+        if twitter.r18 == Twitter::RESTRICT::R18
+            title += R18_ICON
         end
         if twitter.pxvid.presence
-            title += "🅿️"
+            title += PXV_ICON
         end
         title += %!】!
         title += %!#{twitter.twtname}(@#{twitter.twtid})!

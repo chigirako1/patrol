@@ -34,10 +34,12 @@ module Twt
     TWT_ARCHIVE_DIR_PATH = "public/twt"
     TWT_DIRLIST_TXT_PATH = "#{TWT_ARCHIVE_DIR_PATH}/dirlist.txt"
 
-    UL_FREQUECNTY_THRESHOLD = 100
+    UL_FREQUECNTY_THRESHOLD = 150
+    RATING_THRESHOLD = 80
 
     FILESIZE_THRESHOLD_KB = 600
     FILESIZE_THRESHOLD = FILESIZE_THRESHOLD_KB * 1024
+
 
     def self.get_twt_tweet_ids_from_txts(twtid)
         txts = UrlTxtReader::get_url_txt_contents_uniq_ary([])
@@ -964,7 +966,7 @@ module Twt
                     next
                 end
 
-                if (twt.rating||0) < 80
+                if (twt.rating||0) < RATING_THRESHOLD
                     next
                 end
 
@@ -1013,7 +1015,7 @@ module Twt
             end
         end
 
-        key = "#{Util::format_num(twt.update_frequency, 300, 4)}|||更新頻度:#{Util::format_num(twt.update_frequency, 50, 4)}"
+        key = "#{Util::format_num(twt.update_frequency, 100, 4)}|||更新頻度:#{Util::format_num(twt.update_frequency, 50, 4)}"
 
         [key, elem]
     end
@@ -1037,6 +1039,10 @@ module Twt
             end
 
             if (twt.rating||0) < 80
+                next
+            end
+
+            if twt.ul_freq_low?
                 next
             end
 

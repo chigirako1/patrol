@@ -154,19 +154,19 @@
     <%= form.label :r18, style: "display: block" %>
 
     <%= form.radio_button :r18, :R18 %>
-    <%= form.label :r18_r18, "R18" %>
+    <%= form.label :r18_r18, Twitter::RESTRICT::R18 %>
     <br />
 
     <%= form.radio_button :r18, :R15 %>
-    <%= form.label :r18_r15, "R15" %>
+    <%= form.label :r18_r15, Twitter::RESTRICT::R15 %>
     <br />
 
     <%= form.radio_button :r18, :R12 %>
-    <%= form.label :r18_r12, "R12" %>
+    <%= form.label :r18_r12, Twitter::RESTRICT::R12 %>
     <br />
 
     <%= form.radio_button :r18, :全年齢 %>
-    <%= form.label :r18_全年齢, "全年齢" %>
+    <%= form.label :r18_全年齢, Twitter::RESTRICT::NOTHING %>
     <br />
   </div>
 
@@ -349,10 +349,6 @@
     <%= form.label :公開範囲, style: "display: block" %>
     <%= form.select :private_account,
       tw_visibility_list,
-      #[
-      #  [Twitter::TWT_VISIBILITY::TV_OPEN, Twitter::TWT_VISIBILITY::TV_OPEN],
-      #  [Twitter::TWT_VISIBILITY::TV_PRIVATE, Twitter::TWT_VISIBILITY::TV_PRIVATE],
-      #],
       include_blank: "選択して下さい" %>
   </div>
 

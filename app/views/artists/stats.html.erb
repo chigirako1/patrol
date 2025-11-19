@@ -21,7 +21,7 @@
                             <% col = $1 %>
                             <% if col == "status" %>
                                 <% url = artists_path(page_title: "xxx", status: k, ai: true) %>
-                            <% elsif col == "r18" %>
+                            <% elsif col == Twitter::RESTRICT::R18 %>
                                 <% url = artists_path(page_title: "xxx", r18: k, ai: true) %>
                             <% end %>
                         <% end %>
