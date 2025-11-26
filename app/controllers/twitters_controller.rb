@@ -30,7 +30,9 @@ class TwittersController < ApplicationController
     GRP_SORT_UL_FREQ = "更新頻度"
     GRP_SORT_ACCESS = "アクセス日順"
     GRP_SORT_ACCESS_W = "アクセス日順(週)"
+    GRP_SORT_ACCESS_W_P = "アクセス日順(週)|予想数順"
     GRP_SORT_R_A_P = "評価|アクセス日|予想数順"
+    GRP_SORT_R_A = "評価|アクセス日||予想数順"
     GRP_SORT_R_P = "評価||予想数順"
     GRP_SORT_RATE = "評価順"
     GRP_SORT_UL = "投稿日順"
@@ -142,6 +144,7 @@ class TwittersController < ApplicationController
     ul_freq = Util::get_param_num(params, :ul_freq)
     param_target = Util::get_param_str(params, :target)
     param_grp_sort_by = Util::get_param_str(params, :grp_sort_by)
+    prm_todo_cnt = Util::get_param_num(params, :todo_cnt)
 
     if true
       sql_query = "LEFT OUTER JOIN artists ON twitters.twtid = artists.twtid"
@@ -695,17 +698,26 @@ class TwittersController < ApplicationController
       known_twt_url_list, _ = Twitter::url_list(filename)
       @url_list_summary = Tweet::url_list_summary(known_twt_url_list)
 
-      if params[:todo_cnt].presence
-        todo_cnt = params[:todo_cnt].to_i
-      else
-        todo_cnt = 0
-      end
-      known_ids = @url_list_summary.map {|x| x.screen_name if x.todo_cnt >= todo_cnt}.compact
+      # if params[:todo_cnt].presence
+      #   todo_cnt = params[:todo_cnt].to_i
+      # else
+      #   todo_cnt = 0
+      # end
+      known_ids = @url_list_summary.map {|x| x.screen_name if x.todo_cnt >= prm_todo_cnt}.compact
       twitters = twitters.select {|x| known_ids.include?(x.twtid) }
       
       twitters = twitters.sort_by {|x| [-(x.rating||0), -x.prediction, x.last_access_datetime]}
-      #@twitters_group = twitters.group_by {|x| x.key_for_group_by()}.sort_by {|k, v| k}.reverse.to_h
-      @twitters_group = twitters.group_by {|x| x.a1o_auto_group_key(3)}.sort_by {|k, v| k}.reverse.to_h
+
+      if param_grp_sort_by == GRP_SORT::GRP_SORT_AUTO
+        url_list_summary_h = @url_list_summary.map {|x| [x.screen_name, x]}.to_h
+        @twitters_group = twitters.group_by {|x|
+          #x.a1o_auto_group_key(3)
+          x.a1o_auto_group_key_xx(url_list_summary_h[x.twtid], @hide_within_days, rating_gt, sort_by)
+        }.sort_by {|k, v| k}.reverse.to_h
+      else
+        @twitters_group = twt_group_by(twitters, param_grp_sort_by)
+      end
+      @twitters_total_count = @twitters_group.sum {|k,v| v.count}
       return
     when "存在しない"
       twitters = twitters.select {|x| !x.last_access_datetime_p(@hide_within_days)}
@@ -723,15 +735,17 @@ class TwittersController < ApplicationController
     when "all"
       twitters = twitters.sort_by {|x| [-x.prediction, x.last_access_datetime, (x.last_post_datetime || "2000-01-01")]}
     when TwittersController::ModeEnum::SEARCH
-      #@twitters_group = twitters.group_by {|x| x.rating}
-      #@twitters_total_count = 
+      @twitters_group = twt_group_by(twitters, param_grp_sort_by)
+      @twitters_total_count = @twitters_group.sum {|k,v| v.count}
+      return
     else
-      #twitters = twitters.select {|x| x.last_dl_datetime.year >= 2023}
+      #twitt  ers = twitters.select {|x| x.last_dl_datetime.year >= 2023}
       #twitters = twitters.select {|x| x.last_dl_datetime.month >= 11}
     end
 
     @twitters_group = twitters.group_by {|x| x.rating}
     @twitters_group = @twitters_group.sort_by {|k, v| k || 0}.reverse.to_h
+    @twitters_total_count = @twitters_group.sum {|k,v| v.count}
   end
 
   # GET /twitters/1 or /twitters/1.json
@@ -1099,17 +1113,26 @@ class TwittersController < ApplicationController
         grp_sort = -1
       when GRP_SORT::GRP_SORT_ACCESS_W
         #twitters_group = twitters.group_by {|x| %!#{sprintf("%3d", x.last_access_datetime_days_elapsed / 7)}週#{Twitter::TWT_H_SEPARATOR}#{x.rating}|#{x.prediction / 10 * 10}!}
-        twitters_group = twitters.group_by {|x| %!#{sprintf("%3d", x.last_access_datetime_days_elapsed / 7)}週#{Twitter::TWT_H_SEPARATOR}#{Util::format_num(x.prediction, 10)}!}
+        #twitters_group = twitters.group_by {|x| %!#{sprintf("%3d", x.last_access_datetime_days_elapsed / 7)}週#{Twitter::TWT_H_SEPARATOR}#{Util::format_num(x.prediction, 10)}!}
+        twitters_group = twitters.group_by {|x| x.group_key_test(grp_sort_by)}
+        grp_sort = -1
+      when GRP_SORT::GRP_SORT_ACCESS_W_P
+        twitters_group = twitters.group_by {|x| x.group_key_test(grp_sort_by)}
         grp_sort = -1
       when GRP_SORT::GRP_SORT_R_P
-        twitters_group = twitters.group_by {|x| %!#{x.rating}#{Twitter::TWT_H_SEPARATOR}#{Util::format_num(x.prediction, 10)}!}
+        #twitters_group = twitters.group_by {|x| %!#{x.rating}#{Twitter::TWT_H_SEPARATOR}#{Util::format_num(x.prediction, 10)}!}
+        twitters_group = twitters.group_by {|x| x.group_key_test(grp_sort_by)}
+      when GRP_SORT::GRP_SORT_R_A
+        twitters_group = twitters.group_by {|x| x.group_key_test(grp_sort_by)}
+        grp_sort = -1
       when GRP_SORT::GRP_SORT_R_A_P
         #twitters_group = twitters.group_by {|x| %!#{x.rating / 5 * 5}#{Twitter::TWT_H_SEPARATOR}#{x.last_access_datetime_days_elapsed / 7}週|#{Util::format_num(x.prediction, 10)}!}
         #twitters_group = twitters.group_by {|x| x.group_key_rap}
         twitters_group = twitters.group_by {|x| x.a1o_auto_group_key(3)}
         grp_sort = -1
       when GRP_SORT::GRP_SORT_PRED
-        twitters_group = twitters.group_by {|x| %!#{Util::format_num(x.prediction, 10)}!}
+        #twitters_group = twitters.group_by {|x| %!#{Util::format_num(x.prediction, 10)}!}
+        twitters_group = twitters.group_by {|x| x.group_key_test(grp_sort_by)}
         grp_sort = 1
       when GRP_SORT::GRP_SORT_PRED_DESC
         twitters_group = twitters.group_by {|x| %!#{Util::format_num(x.prediction, 10)}!}
@@ -1118,7 +1141,8 @@ class TwittersController < ApplicationController
         twitters_group = twitters.group_by {|x| %!#{Util::format_num(x.created_at_day_num / 30, 1)}!}
         grp_sort = 1
       when GRP_SORT::GRP_SORT_RATE
-        twitters_group = twitters.group_by {|x| %!#{x.rating}|#{x.last_access_datetime_days_elapsed / 30}!}
+        #twitters_group = twitters.group_by {|x| %!#{x.rating}|#{x.last_access_datetime_days_elapsed / 30}!}
+        twitters_group = twitters.group_by {|x| x.group_key_test(grp_sort_by)}
         grp_sort = -1
       when GRP_SORT::GRP_SORT_UL_FREQ
         if twitters.size < 100

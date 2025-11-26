@@ -86,7 +86,7 @@
                 <%= twt.twtname %>(@<%= e.screen_name %>)
 
                 [
-                <% if twt.filesize_huge? %>
+                <% if twt.sp? #filesize_huge? %>
                     <font color="red">※ファイルサイズ大<%= twt.filesize_kb %>※</font>
                 <% end %>
                 <%= link_to_ex("■twt■", twt) %>

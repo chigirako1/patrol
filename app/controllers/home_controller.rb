@@ -35,7 +35,7 @@ class HomeController < ApplicationController
           num_of_disp: 5,
           #force_disp_day: 10,
           mode: TwittersController::ModeEnum::ALL_IN_1,
-          grp_sort_by: TwittersController::GRP_SORT::GRP_SORT_R_A_P,
+          grp_sort_by: TwittersController::GRP_SORT::GRP_SORT_ACCESS_W,
           sort_by: TwittersController::SORT_BY::RATING,
           #aio: TwittersController::GRP_SORT::GRP_SORT_ACCESS + "|" + TwittersController::GRP_SORT::GRP_SORT_PRED,
           #step: -3,
@@ -44,7 +44,7 @@ class HomeController < ApplicationController
           thumbnail: ""
         ) 
       },
-      { :label => "T|AI|all in 1 87△pred",
+      { :label => "T|AI|all in 1 87△auto",
         :path => twitters_path(
           target: "AI",
           #page_title: "Twitter [AI] 85△",
@@ -166,7 +166,7 @@ class HomeController < ApplicationController
       },
       # ----------------------------
       { :label => "-", :path => "" },
-      { :label => "🅿️AI/all in 1 90",
+      { :label => "🅿️AI/all in 1 95",
           :path => artists_path(
             file: ArtistsController::MethodEnum::ALL_IN_1,
             #page_title: "",
@@ -176,11 +176,11 @@ class HomeController < ApplicationController
             sort_by: ArtistsController::SORT_TYPE::SORT_RATING_O2N,
             group_by: ArtistsController::GROUP_TYPE::GROUP_RATING,
             #aio: TwittersController::GRP_SORT::GRP_SORT_ACCESS, #+ "|" + TwittersController::GRP_SORT::GRP_SORT_PRED,
-            rating: 90,
+            rating: 95,
             #step: 1,
             #num_of_times: 5,
             display_number: 5,
-            last_access_datetime: 60,
+            last_access_datetime: 7,
             thumbnail: false,
           )
       },
@@ -241,12 +241,13 @@ class HomeController < ApplicationController
           :path => twitters_path(
             #page_title: "url list 80",
             mode: TwittersController::ModeEnum::FILE,
-            todo_cnt: 0,
+            todo_cnt: 1,#0,
             target: "AI",
             filename: "thismonth",
-            rating: 80,
-            hide_within_days: 1,
+            hide_within_days: 0,
             num_of_disp: 4,
+            grp_sort_by: TwittersController::GRP_SORT::GRP_SORT_AUTO,
+            sort_by: TwittersController::SORT_BY::RATING,
             #pred: 4,
             #no_pxv: true,
             #thumbnail: "t"
@@ -303,7 +304,7 @@ class HomeController < ApplicationController
           rating: Twt::RATING_THRESHOLD,
           mode: TwittersController::ModeEnum::FILESIZE,
           sort_by: TwittersController::SORT_BY::RATING,
-          grp_sort_by: TwittersController::GRP_SORT::GRP_SORT_UL_FREQ,
+          grp_sort_by: TwittersController::GRP_SORT::GRP_SORT_ACCESS_W, #GRP_SORT_UL_FREQ,
           hide_within_days: 7,
           ul_freq: -149
           #thumbnail: "t"
@@ -358,6 +359,22 @@ class HomeController < ApplicationController
             display_number: 7,
             #year: 2023, 
             thumbnail: true
+          )
+      },
+      { :label => "-", :path => "" },
+      { :label => "Tweet url list summary(ai)",
+          :path => tweets_path(
+            #page_title: "Tweets",
+            mode: TweetsController::ModeEnum::URL_LIST_SUMMARY,
+            sort_by: TwittersController::SORT_BY::TODO_CNT,#PRED,
+            #filename: "thismonth",#"+3",??? url encode？error?
+            filename: "thisyear",#"+3",??? url encode？error?
+            #hide_within_days: 15,
+            #created_at: 30,
+            pred: 30,
+            rating: rating_std,
+            todo_cnt: 2,#1,
+            target: Twitter::DRAWING_METHOD::DM_AI,
           )
       },
       # ----------------------------
@@ -1384,21 +1401,6 @@ class HomeController < ApplicationController
             #filename: "all",
             #hide_within_days: 180,
             #rating: rating_std,
-          )
-      },
-      { :label => "Tweet url list summary(ai)",
-          :path => tweets_path(
-            #page_title: "Tweets",
-            mode: TweetsController::ModeEnum::URL_LIST_SUMMARY,
-            sort_by: TwittersController::SORT_BY::TODO_CNT,#PRED,
-            #filename: "thismonth",#"+3",??? url encode？error?
-            filename: "thisyear",#"+3",??? url encode？error?
-            #hide_within_days: 15,
-            #created_at: 30,
-            pred: 30,
-            rating: rating_std,
-            todo_cnt: 2,#1,
-            target: Twitter::DRAWING_METHOD::DM_AI,
           )
       },
       # ----------------------------

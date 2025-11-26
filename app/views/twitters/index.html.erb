@@ -138,7 +138,7 @@
             <%= prediction %><%= %!(#{pred})! if pred - prediction > 5  %>
             
             <% if twitter.filesize %>
-              <% if twitter.filesize_huge? %>
+              <% if twitter.sp? #filesize_huge? %>
                 <font color="red">
                   <%= twitter.filesize_kb %>
                   <% if twitter.ul_freq_low? %>
@@ -363,6 +363,9 @@ button.horizontal {
     <%= f.label :更新頻度 %>
     <%= f.number_field :ul_freq, :value => params[:ul_freq] %>以上
     <br />
+    <%= f.label :todo_cnt %>
+    <%= f.number_field :todo_cnt, :value => params[:todo_cnt] %>
+    <br />
     <hr />
 
     <!-- ##################################### -->
@@ -390,8 +393,10 @@ button.horizontal {
           [TwittersController::GRP_SORT::GRP_SORT_UL_FREQ, TwittersController::GRP_SORT::GRP_SORT_UL_FREQ],
           ["アクセス日順（旧→新）", TwittersController::GRP_SORT::GRP_SORT_ACCESS],
           ["アクセス日順W（旧→新）", TwittersController::GRP_SORT::GRP_SORT_ACCESS_W],
+          [TwittersController::GRP_SORT::GRP_SORT_ACCESS_W_P, TwittersController::GRP_SORT::GRP_SORT_ACCESS_W_P],
           [TwittersController::GRP_SORT::GRP_SORT_R_A_P, TwittersController::GRP_SORT::GRP_SORT_R_A_P],
           [TwittersController::GRP_SORT::GRP_SORT_R_P, TwittersController::GRP_SORT::GRP_SORT_R_P],
+          [TwittersController::GRP_SORT::GRP_SORT_R_A, TwittersController::GRP_SORT::GRP_SORT_R_A],
           ["評価順", TwittersController::GRP_SORT::GRP_SORT_RATE],
           [TwittersController::GRP_SORT::GRP_SORT_UL, TwittersController::GRP_SORT::GRP_SORT_UL],
           [TwittersController::GRP_SORT::GRP_SORT_UL_ACCESS, TwittersController::GRP_SORT::GRP_SORT_UL_ACCESS],

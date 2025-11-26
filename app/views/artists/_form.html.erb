@@ -326,7 +326,7 @@
     <%= form.select :status,
       [
         ["退会", ArtistsController::Status::DELETED],
-        ["停止", ArtistsController::Status::SUSPEND],
+        ["停止(凍結？)", ArtistsController::Status::SUSPEND],
         ["長期更新なし★", ArtistsController::Status::LONG_TERM_NO_UPDATS],
         ["半年以上更新なし", ArtistsController::Status::SIX_MONTH_NO_UPDATS], 
         ["3ヶ月以上更新なし", "3ヶ月以上更新なし"], 

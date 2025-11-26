@@ -29,7 +29,8 @@ module TwittersHelper
 
         tag += %!"#{twt.twtname}"!
         tag += "【"
-        tag += %!#{twt.rating}|#{twt.r18}|#{twt.drawing_method}|#{twt.status}!
+        tag += PRIVATE_ICON if twt.private_account == Twitter::TWT_VISIBILITY::TV_PRIVATE
+        tag += %!#{twt.rating}|#{twt.r18}#{R18_ICON if twt.r18 == Twitter::RESTRICT::R18}|#{twt.drawing_method}|#{twt.status}!
         tag += "】"
         tag += %![#{link_to_ex("■twt■", twt)}]!
         tag += %!|A:#{twt.last_access_datetime_disp}!

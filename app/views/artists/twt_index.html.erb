@@ -77,7 +77,7 @@
             <%# next %>
         <% end %>
 
-        <% key_twt = twt_account.group_key(url_list.size, @rating) %>
+        <% key_twt = twt_account.group_key() %>
         <% twt_group[key_twt] << [twt_account, url_list] %>
     <% end %>
 <% end %>
@@ -187,7 +187,7 @@
                     </td>
                     <td>
                         <% if twt_account.filesize %>
-                            <% if twt_account.filesize_huge? %>
+                            <% if twt_account.sp? #filesize_huge? %>
                                 <font color="red">
                                     <%= sprintf("[%4d KB]", twt_account.filesize / 1024) %>
                                 </font>
@@ -858,7 +858,11 @@
             アクセス日：<%= elem.twt.last_access_datetime_disp %>
             (@<%= elem.screen_name %>)[<%= link_to_ex("■twt■", elem.twt) %>]
             【<%= elem.twt.rating %>|<%= elem.twt.r18 %>】
-            <%= elem.twt.update_frequency %>
+            [<%= elem.twt.update_frequency %>]
+            <% if elem.twt.sp? %>
+            <% else %>
+                対象外
+            <% end %>
         <% else %>
             <% url = twitters_path(mode: TwittersController::ModeEnum::SEARCH, search_word: elem.dirname) %>
             [<%= link_to_ex("■検索■", url) %>]

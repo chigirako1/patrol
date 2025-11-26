@@ -16,13 +16,15 @@ module Twt
 
     TWT_HTTP_URL = %!https://#{TWT_DOMAIN_NAME}!
 
-    TWT_USER_DEV = "TwitterDev"
+    TWT_USER_DEV = "TwitterDev" #"i"でよい?
 
     TWT_RGX_URL_BASE = ""
     TWT_RGX_URL = %r!https?://(?:x|twitter)\.com/\w+/status/(\d+)!
     TWT_URL_SCREEN_NAME_RGX = %r!(?:x|twitter)\.com/(\w+)!
     TWT_TOP_SCREEN_NAME_RGX = /^(\w+)\s?/
     TWT_AT_SCREEN_NAME_RGX = /\(@(\w+)\)/
+
+    TWT_SP_FILENAME_RGX = /(\d{8}_\d{6})/
 
     TMP_DIR_PATH = "public/d_dl/"
 
@@ -247,7 +249,14 @@ module Twt
     def self.sp_dirs()
         path_list = Util::glob("#{TWT_SP_DIR_PATH}")
         #path_list.map {|path| parse_dirname path}.sort_by {|x| x.screen_name}
-        path_list.map {|path| parse_dirname path}.sort_by {|x| x.twt.last_access_datetime}
+        tmp = path_list.map {|path| parse_dirname path}
+        tmp.sort_by {|x|
+            if x.twt
+                x.twt.last_access_datetime
+            else
+                Time.new(2001,1,1)
+            end
+        }
     end
 
     def self.get_sp_path(twtid)
@@ -277,31 +286,41 @@ module Twt
         path_list
     end
 
+    def self.sp_datetime_str_to_datetime(datetime_str)
+        Util::string_to_datetime(datetime_str).in_time_zone('Tokyo')
+    end
+
+    def self.get_sp_tweet_id_from_filename(filename)
+        if filename =~ TWT_SP_FILENAME_RGX
+            datetime_str = $1
+            datetime = sp_datetime_str_to_datetime(datetime_str)
+            time2tweet_id(datetime)
+        else
+            nil
+        end
+    end
+
     def self.get_sp_tweet_id_from_filepath(fpath)
         filename = File.basename(fpath)
-        if filename =~ /(\d{8}_\d{6})/
-            datetime_str = $1
-            datetime = Util::string_to_datetime(datetime_str).in_time_zone('Tokyo')
-            tweet_id = time2tweet_id(datetime)
-        end
-        tweet_id
+        get_sp_tweet_id_from_filename(filename)
     end
     
     def self.get_tweet_info_from_path(path)
         path_list = UrlTxtReader::get_path_list(path)
         if path_list and path_list.size > 0
             path_list = path_list.sort
-            fpath1 = path_list.last
-            fpath2 = path_list.first
-            tweet_id = get_sp_tweet_id_from_filepath(fpath1)
+            fpath_last = path_list.last
+            fpath_first = path_list.first
+            tweet_id = get_sp_tweet_id_from_filepath(fpath_last)
         end
-        [tweet_id, fpath1, fpath2]
+        [tweet_id, fpath_last, fpath_first]
     end
 
     def self.sp_tweet_id_with_comma(twtid)
         dirpath = Twt::get_sp_path(twtid)
         if dirpath
             tinfo = Twt::get_tweet_info_from_path(dirpath)
+            puts %!sp_tweet_id_with_comma:"#{}"!
             Twt::tweet_id_with_comma tinfo[0]
         else
             nil
@@ -706,17 +725,23 @@ module Twt
 
         tweet_id, pic_no = get_tweet_info(fn)
 
-        if tweet_id != 0
+        if tweet_id == 0
+            if fn =~ TWT_SP_FILENAME_RGX
+                datetime = sp_datetime_str_to_datetime($1)
+                date_str = %![#{datetime.strftime("%Y-%m-%d")}]!
+                tweet_id2 = time2tweet_id(datetime)
+                twt_id_str = tweet_id_with_comma(tweet_id2)
+            else
+                fullpath = Rails.root.join("public/" + path)
+                mtime = File::mtime(fullpath)
+                date_str = %![#{mtime.strftime("%Y-%m-%d")}]!
+                twt_id_str = tweet_id_with_comma(tweet_id)
+            end
+        else
+            twt_id_str = tweet_id_with_comma(tweet_id)
             ul_datestr = timestamp_str(tweet_id)
             date_str = %!【#{ul_datestr}】!
-        else
-            fullpath = Rails.root.join("public/" + path)
-            mtime = File::mtime(fullpath)
-            date_str = %![#{mtime.strftime("%Y-%m-%d")}]!
         end
-        #twt_id_str = tweet_id.to_s(:delimited)
-        #twt_id_str = tweet_id.to_s.reverse.gsub(/\d{3}/, '\0,').reverse
-        twt_id_str = tweet_id_with_comma(tweet_id)
         %!<#{twt_id_str}>#{4 - pic_no}#{date_str}[#{fn})(#{File.dirname path}]!
     end
 
@@ -985,7 +1010,7 @@ module Twt
         end
     end
 
-    def self.get_key_elem(twt, k, v)
+    def self.get_key_elem(twt, k, v, url_list)
         postdate = twt.last_post_datetime.in_time_zone('Tokyo').strftime("%y/%m/%d %H:%M")
         dayn = Util::get_date_delta(twt.last_post_datetime)
         avg = v.avg / 1024
@@ -1002,6 +1027,13 @@ module Twt
         elem << avg
         elem << v.cnt
         elem << pred
+        if url_list
+            elem << url_list.todo_cnt
+            elem << url_list.url_cnt
+        else
+            elem << 0
+            elem << 0
+        end
 
         d_unit = 15
         elapse = dayn / d_unit
@@ -1021,6 +1053,11 @@ module Twt
     end
 
     def self.build_pic_info_list(hash)
+
+        known_twt_url_list, _ = Twitter::url_list("all")
+        #url_list_summary = Tweet::url_list_summary(known_twt_url_list)
+        #url_list_summary_h = url_list_summary.map {|x| [x.screen_name, x]}.to_h
+        url_list_summary_h = Tweet::url_list_summary_hash(known_twt_url_list)
 
         list = Hash.new { |h, k| h[k] = [] }
         hash.each do |k,val|
@@ -1046,7 +1083,7 @@ module Twt
                 next
             end
 
-            key, elem = get_key_elem(twt, k, v)
+            key, elem = get_key_elem(twt, k, v, url_list_summary_h[k])
 
             list[key] << elem
         end
@@ -1135,6 +1172,15 @@ module Twt
         end
 
         STDERR.puts "### reg_filesize <<<"
+    end
+
+    def self.list_vid
+        twts = Twitter.select {|x| (x.video_cnt||0) > 0}.sort_by {|x| x.video_cnt}.reverse
+        twts.each do |twt|
+            puts %!#{twt.twtid},"#{twt.twtname}",#{twt.video_cnt},#{twt.private_account}!
+        end
+
+        twts.map {|x| x.twtid}
     end
 
     # =========================================================================

@@ -315,6 +315,18 @@ class Twitter < ApplicationRecord
         end
     end
 
+    def sp?
+        if filesize_huge?
+            if ul_freq_low?
+                false
+            else
+                true
+            end
+        else
+            false
+        end
+    end
+
     def twt_user_url
         Twt::twt_user_url(twtid)
     end
@@ -535,163 +547,143 @@ class Twitter < ApplicationRecord
         %!#{rate_n}#{Twitter::TWT_H_SEPARATOR}#{lad_n}週|#{pred_n}!
     end
 
-    def a1o_auto_group_key(r_unit=3)
-        if filesize_huge?
+    def a1o_auto_group_key(r_unit=3, newc=true)
+        if sp? #filesize_huge?
             return "00.ファイルサイズ大#{Twitter::TWT_H_SEPARATOR}更新頻度#{Util::format_num(self.update_frequency, 100, 4)}"
         end
 
-        rate_n = Util::format_num(self.rating, r_unit)
-        lad_n = sprintf("%3d", self.last_access_datetime_days_elapsed / 7)
+        daysn =  self.last_access_datetime_days_elapsed
+        lad_n = sprintf("%3d週", daysn / 7)
         pred_n = Util::format_num(self.prediction, 10)
-        key = %!評価#{rate_n}～|#{lad_n}週|予測#{pred_n}～!
 
-        if created_at_day_num <= 60
-            newcomer = "90.新規#{Twitter::TWT_H_SEPARATOR}"
-        elsif created_at_day_num > 365
-            newcomer = "01.古株#{Twitter::TWT_H_SEPARATOR}"
+        if daysn <= 3
+            recent = "[0最近アクセス]"
+            key = "#{daysn}日|予測#{pred_n}～"
         else
-            newcomer = "50.中堅#{Twitter::TWT_H_SEPARATOR}"
+            recent = "[9]"
+            rate_n = Util::format_num(self.rating, r_unit)
+            #key = %!評価#{rate_n}～|#{lad_n}|予測#{pred_n}～!
+            key = %!#{lad_n}|予測#{pred_n}～!
         end
 
-        newcomer + key
+        if newc
+            if created_at_day_num <= 60
+                newcomer = "90.新参"
+            elsif created_at_day_num > 365
+                newcomer = "01.古株"
+            else
+                newcomer = "50.中堅"
+            end
+        else
+            newcomer = ""
+        end
+
+        recent + newcomer + Twitter::TWT_H_SEPARATOR + key
     end
 
-    def group_key(count, rating_arg, add_count = false)
+    def group_key_test(grp_sort_by, status=false)
+        gkey = ""
+        if self.sp?
+            uf = Util::format_num(self.update_frequency, 100, 4)
+            gkey = "ファイルサイズ大&更新頻度高め#{Twitter::TWT_H_SEPARATOR}更新頻度#{uf}"
+        else
+            case grp_sort_by
+            when TwittersController::GRP_SORT::GRP_SORT_PRED
+                p = Util::format_num(prediction, 10)
+                gkey = %!予測#{Twitter::TWT_H_SEPARATOR}#{p}!
+            when TwittersController::GRP_SORT::GRP_SORT_ACCESS_W
+                w = %!#{sprintf("%3d", self.last_access_datetime_days_elapsed / 7)}週!
+                p = %!#{Util::format_num(self.prediction, 10)}!
+                gkey = %!#{w}#{Twitter::TWT_H_SEPARATOR}#{p}!
+            when TwittersController::GRP_SORT::GRP_SORT_ACCESS_W_P
+                w = %!#{sprintf("%3d", self.last_access_datetime_days_elapsed / 7)}週!
+                p = %!#{Util::format_num(self.prediction, 10)}!
+                gkey = %!#{w}#{Twitter::TWT_H_SEPARATOR}#{p}!
+            when TwittersController::GRP_SORT::GRP_SORT_R_P
+                p = Util::format_num(self.prediction, 10)
+                r = Util::format_num(self.rating, 1)
+                gkey = %!#{r}#{Twitter::TWT_H_SEPARATOR}#{p}!
+            when TwittersController::GRP_SORT::GRP_SORT_R_A
+                w = %!#{sprintf("%3d", self.last_access_datetime_days_elapsed / 7)}週!
+                r = Util::format_num(self.rating, 1)
+                gkey = %!#{r}#{Twitter::TWT_H_SEPARATOR}#{w}!
+            when TwittersController::GRP_SORT::GRP_SORT_RATE
+                r = Util::format_num(self.rating, 1)
+                self.last_access_datetime_days_elapsed / 30
+                gkey = %!#{r}!
+            else
+            end
+        end
+        gkey
+    end
+
+    def a1o_auto_group_key_xx(e, hide_within_days, rating_gt, sort_by)
+        detail = true
+        case self.status
+        when Twitter::TWT_STATUS::STATUS_PATROL
+            case sort_by
+            when TwittersController::SORT_BY::PRED
+                gkey = ""
+            when TwittersController::SORT_BY::ACCESS
+                gkey = ""
+            when TwittersController::SORT_BY::TODO_CNT
+                if self.sp?
+                    gkey = "ファイルサイズ大&更新頻度高め"
+                    detail = false
+                else
+                    gkey = sprintf("残:%3d件", e.todo_cnt)
+                end
+            when TwittersController::SORT_BY::TOTAL_CNT
+                gkey = sprintf("全:%3d件", e.url_cnt)
+            else
+                gkey = ""
+            end
+            
+            gkey += self.a1o_auto_group_key(3, false) if detail
+            gkey
+        when "", nil
+            month_n = Util::format_num(self.last_access_datetime_days_elapsed / 30, 1)
+            month_s = %!#{month_n}ヶ月!
+
+            if self.pxvid.presence
+                pxv = %!pxvあり!
+            else
+                pxv = "pxvなし"
+            end
+
+            p = Util::format_num(self.prediction, 10)
+            gkey = pxv + TWT_H_SEPARATOR + "#{month_s}:#{p}件～"
+        else
+            self.group_key2(hide_within_days, rating_gt)
+        end
+    end
+
+    def group_key()
 
         case drawing_method
         when DRAWING_METHOD::DM_HAND
-            dm = %!901.手!
+            dm = %!970.手!
         when DRAWING_METHOD::DM_AI
-            dm = %!902.AI!
-        when DRAWING_METHOD::DM_3D, DRAWING_METHOD::DM_3D
-            return %!997.#{drawing_method}!
+            dm = %!980.AI!
+        when DRAWING_METHOD::DM_3D, DRAWING_METHOD::DM_REPRINT
+            return %!910.その他#{TWT_H_SEPARATOR}#{drawing_method}!
         when "", nil
             dm = %!999.未設定!
+            day_n = Util::format_num(self.last_access_datetime_days_elapsed, 3)
+            key = "#{day_n}～"
         else
-            dm = %!998.#{drawing_method}!
+            dm = %!990.#{drawing_method}!
         end
 
         case status
         when Twitter::TWT_STATUS::STATUS_PATROL
-            key = %!999.#{a1o_auto_group_key(3)}!
+            key = %!999.#{a1o_auto_group_key(3, false)}!
         else
-            #lad_n = self.last_access_datetime_days_elapsed / 7
-            #pred_n = Util::format_num(self.prediction, 10)
-            #key = %!000."#{status}"#{lad_n}週|予測#{pred_n}～!
+            key = status
         end
 
-        %!#{dm}::#{key}!
+        %!#{dm}#{TWT_H_SEPARATOR}#{key}!
     end
-
-=begin
-    def group_key_obsolete(count, rating_arg, add_count = false)
-        
-        if drawing_method == "パクリ"
-            return drawing_method
-        end
-
-        filenum_str = %!(総ファイル数#{Util::zero_padding(filenum)}↑)!
-        case status
-        when Twitter::TWT_STATUS::STATUS_PATROL
-            if rating.presence
-                case drawing_method
-                when "AI"
-                    #method = "102:AI"
-                    method = "AI"
-                when "パクリ"
-                    #method = "101:paku"
-                    method = "paku"
-                else
-                    #method = "109:手"
-                    method = ""
-                end
-                
-                days_accs = Util::get_date_delta(last_access_datetime)
-                if days_accs <= 1
-                    key = %!080:1日以内!
-                    add_count = false
-                elsif days_accs <= 4
-                    key = %!080:4日以内!
-                    add_count = false
-                elsif days_accs <= 7
-                    #key = %!080:#{days_accs}日以内!
-                    key = %!080:7日以内!
-                    add_count = false
-                    #return %!#{key}!
-                elsif days_accs < 30
-                    nweek = (days_accs + 6) / 7
-                    key = %!090:#{nweek}週間以内!
-                    add_count = false
-                elsif days_accs > 365 #* 2
-                    year = sprintf("%03d", days_accs / 365)
-                    key = %!991:#{year}年以上!
-                elsif days_accs > 90
-                    month = sprintf("%03d", days_accs / 30)
-                    key = %!990:#{month}ヶ月以上!
-                else
-                    month = sprintf("%03d", days_accs / 30)
-                    #key = "901:評価#{rating}(#{month}ヶ月)"
-                    key = "901:評価#{rating}"
-                end
-                #key = %!#{method}|#{key}!
-                pred = prediction
-                if pred == 0
-                    key = %!#{key}|予測0!
-                elsif pred > 10
-                    unit = 10
-                    #p = prediction / unit * unit
-                    p = Util::num_to_str_f(pred, unit)
-                    key = %!#{key}|予測#{p}↑!
-                else
-                    unit = 5
-                    #p = prediction / unit * unit
-                    p = Util::num_to_str_f(pred, unit)
-                    key = %!#{key}|予測#{p}↑!
-                end
-            else
-                key = "999.未設定#{filenum_str}"
-            end
-        when Twitter::TWT_STATUS::STATUS_NOT_EXIST
-        when Twitter::TWT_STATUS::STATUS_FROZEN
-        when Twitter::TWT_STATUS::STATUS_PRIVATE
-            key = %!000:"#{status}"!
-            #return %!#{key}!
-        #when Twitter::TWT_STATUS::STATUS_SCREEN_NAME_CHANGED
-        when "", nil
-            days_accs = Util::get_date_delta(last_access_datetime)
-            if true
-                key = %!000:#{days_accs / 30}#{filenum_str}!
-            elsif days_accs < 30
-                key = %!000:#{days_accs / 7}#{filenum_str}!
-            else
-                key = %!000:#{9}#{filenum_str}!
-            end
-        else
-            key = %!000:"#{status}"#{filenum_str}!
-        end
-
-        if add_count
-            key = sprintf("<%03d>:%s", count / 5 * 5, key)
-        else
-            key = sprintf("<%03d>:%s", 0, key)
-        end
-
-        if drawing_method == "手描き"
-            key = %!手|#{key}!
-        elsif drawing_method == ""
-            key = %![未設定]|#{key}!
-        else
-            key = (drawing_method||"") + "|" + key
-        end
-
-        if rating and rating_arg > 0 and rating < rating_arg
-            #key = "!評価規定以下|#{rating}|#{key}"
-            key = "!評価規定以下|#{key}|#{rating / 5 * 5}"
-        end
-
-        key
-    end
-=end
 
     def self.access_str(lad_n)
         tbl = [
@@ -723,13 +715,6 @@ class Twitter < ApplicationRecord
             created_at_str = "1新"
         end
 
-=begin
-        if last_access_datetime_p(hide_within_days)
-            accs = "1:最近アクセス(#{hide_within_days}日)"
-        else
-            accs = "0:日数経過"
-        end
-=end
         accs = ""
 
         rating_w = rating||0
@@ -804,25 +789,8 @@ class Twitter < ApplicationRecord
         hash = url_list_work.group_by {|x|
             e = x[0]
             twt = x[1]
-            if (twt.status||"") == Twitter::TWT_STATUS::STATUS_PATROL
-                case sort_by
-                when TwittersController::SORT_BY::PRED
-                    gkey = ""
-                when TwittersController::SORT_BY::ACCESS
-                    gkey = ""
-                when TwittersController::SORT_BY::TODO_CNT
-                    gkey = sprintf("[%2d(%d)]#{TWT_H_SEPARATOR}", 100 - e.todo_cnt, e.todo_cnt)
-                when TwittersController::SORT_BY::TOTAL_CNT
-                    gkey = sprintf("[%2d(%d)]#{TWT_H_SEPARATOR}", 100 - e.url_cnt, e.url_cnt)
-                else
-                    gkey = ""
-                end
-                gkey += twt.group_key2(hide_within_days, rating_gt)
-                gkey
-            else
-                twt.group_key2(hide_within_days, rating_gt)
-            end
+            twt.a1o_auto_group_key_xx(e, hide_within_days, rating_gt, sort_by)
         }
-        hash.sort_by {|k,v| k}.to_h
+        hash.sort_by {|k,v| k}.reverse.to_h
     end
 end

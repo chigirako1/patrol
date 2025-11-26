@@ -154,7 +154,7 @@ textarea {
                 <% cmnt = "大きめ" %>
             <% elsif fsize_avg > 500 * 1024 %>
                 <% cmnt = "少し大きめ" %>
-            <% elsif fsize_avg > 400 * 1024 %>
+            <% elsif false #fsize_avg > 400 * 1024 %>
                 <% cmnt = "中" %>
                 <% fcolor = "orange" %>
             <% else %>
@@ -172,9 +172,6 @@ textarea {
             <%= pnum %>
             <font color="orange">★複数★</font>
         <% end %>
-
-        <%# pic_info = Twt::load_pic_info_tsv(twitter.twtid) %>
-        <%#= Util::formatFileSize(v.avg) %>
     <% end %>
     
     <% if twitter.filenum and twitter.filenum > twt_pic_list.size %>
@@ -188,7 +185,8 @@ textarea {
                 <% tweet_id_c = Twt::sp_tweet_id_with_comma(@twitter.twtid) %>
                 <% if tweet_id_c %>
                     <br />
-                    <b><%= tweet_id_c %></b>(DL日時からの推測)
+                    <h3>SP</h3>
+                    <b><%= tweet_id_c %></b> (DL日時からの推測)
                 <% end %>
 
                 <br />
@@ -264,10 +262,12 @@ textarea {
         
         <% filelist = Twt::get_sp_pic_filelist_by_twtid(@twitter.twtid) %>
         <% if filelist.presence %>
-            <b><%= Twt::tweet_id_with_comma(Twt::get_sp_tweet_id_from_filepath(filelist.last)) %></b>(DL日時からの推測)(<%= filelist.size %>)
+            <h4>SP</h4>
+            <% sp_tweet_id = Twt::get_sp_tweet_id_from_filepath(filelist.last) %>
+            <b><%= Twt::tweet_id_with_comma(sp_tweet_id) %></b>(DL日時からの推測)[<%= File::basename filelist.last %>](ファイル数:<%= filelist.size %>)
             <br />
             <% pic_mag_twt_b = '10%' %>
-            <% filelist.reverse.first(4).each do |fpath| %>
+            <% filelist.reverse.first(5).each do |fpath| %>
                 <%= link_to_ex(image_tag(fpath, width: pic_mag_twt_b, height: pic_mag_twt_b), fpath) %>
             <% end %>
         <% end %>
@@ -317,7 +317,7 @@ textarea {
                 <%= link_to_ex(tweet_id, Twt::twt_tweet_url(@twitter.twtid, tweet_id)) %>
                 <% if tweet.presence %>
                     <% if true #tweet.status == Tweet::StatusEnum::UNACCESSIBLE or @twitter.status == Twitter::TWT_STATUS::STATUS_NOT_EXIST %>
-                        <b><%= tweet.status %></b>
+                        "<b><%= tweet.status %></b>"
                         (id変わったとき用→)
                         <%= link_to_ex(tweet_id, Twt::twt_tweet_url_dev(tweet_id)) %>
                     <% elsif params[:tweet_id].to_i == tweet_id and params[:tweet_st] == Tweet::StatusEnum::DELETED %>

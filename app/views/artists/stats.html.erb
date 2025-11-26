@@ -60,7 +60,17 @@
 
 <h1>stats</h1>
 
-<% ids = Twt::load_pic_info_tsv() %>
+<% if params[:vid] %>
+<% else %>
+    <h2>huge</h2>
+    <% ids = Twt::load_pic_info_tsv() %>
+    <% ids.each do |screen_name| %>
+        <%= screen_name %><br />
+    <% end %>
+<% end %>
+
+<h2>vid</h2>
+<% ids = Twt::list_vid() %>
 <% ids.each do |screen_name| %>
     <%= screen_name %><br />
 <% end %>

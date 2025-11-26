@@ -92,7 +92,12 @@ class Tweet < ApplicationRecord
             url_list_summary << url_List_Summary.new(key, url_list.size, url_list.size - exist_cnt)
             #STDERR.puts %!"@#{key}":#{}!
         end
-        url_list_summary.sort_by {|x| [x.todo_cnt, x.url_cnt, x.screen_name]}.reverse
+        url_list_summary.sort_by {|x| [x.todo_cnt, x.url_cnt, x.screen_name]}#.reverse
+    end
+
+    def self.url_list_summary_hash(known_twt_url_list)
+        url_l_summary = url_list_summary(known_twt_url_list)
+        url_l_summary.map {|x| [x.screen_name, x]}.to_h
     end
 
     def self.summary_str(tweet_sum_hash, screen_name)
