@@ -398,6 +398,37 @@
 
     <hr />
 
+    <%= f.label :group_by, style: "display: block" %>
+    <%= f.select :group_by, 
+      options_for_select(
+        [
+          ['none'],
+          ['filenum'], 
+          ['last_ul_datetime'], 
+          ['last_ul_datetime_X_filenum'], 
+          ['last_ul_datetime_ym'],
+          ['last_ul_datetime_ym旧→新'],
+          ['last_ul_datetime_y'], 
+          ['recent_filenum'],
+          ['pxvname_fl'],
+          ['pxvname'],
+          [ArtistsController::GROUP_TYPE::GROUP_STAT],
+          [ArtistsController::GROUP_TYPE::GROUP_STAT_RAT],
+          [ArtistsController::GROUP_TYPE::GROUP_STAT_RAT_R18],
+          ['r18'],
+          ['priority'],
+          ['予測'],
+          ['rating'],
+          [ArtistsController::GROUP_TYPE::GROUP_FEAT_STAT_RAT],
+          ['評価+年齢制限'],
+          ['さかのぼり'],
+          [ArtistsController::GROUP_TYPE::GROUP_ACCESS_OLD_TO_NEW],
+          [ArtistsController::GROUP_TYPE::GROUP_MONTH_PRED],
+        ],
+        selected: params[:group_by] 
+      ) %>
+    <br />
+    
     <%= f.label :sort_by, style: "display: block" %>
     <%= f.select :sort_by, 
       options_for_select(
@@ -428,35 +459,7 @@
         selected: params[:sort_by] 
       ) %>
     <br />
-    <%= f.label :group_by, style: "display: block" %>
-    <%= f.select :group_by, 
-      options_for_select(
-        [
-          ['none'],
-          ['filenum'], 
-          ['last_ul_datetime'], 
-          ['last_ul_datetime_X_filenum'], 
-          ['last_ul_datetime_ym'],
-          ['last_ul_datetime_ym旧→新'],
-          ['last_ul_datetime_y'], 
-          ['recent_filenum'],
-          ['pxvname_fl'],
-          ['pxvname'],
-          [ArtistsController::GROUP_TYPE::GROUP_STAT],
-          [ArtistsController::GROUP_TYPE::GROUP_STAT_RAT],
-          [ArtistsController::GROUP_TYPE::GROUP_STAT_RAT_R18],
-          ['r18'],
-          ['priority'],
-          ['予測'],
-          ['rating'],
-          [ArtistsController::GROUP_TYPE::GROUP_FEAT_STAT_RAT],
-          ['評価+年齢制限'],
-          ['さかのぼり'],
-          [ArtistsController::GROUP_TYPE::GROUP_ACCESS_OLD_TO_NEW],
-        ],
-        selected: params[:group_by] 
-      ) %>
-    <br />
+
     <%= f.label :表示数 %>
     <%= f.number_field :display_number, :value => params[:display_number] %>
     <br />

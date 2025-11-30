@@ -26,16 +26,17 @@ class HomeController < ApplicationController
       },
       # =====================================
       { :label => "ai1", :path => "" },
-      { :label => "T|AI|all in 1 87△access",
+      { :label => "T|AI|all in 1 87",
         :path => twitters_path(
           target: "AI",
           rating: 87,
-          pred: 55,
+          pred: 44,
           hide_within_days: 5,
           num_of_disp: 5,
           #force_disp_day: 10,
           mode: TwittersController::ModeEnum::ALL_IN_1,
-          grp_sort_by: TwittersController::GRP_SORT::GRP_SORT_ACCESS_W,
+          grp_sort_by: TwittersController::GRP_SORT::GRP_SORT_SPEC,
+          grp_sort_spec: "評価{r1}::{w}週|予測{p50}",#登録{c3}ヶ月|予測{p50}～::評価{r10}～|{w}週～
           sort_by: TwittersController::SORT_BY::RATING,
           #aio: TwittersController::GRP_SORT::GRP_SORT_ACCESS + "|" + TwittersController::GRP_SORT::GRP_SORT_PRED,
           #step: -3,
@@ -173,8 +174,8 @@ class HomeController < ApplicationController
             exclude_ai: "",
             ai: true,
             status: "「長期更新なし」を除外",
+            group_by: ArtistsController::GROUP_TYPE::GROUP_MONTH_PRED,
             sort_by: ArtistsController::SORT_TYPE::SORT_RATING_O2N,
-            group_by: ArtistsController::GROUP_TYPE::GROUP_RATING,
             #aio: TwittersController::GRP_SORT::GRP_SORT_ACCESS, #+ "|" + TwittersController::GRP_SORT::GRP_SORT_PRED,
             rating: 95,
             #step: 1,
@@ -978,33 +979,6 @@ class HomeController < ApplicationController
           mode: "patrol", thumbnail: "t"
         )
       },
-      { :label => "-", :path => "" },
-      # ----------------------------
-      { :label => "-", :path => "" },
-      { :label => "Twitter[AI] 更新なし？ 85",
-        :path => twitters_path(
-          page_title: "AI 更新なし？ 85",
-          target: "AI",
-          sort_by: TwittersController::SORT_BY::ACCESS,#,"access",
-          rating: 85,
-          hide_within_days: 60,
-          num_of_disp: 3,
-          mode: "patrol2",
-          thumbnail: "t",
-        )
-      },
-      { :label => "Twitter[AI] 凍結etc... 75",
-        :path => twitters_path(
-          page_title: "AI 凍結etc... 75",
-          target: "AI",
-          sort_by: TwittersController::SORT_BY::ACCESS,#"access",
-          rating: 75,
-          #hide_within_days: 30,
-          num_of_disp: 6,
-          mode: "patrol3",
-          thumbnail: "t",
-        )
-      },
       # ----------------------------
       { :label => "twitter ", :path => "" },
       { :label => "Twitter[パクリ] ご無沙汰 1",
@@ -1067,28 +1041,6 @@ class HomeController < ApplicationController
           hide_within_days: 60,#30, 
           num_of_disp: NUM_OF_DISP,
           pred: 0, 
-          thumbnail: "t"
-        )
-      },
-      { :label => "Twitter 凍結/存在しない/etc...",
-        :path => twitters_path(
-          page_title: "凍結/存在しない/etc...", 
-          #rating: 0, 
-          hide_within_days: 21, 
-          num_of_disp: NUM_OF_DISP,
-          #pred: 0,
-          mode: "更新不可", 
-          thumbnail: "t"
-        )
-      },
-      { :label => "Twitter 存在しない",
-        :path => twitters_path(
-          page_title: "存在しない",
-          #rating: 0, 
-          hide_within_days: 21, 
-          num_of_disp: NUM_OF_DISP,
-          #pred: 0,
-          mode: "存在しない",
           thumbnail: "t"
         )
       },

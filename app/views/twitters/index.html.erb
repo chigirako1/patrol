@@ -376,7 +376,8 @@ button.horizontal {
     <%= f.label :ソート %>
     <%= f.select :sort_by, options_for_select(
         [
-          ["予測▽順", TwittersController::SORT_BY::PRED],
+          ["予測降順(▽)", TwittersController::SORT_BY::PRED],
+          ["予測昇順(△)", TwittersController::SORT_BY::PRED_ASC],
           ["アクセス日順（旧→新）", TwittersController::SORT_BY::ACCESS],
           ["評価順", TwittersController::SORT_BY::RATING],
         ],
@@ -404,10 +405,14 @@ button.horizontal {
           [TwittersController::GRP_SORT::GRP_SORT_NO_UPDATE, TwittersController::GRP_SORT::GRP_SORT_NO_UPDATE],
           [TwittersController::GRP_SORT::GRP_SORT_DEL, TwittersController::GRP_SORT::GRP_SORT_DEL],
           ["自動(おまかせ)", TwittersController::GRP_SORT::GRP_SORT_AUTO],
+          [TwittersController::GRP_SORT::GRP_SORT_SPEC, TwittersController::GRP_SORT::GRP_SORT_SPEC],
         ],
         selected: params[:grp_sort_by] 
       )
     %>
+    <br />
+    <%= f.label :グループ化指定文字列 %>
+    <%= f.text_field :grp_sort_spec, :value => params[:grp_sort_spec] %>
     <br />
 
     <%= f.label :step %>

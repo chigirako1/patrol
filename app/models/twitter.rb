@@ -547,22 +547,86 @@ class Twitter < ApplicationRecord
         %!#{rate_n}#{Twitter::TWT_H_SEPARATOR}#{lad_n}週|#{pred_n}!
     end
 
-    def a1o_auto_group_key(r_unit=3, newc=true)
-        if sp? #filesize_huge?
+    #
+    # ""
+    #
+    def group_spec(grp_sort_spec_arg, total_cnt)
+        regexp_pattern = /\{\w\d*\}/
+        matches = grp_sort_spec_arg.scan(regexp_pattern)
+        gkey_work = grp_sort_spec_arg.dup
+
+        matches.each do |x|
+            if x =~ /\w(\d+)/
+                unit = $1.to_i
+            end
+
+            case x[1]
+            when "c"
+                unit = 1 unless unit
+                w = Util::format_num(self.created_at_day_num / 30, unit)
+                gkey_work.gsub!(x, w)
+            when "m"
+                unit = 1 unless unit
+                w = Util::format_num(self.last_access_datetime_days_elapsed / 30, unit)
+                gkey_work.gsub!(x, w)
+            when "p"
+                unit = 10 unless unit
+                p = Util::format_num(self.prediction, unit)
+                gkey_work.gsub!(x, p)
+            when "r"
+                unit = 5 unless unit
+                r = Util::format_num(self.rating, unit)
+                gkey_work.gsub!(x, r)
+            when "w"
+                unit = 1 unless unit
+                w = Util::format_num(self.last_access_datetime_days_elapsed / 7, unit)
+                gkey_work.gsub!(x, w)
+            else
+            end
+        end
+
+        gkey_work
+    end
+
+    def created_d_n(months)
+        if months >= 12
+            work = 12
+        elsif months >= 6
+            work = 6
+        elsif months >= 3
+            work = 3
+        else
+            work = months
+        end
+        Util::format_num(work, 1)
+    end
+
+    def a1o_auto_group_key(r_unit=5, newc=true)
+        if sp?
             return "00.ファイルサイズ大#{Twitter::TWT_H_SEPARATOR}更新頻度#{Util::format_num(self.update_frequency, 100, 4)}"
         end
 
         daysn =  self.last_access_datetime_days_elapsed
         lad_n = sprintf("%3d週", daysn / 7)
-        pred_n = Util::format_num(self.prediction, 10)
 
         if daysn <= 3
-            recent = "[0最近アクセス]"
-            key = "#{daysn}日|予測#{pred_n}～"
+            pred_n = Util::format_num(self.prediction, 5)
+            if daysn < 1
+                recent = "[0.本日アクセス]"
+            else
+                recent = "[1.最近アクセス]"
+            end
+            #key = "#{daysn}日|予測#{pred_n}～"
+            rate_n = Util::format_num(self.rating, 10)
+            #key = %!評価#{rate_n}～|予測#{pred_n}～!
+            #created_n = Util::format_num(self.created_at_day_num / 30, 1)
+            created_n = created_d_n(self.created_at_day_num / 30)
+            key = %!登録#{created_n}ヶ月～|予測#{pred_n}～!
+            rate_n = ""
         else
-            recent = "[9]"
-            rate_n = Util::format_num(self.rating, r_unit)
-            #key = %!評価#{rate_n}～|#{lad_n}|予測#{pred_n}～!
+            pred_n = Util::format_num(self.prediction, 10)
+            recent = "[9.日数経過]"
+            rate_n = %!評価#{Util::format_num(self.rating, r_unit)}～!
             key = %!#{lad_n}|予測#{pred_n}～!
         end
 
@@ -578,7 +642,7 @@ class Twitter < ApplicationRecord
             newcomer = ""
         end
 
-        recent + newcomer + Twitter::TWT_H_SEPARATOR + key
+        recent + newcomer + rate_n + Twitter::TWT_H_SEPARATOR + key
     end
 
     def group_key_test(grp_sort_by, status=false)
@@ -589,7 +653,7 @@ class Twitter < ApplicationRecord
         else
             case grp_sort_by
             when TwittersController::GRP_SORT::GRP_SORT_PRED
-                p = Util::format_num(prediction, 10)
+                p = Util::format_num(self.prediction, 10)
                 gkey = %!予測#{Twitter::TWT_H_SEPARATOR}#{p}!
             when TwittersController::GRP_SORT::GRP_SORT_ACCESS_W
                 w = %!#{sprintf("%3d", self.last_access_datetime_days_elapsed / 7)}週!
@@ -639,19 +703,24 @@ class Twitter < ApplicationRecord
                 gkey = ""
             end
             
-            gkey += self.a1o_auto_group_key(3, false) if detail
+            gkey += self.a1o_auto_group_key(5, false) if detail
             gkey
         when "", nil
-            month_n = Util::format_num(self.last_access_datetime_days_elapsed / 30, 1)
-            month_s = %!#{month_n}ヶ月!
-
             if self.pxvid.presence
-                pxv = %!pxvあり!
+                pxv = %!05.pxvあり!
             else
-                pxv = "pxvなし"
+                pxv = "09.pxvなし"
             end
 
-            p = Util::format_num(self.prediction, 10)
+            if true
+                month_n = Util::format_num(self.last_access_datetime_days_elapsed / 7, 1)
+                month_s = %!#{month_n}週!
+            else
+                month_n = Util::format_num(self.last_access_datetime_days_elapsed / 30, 1)
+                month_s = %!#{month_n}ヶ月!
+            end
+
+            p = Util::format_num(self.prediction, 5)
             gkey = pxv + TWT_H_SEPARATOR + "#{month_s}:#{p}件～"
         else
             self.group_key2(hide_within_days, rating_gt)
@@ -670,16 +739,19 @@ class Twitter < ApplicationRecord
         when "", nil
             dm = %!999.未設定!
             day_n = Util::format_num(self.last_access_datetime_days_elapsed, 3)
-            key = "#{day_n}～"
+            key = "#{day_n}日～"
         else
             dm = %!990.#{drawing_method}!
         end
 
         case status
         when Twitter::TWT_STATUS::STATUS_PATROL
-            key = %!999.#{a1o_auto_group_key(3, false)}!
+            r = Util::format_num(self.rating, 5)
+            #key = %!999.#{a1o_auto_group_key(3, false)}!
+            r = 999
+            key = %!評価#{r}～.#{a1o_auto_group_key(5, false)}!
         else
-            key = status
+            key = status unless key
         end
 
         %!#{dm}#{TWT_H_SEPARATOR}#{key}!
@@ -776,10 +848,9 @@ class Twitter < ApplicationRecord
             ].join("-")
         else
             [
-                self.status||"",
                 self.drawing_method||"",
-                #accs_rec,
-                #obj,
+                TWT_H_SEPARATOR,
+                self.status||"",
             ].join("-")
         end
     end

@@ -660,6 +660,13 @@ class Artist < ApplicationRecord
         end
     end
 
+    def group_by
+        month_s = Util::format_num(self.last_access_datetime_num / 30, 1)
+        pred_s = Util::format_num(self.prediction_up_cnt(true), 10)
+
+        %!#{month_s}ヶ月|予測#{pred_s}!
+    end
+
     def key_for_group_by
         days = last_access_datetime_num
         if days < 1
