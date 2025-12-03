@@ -5,6 +5,8 @@ class TweetsController < ApplicationController
     SUMMARY = 'summary'
     URL_LIST = 'urllist'
     URL_LIST_SUMMARY = 'urllist_summary'
+    URL_LIST_ = 'urllist_summary'
+    URL_UNACCESSIBLE =  'url_unaccessible'
   end
 
   def get_param_num(symbol)
@@ -41,6 +43,8 @@ class TweetsController < ApplicationController
     when ModeEnum::URL_LIST
       filename = params[:filename]
       @known_twt_url_list, @unknown_twt_url_list = url_list(filename)
+    when ModeEnum::URL_UNACCESSIBLE
+      @unaccessible_tweet_summary = Tweet.unaccessible_tweet_summary
     else
       if params[:screen_name].presence
         scrn_name = params[:screen_name]

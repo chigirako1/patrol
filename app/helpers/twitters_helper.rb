@@ -52,7 +52,7 @@ module TwittersHelper
         end
     end
 
-    def twitter_show_page_title(twitter)
+    def twitter_show_page_title(twitter, r18=false)
         title = ""
 
         if twitter.private_account == Twitter::TWT_VISIBILITY::TV_PRIVATE
@@ -61,6 +61,10 @@ module TwittersHelper
 
         title += dm_icon(twitter.drawing_method)
         title += %!【#{twitter.rating}!
+
+        if r18 and twitter.r18
+            title += "|" + twitter.r18
+        end
 
         if twitter.r18 == Twitter::RESTRICT::R18
             title += R18_ICON
@@ -74,7 +78,7 @@ module TwittersHelper
     end
 
     def twitter_show_header_str(twitter)
-        str = twitter_show_page_title(twitter)
+        str = twitter_show_page_title(twitter, true)
         if twitter.old_twtid.presence
             str += %!←#{twitter.old_twtid}!
         end

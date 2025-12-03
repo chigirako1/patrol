@@ -172,21 +172,17 @@
 <%= link_to "next >", "../artists?#{get_url_params}&begin_no=#{@begin_no.to_i + @size_per_table}" %>
 <%#= link_to "last >>", "../artists?#{get_url_params}&begin_no=#{@artists_group.size - @size_per_table}" %>
 
-
-<% @artists_group.each do |key, artists| %>
-  <% if artists.size == 0 and params[:file] == "検索" %>
-    <%# if search_word =~ %r!pixiv\.net/users/(\d+)! %>
-    <% if search_word =~ Artist::PXV_USER_URL_REGEX %>
-      <% pxv_user_id = $1 %>
-      <% dirlist = Pxv::stock_dir_list %>
-      <% user_name = Pxv::user_name(dirlist, pxv_user_id) %>
-      <% if user_name.presence %>
-        <h3>DB未登録だが、フォルダあり："<%= user_name %>"(<%= pxv_user_id %>)</h3>
-        <%= link_to_ex %!☆pxv☆:@#{pxv_user_id}!, artist_pxv_path(pxv_user_id) %>
-      <% else %>
-        <h3>pxv:"<%= pxv_user_id %>" not found</h3>
-        <%= link_to_ex "New Artist(#{pxv_user_id})", new_artist_path(pxvid: pxv_user_id) %>
-      <% end %>
+<% if @artists_group.size == 0 and params[:file] == ArtistsController::MethodEnum::SEARCH %>
+  <% if search_word =~ Artist::PXV_USER_URL_REGEX %>
+    <% pxv_user_id = $1 %>
+    <% dirlist = Pxv::stock_dir_list %>
+    <% user_name = Pxv::user_name(dirlist, pxv_user_id) %>
+    <% if user_name.presence %>
+      <h3>DB未登録だが、フォルダあり："<%= user_name %>"(<%= pxv_user_id %>)</h3>
+      <%= link_to_ex %!☆pxv☆:@#{pxv_user_id}!, artist_pxv_path(pxv_user_id) %>
+    <% else %>
+      <h3>pxv:"<%= pxv_user_id %>" not found</h3>
+      <%= link_to_ex "New Artist(#{pxv_user_id})", new_artist_path(pxvid: pxv_user_id) %>
     <% end %>
   <% end %>
 <% end %>
@@ -309,9 +305,23 @@
     検索ワード：
     <%= f.text_field :search_word, :value => params[:search_word] %>
     <br />
-    <%= f.select :match_method, options_for_select([["(自動判断)","auto"], ["を含む","partial_match"], ["完全一致","perfect_match"], ["から始まる","begin_match"],  ["で終わる","end_match"]]) %>
+    <%= f.select :match_method,
+      options_for_select(
+        [
+          ["(自動判断)","auto"], ["を含む","partial_match"], ["完全一致","perfect_match"], ["から始まる","begin_match"],  ["で終わる","end_match"]
+        ],
+        selected: params[:match_method]
+      )
+    %>
     検索対象：
-    <%= f.select :target_col, options_for_select([['(自動判断)'], ['pxvname'], ['pxvid']]) %>
+    <%= f.select :target_col,
+      options_for_select(
+        [
+          ['(自動判断)'], ['pxvname'], ['pxvid']
+        ],
+        selected: params[:target_col]
+      )
+    %>
     <br />
 
     <%= f.submit("検索", name: nil, class: 'subtmi-btn') %>
@@ -403,7 +413,7 @@
       options_for_select(
         [
           ['none'],
-          ['filenum'], 
+          [ArtistsController::GROUP_TYPE::FILENUM],
           ['last_ul_datetime'], 
           ['last_ul_datetime_X_filenum'], 
           ['last_ul_datetime_ym'],

@@ -7,6 +7,7 @@ class Tweet < ApplicationRecord
         TO_BE_REMOVED = "削除予定"
         DELETED = "削除"
         UNACCESSIBLE = "URLアクセス不可"
+        UNACCESSIBLE_FREEZED = "URLアクセス不可(凍結されたアカウント)"
         DUPLICATE = "重複"
     end
 
@@ -129,5 +130,17 @@ class Tweet < ApplicationRecord
     
     def self.summary_cnt(tweet_sum_hash, screen_name, status)
         tweet_sum_hash[screen_name][status]
+    end
+
+    def self.get_unaccessible_twt_account_list()
+        t = Tweet.select {|x| x.status == StatusEnum::UNACCESSIBLE}
+        grp = t.group_by {|x| x.screen_name}.delete_if {|k,v| v.size < 2}
+        grp
+    end
+
+    def self.unaccessible_tweet_summary()
+        grp = get_unaccessible_twt_account_list
+        grp = grp.sort_by {|k,v| v.size}.reverse.to_h
+        unaccessible_tweet_summary = grp
     end
 end

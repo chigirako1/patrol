@@ -53,7 +53,7 @@ class Artist < ApplicationRecord
     def self.looks(target_col, search_word, match_method)
 
         search_word.strip!
-        puts %!#{target_col}, #{search_word}, #{match_method}!
+        STDERR.puts %!"#{target_col}", "#{search_word}", "#{match_method}"!
 
         if target_col == C_ARTIST_TARGET_AUTO
             if search_word =~ /^\d+$/
@@ -76,7 +76,7 @@ class Artist < ApplicationRecord
             end
         end
 
-        puts %!#{target_col}, #{search_word}, #{match_method}!
+        STDERR.puts %!"#{target_col}", "#{search_word}", "#{match_method}"!
 
         search_word_p = ""
         case match_method
@@ -91,6 +91,9 @@ class Artist < ApplicationRecord
         else
             search_word_p = search_word
         end
+
+        STDERR.puts %!"#{target_col}", "#{search_word}", "#{search_word_p}"!
+
         @artist = Artist.where("#{target_col} LIKE?", search_word_p)
     end
 

@@ -588,17 +588,29 @@ class Twitter < ApplicationRecord
         gkey_work
     end
 
-    def created_d_n(months)
+    def created_d_s(months)
         if months >= 12
             work = 12
+            n = 1
         elsif months >= 6
             work = 6
+            n = 2
         elsif months >= 3
             work = 3
+            n = 3
         else
             work = months
+            n = 9 - work
         end
-        Util::format_num(work, 1)
+        "登録[#{n}]" + Util::format_num(work, 1)
+    end
+
+    def newcomer?
+        if created_at_day_num <= 30
+            true
+        else
+            false
+        end
     end
 
     def a1o_auto_group_key(r_unit=5, newc=true)
@@ -610,22 +622,38 @@ class Twitter < ApplicationRecord
         lad_n = sprintf("%3d週", daysn / 7)
 
         if daysn <= 3
-            pred_n = Util::format_num(self.prediction, 5)
             if daysn < 1
                 recent = "[0.本日アクセス]"
+                p_unit = 5
+            elsif rating >= 87
+                recent = "[7.高評価]最近アクセス"
+                p_unit = 10
             else
                 recent = "[1.最近アクセス]"
+                p_unit = 5
             end
+            pred_n = Util::format_num(self.prediction, p_unit)
             #key = "#{daysn}日|予測#{pred_n}～"
             rate_n = Util::format_num(self.rating, 10)
             #key = %!評価#{rate_n}～|予測#{pred_n}～!
             #created_n = Util::format_num(self.created_at_day_num / 30, 1)
-            created_n = created_d_n(self.created_at_day_num / 30)
-            key = %!登録#{created_n}ヶ月～|予測#{pred_n}～!
+            created_s = created_d_s(self.created_at_day_num / 30)
+            key = %!#{created_s}ヶ月～|予測#{pred_n}～!
             rate_n = ""
         else
-            pred_n = Util::format_num(self.prediction, 10)
-            recent = "[9.日数経過]"
+            if daysn >= 365
+                recent = "[9.数年経過]"
+            elsif daysn >= 180
+                recent = "[8.数カ月経過]"
+            elsif rating >= 87
+                recent = "[7.高評価]"
+            elsif daysn < 7 and self.prediction < 10
+                recent = "[4.1週間以内アクセス&予測少]"
+            else
+                recent = "[5.日数経過]"
+            end
+            p_unit = 20
+            pred_n = Util::format_num(self.prediction, p_unit)
             rate_n = %!評価#{Util::format_num(self.rating, r_unit)}～!
             key = %!#{lad_n}|予測#{pred_n}～!
         end
@@ -706,21 +734,29 @@ class Twitter < ApplicationRecord
             gkey += self.a1o_auto_group_key(5, false) if detail
             gkey
         when "", nil
+            todo_cnt_str = sprintf("残:%3d件", e.todo_cnt)
             if self.pxvid.presence
-                pxv = %!05.pxvあり!
+                pxv = %!05.pxvあり<#{todo_cnt_str}>!
             else
-                pxv = "09.pxvなし"
+                pxv = "09.pxvなし<#{todo_cnt_str}>"
             end
 
-            if true
-                month_n = Util::format_num(self.last_access_datetime_days_elapsed / 7, 1)
-                month_s = %!#{month_n}週!
+            daysn = self.last_access_datetime_days_elapsed
+            if daysn < 30
+                month_n = Util::format_num(daysn / 7, 1)
+                month_s = %!1.#{month_n}週!
+                r_unit = 5
+            elsif daysn < 365
+                month_n = Util::format_num(daysn / 30, 1)
+                month_s = %!2.#{month_n}ヶ月!
+                r_unit = 30
             else
-                month_n = Util::format_num(self.last_access_datetime_days_elapsed / 30, 1)
-                month_s = %!#{month_n}ヶ月!
+                month_n = Util::format_num(daysn / 365, 1)
+                month_s = %!3.#{month_n}年!
+                r_unit = 60
             end
 
-            p = Util::format_num(self.prediction, 5)
+            p = Util::format_num(self.prediction, r_unit)
             gkey = pxv + TWT_H_SEPARATOR + "#{month_s}:#{p}件～"
         else
             self.group_key2(hide_within_days, rating_gt)

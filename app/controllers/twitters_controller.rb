@@ -779,6 +779,14 @@ class TwittersController < ApplicationController
     end
 
     def index_all_in_1(twitters, params, rating_gt, pred_cond_gt)
+      filename = params[:filename]
+      STDERR.puts %!index_all_in_1:"#{filename}"(#{twitters.size})!
+      if filename == "アクセス不可"
+        grp = Tweet::get_unaccessible_twt_account_list
+        ids = grp.keys
+        twitters = twitters.select {|x| ids.include?(x.twtid) }
+      end
+      STDERR.puts %!index_all_in_1:"#{filename}"(#{twitters.size})!
       twitters = twitters.select {|x| x.rating == nil or x.rating >= rating_gt }
       twitters = twitters.select {|x| x.drawing_method == params[:target]}
 

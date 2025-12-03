@@ -165,6 +165,9 @@
                     <td>
                         [<%= url_list.size %>]
                         【<%= twt_account.rating %>】<%= twt_account.r18 %>
+                        <% if twt_account.newcomer? %>
+                            <b>!NEW!</b>
+                        <% end %>
                     </td>
                     <td>
                         <% if twt_account.status == "TWT巡回" %>

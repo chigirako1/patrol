@@ -351,6 +351,7 @@ class ArtistsController < ApplicationController
   end
 
   module GROUP_TYPE
+    FILENUM = "filenum"
     GROUP_ACCESS_OLD_TO_NEW = "ACCESS旧→新"
     GROUP_FEAT_STAT_RAT = "feature/status/rating"
     GROUP_STAT = "status"
@@ -1345,7 +1346,7 @@ class ArtistsController < ApplicationController
         artists_group = artists.group_by {|x| x[:last_ul_datetime].strftime("%Y-%m")}.sort.to_h
       when "last_ul_datetime_y"
         artists_group = artists.group_by {|x| x[:last_ul_datetime].strftime("%Y")}.sort.reverse.to_h
-      when "filenum"
+      when GROUP_TYPE::FILENUM
         artists_group = artists.group_by {|x| filenum_g(x.filenum)}.sort.reverse.to_h
       when "recent_filenum"
         artists_group = artists.group_by {|x| (x.recent_filenum / 10 * 10)}.sort.reverse.to_h

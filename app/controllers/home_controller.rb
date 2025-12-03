@@ -36,7 +36,7 @@ class HomeController < ApplicationController
           #force_disp_day: 10,
           mode: TwittersController::ModeEnum::ALL_IN_1,
           grp_sort_by: TwittersController::GRP_SORT::GRP_SORT_SPEC,
-          grp_sort_spec: "評価{r1}::{w}週|予測{p50}",#登録{c3}ヶ月|予測{p50}～::評価{r10}～|{w}週～
+          grp_sort_spec: "{w}週|評価{r1}::予測{p50}",#"評価{r1}::{w}週|予測{p50}",#登録{c3}ヶ月|予測{p50}～::評価{r10}～|{w}週～
           sort_by: TwittersController::SORT_BY::RATING,
           #aio: TwittersController::GRP_SORT::GRP_SORT_ACCESS + "|" + TwittersController::GRP_SORT::GRP_SORT_PRED,
           #step: -3,
@@ -348,7 +348,7 @@ class HomeController < ApplicationController
             page_title: "pxv 未設定 更新数[多]予測", 
             #sort_by: "id",
             sort_by: "予測▽",
-            #group_by: "",
+            group_by: ArtistsController::GROUP_TYPE::FILENUM,
             #exclude_ai: "true",
             #status: "「長期更新なし」を除外",
             #point: 1, 
@@ -1353,6 +1353,11 @@ class HomeController < ApplicationController
             #filename: "all",
             #hide_within_days: 180,
             #rating: rating_std,
+          )
+      },
+      { :label => "Tweet #{TweetsController::ModeEnum::URL_UNACCESSIBLE} summary",
+          :path => tweets_path(
+            mode: TweetsController::ModeEnum::URL_UNACCESSIBLE,
           )
       },
       # ----------------------------
