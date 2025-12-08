@@ -203,6 +203,20 @@ module UrlTxtReader
         when "thismonth"
             yymm = Date.today.strftime("%y%m")
             path = UrlTxtReader::txt_file_list(yymm + "\\d+")
+        when /thisyear\s+(\d+)/
+            opt = $1.to_i
+
+            start_y = Date.today.years_ago(opt)
+            end_y = Date.today
+
+            ary = []
+            ye = Util::year_enumrator(start_y, end_y)
+            ye.each do |x|
+                ary << x.strftime("%y")
+            end
+            rgx_str = %!(#{ary.join("|")})!
+
+            path = UrlTxtReader::txt_file_list(rgx_str + "\\d+")
         when "thisyear"
             yy = Date.today.strftime("%y")
             path = UrlTxtReader::txt_file_list(yy + "\\d{4}")

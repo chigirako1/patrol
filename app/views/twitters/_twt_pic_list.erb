@@ -259,18 +259,20 @@ textarea {
             <%= link_to_ex tweet_id, Twt::twt_tweet_url_dev(tweet_id) %>
         <% #end %>
         <br />
-        
-        <% filelist = Twt::get_sp_pic_filelist_by_twtid(@twitter.twtid) %>
-        <% if filelist.presence %>
-            <h4>SP</h4>
-            <% sp_tweet_id = Twt::get_sp_tweet_id_from_filepath(filelist.last) %>
-            <b><%= Twt::tweet_id_with_comma(sp_tweet_id) %></b>(DL日時からの推測)[<%= File::basename filelist.last %>](ファイル数:<%= filelist.size %>)
-            <br />
-            <% pic_mag_twt_b = '10%' %>
-            <% filelist.reverse.first(5).each do |fpath| %>
-                <%= link_to_ex(image_tag(fpath, width: pic_mag_twt_b, height: pic_mag_twt_b), fpath) %>
-            <% end %>
+       
+    <% end %>
+
+    <% filelist = Twt::get_sp_pic_filelist_by_twtid(@twitter.twtid) %>
+    <% if filelist.presence %>
+        <h4>SP</h4>
+        <% sp_tweet_id = Twt::get_sp_tweet_id_from_filepath(filelist.last) %>
+        <b><%= Twt::tweet_id_with_comma(sp_tweet_id) %></b>(DL日時からの推測)[<%= File::basename filelist.last %>](ファイル数:<%= filelist.size %>)
+        <br />
+        <% pic_mag_twt_b = '10%' %>
+        <% filelist.reverse.first(5).each do |fpath| %>
+            <%= link_to_ex(image_tag(fpath, width: pic_mag_twt_b, height: pic_mag_twt_b), fpath) %>
         <% end %>
+    <% else %>
     <% end %>
 
     <!-- URLのテキストファイルに含まれる画像が存在するかチェック -->

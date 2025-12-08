@@ -1152,7 +1152,8 @@ module Twt
                         twt_params[:filesize] = avg
                     elsif avg == twt.filesize
                     else
-                        msg = %!サイズが小さくなっているため保留:#{twt.filesize} -> #{avg}!
+                        percent = avg * 100 / twt.filesize
+                        msg = %!サイズが小さくなっているため保留:#{twt.filesize} -> #{avg}(#{percent}%)!
                         Rails.logger.warn(msg)
                     end
                 else

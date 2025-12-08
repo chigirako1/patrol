@@ -327,6 +327,15 @@ class Twitter < ApplicationRecord
         end
     end
 
+    def has_unaccessible_tweet?
+        h = Tweet::summary_hash(self.twtid)
+        p h
+        if h and (h[Tweet::StatusEnum::UNACCESSIBLE]||0) > 0
+            return true
+        end
+        false
+    end
+
     def twt_user_url
         Twt::twt_user_url(twtid)
     end
@@ -585,7 +594,11 @@ class Twitter < ApplicationRecord
             end
         end
 
-        gkey_work
+        if self.sp?
+            "ファイルサイズ大#{TWT_H_SEPARATOR}."# + gkey_work
+        else
+            gkey_work
+        end
     end
 
     def created_d_s(months)
@@ -621,50 +634,82 @@ class Twitter < ApplicationRecord
         daysn =  self.last_access_datetime_days_elapsed
         lad_n = sprintf("%3d週", daysn / 7)
 
-        if daysn <= 3
+        rat_a = 87
+        rat_b = 85
+        if daysn <= 7
             if daysn < 1
-                recent = "[0.本日アクセス]"
+                recent = "[20.本日アクセス]"
+                p_unit = 1
+            elsif rating >= 90
+                recent = "[91.高評価]最近アクセス"
                 p_unit = 5
+            elsif daysn < 2
+                recent = "[21.昨日アクセス]"
+                p_unit = 2
+            elsif daysn < 3
+                recent = "[22.一昨日アクセス]"
+                p_unit = 3
             elsif rating >= 87
-                recent = "[7.高評価]最近アクセス"
-                p_unit = 10
+                recent = "[56.高評価(#{rat_a}↑)]最近アクセス"
+                p_unit = 5
+            elsif rating < 85
+                recent = "[24.直近アクセス]"
+                p_unit = 5
             else
-                recent = "[1.最近アクセス]"
+                recent = "[25.直近アクセス](#{rat_b}↑)"
                 p_unit = 5
             end
-            pred_n = Util::format_num(self.prediction, p_unit)
-            #key = "#{daysn}日|予測#{pred_n}～"
-            rate_n = Util::format_num(self.rating, 10)
-            #key = %!評価#{rate_n}～|予測#{pred_n}～!
-            #created_n = Util::format_num(self.created_at_day_num / 30, 1)
-            created_s = created_d_s(self.created_at_day_num / 30)
-            key = %!#{created_s}ヶ月～|予測#{pred_n}～!
+
+            if false
+                #created_n = Util::format_num(self.created_at_day_num / 30, 1)
+                created_s = created_d_s(self.created_at_day_num / 30)
+                key = %!#{created_s}ヶ月～|予測#{pred_n}～!
+            elsif false
+                pred_n = Util::format_num(self.prediction, p_unit)
+                #key = "#{daysn}日|予測#{pred_n}～"
+                rate_n = Util::format_num(self.rating, 10)
+                key = %!評価#{rate_n}～|予測#{pred_n}～!
+            else
+                pred_n = Util::format_num(self.prediction, 3)
+                key = %!予測#{pred_n}～!
+            end
             rate_n = ""
         else
-            if daysn >= 365
-                recent = "[9.数年経過]"
-            elsif daysn >= 180
-                recent = "[8.数カ月経過]"
-            elsif rating >= 87
-                recent = "[7.高評価]"
-            elsif daysn < 7 and self.prediction < 10
-                recent = "[4.1週間以内アクセス&予測少]"
-            else
-                recent = "[5.日数経過]"
-            end
             p_unit = 20
+            if daysn >= 365
+                recent = "[59.数年経過]"
+            elsif daysn >= 180
+                recent = "[58.半年以上経過]"
+            elsif daysn >= 90
+                recent = "[57.数カ月経過]"
+            elsif rating >= 90
+                recent = "[95.高評価]最近アクセス"
+                p_unit = 5
+            elsif rating >= 87
+                recent = "[56.高評価]"
+                p_unit = 10
+            elsif daysn >= 30
+                recent = "[55.1カ月以上経過]"
+            elsif self.prediction > 40
+                recent = "[54.予測多い]"
+            elsif daysn < 7 and self.prediction < 10
+                recent = "[51.1週間以内アクセス&予測少]"
+            else
+                recent = "[52.日数経過]"
+            end
+            pred_nn = Util::format_num(self.prediction, 40)
             pred_n = Util::format_num(self.prediction, p_unit)
             rate_n = %!評価#{Util::format_num(self.rating, r_unit)}～!
-            key = %!#{lad_n}|予測#{pred_n}～!
+            key = %!<#{pred_nn}>#{lad_n}|予測#{pred_n}～!
         end
 
         if newc
             if created_at_day_num <= 60
-                newcomer = "90.新参"
+                newcomer = "90.新参|"
             elsif created_at_day_num > 365
-                newcomer = "01.古株"
+                newcomer = "01.古株|"
             else
-                newcomer = "50.中堅"
+                newcomer = "50.中堅|"
             end
         else
             newcomer = ""
@@ -709,6 +754,30 @@ class Twitter < ApplicationRecord
         gkey
     end
 
+    def days_str(daysn)
+        daysn = 
+        if daysn < 3
+            month_n = Util::format_num(daysn, 1)
+            month_s = %!1.#{month_n}日!
+            p_unit = 5
+        elsif daysn < 30
+            month_n = Util::format_num(daysn / 7, 1)
+            month_s = %!5.#{month_n}週!
+            p_unit = 5
+        elsif daysn < 365
+            month_n = Util::format_num(daysn / 30, 1)
+            month_s = %!8.#{month_n}ヶ月!
+            p_unit = 30
+        else
+            month_n = Util::format_num(daysn / 365, 1)
+            month_s = %!9.#{month_n}年!
+            p_unit = 60
+        end
+
+        p = Util::format_num(self.prediction, p_unit)
+        "#{month_s}:#{p}件～"
+    end
+
     def a1o_auto_group_key_xx(e, hide_within_days, rating_gt, sort_by)
         detail = true
         case self.status
@@ -734,30 +803,20 @@ class Twitter < ApplicationRecord
             gkey += self.a1o_auto_group_key(5, false) if detail
             gkey
         when "", nil
-            todo_cnt_str = sprintf("残:%3d件", e.todo_cnt)
-            if self.pxvid.presence
-                pxv = %!05.pxvあり<#{todo_cnt_str}>!
-            else
-                pxv = "09.pxvなし<#{todo_cnt_str}>"
-            end
-
             daysn = self.last_access_datetime_days_elapsed
-            if daysn < 30
-                month_n = Util::format_num(daysn / 7, 1)
-                month_s = %!1.#{month_n}週!
-                r_unit = 5
-            elsif daysn < 365
-                month_n = Util::format_num(daysn / 30, 1)
-                month_s = %!2.#{month_n}ヶ月!
-                r_unit = 30
-            else
-                month_n = Util::format_num(daysn / 365, 1)
-                month_s = %!3.#{month_n}年!
-                r_unit = 60
-            end
 
-            p = Util::format_num(self.prediction, r_unit)
-            gkey = pxv + TWT_H_SEPARATOR + "#{month_s}:#{p}件～"
+            if daysn < 60
+                pxv = "09.未設定|2ヶ月以内"
+            else
+                todo_cnt_str = sprintf("残:%3d件", e.todo_cnt)
+                if self.pxvid.presence
+                    pxv = %!05.pxvあり<#{todo_cnt_str}>!
+                else
+                    pxv = "08.pxvなし<#{todo_cnt_str}>"
+                end
+            end
+            p = days_str(daysn)
+            gkey = pxv + TWT_H_SEPARATOR + p
         else
             self.group_key2(hide_within_days, rating_gt)
         end
@@ -774,18 +833,20 @@ class Twitter < ApplicationRecord
             return %!910.その他#{TWT_H_SEPARATOR}#{drawing_method}!
         when "", nil
             dm = %!999.未設定!
-            day_n = Util::format_num(self.last_access_datetime_days_elapsed, 3)
-            key = "#{day_n}日～"
+            #day_n = Util::format_num(self.last_access_datetime_days_elapsed, 3)
+            #key = "#{day_n}日～"
+            key = days_str(self.last_access_datetime_days_elapsed)
         else
             dm = %!990.#{drawing_method}!
         end
 
         case status
         when Twitter::TWT_STATUS::STATUS_PATROL
-            r = Util::format_num(self.rating, 5)
+            #r = Util::format_num(self.rating, 5)
             #key = %!999.#{a1o_auto_group_key(3, false)}!
-            r = 999
-            key = %!評価#{r}～.#{a1o_auto_group_key(5, false)}!
+            #r = 999
+            #key = %!評価#{r}～.#{a1o_auto_group_key(5, false)}!
+            key = a1o_auto_group_key(5, false)
         else
             key = status unless key
         end

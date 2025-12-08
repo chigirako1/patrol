@@ -108,6 +108,17 @@ class Tweet < ApplicationRecord
             return tmp_ary
         end
 
+        make_summary_str(hash)
+    end
+
+    def self.summary_hash(screen_name)
+        t = Tweet.where(screen_name: screen_name)
+        hash = t.group(:status).count
+        hash
+    end
+    
+    def self.make_summary_str(hash)
+        tmp_ary = []
         cnt = hash.sum {|k,v| v}
         hash.each do |k,v|
             tmp_ary << %!#{k}:#{v}(#{ v * 100 / cnt}%)!
@@ -116,16 +127,8 @@ class Tweet < ApplicationRecord
     end
 
     def self.get_summary_str(screen_name)
-        tmp_ary = []
-
-        t = Tweet.where(screen_name: screen_name)
-        hash = t.group(:status).count
-
-        cnt = hash.sum {|k,v| v}
-        hash.each do |k,v|
-            tmp_ary << %!#{k}:#{v}(#{ v * 100 / cnt}%)!
-        end
-        tmp_ary
+        hash = summary_hash(screen_name)
+        make_summary_str(hash)
     end
     
     def self.summary_cnt(tweet_sum_hash, screen_name, status)
@@ -140,7 +143,16 @@ class Tweet < ApplicationRecord
 
     def self.unaccessible_tweet_summary()
         grp = get_unaccessible_twt_account_list
-        grp = grp.sort_by {|k,v| v.size}.reverse.to_h
+        #grp = grp.sort_by {|k,v| v.size}.reverse.to_h
         unaccessible_tweet_summary = grp
+    end
+
+    def self.unaccessible_twt_list(grp)
+        id_list = grp.keys
+        twitters = Twitter.select {|x| id_list.include?(x.twtid)}
+        twitters = twitters.select {|x| x.drawing_method == Twitter::DRAWING_METHOD::DM_AI and x.status == Twitter::TWT_STATUS::STATUS_PATROL}
+        #twitters = twitters.sort_by {|x| -x.rating}
+        twitters = twitters.sort_by {|x| x.last_access_datetime}
+        twitters
     end
 end

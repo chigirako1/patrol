@@ -32,23 +32,25 @@
 
     <% if @unaccessible_tweet_summary and @unaccessible_tweet_summary.size > 0 %>
         <h2>@unaccessible_tweet_summary(<%= @unaccessible_tweet_summary.size %>)</h2>
-        <% @unaccessible_tweet_summary.each.with_index(1) do |(k,v), idx| %>
-            <% screen_name = k %>
-            <% twt = Twitter.find_by_twtid_ignore_case(screen_name) %>
-            <% if twt and twt.drawing_method == Twitter::DRAWING_METHOD::DM_AI %>
-                <%= v.size %>
-                【
-                <%= twt.drawing_method %>|
-                <%= twt.rating %>|
-                <%= twt.status %>
-                】
-                <%= twt.twtname %>
-                (@<%= screen_name %>)
-                [<%= link_to_ex("■twt■", twt) %>]
-                <br />
-            <% else %>
-                <% STDERR.puts %!miss:"#{screen_name}"! %>
-            <% end %>
+        <% list = Tweet::unaccessible_twt_list(@unaccessible_tweet_summary) %>
+        <% list.each.with_index(1) do |(twt), idx| %>
+            <%= @unaccessible_tweet_summary[twt.twtid].size %>
+            【
+            <%= twt.drawing_method %>|
+            <%= twt.rating %>|
+            <%= twt.status %>
+            】
+            <%= twt.twtname %>
+            (@<%= twt.twtid %>)
+            予測:<%= twt.prediction %>
+            [
+                <%= link_to_ex("■twt■", twt) %>
+                <% if twt.sp? %>
+                    ★FS大★
+                <% end %>
+            ]
+            A:<%= twt.last_access_datetime_disp %>
+            <br />
         <% end %>
     <% end %>
 
@@ -132,7 +134,7 @@
                     <% if twt.new_twtid %>
                         ★新アカウント→
                         <% n_twt = Twitter.find_by_twtid_ignore_case(twt.new_twtid) %>
-                        <%= link_to_ex("■twt■", twt) %>
+                        <%= link_to_ex("■twt■", n_twt) %>
                     <% end %>
                 <% end %>
 
@@ -146,7 +148,8 @@
 
                 <% %>
                 <% pxv = Artist.find_by(twtid: e.screen_name) %>
-                <% if pxv %>    
+                <% if pxv %>
+                    【PXV】
                     [<%= pxv.feature %>|<%= pxv.rating %>]<%= pxv.pxvname %>[<%= link_to_ex(%!■pxv■!, pxv) %>]A:<%= pxv.last_access_datetime_disp %>
                 <% end %>
                 <br />

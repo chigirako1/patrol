@@ -36,7 +36,7 @@ class HomeController < ApplicationController
           #force_disp_day: 10,
           mode: TwittersController::ModeEnum::ALL_IN_1,
           grp_sort_by: TwittersController::GRP_SORT::GRP_SORT_SPEC,
-          grp_sort_spec: "{w}週|評価{r1}::予測{p50}",#"評価{r1}::{w}週|予測{p50}",#登録{c3}ヶ月|予測{p50}～::評価{r10}～|{w}週～
+          grp_sort_spec: "{r5}|{w4}週|予測{p25}～::{w}週|評価{r1}",#"予測{p25}::{w}週|評価{r1}",#{w}週|評価{r1}::予測{p50}",#"評価{r1}::{w}週|予測{p50}",#登録{c3}ヶ月|予測{p50}～::評価{r10}～|{w}週～
           sort_by: TwittersController::SORT_BY::RATING,
           #aio: TwittersController::GRP_SORT::GRP_SORT_ACCESS + "|" + TwittersController::GRP_SORT::GRP_SORT_PRED,
           #step: -3,
@@ -363,13 +363,13 @@ class HomeController < ApplicationController
           )
       },
       { :label => "-", :path => "" },
-      { :label => "Tweet url list summary(ai)",
+      { :label => "Tweet url list summary(ai) 今年",
           :path => tweets_path(
             #page_title: "Tweets",
             mode: TweetsController::ModeEnum::URL_LIST_SUMMARY,
             sort_by: TwittersController::SORT_BY::TODO_CNT,#PRED,
             #filename: "thismonth",#"+3",??? url encode？error?
-            filename: "thisyear",#"+3",??? url encode？error?
+            filename: "thisyear 1",#"+3",??? url encode？error?
             #hide_within_days: 15,
             #created_at: 30,
             pred: 30,
