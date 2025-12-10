@@ -1,12 +1,20 @@
 <div id="<%= dom_id pxv_artwork %>">
+  <h2><%= %!#{pxv_artwork.title}(#{pxv_artwork.artwork_id}) - #{pxv_artwork.user_id}! %></h2>
+  <% artwork_info = pxv_artwork.artwork_info %>
+  <% if artwork_info %>
+    <% artwork_path = artwork_info.path_list[0] %>
+    <% ratio = '15%' %>
+    <%= link_to_ex(image_tag(artwork_path, width: ratio, height: ratio), artwork_path) %>
+  <% end %>
+
   <p>
     <strong>Artwork:</strong>
-    <%= pxv_artwork.artwork_id %>
+    <%= pxv_artwork.artwork_id %>(<%= link_to_ex("pxv", pxv_artwork.artwork_url)%>)
   </p>
 
   <p>
-    <strong>User:</strong>
-    <%= pxv_artwork.user_id %>
+    <strong>User ID:</strong>
+    <%= pxv_artwork.user_id %>(<%= link_to_ex("pxv", pxv_artwork.user_url)%>)
   </p>
 
   <p>

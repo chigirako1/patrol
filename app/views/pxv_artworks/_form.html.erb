@@ -33,8 +33,9 @@
     <% ratio = '15%' %>
     <%= link_to_ex(image_tag(artwork_path, width: ratio, height: ratio), artwork_path) %>
     <%= artwork_path %>
-  <% else %>
+  <% elsif pxv_artwork.artwork_id %>
     <h3>※作品が見つかりませんでした。</h3>
+  <% else %>
   <% end %>
 
   <div>
@@ -104,8 +105,14 @@
   </div>
 
   <div>
+    <% if params[:user_id].presence %>
+      <% user_id = params[:user_id] %>
+    <% else %>
+      <% user_id = pxv_artwork.user_id %>
+    <% end %>
+
     <%= form.label "PXVユーザーID", style: "display: block" %>
-    <%= form.number_field :user_id %>
+    <%= form.number_field :user_id, :value => user_id %>
   </div>
 
 

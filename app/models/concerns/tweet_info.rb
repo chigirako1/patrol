@@ -27,6 +27,8 @@ module TweetInfo
         elsif filename =~ /TID\-unknown\-/
         elsif filename =~ /^[\w\-]{15}\./
             #STDERR.puts %![dbg] #{filename}!
+        elsif filename =~ /^(\d{18,}) \w+/ #18は適当
+          tweet_id = $1.to_i
         else
             STDERR.puts %!regex no hit:#{filename}!
         end
@@ -38,3 +40,64 @@ class TweetPicInfo
     attr_accessor :tweet_id, :hash_val, :filesize
     
 end
+
+
+
+=begin
+require 'net/http'
+require 'uri'
+
+# 最大リダイレクト回数を設定（無限ループ防止のため）
+MAX_REDIRECTS = 5
+
+def resolve_tweet_url(url_string)
+  uri = URI.parse(url_string)
+  redirect_count = 0
+  
+  # リダイレクトを追跡するループ
+  while redirect_count < MAX_REDIRECTS
+    # HTTPリクエストのセットアップ
+    http = Net::HTTP.new(uri.host, uri.port)
+    http.use_ssl = (uri.scheme == 'https')
+    
+    # GETリクエストを実行（ヘッダーのみを取得するため、HEADリクエストを使用することが多いが、
+    # リダイレクト処理の確実性を考慮し、今回はGETを使用）
+    request = Net::HTTP::Get.new(uri.request_uri)
+    
+    begin
+      response = http.request(request)
+    rescue => e
+      # 接続エラーやタイムアウトなどの処理
+      return "接続エラーが発生しました: #{e.message}"
+    end
+    
+    # ステータスコードがリダイレクトを示すかチェック（301, 302, 303, 307, 308）
+    if response.code.start_with?('3') && response['location']
+      # 新しいリダイレクト先を取得
+      new_location = response['location']
+      
+      # 新しいURIをパース
+      uri = URI.parse(new_location)
+      
+      # URLが相対パスだった場合（稀なケース）、元のURIを基に絶対URLに変換
+      uri = uri.host ? uri : URI.join(url_string, new_location)
+      
+      redirect_count += 1
+      
+    else
+      # リダイレクトが終了、またはエラーが発生した場合
+      return uri.to_s
+    end
+  end
+  
+  # 最大リダイレクト回数を超えた場合
+  return "リダイレクト回数が上限 (#{MAX_REDIRECTS}回) を超えました。"
+end
+
+# --- 使用例 ---
+url = "https://x.com/i/status/19976728225"
+final_url = resolve_tweet_url(url)
+
+puts "元のURL: #{url}"
+puts "最終的なURL: #{final_url}"
+=end

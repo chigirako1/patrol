@@ -81,13 +81,15 @@
     <% elsif @show_mode == ArtistsController::ShowMode::INTERVAL_CHECK %>
         <% ratio = '10%' %>
         <% list = Artist.artwork_list(@path_list) %>
-        <h2 id="interval_chk">公開日の間隔が離れている</h2>
-        <!-- TODO: 無視する間隔を記録する(artwork id a/b) -->
+
         <% if params[:nday] %>
             <% daysn = params[:nday].to_i %>
         <% else %>
             <% daysn = 14 %>
         <% end %>
+
+        <h2 id="interval_chk">公開日の間隔が離れている(<%= daysn %>日)</h2>
+        <!-- TODO: 無視する間隔を記録する(artwork id a/b) -->
         <% long_term_list = Artist.interval_list(list, daysn) %>
         <% long_term_list.each do |x| %>
             <% aw = x[0] %>

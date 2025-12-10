@@ -174,7 +174,7 @@ class HomeController < ApplicationController
             exclude_ai: "",
             ai: true,
             status: "「長期更新なし」を除外",
-            group_by: ArtistsController::GROUP_TYPE::GROUP_MONTH_PRED,
+            group_by: ArtistsController::GROUP_TYPE::GROUP_R_A_P,
             sort_by: ArtistsController::SORT_TYPE::SORT_RATING_O2N,
             #aio: TwittersController::GRP_SORT::GRP_SORT_ACCESS, #+ "|" + TwittersController::GRP_SORT::GRP_SORT_PRED,
             rating: 95,

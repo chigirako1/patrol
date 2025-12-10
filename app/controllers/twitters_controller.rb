@@ -213,7 +213,8 @@ class TwittersController < ApplicationController
       twitters = twitters.select {|x| (x.rating||0) >= rating_gt}
       twitters = twitters.select {|x| x.prediction >= pred_cond_gt}
 
-      if ul_freq < 0
+      if ul_freq == 0
+      elsif ul_freq < 0
         twitters = twitters.select {|x| (x.update_frequency||0) <= -(ul_freq)}
       else
         twitters = twitters.select {|x| (x.update_frequency||0) >= (ul_freq)}
@@ -790,6 +791,14 @@ class TwittersController < ApplicationController
       twitters = twitters.select {|x| x.rating == nil or x.rating >= rating_gt }
       twitters = twitters.select {|x| x.drawing_method == params[:target]}
 
+      ul_freq = Util::get_param_num(params, :ul_freq)
+      if ul_freq == 0
+      elsif ul_freq < 0
+        twitters = twitters.select {|x| (x.update_frequency||0) <= -(ul_freq)}
+      else
+        twitters = twitters.select {|x| (x.update_frequency||0) >= (ul_freq)}
+      end
+
       if @hide_within_days > 0
         twitters = twitters.select {|x| !x.last_access_datetime_p(@hide_within_days)}
       end
@@ -1003,7 +1012,8 @@ class TwittersController < ApplicationController
         twitters_group = twitters.group_by {|x| x.group_spec(grp_sort_spec_arg, twitters.size)}
         grp_sort = -1
       when GRP_SORT::GRP_SORT_AUTO
-        twitters_group = twitters.group_by {|x| x.a1o_auto_group_key}
+        #twitters_group = twitters.group_by {|x| x.a1o_auto_group_key}
+        twitters_group = twitters.group_by {|x| x.a1o_auto_group_key(5, false)}
         grp_sort = -1
       when GRP_SORT::GRP_SORT_ACCESS
         twitters_group = twitters.group_by {|x| %!#{x.last_access_datetime_days_elapsed / 30}|#{x.rating}|#{Util::format_num(x.prediction, 10)}!}

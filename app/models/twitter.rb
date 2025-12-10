@@ -16,7 +16,7 @@ class Twitter < ApplicationRecord
         STATUS_NOT_EXIST = "存在しない"
         STATUS_FROZEN = "凍結"
         STATUS_PRIVATE = "非公開アカウント"
-        STATUS_WAITING = "フォロー許可待ち"
+        STATUS_WAITING = "フォロー許可待ち"#承認？
         STATUS_ANOTHER = "別アカウントに移行"
         STATUS_SCREEN_NAME_CHANGED = "アカウントID変更"
     end
@@ -328,12 +328,21 @@ class Twitter < ApplicationRecord
     end
 
     def has_unaccessible_tweet?
-        h = Tweet::summary_hash(self.twtid)
-        p h
-        if h and (h[Tweet::StatusEnum::UNACCESSIBLE]||0) > 0
-            return true
+        if self.unaccessible_tweet_count > 0
+            true
+        else
+            false
         end
-        false
+    end
+
+    def unaccessible_tweet_count
+        h = Tweet::summary_hash(self.twtid)
+        #p h
+        if h and h[Tweet::StatusEnum::UNACCESSIBLE]
+            h[Tweet::StatusEnum::UNACCESSIBLE]
+        else
+            0
+        end
     end
 
     def twt_user_url
@@ -634,9 +643,10 @@ class Twitter < ApplicationRecord
         daysn =  self.last_access_datetime_days_elapsed
         lad_n = sprintf("%3d週", daysn / 7)
 
+        ndays_s = 7
         rat_a = 87
         rat_b = 85
-        if daysn <= 7
+        if daysn <= ndays_s
             if daysn < 1
                 recent = "[20.本日アクセス]"
                 p_unit = 1
@@ -695,12 +705,12 @@ class Twitter < ApplicationRecord
             elsif daysn < 7 and self.prediction < 10
                 recent = "[51.1週間以内アクセス&予測少]"
             else
-                recent = "[52.日数経過]"
+                recent = "[52.#{ndays_s}日以上経過]"
             end
             pred_nn = Util::format_num(self.prediction, 40)
             pred_n = Util::format_num(self.prediction, p_unit)
             rate_n = %!評価#{Util::format_num(self.rating, r_unit)}～!
-            key = %!<#{pred_nn}>#{lad_n}|予測#{pred_n}～!
+            key = %!<#{pred_nn}～>#{lad_n}|予測#{pred_n}～!
         end
 
         if newc

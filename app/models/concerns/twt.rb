@@ -138,13 +138,13 @@ module Twt
 
         txtpath = Rails.root.join(TWT_DIRLIST_TXT_PATH).to_s
         File.open(txtpath) { |file|
-            rgx = %r!#{TWT_ARCHIVE_DIR_PATH}\/.\/#{twtid.downcase}!
+            rgx = %r!#{TWT_ARCHIVE_DIR_PATH}\/.\/#{twtid.downcase}\b!
             STDERR.puts %![get_twt_path_from_dirlist] rgx="#{rgx}"!
             while line = file.gets
-                #if line =~ %r!#{TWT_ARCHIVE_DIR_PATH}/./#{twtid}!
+                line.chomp!
                 if line.downcase =~ rgx
-                    path << line.chomp
-                    STDERR.puts %!"#{line}"!
+                    path << line
+                    STDERR.puts %!hit:"#{line}"!
                     break
                 end
             end

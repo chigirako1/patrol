@@ -65,6 +65,12 @@
 
     <% tmp_list = list.to_a.slice(start_idx, num_elem) %>
     <% if tmp_list %>
+        <% if params[:nday] %>
+            <% daysn = params[:nday].to_i %>
+        <% else %>
+            <% daysn = 14 %>
+        <% end %>
+
         <% date_tmp = Date.today %>
         <% tmp_list.each.with_index(start_idx + 1) do |(artwork_id, data), idx| %>
             <% path = data[0] %>
@@ -74,8 +80,12 @@
             <% pic_path_list = data[4] %>
 
             <% dayn = (date_tmp - date).to_i %>
-            <% if dayn > 30 %>
+            <% if dayn > daysn %>
                 <h3>間隔が空いている(<%= dayn %>日)</h3>
+                <% pa = PxvArtwork.find_by(artwork_id: artwork_id) %>
+                <% if pa and pa.remarks %>
+                    ↑「<%= pa.remarks %>」↓<br />
+                <% end %>
             <% end %>
             <% date_tmp = date %>
 
@@ -86,6 +96,7 @@
             <%#= path.gsub("%23", "#") %>
             「<%= art_title %>」
             <%= %!(#{pic_cnt} pics)! if pic_cnt > 1 %>
+            [<%= link_to_ex("New pxv artwork", new_pxv_artwork_path(artwork_id: artwork_id, user_id: artist.pxvid)) %>]
             <br />
             <%= link_to_ex(image_tag(path, width: ratio, height: ratio), path) %>
 

@@ -15,16 +15,25 @@
   検索ワード：「<b><%= search_word %></b>」
 <% end %>
 
+<% h_bak = "" %>
 <% disp_id_list = [] %>
 <% @artists_group.each do |key, artists| %>
   <% if artists.size < @begin_no %>
     <%# next %> 
   <% end %>
-  <h2>
-    <%#= "#{key}(全#{artists.size}件)[#{@begin_no + 1}..#{[(@begin_no.to_i + @size_per_table), artists.size].min }]" %>
-    <% h2_tile = "#{key}(#{artists.size}件)[#{@begin_no + 1}..#{[(@begin_no.to_i + @size_per_table), artists.size].min }]" %>
-    <%= h2_tile %>
-  </h2>
+
+  <% h_a, h_b = key.split(Artist::PXV_H_SEPARATOR) if key.instance_of?(String) %>
+  <% if h_b == nil %>
+    <% h_b = key %>
+  <% elsif h_bak != h_a %>
+    <h2><%= h_a %></h2>
+    <% h_bak = h_a %>
+  <% else %>
+  <% end %>
+
+  <h3>
+    <%= "#{h_b}(#{artists.size}件)" %>
+  </h3>
   <table border="1" rules="all">
     <tr>
       <th>ID</th>
@@ -434,6 +443,7 @@
           ['さかのぼり'],
           [ArtistsController::GROUP_TYPE::GROUP_ACCESS_OLD_TO_NEW],
           [ArtistsController::GROUP_TYPE::GROUP_MONTH_PRED],
+          [ArtistsController::GROUP_TYPE::GROUP_R_A_P],
         ],
         selected: params[:group_by] 
       ) %>

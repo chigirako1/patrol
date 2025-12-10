@@ -25,8 +25,8 @@ class PxvArtwork < ApplicationRecord
     end
 
     def find_artist()
-        if user_id
-            pxv_artist = Artist.find_by(pxvid: user_id)
+        if self.user_id
+            pxv_artist = Artist.find_by(pxvid: self.user_id)
             pxv_artist
         else
             nil
@@ -35,5 +35,21 @@ class PxvArtwork < ApplicationRecord
 
     def info_txt
         %!#{state}/#{I18n.l(release_date, format: :date) if release_date}/user_id:#{user_id}/「#{title}」(#{number_of_pic}枚?)!
+    end
+
+    def artwork_url
+        Pxv::pxv_artwork_url(self.artwork_id)
+    end
+
+    def user_url
+        Pxv::pxv_user_url(self.user_id)
+    end
+
+    def artwork_info
+        if self.state == StateEnum::SAVED
+            Pxv::get_artwork_info(self.user_id, self.artwork_id)
+        else
+            nil
+        end
     end
 end

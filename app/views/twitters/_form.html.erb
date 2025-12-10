@@ -35,8 +35,9 @@
     PXV最終投稿日:<%= pxv.get_datetime_string(pxv.last_ul_datetime) %>
   <% end %>
 
-  <% if @twitter.has_unaccessible_tweet? %>
-    <h3>アクセス不可URLあり</h3>
+  <% unaccessible_tw_cnt = @twitter.unaccessible_tweet_count %>
+  <% if unaccessible_tw_cnt > 0 %>
+    <h3>アクセス不可URLあり(<%= unaccessible_tw_cnt %>件)</h3>
   <% end %>
 
   <% if @twitter.twtid %>

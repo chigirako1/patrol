@@ -2,7 +2,6 @@ require 'nkf'
 require 'find'
 require 'date'
 
-
 class PxvInfo
     attr_reader :pxvid, :cnt, :p
 
@@ -35,6 +34,8 @@ class Artist < ApplicationRecord
     C_ARTIST_MATCH_END = "end_match"
 
     PXV_USER_URL_REGEX = %r!pixiv\.net/users/(\d+)!
+
+    PXV_H_SEPARATOR = "::"
 
     module ReverseEnum
         REV_ON = "さかのぼり中"
@@ -663,11 +664,15 @@ class Artist < ApplicationRecord
         end
     end
 
-    def group_by
+    def group_by_key(rate = false)
         month_s = Util::format_num(self.last_access_datetime_num / 30, 1)
         pred_s = Util::format_num(self.prediction_up_cnt(true), 10)
 
-        %!#{month_s}ヶ月|予測#{pred_s}!
+        key = %!#{month_s}ヶ月|予測#{pred_s}!
+        if rate
+            rate_s = Util::format_num(self.rating, 1)
+            key = rate_s + PXV_H_SEPARATOR + key
+        end
     end
 
     def key_for_group_by

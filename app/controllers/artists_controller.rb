@@ -359,6 +359,7 @@ class ArtistsController < ApplicationController
     GROUP_STAT_RAT_R18 = "status/rating/r18"
     GROUP_RATING = "rating"
     GROUP_MONTH_PRED = "月/予測"
+    GROUP_R_A_P = "評価/経過/予測"
   end
 
   module GRP_SORT
@@ -1371,7 +1372,9 @@ class ArtistsController < ApplicationController
       when GROUP_TYPE::GROUP_STAT_RAT_R18
         artists_group = artists.group_by {|x| [x.status, -x.rating, x.r18]}.sort.to_h
       when GROUP_TYPE::GROUP_MONTH_PRED
-        artists_group = artists.group_by {|x| x.group_by()}.sort.reverse.to_h
+        artists_group = artists.group_by {|x| x.group_by_key()}.sort.reverse.to_h
+      when GROUP_TYPE::GROUP_R_A_P
+        artists_group = artists.group_by {|x| x.group_by_key(true)}.sort.reverse.to_h
       when "評価+年齢制限"
         #artists_group = artists.group_by {|x| [-x.rating, x.r18]}.sort.to_h
         artists_group = artists.group_by {|x| [x.rating, x.r18]}.sort.reverse.to_h
