@@ -569,19 +569,33 @@ class Twitter < ApplicationRecord
     # ""
     #
     def group_spec(grp_sort_spec_arg, total_cnt)
-        regexp_pattern = /\{\w\d*\}/
+        #regexp_pattern = /\{\w+\d*\}/
+        regexp_pattern = /\{[a-zA-Z_]+\d*\}/
         matches = grp_sort_spec_arg.scan(regexp_pattern)
         gkey_work = grp_sort_spec_arg.dup
 
+        STDERR.puts %!"#{gkey_work}"!
+
         matches.each do |x|
-            if x =~ /\w(\d+)/
-                unit = $1.to_i
+            if x =~ /([a-zA-Z_]+)(\d*)/
+                start_str = $1
+                unit = $2.to_i if $2 != ""
             end
 
-            case x[1]
-            when "c"
+            STDERR.puts %!"#{x}" => "#{start_str}|#{unit}"!
+
+            case start_str
+            when "c", "cm"
                 unit = 1 unless unit
                 w = Util::format_num(self.created_at_day_num / 30, unit)
+                gkey_work.gsub!(x, w)
+            when "cw"
+                unit = 1 unless unit
+                w = Util::format_num(self.created_at_day_num / 7, unit)
+                gkey_work.gsub!(x, w)
+            when "cd"
+                unit = 1 unless unit
+                w = Util::format_num(self.created_at_day_num, unit)
                 gkey_work.gsub!(x, w)
             when "m"
                 unit = 1 unless unit
@@ -592,7 +606,7 @@ class Twitter < ApplicationRecord
                 p = Util::format_num(self.prediction, unit)
                 gkey_work.gsub!(x, p)
             when "r"
-                unit = 5 unless unit
+                unit = 1 unless unit
                 r = Util::format_num(self.rating, unit)
                 gkey_work.gsub!(x, r)
             when "w"
@@ -815,8 +829,9 @@ class Twitter < ApplicationRecord
         when "", nil
             daysn = self.last_access_datetime_days_elapsed
 
-            if daysn < 60
-                pxv = "09.未設定|2ヶ月以内"
+            d = 60
+            if daysn < d
+                pxv = "09.未設定|#{d / 30}ヶ月以内"
             else
                 todo_cnt_str = sprintf("残:%3d件", e.todo_cnt)
                 if self.pxvid.presence
@@ -825,8 +840,11 @@ class Twitter < ApplicationRecord
                     pxv = "08.pxvなし<#{todo_cnt_str}>"
                 end
             end
+
+            t = Util::format_num(e.todo_cnt, 3)
             p = days_str(daysn)
-            gkey = pxv + TWT_H_SEPARATOR + p
+
+            gkey = pxv + TWT_H_SEPARATOR + %!#{t}件～|! + p
         else
             self.group_key2(hide_within_days, rating_gt)
         end
@@ -836,16 +854,30 @@ class Twitter < ApplicationRecord
 
         case drawing_method
         when DRAWING_METHOD::DM_HAND
-            dm = %!970.手!
+            if self.pxvid
+                dm = %!970.手(pxvあり)!
+            else
+                dm = %!975.手!
+            end
         when DRAWING_METHOD::DM_AI
             dm = %!980.AI!
         when DRAWING_METHOD::DM_3D, DRAWING_METHOD::DM_REPRINT
             return %!910.その他#{TWT_H_SEPARATOR}#{drawing_method}!
         when "", nil
-            dm = %!999.未設定!
-            #day_n = Util::format_num(self.last_access_datetime_days_elapsed, 3)
-            #key = "#{day_n}日～"
-            key = days_str(self.last_access_datetime_days_elapsed)
+            daysn = self.last_access_datetime_days_elapsed
+            if daysn > 90
+                dm = %!998.未設定(古め)!
+            else
+                dm = %!999.未設定(最近)!
+            end
+
+            if self.pxvid
+                dm += "pxvあり"
+            else
+                dm += "pxvなし"
+            end
+
+            key = days_str(daysn)
         else
             dm = %!990.#{drawing_method}!
         end

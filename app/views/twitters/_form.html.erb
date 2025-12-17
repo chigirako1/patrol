@@ -29,7 +29,7 @@
     </div>
   <% end %>
 
-  <%= link_to %!表示リフレッシュ!, twitter_path(@twitter, refresh: "y") if @twitter.twtid %>
+  <%= link_to(%!表示リフレッシュ!, twitter_path(@twitter, refresh: "y"), class: 'button') if @twitter.twtid %>
 
   <% if pxv.presence %>
     PXV最終投稿日:<%= pxv.get_datetime_string(pxv.last_ul_datetime) %>
@@ -179,7 +179,7 @@
   <hr />
   
   <div>
-    <%= form.submit("更新", class: 'subtmi-btn') %>
+    <%= form.submit("更新", class: 'submit-btn') %>
     <input type="button" value="DL日時を現在時刻に設定" onclick="set_time('twitter_last_dl_datetime');" />
   </div>
 
@@ -211,7 +211,7 @@
       <%= %!pxvid="#{pxv.pxvid}"! %>
       【<%= pxv.rating %>】
       [A:<%= pxv.last_access_datetime_disp %>
-      [<%= twitter_status_tag(pxv) %>|<%= pxv.feature %>|<%= pxv.pxvname %>|<%= pxv.r18 %>]
+      [<%= twitter_status_tag(pxv) %>|<%= pxv.feature %>|<%= pxv.pxvname %>|<%= pxv.r18_disp %>]
       [<%= link_to_ex("■pxv■", artist_path(pxv.id, access_dt_update: "yes")) %>]
       予測：<%= pxv.prediction_up_cnt(true) %>
       <br />
@@ -221,7 +221,7 @@
       <% pxv2 = Artist.find_by(pxvid: @twitter.pxvid) %>
       <% if pxv2.presence %>
         <br />
-        【<%= pxv2.rating %>】<%= pxv2.r18 %>|<%= pxv2.filenum %>
+        【<%= pxv2.rating %>】<%= pxv2.r18_disp %>|<%= pxv2.filenum %>
         <br />
         <%= pxv2.pxvname %>(@<%= pxv2.twtid %>)
         [<%= twitter_status_tag(pxv2) %>|<%= pxv2.feature %>]

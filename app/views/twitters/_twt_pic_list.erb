@@ -138,7 +138,8 @@ textarea {
 
     <% if twitter.filenum != twt_pic_list.size %>
         <br />
-        <b>読み込み:</b><%= twt_pic_list.size %>
+        <b>読み込み:</b>
+        <%= twt_pic_list.size %>(←<%= twitter.filenum %>)
     <% end %>
 
     <% if twt_pic_list.size > 0 %>
@@ -162,6 +163,11 @@ textarea {
                 <% fcolor = "black" %>
             <% end %>
             <font color="<%= fcolor %>"><%= Util.formatFileSize(fsize_avg) %><%= %!←★#{cmnt}★! if cmnt %></font>
+
+            <% if twitter.filesize %>
+                (DB:<b><%= Util.formatFileSize twitter.filesize %></b>)
+            <% end %>
+
             <b>合計：</b><%= Util.formatFileSize(fsize_list.sum) %>
         <% end %>
         (<%= show_pic_num %> files)
@@ -172,6 +178,10 @@ textarea {
             <%= pnum %>
             <font color="orange">★複数★</font>
         <% end %>
+    <% end %>
+
+    <% if twitter.sp? %>
+        <h3>SP対象？</h3>
     <% end %>
     
     <% if twitter.filenum and twitter.filenum > twt_pic_list.size %>
@@ -296,7 +306,7 @@ textarea {
                     <% end %>
 
                     <% if tweet.presence %>
-                        <% if tweet.status != Tweet::StatusEnum::SAVED %>
+                        <% if tweet.status != Tweet::StatusEnum::SAVED and tweet.status != Tweet::StatusEnum::DUPLICATE %>
                             <% Tweet::update_record(tweet_id, Tweet::StatusEnum::SAVED) %>
                             【レコード更新】"<%= tweet.status %>" => "<%= Tweet::StatusEnum::SAVED %>"
                         <% else %>

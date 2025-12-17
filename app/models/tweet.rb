@@ -8,6 +8,7 @@ class Tweet < ApplicationRecord
         DELETED = "削除"
         UNACCESSIBLE = "URLアクセス不可"
         UNACCESSIBLE_FREEZED = "URLアクセス不可(凍結されたアカウント)"
+        UNACCESSIBLE_PRIVATE = "URLアクセス不可(非公開アカウント)"
         DUPLICATE = "重複"
     end
 
@@ -59,16 +60,21 @@ class Tweet < ApplicationRecord
     end
 
     def self.check_registered_record(url_list)
-        exsit = 0
+        exist = 0
 
         url_list.each do |x|
             tweet_id = Twt::get_tweet_id_from_url(x)
-            tweet = Tweet.find_by(tweet_id: tweet_id)
-            if tweet
-                exsit += 1
+            if tweet_id
+                tweet = Tweet.find_by(tweet_id: tweet_id)
+                if tweet
+                    exist += 1
+                end
+            else
+                exist += 1
+                #STDERR.puts %!\t"#{x}"\t#{exist}!
             end
         end
-        exsit
+        exist
     end
 
     def self.summary()
@@ -84,14 +90,23 @@ class Tweet < ApplicationRecord
         [tweet_cnt_list, tweet_sum_hash]
     end
 
+    Url_List_Summary = Struct.new(:screen_name, :url_cnt, :todo_cnt)
+
+    def self.new_summary(key, url_list)
+        exist_cnt = check_registered_record(url_list)
+        todo_cnt = url_list.size - exist_cnt
+        if todo_cnt > 0
+            STDERR.puts %!"@#{key}":#{todo_cnt}/#{url_list.size}!
+        end
+
+        Url_List_Summary.new(key, url_list.size, todo_cnt)
+    end
+
     def self.url_list_summary(known_twt_url_list)
-        url_List_Summary = Struct.new(:screen_name, :url_cnt, :todo_cnt)
 
         url_list_summary = []
         known_twt_url_list.each do |key, url_list|
-            exist_cnt = check_registered_record(url_list)
-            url_list_summary << url_List_Summary.new(key, url_list.size, url_list.size - exist_cnt)
-            #STDERR.puts %!"@#{key}":#{}!
+            url_list_summary << new_summary(key, url_list)
         end
         url_list_summary.sort_by {|x| [x.todo_cnt, x.url_cnt, x.screen_name]}#.reverse
     end

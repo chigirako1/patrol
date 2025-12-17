@@ -35,7 +35,7 @@ module TwittersHelper
         tag += %![#{link_to_ex("■twt■", twt)}]!
         tag += %!|A:#{twt.last_access_datetime_disp}!
         tag += %!|U:#{Util.get_date_info twt.last_post_datetime}!
-        tag += %!|PXVID:#{twt.pxvid}! if twt.pxvid.presence
+        tag += %!|#{PXV_ICON}:#{twt.pxvid}! if twt.pxvid.presence
         tag += %!|予測:#{twt.prediction}!
 
         tag.html_safe

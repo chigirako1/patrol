@@ -719,7 +719,7 @@
 
         <% t = Twitter.find_by(pxvid: elem.pxvid) %>
         <% if t %>
-            [<%= link_to_ex "■twt■", t %>(<%= t.twtname %>)【<%= t.rating %>|<%= t.r18 %>|<%= t.last_access_datetime_disp %>]
+            [<%= link_to_ex "■twt■", t %>]<%= t.twtname %>(<%= t.twtid %>)【<%= t.rating %>|<%= t.r18 %>|<%= t.last_access_datetime_disp %>】
         <% end %>
         <br />
     <% end %>
@@ -864,7 +864,7 @@
             [<%= elem.twt.update_frequency %>]
             <% if elem.twt.sp? %>
             <% else %>
-                対象外
+                <b>★対象外★</b>
             <% end %>
         <% else %>
             <% url = twitters_path(mode: TwittersController::ModeEnum::SEARCH, search_word: elem.dirname) %>

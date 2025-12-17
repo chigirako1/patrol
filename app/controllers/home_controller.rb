@@ -17,10 +17,10 @@ class HomeController < ApplicationController
         :path => twitters_path(
           page_title: "all",
           mode: "all",
-          rating: 0,
+          #rating: 0,
           hide_within_days: 0,
           num_of_disp: 10,
-          pred: 0,
+          #pred: 0,
           thumbnail: ""
         )
       },
@@ -970,13 +970,33 @@ class HomeController < ApplicationController
       # ----------------------------
       { :label => "twitter AI", :path => "" },
       { :label => "Twitter[AI] 90", :path => twitters_path(
-          target: "AI", page_title: "AI 90",
-          rating: 90, 
+          target: "AI",
+          page_title: "AI 90",
+          rating: 90,
           hide_within_days: 2,
           num_of_disp: NUM_OF_DISP,
-          pred: 13, 
+          pred: 13,
           force_disp_day: 18,
-          mode: "patrol", thumbnail: "t"
+          mode: "patrol",
+          thumbnail: "t"
+        )
+      },
+      { :label => "Twitter[AI] 87 新参",
+        :path => twitters_path(
+          target: "AI",
+          page_title: "AI 87",
+          rating: 87,
+          hide_within_days: 2,
+          num_of_disp: 15,
+          #pred: 13, 
+          #force_disp_day: 18,
+          #ul_freq: -500,
+          created_at: 90,
+          mode: "patrol",
+          group_by: TwittersController::GRP_SORT::GRP_SORT_SPEC,#GRP_SORT_AUTO,
+          grp_sort_spec: "{r5}|{w4}週|予測{p25}～::{w}週|評価{r1}",
+          sort_by: TwittersController::SORT_BY::PRED,
+          thumbnail: ""
         )
       },
       # ----------------------------

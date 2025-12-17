@@ -4,6 +4,8 @@ h1 { background-color: black; color: white; padding: .8rem; }
 h2 { background-color: navy; color: white; padding: .3rem; }
 h3 { background-color: lightblue; color: black; padding: .3rem; }
 h4 { background-color: pink; color: black; padding: .3rem; }
+h5 { background-color: darkgray; color: black; padding: .3rem; }
+h6 { background-color: lightgray; color: black; padding: .3rem; }
 
 a { color: #339; }
 a:visited { color:purple;  }
@@ -13,14 +15,14 @@ textarea { height: 3rem; width: 25rem; }
 
 button, input[type=submit] { height: 1.4rem; width: 10rem; margin-bottom: .5rem; }
 
-.subtmi-btn {
+.submit-btn {
     width: 300px;
     height: 50px;
     border: solid 1px;
     background: yellow;
 }
 
-.subtmi-btn:hover {
+.submit-btn:hover {
     opacity: 1.0;
     background: orange;
 }

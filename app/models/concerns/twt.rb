@@ -57,6 +57,19 @@ module Twt
         tweet_id
     end
     
+=begin
+    def self.get_tweet_id_from_url(url)
+        search_tweet_id = nil
+        if url =~ /status\/(\d+)/
+            search_tweet_id = $1.to_i
+        elsif url =~ /(\d+)/
+            search_tweet_id = $1.to_i
+        else
+        end
+        search_tweet_id
+    end
+=end
+
     def self.get_tweet_ids(txts, twtid)
         twt_ids = []
         rgx = %r!https?://(?:x|twitter)\.com/#{twtid}/status/(\d+)!
@@ -377,17 +390,6 @@ module Twt
 
     def self.twt_tweet_url_dev(tweet_id)
         twt_tweet_url(TWT_USER_DEV, tweet_id)
-    end
-
-    def self.get_tweet_id_from_url(url)
-        search_tweet_id = nil
-        if url =~ /status\/(\d+)/
-            search_tweet_id = $1.to_i
-        elsif url =~ /(\d+)/
-            search_tweet_id = $1.to_i
-        else
-        end
-        search_tweet_id
     end
 
     def self.search_tweet(twt_pic_path_list, search_tweet_id)

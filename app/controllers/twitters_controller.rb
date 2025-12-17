@@ -16,10 +16,11 @@ class TwittersController < ApplicationController
   module SORT_BY
     ID = "id"
     PRED = "pred"
-    PRED_ASC = "pred_asc"
+    PRED_ASC = "pred_asc"#desc?
     ACCESS = "access"
     RATING = "rating"
     FILENUM = "filenum"
+    SORT_CREATE = "create"
 
     TODO_CNT = "todo_cnt"
     TOTAL_CNT = "total_cnt"
@@ -475,6 +476,10 @@ class TwittersController < ApplicationController
     when "dl_nil"
       twitters = twitters.select {|x| x.last_dl_datetime == nil}
     when TwittersController::ModeEnum::PATROL, TwittersController::ModeEnum::STATS
+      if params[:ex_sp] == "true"
+        twitters = twitters.select {|x| !x.sp?}
+      end
+
       twitters = twitters.select {|x| x.drawing_method != nil}
       if mode == TwittersController::ModeEnum::PATROL
         twitters = twitters.select {|x| x.status == Twitter::TWT_STATUS::STATUS_PATROL}
@@ -524,6 +529,8 @@ class TwittersController < ApplicationController
         twitters = twitters.sort_by {|x| [x.last_access_datetime, (x.last_dl_datetime)]}#.reverse
       when SORT_BY::PRED
         twitters = twitters.sort_by {|x| [-x.prediction, x.last_access_datetime]}
+      when SORT_BY::SORT_CREATE
+        twitters = twitters.sort_by {|x| x.created_at}
       else
         twitters = twitters.sort_by {|x| [-(x.rating||0), -x.prediction, x.last_access_datetime]}
       end
@@ -620,7 +627,8 @@ class TwittersController < ApplicationController
       @twitters_total_count = @twitters_group.sum {|k,v| v.count}
       return
     when "all"
-      twitters = twitters.sort_by {|x| [-x.prediction, x.last_access_datetime, (x.last_post_datetime || "2000-01-01")]}
+      #twitters = twitters.sort_by {|x| [-x.prediction, x.last_access_datetime, (x.last_post_datetime || "2000-01-01")]}.first(50)
+      twitters = twitters.sort_by {|x| [x.last_access_datetime]}.reverse.first(50)
     when TwittersController::ModeEnum::SEARCH
       @twitters_group = twt_group_by(twitters, param_grp_sort_by)
       @twitters_total_count = @twitters_group.sum {|k,v| v.count}
@@ -828,7 +836,8 @@ class TwittersController < ApplicationController
         twitters_check = twitters.select {|x| x.update_chk?}
         #STDERR.puts %!|xxx|[#{rating_gt}](twitters_check.size)=#{twitters_check.size}!
         twitters_check = twitters_check.select {|x| x.select_cond_post_date}
-        twitters_check = twitters_check.select {|x| x.status != Twitter::TWT_STATUS::STATUS_WAITING}
+        #twitters_check = twitters_check.select {|x| x.status != Twitter::TWT_STATUS::STATUS_WAITING}
+
         twitters_check = twitters_check.sort_by {|x| [-(x.rating||0), x.last_access_datetime, -x.prediction]}
 
         if twitters_check.size > 0

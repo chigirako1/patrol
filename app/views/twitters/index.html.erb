@@ -175,6 +175,9 @@
           <!-- pxv id -->
           <td bgcolor="pink">
             <% if pxv2.presence %>
+              <% if pxv2.rating == 0 %>
+                <b>NEW!</b>
+              <% end %>
               <%= %!#{pxv2.feature}【#{pxv2.rating}】! %>
               <%= twitter.pxvname if twitter.twtname != twitter.pxvname %>
               (<%= link_to_ex pxv2.pxvid, pxv2.pxv_user_url %>)
@@ -312,7 +315,7 @@ button.horizontal {
 <div class="view_form">
   <%= form_with url: twitters_path, local: true, method: :get do |f| %>
    
-    <%= f.submit("検索", name: nil, class: 'subtmi-btn') %>
+    <%= f.submit("検索", name: nil, class: 'submit-btn') %>
     検索：<%= f.text_field :search_word, :value => params[:search_word] %>
     <br />
     <%= f.select :match_method, options_for_select([
@@ -380,6 +383,7 @@ button.horizontal {
           ["予測昇順(△)", TwittersController::SORT_BY::PRED_ASC],
           ["アクセス日順（旧→新）", TwittersController::SORT_BY::ACCESS],
           ["評価順", TwittersController::SORT_BY::RATING],
+          ["登録日順", TwittersController::SORT_BY::SORT_CREATE]
         ],
         selected: params[:sort_by] 
       )
@@ -404,8 +408,8 @@ button.horizontal {
           [TwittersController::GRP_SORT::GRP_SORT_REGISTERED, TwittersController::GRP_SORT::GRP_SORT_REGISTERED],
           [TwittersController::GRP_SORT::GRP_SORT_NO_UPDATE, TwittersController::GRP_SORT::GRP_SORT_NO_UPDATE],
           [TwittersController::GRP_SORT::GRP_SORT_DEL, TwittersController::GRP_SORT::GRP_SORT_DEL],
-          ["自動(おまかせ)", TwittersController::GRP_SORT::GRP_SORT_AUTO],
           [TwittersController::GRP_SORT::GRP_SORT_SPEC, TwittersController::GRP_SORT::GRP_SORT_SPEC],
+          ["自動(おまかせ)", TwittersController::GRP_SORT::GRP_SORT_AUTO],
         ],
         selected: params[:grp_sort_by] 
       )
@@ -427,6 +431,9 @@ button.horizontal {
     <br />
     <%= f.check_box :no_pxv, {checked: params[:no_pxv] == "true"}, true, false %>
     <%= f.label :pxv除外 %>
+    <br />
+    <%= f.check_box :ex_sp, {checked: params[:ex_sp] == "true"}, true, false %>
+    <%= f.label :FS大除外 %>
     <br />
     <%= f.check_box :thumbnail, {checked: params[:thumbnail] == "true"}, true, false %>
     <%= f.label :サムネイル表示 %>
