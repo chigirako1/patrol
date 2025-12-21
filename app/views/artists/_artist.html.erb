@@ -1,16 +1,7 @@
 <div id="<%= dom_id artist %>">
 
   <p>
-    <h2>
-    <%= artist.pxvname %>
-    (<%= artist.pxvid %>)
-
-    <% furigana = %![#{artist.furigana}]! if artist.furigana != ""%>
-    <%= furigana %>
-    <%= %!/別名"#{artist.altname}"! if artist.altname.presence %>
-    <%= %!/旧名"#{artist.oldname}"! if artist.oldname.presence %>
-    <%= %!/サークル名："#{artist.circle_name}"! if artist.circle_name.presence %>
-    </h2>
+    <h2><%= page_header(artist) %></h2>
   </p>
 
   <p>

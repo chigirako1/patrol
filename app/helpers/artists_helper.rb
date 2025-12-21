@@ -1,5 +1,45 @@
 module ArtistsHelper
 
+    DM_AI_ICON = ApplicationHelper::DM_AI_ICON
+    DM_HAND_ICON = ApplicationHelper::DM_HAND_ICON
+    R18_ICON = ApplicationHelper::R18_ICON
+    PXV_ICON = ApplicationHelper::PXV_ICON
+    PRIVATE_ICON = ApplicationHelper::PRIVATE_ICON
+
+    def r18_disp(restr)
+        if restr == "R18"
+            r18_icon = R18_ICON
+        else
+            r18_icon = ""
+        end
+
+        (restr||"") + r18_icon
+    end
+
+    def page_title(artist)
+        if artist.twtid.presence
+            twt = ""
+        else
+            twt = %!@\!!
+        end
+        
+        r = r18_disp(artist.r18)
+
+        twt + %!【#{r}】#{artist.pxvname}!
+    end
+
+    def page_header(artist)
+        if artist.furigana != ""
+            furigana = %![#{artist.furigana}]! 
+        end
+
+        altname = %!/別名"#{artist.altname}"! if artist.altname.presence
+        oldname = %!/旧名"#{artist.oldname}"! if artist.oldname.presence
+        circle_name = %!/サークル名："#{artist.circle_name}"! if artist.circle_name.presence
+
+        %!【#{artist.rating}|#{r18_disp(artist.r18)}】#{artist.pxvname}(#{artist.pxvid})#{furigana}#{altname}#{oldname}#{circle_name}!
+    end
+
     def pxvname_tag(artist)
         tag = %!<b>#{artist.pxvname}</b>!
         if artist.append_info != nil and artist.append_info != ""

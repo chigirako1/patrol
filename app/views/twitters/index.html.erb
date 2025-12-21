@@ -113,7 +113,7 @@
               [<%= ele.todo_cnt %>件]
             <% end %>
             <%= TwittersHelper::PRIVATE_ICON if twitter.private_account == Twitter::TWT_VISIBILITY::TV_PRIVATE %>
-            <%= twitter.drawing_method %>【<%= twitter.rating %>】<%= twitter.r18 %>
+            <%= dm_disp(twitter.drawing_method) %>【<%= twitter.rating %>】<%= twitter.r18 %>
             <% if twitter.r18 == Twitter::RESTRICT::R18 %>
               <%= TwittersHelper::R18_ICON %>
             <% end %>
@@ -359,6 +359,9 @@ button.horizontal {
     <br />
     <%= f.label :DB登録日 %>
     <%= f.number_field :created_at, :value => params[:created_at] %>日以内にDB登録されたレコード
+    <br />
+    <%= f.label :ファイル数 %>
+    <%= f.number_field :pfilenum, :value => params[:pfilenum] %>以上
     <br />
     <%= f.label :予測 %>
     <%= f.number_field :pred, :value => params[:pred] %>以上

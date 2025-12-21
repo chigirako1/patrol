@@ -23,6 +23,7 @@ module Twt
     TWT_URL_SCREEN_NAME_RGX = %r!(?:x|twitter)\.com/(\w+)!
     TWT_TOP_SCREEN_NAME_RGX = /^(\w+)\s?/
     TWT_AT_SCREEN_NAME_RGX = /\(@(\w+)\)/
+    TWT_AT_SCREEN_NAME_RGX2 = /^(\w+)/
 
     TWT_SP_FILENAME_RGX = /(\d{8}_\d{6})/
 
@@ -1147,15 +1148,17 @@ module Twt
             twt = Twitter.find_by(twtid: k)
             if twt
                 twt_params = {}
-                avg = v.sum / v.size
+                #avg = v.sum / v.size
+                tmp_v = v.last(100)
+                avg = tmp_v.sum / tmp_v.size
 
                 if twt.filesize 
                     if avg > twt.filesize
                         twt_params[:filesize] = avg
                     elsif avg == twt.filesize
-                    else
+                    elsif (avg) < (twt.filesize * 90 / 100)
                         percent = avg * 100 / twt.filesize
-                        msg = %!サイズが小さくなっているため保留:#{twt.filesize} -> #{avg}(#{percent}%)!
+                        msg = %!サイズが小さくなっている:#{twt.filesize} -> #{avg}(#{percent}%)[@#{k}]!
                         Rails.logger.warn(msg)
                     end
                 else

@@ -1,6 +1,12 @@
 
 module ApplicationHelper
     BASE_TITLE = "巡回app".freeze
+    
+    DM_AI_ICON = "🤖"
+    DM_HAND_ICON ="✍️"
+    R18_ICON = "🔞"
+    PXV_ICON = "🅿️"
+    PRIVATE_ICON = "🔒️"
 
     def full_title(page_title)
         if page_title.blank?

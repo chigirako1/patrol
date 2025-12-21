@@ -11,7 +11,7 @@
 }
 
 .btn_s_minus {
-    background: aqua;
+    background: yellow;
 }
 </style>
 
@@ -29,7 +29,7 @@
     </div>
   <% end %>
 
-  <%= link_to(%!表示リフレッシュ!, twitter_path(@twitter, refresh: "y"), class: 'button') if @twitter.twtid %>
+  <%= link_to(%!表示リフレッシュ!, twitter_path(@twitter, refresh: "y"), class: 'button button_b') if @twitter.twtid %>
 
   <% if pxv.presence %>
     PXV最終投稿日:<%= pxv.get_datetime_string(pxv.last_ul_datetime) %>
@@ -478,6 +478,11 @@
 
     <% avg_filesize = @twitter.filesize %>
     <%= form.number_field :filesize, value: avg_filesize %>
+    
+    <% if @twitter.filesize %>
+      <br />=>
+      <%= Util::formatFileSizeKB(@twitter.filesize) %>
+    <% end %>
   </div>
 
   <div>

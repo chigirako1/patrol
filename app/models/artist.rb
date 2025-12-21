@@ -48,6 +48,10 @@ class Artist < ApplicationRecord
         F3D = '3D'
     end
 
+    module COLUMN
+        PXV_TWTID = "twtid"
+    end
+
     #--------------------------------------------------------------------------
     # クラスメソッド
     #--------------------------------------------------------------------------
@@ -58,22 +62,21 @@ class Artist < ApplicationRecord
 
         if target_col == C_ARTIST_TARGET_AUTO
             if search_word =~ /^\d+$/
-                target_col = "pxvid"
-            #elsif search_word =~ %r!www\.pixiv\.net/users/(\d+)!
+                target_col = C_ARTIST_TARGET_PXVID
             elsif search_word =~ PXV_USER_URL_REGEX
-                target_col = "pxvid"
+                target_col = C_ARTIST_TARGET_PXVID
                 search_word = $1
             else
-                target_col = "pxvname"
+                target_col = C_ARTIST_TARGET_PXVNAME
             end
         end
 
-        if match_method == "auto"
+        if match_method == C_ARTIST_MATCH_AUTO
             case target_col
-            when "pxvid"
-                match_method = "perfect_match"
+            when C_ARTIST_TARGET_PXVID
+                match_method = C_ARTIST_MATCH_PERFECT
             else
-                match_method = "partial_match"
+                match_method = C_ARTIST_MATCH_PARTIAL
             end
         end
 
@@ -81,13 +84,13 @@ class Artist < ApplicationRecord
 
         search_word_p = ""
         case match_method
-        when "perfect_match"
+        when C_ARTIST_MATCH_PERFECT
             search_word_p = search_word
-        when "begin_match"
+        when C_ARTIST_MATCH_BEGIN
             search_word_p = "#{search_word}%"
-        when "end_match"
+        when C_ARTIST_MATCH_END
             search_word_p = "%#{search_word}"
-        when "partial_match"
+        when C_ARTIST_MATCH_PARTIAL
             search_word_p = "%#{search_word}%"
         else
             search_word_p = search_word

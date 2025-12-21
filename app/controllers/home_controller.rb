@@ -36,7 +36,7 @@ class HomeController < ApplicationController
           #force_disp_day: 10,
           mode: TwittersController::ModeEnum::ALL_IN_1,
           grp_sort_by: TwittersController::GRP_SORT::GRP_SORT_SPEC,
-          grp_sort_spec: "{r5}|{w4}週|予測{p25}～::{w}週|評価{r1}",#"予測{p25}::{w}週|評価{r1}",#{w}週|評価{r1}::予測{p50}",#"評価{r1}::{w}週|予測{p50}",#登録{c3}ヶ月|予測{p50}～::評価{r10}～|{w}週～
+          grp_sort_spec: "{f}～|{w4}週～|予測{p25}～::{w}週|評価{r1}",#{r5}|{w4}週|予測{p25}～::{w}週|評価{r1}",#"予測{p25}::{w}週|評価{r1}",#{w}週|評価{r1}::予測{p50}",#"評価{r1}::{w}週|予測{p50}",#登録{c3}ヶ月|予測{p50}～::評価{r10}～|{w}週～
           sort_by: TwittersController::SORT_BY::RATING,
           #aio: TwittersController::GRP_SORT::GRP_SORT_ACCESS + "|" + TwittersController::GRP_SORT::GRP_SORT_PRED,
           #step: -3,
@@ -294,6 +294,9 @@ class HomeController < ApplicationController
             thumbnail: false
           )
       },
+      # ----------------------------
+      { :label => "stats,そのた", :path => "" },
+      { :label => "Artist::stats", :path => artists_stats_index_path },
       { :label => "-", :path => "" },
       { :label => "twt(dir-sp fsチェック)", :path => artists_twt_index_path(dir: ArtistsController::DIR_TYPE::SMARTPHONE) },
       { :label => "-", :path => "" },
@@ -378,12 +381,10 @@ class HomeController < ApplicationController
             target: Twitter::DRAWING_METHOD::DM_AI,
           )
       },
-      # ----------------------------
-      { :label => "stats", :path => "" },
-      { :label => "Artist::stats", :path => artists_stats_index_path },
       # =====================================
       { :label => "DB更新", :path => "" },
       # ----------------------------
+      { :label => "#pxv", :path => "" },
       { :label => "pxv (dir-DB更新 BY FS)",
           :path => artists_path(
             page_title: "pxv (dir-DB更新 BY FS)", 
@@ -391,7 +392,7 @@ class HomeController < ApplicationController
             display_number: 11
           )
       },
-      { :label => "-", :path => "" },
+      { :label => "#twt", :path => "" },
       { :label => "twt(dir-DB更新 BY FS)", :path => artists_twt_index_path(dir: ArtistsController::DIR_TYPE::UPDATE) },
       { :label => "tweets(dir-DB更新 BY FS)", :path => tweets_update_recods_index_path() },
       { :label => "-", :path => "" },

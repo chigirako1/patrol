@@ -85,7 +85,6 @@ class TwittersController < ApplicationController
     end
     puts %!created_at="#{created_at}"!
     
-
     if params[:rating] == ""
       rating_gt = 0
     else
@@ -133,7 +132,6 @@ class TwittersController < ApplicationController
     param_grp_sort_by = Util::get_param_str(params, :grp_sort_by)
     param_grp_sort_spec = Util::get_param_str(params, :grp_sort_spec)
     prm_todo_cnt = Util::get_param_num(params, :todo_cnt)
-    
 
     if true
       sql_query = "LEFT OUTER JOIN artists ON twitters.twtid = artists.twtid"
@@ -788,6 +786,7 @@ class TwittersController < ApplicationController
     end
 
     def index_all_in_1(twitters, params, rating_gt, pred_cond_gt)
+      
       filename = params[:filename]
       STDERR.puts %!index_all_in_1:"#{filename}"(#{twitters.size})!
       if filename == "アクセス不可"
@@ -796,6 +795,7 @@ class TwittersController < ApplicationController
         twitters = twitters.select {|x| ids.include?(x.twtid) }
       end
       STDERR.puts %!index_all_in_1:"#{filename}"(#{twitters.size})!
+
       twitters = twitters.select {|x| x.rating == nil or x.rating >= rating_gt }
       twitters = twitters.select {|x| x.drawing_method == params[:target]}
 
@@ -805,6 +805,14 @@ class TwittersController < ApplicationController
         twitters = twitters.select {|x| (x.update_frequency||0) <= -(ul_freq)}
       else
         twitters = twitters.select {|x| (x.update_frequency||0) >= (ul_freq)}
+      end
+
+      prm_filenum = Util::get_param_num(params, :pfilenum)
+      if prm_filenum == 0
+      elsif prm_filenum < 0
+        twitters = twitters.select {|x| (x.filenum||0) <= -(prm_filenum)}
+      else
+        twitters = twitters.select {|x| (x.filenum||0) >= (prm_filenum)}
       end
 
       if @hide_within_days > 0

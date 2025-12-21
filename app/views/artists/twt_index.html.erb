@@ -866,6 +866,13 @@
             <% else %>
                 <b>★対象外★</b>
             <% end %>
+
+            <% if false %>
+                <% plist = Twt::get_sp_pic_filelist_by_twtid(elem.screen_name) %>
+                <% if plist.size == 0 %>
+                    <b>★ファイル0★</b>
+                <% end %>
+            <% end %>
         <% else %>
             <% url = twitters_path(mode: TwittersController::ModeEnum::SEARCH, search_word: elem.dirname) %>
             [<%= link_to_ex("■検索■", url) %>]

@@ -1,6 +1,6 @@
 
 module TwittersHelper
-    DM_AI_ICON = "🤖"
+    DM_AI_ICON = ApplicationHelper::DM_AI_ICON#"🤖"
     DM_HAND_ICON ="✍️"
     R18_ICON = "🔞"
     PXV_ICON = "🅿️"
@@ -30,7 +30,7 @@ module TwittersHelper
         tag += %!"#{twt.twtname}"!
         tag += "【"
         tag += PRIVATE_ICON if twt.private_account == Twitter::TWT_VISIBILITY::TV_PRIVATE
-        tag += %!#{twt.rating}|#{twt.r18}#{R18_ICON if twt.r18 == Twitter::RESTRICT::R18}|#{twt.drawing_method}|#{twt.status}!
+        tag += %!#{twt.rating}|#{twt.r18}#{R18_ICON if twt.r18 == Twitter::RESTRICT::R18}|#{dm_disp(twt.drawing_method)}|#{twt.status}!
         tag += "】"
         tag += %![#{link_to_ex("■twt■", twt)}]!
         tag += %!|A:#{twt.last_access_datetime_disp}!
@@ -39,6 +39,10 @@ module TwittersHelper
         tag += %!|予測:#{twt.prediction}!
 
         tag.html_safe
+    end
+
+    def dm_disp(dm)
+        dm.to_s + dm_icon(dm)
     end
 
     def dm_icon(dm)

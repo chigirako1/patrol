@@ -96,7 +96,7 @@ class Tweet < ApplicationRecord
         exist_cnt = check_registered_record(url_list)
         todo_cnt = url_list.size - exist_cnt
         if todo_cnt > 0
-            STDERR.puts %!"@#{key}":#{todo_cnt}/#{url_list.size}!
+            #STDERR.puts %!"@#{key}":#{todo_cnt}/#{url_list.size}!
         end
 
         Url_List_Summary.new(key, url_list.size, todo_cnt)

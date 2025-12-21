@@ -856,8 +856,13 @@ class ArtistsController < ApplicationController
         Twt::archive_check()
       when DIR_TYPE::SMARTPHONE
         @sp_dirs = Twt::sp_dirs()
+        h = @sp_dirs.map {|x| x.screen_name.downcase}.tally
+        #h.delete_if {|k,v| v == 1}
+        h.each do |k,v|
+          puts %!xxxxx:::#{k}::#{v}! if v > 1
+        end
       when DIR_TYPE::REG_FILESIZE
-        @sp_dirs = Twt::reg_filesize()
+        Twt::reg_filesize()
       else
       end
     elsif filename == ""

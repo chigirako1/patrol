@@ -565,6 +565,11 @@ class Twitter < ApplicationRecord
         %!#{rate_n}#{Twitter::TWT_H_SEPARATOR}#{lad_n}週|#{pred_n}!
     end
 
+    def group_sub(unit, number, gkey_work, x, digit=3)
+        w = Util::format_num(number, unit, digit)
+        gkey_work.gsub(x, w)
+    end
+
     #
     # ""
     #
@@ -574,7 +579,7 @@ class Twitter < ApplicationRecord
         matches = grp_sort_spec_arg.scan(regexp_pattern)
         gkey_work = grp_sort_spec_arg.dup
 
-        STDERR.puts %!"#{gkey_work}"!
+        #STDERR.puts %!"#{gkey_work}"!
 
         matches.each do |x|
             if x =~ /([a-zA-Z_]+)(\d*)/
@@ -582,38 +587,58 @@ class Twitter < ApplicationRecord
                 unit = $2.to_i if $2 != ""
             end
 
-            STDERR.puts %!"#{x}" => "#{start_str}|#{unit}"!
+            #STDERR.puts %!"#{x}" => "#{start_str}|#{unit}"!
 
             case start_str
             when "c", "cm"
                 unit = 1 unless unit
-                w = Util::format_num(self.created_at_day_num / 30, unit)
-                gkey_work.gsub!(x, w)
+                # w = Util::format_num(self.created_at_day_num / 30, unit)
+                # gkey_work.gsub!(x, w)
+                number = self.created_at_day_num / 30
+                gkey_work = group_sub(unit, number, gkey_work, x)
             when "cw"
                 unit = 1 unless unit
-                w = Util::format_num(self.created_at_day_num / 7, unit)
-                gkey_work.gsub!(x, w)
+                #w = Util::format_num(self.created_at_day_num / 7, unit)
+                #gkey_work.gsub!(x, w)
+                number = self.created_at_day_num / 7
+                gkey_work = group_sub(unit, number, gkey_work, x)
             when "cd"
                 unit = 1 unless unit
-                w = Util::format_num(self.created_at_day_num, unit)
-                gkey_work.gsub!(x, w)
+                #w = Util::format_num(self.created_at_day_num, unit)
+                #gkey_work.gsub!(x, w)
+                number = self.created_at_day_num
+                gkey_work = group_sub(unit, number, gkey_work, x)
+            when "f"
+                unit = 500 unless unit
+                number = self.filenum
+                gkey_work = group_sub(unit, number, gkey_work, x, 4)
             when "m"
                 unit = 1 unless unit
-                w = Util::format_num(self.last_access_datetime_days_elapsed / 30, unit)
-                gkey_work.gsub!(x, w)
+                #w = Util::format_num(self.last_access_datetime_days_elapsed / 30, unit)
+                #gkey_work.gsub!(x, w)
+                number = self.last_access_datetime_days_elapsed / 30
+                gkey_work = group_sub(unit, number, gkey_work, x)
             when "p"
                 unit = 10 unless unit
-                p = Util::format_num(self.prediction, unit)
-                gkey_work.gsub!(x, p)
+                #p = Util::format_num(self.prediction, unit)
+                #gkey_work.gsub!(x, p)
+                number = self.prediction
+                gkey_work = group_sub(unit, number, gkey_work, x)
             when "r"
                 unit = 1 unless unit
-                r = Util::format_num(self.rating, unit)
-                gkey_work.gsub!(x, r)
+                #r = Util::format_num(self.rating, unit)
+                #gkey_work.gsub!(x, r)
+                number = self.rating
+                gkey_work = group_sub(unit, number, gkey_work, x)
             when "w"
                 unit = 1 unless unit
-                w = Util::format_num(self.last_access_datetime_days_elapsed / 7, unit)
-                gkey_work.gsub!(x, w)
+                #w = Util::format_num(self.last_access_datetime_days_elapsed / 7, unit)
+                #gkey_work.gsub!(x, w)
+                number = self.last_access_datetime_days_elapsed / 7
+                gkey_work = group_sub(unit, number, gkey_work, x)
             else
+                msg = %!wrong opt:"#{start_str}"!
+                Rails.logger.error(msg)
             end
         end
 
@@ -658,14 +683,15 @@ class Twitter < ApplicationRecord
         lad_n = sprintf("%3d週", daysn / 7)
 
         ndays_s = 7
+        rat_1 = 90
         rat_a = 87
         rat_b = 85
         if daysn <= ndays_s
             if daysn < 1
                 recent = "[20.本日アクセス]"
                 p_unit = 1
-            elsif rating >= 90
-                recent = "[91.高評価]最近アクセス"
+            elsif self.rating >= rat_1
+                recent = "[91.高評価(#{rat_1}↑)]最近アクセス"
                 p_unit = 5
             elsif daysn < 2
                 recent = "[21.昨日アクセス]"
@@ -673,14 +699,15 @@ class Twitter < ApplicationRecord
             elsif daysn < 3
                 recent = "[22.一昨日アクセス]"
                 p_unit = 3
-            elsif rating >= 87
-                recent = "[56.高評価(#{rat_a}↑)]最近アクセス"
+            elsif self.rating >= rat_a
+                #recent = "[56.高評価(#{rat_a}↑)]最近アクセス"
+                recent = "[56.高評価(#{self.rating})]最近アクセス"
                 p_unit = 5
             elsif rating < 85
-                recent = "[24.直近アクセス]"
+                recent = "[24.1週間以内アクセス](#{rat_b}↓)"
                 p_unit = 5
             else
-                recent = "[25.直近アクセス](#{rat_b}↑)"
+                recent = "[25.1週間以内アクセス](#{rat_b}↑)"
                 p_unit = 5
             end
 
@@ -709,8 +736,8 @@ class Twitter < ApplicationRecord
             elsif rating >= 90
                 recent = "[95.高評価]最近アクセス"
                 p_unit = 5
-            elsif rating >= 87
-                recent = "[56.高評価]"
+            elsif rating >= rat_a
+                recent = "[56.高評価(#{rat_a}↑)]"
                 p_unit = 10
             elsif daysn >= 30
                 recent = "[55.1カ月以上経過]"
@@ -739,7 +766,7 @@ class Twitter < ApplicationRecord
             newcomer = ""
         end
 
-        recent + newcomer + rate_n + Twitter::TWT_H_SEPARATOR + key
+        recent + newcomer + "|" + rate_n + Twitter::TWT_H_SEPARATOR + key
     end
 
     def group_key_test(grp_sort_by, status=false)
@@ -771,7 +798,8 @@ class Twitter < ApplicationRecord
             when TwittersController::GRP_SORT::GRP_SORT_RATE
                 r = Util::format_num(self.rating, 1)
                 self.last_access_datetime_days_elapsed / 30
-                gkey = %!#{r}!
+                #gkey = %!#{r}!
+                gkey = %!#{self.status}#{Twitter::TWT_H_SEPARATOR}#{r}!
             else
             end
         end
@@ -833,11 +861,14 @@ class Twitter < ApplicationRecord
             if daysn < d
                 pxv = "09.未設定|#{d / 30}ヶ月以内"
             else
-                todo_cnt_str = sprintf("残:%3d件", e.todo_cnt)
+                file_num_s = Util::format_num(self.filenum, 25)
+
+                #todo_cnt_str = sprintf("残:%3d件", e.todo_cnt)
+                todo_cnt_str = "残:" +  Util::format_num(e.todo_cnt, 3) + "件↑"
                 if self.pxvid.presence
-                    pxv = %!05.pxvあり<#{todo_cnt_str}>!
+                    pxv = %!05.[#{file_num_s}ファイル]pxvあり<#{todo_cnt_str}>!
                 else
-                    pxv = "08.pxvなし<#{todo_cnt_str}>"
+                    pxv = %!08.[#{file_num_s}ファイル]pxvなし<#{todo_cnt_str}>!
                 end
             end
 
@@ -846,7 +877,8 @@ class Twitter < ApplicationRecord
 
             gkey = pxv + TWT_H_SEPARATOR + %!#{t}件～|! + p
         else
-            self.group_key2(hide_within_days, rating_gt)
+            #self.group_key2(hide_within_days, rating_gt)
+            %!00.#{self.drawing_method}#{TWT_H_SEPARATOR}#{self.status}!
         end
     end
 

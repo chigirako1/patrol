@@ -1,10 +1,6 @@
-<% if @artist.twtid.presence %>
-  <% title = "" %>
-<% else %>
-  <% title = %!@\!! %>
-<% end %>
-<% title = title + %!【#{@artist.rating}#{"🔞" if @artist.r18 == "R18"}】#{@artist.pxvname}! %>
+<% title = page_title(@artist) %>
 <% provide(:title, title) %>
+
 <p style="color: green"><%= notice %></p>
 
 <%
@@ -17,122 +13,122 @@
 =end %>
 
 <script>
-  let pic_idx = 0;
-  window.onload = (event) => {
-    //pic_idx = path_ary.length;
-    console.log(`onload:${pic_idx}`);
-    //next_pic();
-  };
+    let pic_idx = 0;
+    window.onload = (event) => {
+        //pic_idx = path_ary.length;
+        console.log(`onload:${pic_idx}`);
+        //next_pic();
+    };
 
-  window.addEventListener('keypress', keypress_event);
-  window.addEventListener('keyup', keyup_event);
-  
-  function page_close() {
-    open(location, '_self').close();
-  }
-
-  const path_ary = [
-      <% @path_list.each do |path| %>
-        <%== %!"#{path}",! %>
-      <% end %>
-  ];
-
-  function next_pic() {
-    console.log(`next_pic:${pic_idx}`);
-    pic_idx++;
-    if (pic_idx >= path_ary.length) {
-      pic_idx = 0;
-    }
-    //console.log({pic_idx});
-    set_pic(path_ary[pic_idx]);
-  }
-
-  function prev_pic() {
-    pic_idx--;
-    if (pic_idx < 0) {
-      pic_idx = path_ary.length - 1;
-    }
-    set_pic(path_ary[pic_idx]);
-  }
-
-  function set_pic(path) {
-    //console.log({path});
-    let img_elem = document.getElementById("imagexx")
-    img_elem.src = path;
-
-    /*img_elem.src.onload = function () {
-      var width = img_elem.naturalWidth ;
-      var height = img_elem.naturalHeight ;
-    }*/
-
-    let txt_elem = document.getElementById("pic_path")
-    txt_elem.innerHTML = `[${pic_idx}]"${path}"`;
+    window.addEventListener('keypress', keypress_event);
+    window.addEventListener('keyup', keyup_event);
     
-    //txt_elem.innerHTML +=  ":" + width + "x" + height;
-  }
-
-  function keypress_event(e) {
-    //こっちこない？
-    Console.log("test");
-    return false; 
-  }
-
-  function keyup_event(e) {
-    if (e.key == 'ArrowLeft') {
-      prev_pic();
-    } else if (e.key == 'ArrowRight') {
-      next_pic();
-    } else if (e.key == 'Escape') {
-      //page_close();
+    function page_close() {
+        open(location, '_self').close();
     }
-    //Console.log("test");
-    return false; 
-  }
 
-  // full screen
-  function set_fullscreen() {
-    document.body.requestFullscreen();
-  }
+    const path_ary = [
+        <% @path_list.each do |path| %>
+            <%== %!"#{path}",! %>
+        <% end %>
+    ];
 
-// full screen
-  function unset_fullscreen() {
-    document.body.exitFullscreen();
-  }
+    function next_pic() {
+        console.log(`next_pic:${pic_idx}`);
+        pic_idx++;
+        if (pic_idx >= path_ary.length) {
+        pic_idx = 0;
+        }
+        //console.log({pic_idx});
+        set_pic(path_ary[pic_idx]);
+    }
+
+    function prev_pic() {
+        pic_idx--;
+        if (pic_idx < 0) {
+            pic_idx = path_ary.length - 1;
+        }
+        set_pic(path_ary[pic_idx]);
+    }
+
+    function set_pic(path) {
+        //console.log({path});
+        let img_elem = document.getElementById("imagexx")
+        img_elem.src = path;
+
+        /*img_elem.src.onload = function () {
+        var width = img_elem.naturalWidth ;
+        var height = img_elem.naturalHeight ;
+        }*/
+
+        let txt_elem = document.getElementById("pic_path")
+        txt_elem.innerHTML = `[${pic_idx}]"${path}"`;
+        
+        //txt_elem.innerHTML +=  ":" + width + "x" + height;
+    }
+
+    function keypress_event(e) {
+        //こっちこない？
+        Console.log("test");
+        return false; 
+    }
+
+    function keyup_event(e) {
+        if (e.key == 'ArrowLeft') {
+            prev_pic();
+        } else if (e.key == 'ArrowRight') {
+            next_pic();
+        } else if (e.key == 'Escape') {
+            //page_close();
+        }
+            //Console.log("test");
+        return false; 
+    }
+
+    // full screen
+    function set_fullscreen() {
+        document.body.requestFullscreen();
+    }
+
+    // full screen
+    function unset_fullscreen() {
+        document.body.exitFullscreen();
+    }
 </script>
 
 <% if @show_mode == ArtistsController::ShowMode::SHOW_VIEWER %>
-  <%= render "viewer", artist: @artist %>
+    <%= render "viewer", artist: @artist %>
 <% elsif @show_mode == ArtistsController::ShowMode::SHOW_LIST_VIEW %>
-  <%= render "list_view", artist: @artist %>
+    <%= render "list_view", artist: @artist %>
 <%# elsif @show_mode == ArtistsController::ShowMode::INTERVAL_CHECK %>
-  <%#= render "list_view", artist: @artist %>
+    <%#= render "list_view", artist: @artist %>
 <% else %>
-  <%= render @artist %>
+    <%= render @artist %>
 
-  <hr />
-
-  <%= render "pics", artist: @artist %>
-
-  <% if @show_mode == ArtistsController::ShowMode::TWT_PIC_LIST #"twt_pic_list" %>
-    <%= render "twt_pic_list", artist: @artist %>
-  <% end %>
-  <%= render "form", artist: @artist %>
-
-  <% if @show_mode == nil %>
-    <br />
-  <% else %>
     <hr />
-    <a href="javascript:void(0);" onclick="prev_pic();">前の画像</a>
-    <a href="javascript:void(0);" onclick="next_pic();">次の画像</a>
-    <br />
-    <img id="imagexx" width="20%" height="20%" src="" />
-    <div id="pic_path">_</div>
-    <hr />
-  <% end %>
 
-  <%= render "stat", artist: @artist %>
-  <hr />
-  <%= link_to_ex("個別表示", "../artists/#{@artist.id}?mode=#{ArtistsController::ShowMode::SHOW_VIEWER}") %>
-  <%= link_to_ex("リスト表示(全画像)", artist_path(@artist, mode: ArtistsController::ShowMode::SHOW_LIST_VIEW, thumbnail: "yes")) %>
-  <%= link_to_ex("リスト表示(先頭画像)", artist_path(@artist, mode: ArtistsController::ShowMode::SHOW_LIST_VIEW, thumbnail: "yes", no_pic: "t", nday: 14)) %>
+    <%= render "pics", artist: @artist %>
+
+    <% if @show_mode == ArtistsController::ShowMode::TWT_PIC_LIST #"twt_pic_list" %>
+        <%= render "twt_pic_list", artist: @artist %>
+    <% end %>
+    <%= render "form", artist: @artist %>
+
+    <% if @show_mode == nil %>
+        <br />
+    <% else %>
+        <hr />
+        <a href="javascript:void(0);" onclick="prev_pic();">前の画像</a>
+        <a href="javascript:void(0);" onclick="next_pic();">次の画像</a>
+        <br />
+        <img id="imagexx" width="20%" height="20%" src="" />
+        <div id="pic_path">_</div>
+        <hr />
+    <% end %>
+
+    <%= render "stat", artist: @artist %>
+    <hr />
+    <%= link_to_ex("個別表示", "../artists/#{@artist.id}?mode=#{ArtistsController::ShowMode::SHOW_VIEWER}") %>
+    <%= link_to_ex("リスト表示(全画像)", artist_path(@artist, mode: ArtistsController::ShowMode::SHOW_LIST_VIEW, thumbnail: "yes")) %>
+    <%= link_to_ex("リスト表示(先頭画像)", artist_path(@artist, mode: ArtistsController::ShowMode::SHOW_LIST_VIEW, thumbnail: "yes", no_pic: "t", nday: 14)) %>
 <% end %>

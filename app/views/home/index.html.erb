@@ -16,6 +16,8 @@
             <hr />
         <% elsif menu[:label] == "." %>
             <li>・</li>
+        <% elsif menu[:label][0] == "#" %>
+            <h3><%= menu[:label][1..-1] %></h3>
         <% else %>
             <h2><%= menu[:label] %></h2>
         <% end %>
