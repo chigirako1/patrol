@@ -28,6 +28,16 @@ module Util
         value
     end
 
+    def self.get_param_bool(params, symbol)
+        if params[symbol].presence
+            value = true
+        else
+            value = false
+        end
+        STDERR.puts %!#{symbol}="#{value}"!
+        value
+    end
+
     # よくわからないが、
     # ・"24-09-22".to_date => 0024-09-22
     # ・Date.parse("24-09-22") => 2024-09-22

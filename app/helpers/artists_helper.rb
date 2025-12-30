@@ -25,7 +25,7 @@ module ArtistsHelper
         
         r = r18_disp(artist.r18)
 
-        twt + %!【#{r}】#{artist.pxvname}!
+        twt + %![#{artist.rating}]#{artist.pxvname}【#{r}】!
     end
 
     def page_header(artist)

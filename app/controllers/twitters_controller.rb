@@ -5,6 +5,7 @@ class TwittersController < ApplicationController
     UNASSOCIATED_TWT_ACNT = '未紐づけTWTアカウント' #PXV DBにはTWT IDが登録されているがTWT DBにはPXV IDが登録されていない
     ALL_IN_ONE = 'all in one'
     ALL_IN_1 = 'all in 1'
+    ALL = 'all'
     FILE = 'file'
     URL_TXT = 'url txt'
     PATROL = 'patrol'
@@ -21,6 +22,7 @@ class TwittersController < ApplicationController
     RATING = "rating"
     FILENUM = "filenum"
     SORT_CREATE = "create"
+    SORT_REGISTERED_DESC = "登録日順(新→旧)"
 
     TODO_CNT = "todo_cnt"
     TOTAL_CNT = "total_cnt"
@@ -51,8 +53,54 @@ class TwittersController < ApplicationController
     GRP_SPLIT_STR = "|"
   end
 
+  class TwtParams
+    attr_accessor :mode,
+      :num_of_disp,
+      :hide_within_days,
+      :force_disp_day,
+      :created_at,
+      :rating_gt,
+      :rating_lt,
+      :sort_by,
+      :step,
+      :ul_freq,
+      :pred_cond_gt,
+      :param_target,
+      :param_grp_sort_by,
+      :param_grp_sort_spec,
+      :prm_todo_cnt,
+      :no_pxv,
+      :ex_sp,
+      :thumbnail
+
+    
+    def initialize(params)
+      @mode = Util::get_param_str(params, :mode, "id")
+      @sort_by = Util::get_param_str(params, :sort_by)
+      @param_target = Util::get_param_str(params, :target)
+      @param_grp_sort_by = Util::get_param_str(params, :grp_sort_by)
+      @param_grp_sort_spec = Util::get_param_str(params, :grp_sort_spec)
+
+      @pred_cond_gt = Util::get_param_num(params, :pred)
+      @num_of_disp = Util::get_param_num(params, :num_of_disp, 10)
+      @hide_within_days = Util::get_param_num(params, :hide_within_days)
+      @force_disp_day = Util::get_param_num(params, :force_disp_day)
+      @created_at = Util::get_param_num(params, :created_at)
+      @rating_gt = Util::get_param_num(params, :rating)
+      @rating_lt = Util::get_param_num(params, :rating_lt)
+      @step = Util::get_param_num(params, :step, 3)
+      @ul_freq = Util::get_param_num(params, :ul_freq)
+      @prm_todo_cnt = Util::get_param_num(params, :todo_cnt)
+
+      @no_pxv = Util::get_param_bool(params, :no_pxv)
+      @ex_sp = Util::get_param_bool(params, :ex_sp)
+      @thumbnail = Util::get_param_bool(params, :thumbnail)
+    end
+  end
+
   # GET /twitters or /twitters.json
   def index
+=begin
     mode = Util::get_param_str(params, :mode, "id")
 
     if params[:num_of_disp].presence
@@ -132,7 +180,25 @@ class TwittersController < ApplicationController
     param_grp_sort_by = Util::get_param_str(params, :grp_sort_by)
     param_grp_sort_spec = Util::get_param_str(params, :grp_sort_spec)
     prm_todo_cnt = Util::get_param_num(params, :todo_cnt)
-
+=end
+    twt_params = TwtParams.new(params)
+    mode = twt_params.mode
+    @num_of_disp = twt_params.num_of_disp
+    @hide_within_days = twt_params.hide_within_days
+    force_disp_day = twt_params.force_disp_day
+    #created_at = twt_params.created_at
+    rating_gt = twt_params.rating_gt
+    rating_lt = twt_params.rating_lt
+    sort_by = twt_params.sort_by
+    step = twt_params.step
+    ul_freq = twt_params.ul_freq
+    param_target = twt_params.param_target
+    param_grp_sort_by = twt_params.param_grp_sort_by
+    param_grp_sort_spec = twt_params.param_grp_sort_spec
+    prm_todo_cnt = twt_params.prm_todo_cnt
+    #no_pxv = twt_params.no_pxv
+    @thumbnail = twt_params.thumbnail
+    
     if true
       sql_query = "LEFT OUTER JOIN artists ON twitters.twtid = artists.twtid"
     else
@@ -180,15 +246,16 @@ class TwittersController < ApplicationController
             artists.*, twitters.*")
     end
 
-    if created_at != 0
+    if twt_params.created_at != 0
       twitters = twitters.select {|x|
           delta = Util::get_date_delta(x.created_at);
-          delta <= created_at
+          delta <= twt_params.created_at
         }
     end
 
     twitters_bak = twitters
-    if no_pxv
+
+    if twt_params.no_pxv
       twitters = twitters.select {|x|
         !(x.pxvid.presence) and
         #(x.artist_pxvid == nil or x.artist_status == "長期更新なし" or x.artist_status == "半年以上更新なし")
@@ -198,32 +265,11 @@ class TwittersController < ApplicationController
       }
     end
 
+    STDERR.puts mode
     case mode
     when TwittersController::ModeEnum::FILESIZE
-      STDERR.puts %!mode="#{mode}"aaa!
-
-      #screen_names = Twt::load_pic_info_tsv()
-      #twitters = twitters.select {|x| screen_names.include?(x.twtid)}
-      twitters = twitters.select {|x| x.status == Twitter::TWT_STATUS::STATUS_PATROL}
-      twitters = twitters.select {|x| x.drawing_method == param_target}
-      twitters = twitters.select {|x| x.last_access_day_num >= @hide_within_days}
-      twitters = twitters.select {|x| x.filesize_huge?}
-      #twitters = twitters.select {|x| x.ul_freq_low? == false}
-      twitters = twitters.select {|x| (x.rating||0) >= rating_gt}
-      twitters = twitters.select {|x| x.prediction >= pred_cond_gt}
-
-      if ul_freq == 0
-      elsif ul_freq < 0
-        twitters = twitters.select {|x| (x.update_frequency||0) <= -(ul_freq)}
-      else
-        twitters = twitters.select {|x| (x.update_frequency||0) >= (ul_freq)}
-      end
-
-      twitters = twt_sort_by(twitters, sort_by)
-      #STDERR.puts %!mode="#{mode}"\t#{screen_names.size}\t#{twitters.size}!
-
-      #@twitters_group = Twt::group_by_ul_freq(twitters, param_grp_sort_by)
-      @twitters_group = twt_group_by(twitters, param_grp_sort_by)
+      twitters = index_mode_filesize(twitters, twt_params)
+      @twitters_group = twt_group_by(twitters, twt_params.param_grp_sort_by)
       @twitters_total_count = @twitters_group.sum {|k,v| v.count}
       return
     when TwittersController::ModeEnum::UNASSOCIATED_TWT_ACNT
@@ -236,7 +282,7 @@ class TwittersController < ApplicationController
 
       group_list = []
       tmp = twitters
-      group = index_all_in_1(tmp, params, rating_gt, pred_cond_gt)
+      group = index_all_in_1(tmp, params, twt_params, rating_gt)
       group_list << group
 
       group = index_unset(twitters_bak, 30, @hide_within_days)
@@ -306,7 +352,7 @@ class TwittersController < ApplicationController
       STDERR.puts %!target_hash=#{target_hash}!
 
       num_of_times.times do |cnt|
-        group, @twitters_total_count = index_all_in_one(tmp, params, rating_gt, rating_lt, target_hash)
+        group, @twitters_total_count = index_all_in_one(tmp, params, twt_params.rating_gt, rating_lt, target_hash)
         if group
           group_list << group
         end
@@ -434,11 +480,11 @@ class TwittersController < ApplicationController
 
       twitters = twt_sort_by(twitters, sort_by)
 
-      if pred_cond_gt != 0
+      if twt_params.pred_cond_gt != 0
         if force_disp_day == 0
-          twitters = twitters.select {|x| x.prediction >= pred_cond_gt}
+          twitters = twitters.select {|x| x.prediction >= twt_params.pred_cond_gt}
         else
-          twitters = twitters.select {|x| x.prediction >= pred_cond_gt or !x.last_access_datetime_p(force_disp_day)}
+          twitters = twitters.select {|x| x.prediction >= twt_params.pred_cond_gt or !x.last_access_datetime_p(force_disp_day)}
         end
       end
       
@@ -474,7 +520,7 @@ class TwittersController < ApplicationController
     when "dl_nil"
       twitters = twitters.select {|x| x.last_dl_datetime == nil}
     when TwittersController::ModeEnum::PATROL, TwittersController::ModeEnum::STATS
-      if params[:ex_sp] == "true"
+      if twt_params.ex_sp
         twitters = twitters.select {|x| !x.sp?}
       end
 
@@ -504,11 +550,11 @@ class TwittersController < ApplicationController
         twitters = twitters.select {|x| x.drawing_method != nil and (x.drawing_method == "AI" or x.drawing_method == "パクリ")}
       end
 
-      if pred_cond_gt != 0
+      if twt_params.pred_cond_gt != 0
         if force_disp_day == 0
-          twitters = twitters.select {|x| x.prediction >= pred_cond_gt}
+          twitters = twitters.select {|x| x.prediction >= twt_params.pred_cond_gt}
         else
-          twitters = twitters.select {|x| x.prediction >= pred_cond_gt or !x.last_access_datetime_p(force_disp_day)}
+          twitters = twitters.select {|x| x.prediction >= twt_params.pred_cond_gt or !x.last_access_datetime_p(force_disp_day)}
         end
       end
 
@@ -522,6 +568,7 @@ class TwittersController < ApplicationController
         puts %!xyy #{twitters.size} (#{rating_lt})!
       end
 
+=begin
       case sort_by
       when SORT_BY::ACCESS
         twitters = twitters.sort_by {|x| [x.last_access_datetime, (x.last_dl_datetime)]}#.reverse
@@ -532,6 +579,8 @@ class TwittersController < ApplicationController
       else
         twitters = twitters.sort_by {|x| [-(x.rating||0), -x.prediction, x.last_access_datetime]}
       end
+=end
+      twitters = index_sort(twitters, twt_params)
 
       @twitters_total_count = twitters.size
       twitters = twitters.first(@num_of_disp)#limit(@num_of_disp)#offset(3)
@@ -624,10 +673,10 @@ class TwittersController < ApplicationController
       end
       @twitters_total_count = @twitters_group.sum {|k,v| v.count}
       return
-    when "all"
-      #twitters = twitters.sort_by {|x| [-x.prediction, x.last_access_datetime, (x.last_post_datetime || "2000-01-01")]}.first(50)
-      twitters = twitters.sort_by {|x| [x.last_access_datetime]}.reverse.first(50)
-    when TwittersController::ModeEnum::SEARCH
+    when ModeEnum::ALL
+      index_mode_all(twitters, twt_params)
+      return
+    when ModeEnum::SEARCH
       @twitters_group = twt_group_by(twitters, param_grp_sort_by)
       @twitters_total_count = @twitters_group.sum {|k,v| v.count}
       return
@@ -785,7 +834,77 @@ class TwittersController < ApplicationController
         )
     end
 
-    def index_all_in_1(twitters, params, rating_gt, pred_cond_gt)
+    def index_select(twitters, twt_params)
+      if twt_params.rating_gt == 0
+        twitters = twitters.select {|x| !x.status.presence}
+        twitters = twitters.select {|x| (x.rating||0) == twt_params.rating_gt}
+      else
+        twitters = twitters.select {|x| x.status == Twitter::TWT_STATUS::STATUS_PATROL}
+        twitters = twitters.select {|x| (x.rating||0) >= twt_params.rating_gt}
+      end
+
+      twitters = twitters.select {|x| x.drawing_method == twt_params.param_target} if twt_params.param_target != ""
+      if @hide_within_days > 0
+        twitters = twitters.select {|x| x.last_access_day_num >= twt_params.hide_within_days}
+      else
+        twitters = twitters.select {|x| x.last_access_day_num < -(twt_params.hide_within_days)}
+      end
+      #twitters = twitters.select {|x| x.filesize_huge?}
+      twitters = twitters.select {|x| x.prediction >= twt_params.pred_cond_gt}
+      if twt_params.ex_sp
+        twitters = twitters.select {|x| !x.sp?}
+      end
+      twitters
+    end
+
+    def index_sort(twitters, twt_params)
+      case twt_params.sort_by
+      when SORT_BY::ACCESS
+        twitters = twitters.sort_by {|x| [x.last_access_datetime, (x.last_dl_datetime)]}#.reverse
+      when SORT_BY::PRED
+        twitters = twitters.sort_by {|x| [-x.prediction, x.last_access_datetime]}
+      when SORT_BY::SORT_CREATE
+        twitters = twitters.sort_by {|x| x.created_at}
+      when SORT_BY::SORT_REGISTERED_DESC
+        twitters = twitters.sort_by {|x| x.created_at}.reverse
+      else
+        twitters = twitters.sort_by {|x| [-(x.rating||0), -x.prediction, x.last_access_datetime]}
+      end
+    end
+
+    def index_mode_all(twitters, twt_params)
+      #twitters = twitters.sort_by {|x| [-x.prediction, x.last_access_datetime, (x.last_post_datetime || "2000-01-01")]}.first(50)
+      #twitters = twitters.sort_by {|x| [x.last_access_datetime]}.reverse.first(50)
+      twitters = index_select(twitters, twt_params)
+      twitters = index_sort(twitters, twt_params)
+
+      @twitters_group = twt_group_by(twitters, twt_params.param_grp_sort_by, twt_params.param_grp_sort_spec)
+      @twitters_group = @twitters_group.sort_by {|k, v| k || 0}.reverse.to_h
+      @twitters_total_count = @twitters_group.sum {|k,v| v.count}
+    end
+
+    def index_mode_filesize(twitters, twt_params)
+      twitters = twitters.select {|x| x.status == Twitter::TWT_STATUS::STATUS_PATROL}
+      twitters = twitters.select {|x| x.drawing_method == twt_params.param_target}
+      twitters = twitters.select {|x| x.last_access_day_num >= twt_params.hide_within_days}
+      #STDERR.puts %!#{twitters.size}!
+      twitters = twitters.select {|x| x.filesize_huge?}
+      #STDERR.puts %!#{twitters.size}!
+      twitters = twitters.select {|x| (x.rating||0) >= twt_params.rating_gt}
+      twitters = twitters.select {|x| x.prediction >= twt_params.pred_cond_gt}
+
+      if twt_params.ul_freq == 0
+      elsif twt_params.ul_freq < 0
+        twitters = twitters.select {|x| (x.update_frequency||0) <= -(twt_params.ul_freq)}
+      else
+        twitters = twitters.select {|x| (x.update_frequency||0) >= (twt_params.ul_freq)}
+      end
+
+      twitters = twt_sort_by(twitters, twt_params.sort_by)
+      twitters
+    end
+
+    def index_all_in_1(twitters, params, twt_params, rating_gt)
       
       filename = params[:filename]
       STDERR.puts %!index_all_in_1:"#{filename}"(#{twitters.size})!
@@ -822,12 +941,12 @@ class TwittersController < ApplicationController
       if true
         twitters_wk = twitters
 
-        if pred_cond_gt > 0
-          #twitters_wk = twitters_wk.select {|x| x.prediction >= pred_cond_gt}
+        if twt_params.pred_cond_gt > 0
+          #twitters_wk = twitters_wk.select {|x| x.prediction >= twt_params.pred_cond_gt}
         end
 
         twitters_wk = twitters_wk.select {|x| x.status == Twitter::TWT_STATUS::STATUS_PATROL}
-        twitters_wk = twitters_wk.select {|x| x.select_cond_aio(pred_cond_gt)}
+        twitters_wk = twitters_wk.select {|x| x.select_cond_aio(twt_params.pred_cond_gt)}
 
         case params[:sort_by]
         when SORT_BY::PRED
@@ -1030,7 +1149,7 @@ class TwittersController < ApplicationController
         grp_sort = -1
       when GRP_SORT::GRP_SORT_AUTO
         #twitters_group = twitters.group_by {|x| x.a1o_auto_group_key}
-        twitters_group = twitters.group_by {|x| x.a1o_auto_group_key(5, false)}
+        twitters_group = twitters.group_by {|x| x.a1o_auto_group_key(5, false, false)}
         grp_sort = -1
       when GRP_SORT::GRP_SORT_ACCESS
         twitters_group = twitters.group_by {|x| %!#{x.last_access_datetime_days_elapsed / 30}|#{x.rating}|#{Util::format_num(x.prediction, 10)}!}
@@ -1091,3 +1210,4 @@ class TwittersController < ApplicationController
       twitters_group
     end
 end
+

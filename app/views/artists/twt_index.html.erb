@@ -856,12 +856,14 @@
 <% if @sp_dirs.presence %>
     <h2>sp(<%= @sp_dirs.size %>)</h2>
     <% @sp_dirs.each.with_index(1) do |elem, idx| %>
-        <%= idx %>."<%= elem.dirname %>"
         <% if elem.twt %>
+            <%= idx %>.
             アクセス日：<%= elem.twt.last_access_datetime_disp %>
-            (@<%= elem.screen_name %>)[<%= link_to_ex("■twt■", elem.twt) %>]
-            【<%= elem.twt.rating %>|<%= elem.twt.r18 %>】
             [<%= elem.twt.update_frequency %>]
+            [<%= link_to_ex("■twt■", elem.twt) %>]
+            【<%= elem.twt.rating %>|<%= elem.twt.r18 %>】
+            <%= elem.twt.twtname %>(@<%= elem.screen_name %>)
+            "<%= elem.dirname %>"
             <% if elem.twt.sp? %>
             <% else %>
                 <b>★対象外★</b>
@@ -874,6 +876,7 @@
                 <% end %>
             <% end %>
         <% else %>
+            <%= idx %>."<%= elem.dirname %>"
             <% url = twitters_path(mode: TwittersController::ModeEnum::SEARCH, search_word: elem.dirname) %>
             [<%= link_to_ex("■検索■", url) %>]
         <% end %>

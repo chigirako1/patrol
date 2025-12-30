@@ -22,8 +22,8 @@ module Twt
     TWT_RGX_URL = %r!https?://(?:x|twitter)\.com/\w+/status/(\d+)!
     TWT_URL_SCREEN_NAME_RGX = %r!(?:x|twitter)\.com/(\w+)!
     TWT_TOP_SCREEN_NAME_RGX = /^(\w+)\s?/
-    TWT_AT_SCREEN_NAME_RGX = /\(@(\w+)\)/
-    TWT_AT_SCREEN_NAME_RGX2 = /^(\w+)/
+    #TWT_AT_SCREEN_NAME_RGX = /\(@(\w+)\)/
+    TWT_AT_SCREEN_NAME_RGX = /^(\w+)/
 
     TWT_SP_FILENAME_RGX = /(\d{8}_\d{6})/
 
@@ -1050,7 +1050,14 @@ module Twt
             end
         end
 
-        key = "#{Util::format_num(twt.update_frequency, 100, 4)}|||更新頻度:#{Util::format_num(twt.update_frequency, 50, 4)}"
+        #key = "#{Util::format_num(twt.update_frequency, 100, 4)}|||更新頻度:#{Util::format_num(twt.update_frequency, 50, 4)}"
+
+        if dayn >= 7
+            dayn_s = "B"
+        else
+            dayn_s = "A"
+        end
+        key = "#{dayn_s}#{Util::format_num(twt.update_frequency, 100, 4)}|||更新頻度:#{Util::format_num(twt.update_frequency, 50, 4)}"
 
         [key, elem]
     end

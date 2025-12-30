@@ -386,7 +386,8 @@ button.horizontal {
           ["予測昇順(△)", TwittersController::SORT_BY::PRED_ASC],
           ["アクセス日順（旧→新）", TwittersController::SORT_BY::ACCESS],
           ["評価順", TwittersController::SORT_BY::RATING],
-          ["登録日順", TwittersController::SORT_BY::SORT_CREATE]
+          ["登録日順", TwittersController::SORT_BY::SORT_CREATE],
+          [TwittersController::SORT_BY::SORT_REGISTERED_DESC],
         ],
         selected: params[:sort_by] 
       )

@@ -574,10 +574,11 @@ class Twitter < ApplicationRecord
     # ""
     #
     def group_spec(grp_sort_spec_arg, total_cnt)
+        gkey_work = grp_sort_spec_arg.gsub(/#.*/, "")
+
         #regexp_pattern = /\{\w+\d*\}/
         regexp_pattern = /\{[a-zA-Z_]+\d*\}/
         matches = grp_sort_spec_arg.scan(regexp_pattern)
-        gkey_work = grp_sort_spec_arg.dup
 
         #STDERR.puts %!"#{gkey_work}"!
 
@@ -590,50 +591,46 @@ class Twitter < ApplicationRecord
             #STDERR.puts %!"#{x}" => "#{start_str}|#{unit}"!
 
             case start_str
+            when "ad"
+                unit = 1 unless unit
+                number = self.last_access_datetime_days_elapsed
+                gkey_work = group_sub(unit, number, gkey_work, x)
             when "c", "cm"
                 unit = 1 unless unit
-                # w = Util::format_num(self.created_at_day_num / 30, unit)
-                # gkey_work.gsub!(x, w)
                 number = self.created_at_day_num / 30
                 gkey_work = group_sub(unit, number, gkey_work, x)
             when "cw"
                 unit = 1 unless unit
-                #w = Util::format_num(self.created_at_day_num / 7, unit)
-                #gkey_work.gsub!(x, w)
                 number = self.created_at_day_num / 7
                 gkey_work = group_sub(unit, number, gkey_work, x)
             when "cd"
                 unit = 1 unless unit
-                #w = Util::format_num(self.created_at_day_num, unit)
-                #gkey_work.gsub!(x, w)
                 number = self.created_at_day_num
                 gkey_work = group_sub(unit, number, gkey_work, x)
+            when "cyymm"
+                yymm = self.created_at.strftime("%Y-%m")
+                gkey_work.gsub!(x, yymm)
+                #STDERR.puts %!"#{x}"\t"#{yymm}"\t"#{gkey_work}"!
             when "f"
                 unit = 500 unless unit
                 number = self.filenum
                 gkey_work = group_sub(unit, number, gkey_work, x, 4)
-            when "m"
+            when "m", "am"
                 unit = 1 unless unit
-                #w = Util::format_num(self.last_access_datetime_days_elapsed / 30, unit)
-                #gkey_work.gsub!(x, w)
                 number = self.last_access_datetime_days_elapsed / 30
                 gkey_work = group_sub(unit, number, gkey_work, x)
             when "p"
                 unit = 10 unless unit
-                #p = Util::format_num(self.prediction, unit)
-                #gkey_work.gsub!(x, p)
                 number = self.prediction
                 gkey_work = group_sub(unit, number, gkey_work, x)
             when "r"
                 unit = 1 unless unit
-                #r = Util::format_num(self.rating, unit)
-                #gkey_work.gsub!(x, r)
                 number = self.rating
                 gkey_work = group_sub(unit, number, gkey_work, x)
-            when "w"
+            when "restrict"
+                gkey_work.gsub!(x, self.r18)
+            when "w", "aw"
                 unit = 1 unless unit
-                #w = Util::format_num(self.last_access_datetime_days_elapsed / 7, unit)
-                #gkey_work.gsub!(x, w)
                 number = self.last_access_datetime_days_elapsed / 7
                 gkey_work = group_sub(unit, number, gkey_work, x)
             else
@@ -674,13 +671,14 @@ class Twitter < ApplicationRecord
         end
     end
 
-    def a1o_auto_group_key(r_unit=5, newc=true)
-        if sp?
+    def a1o_auto_group_key(r_unit=5, newc=true, fs_chk=true)
+        if fs_chk and sp?
             return "00.ファイルサイズ大#{Twitter::TWT_H_SEPARATOR}更新頻度#{Util::format_num(self.update_frequency, 100, 4)}"
         end
 
         daysn =  self.last_access_datetime_days_elapsed
         lad_n = sprintf("%3d週", daysn / 7)
+        lad_n2 = ""
 
         ndays_s = 7
         rat_1 = 90
@@ -739,6 +737,8 @@ class Twitter < ApplicationRecord
             elsif rating >= rat_a
                 recent = "[56.高評価(#{rat_a}↑)]"
                 p_unit = 10
+
+                lad_n2 = %!|#{Util::format_num(daysn / 7, 4)}週～!
             elsif daysn >= 30
                 recent = "[55.1カ月以上経過]"
             elsif self.prediction > 40
@@ -766,7 +766,7 @@ class Twitter < ApplicationRecord
             newcomer = ""
         end
 
-        recent + newcomer + "|" + rate_n + Twitter::TWT_H_SEPARATOR + key
+        recent + newcomer + "|" + rate_n + lad_n2 + Twitter::TWT_H_SEPARATOR + key
     end
 
     def group_key_test(grp_sort_by, status=false)

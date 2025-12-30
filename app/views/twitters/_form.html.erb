@@ -353,9 +353,11 @@
 
   <div>
     <%= form.label :公開範囲, style: "display: block" %>
-    <%= TwittersHelper::PRIVATE_ICON %><%= form.select :private_account,
+    <%= form.select :private_account,
       tw_visibility_list,
-      include_blank: "選択して下さい" %>
+      include_blank: "選択して下さい"
+    %>
+    <%= TwittersHelper::PRIVATE_ICON %>
   </div>
 
   <div>

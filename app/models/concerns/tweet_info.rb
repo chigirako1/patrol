@@ -15,7 +15,7 @@ module TweetInfo
             begin
                 #dl_date = Date.parse(dl_date_str)
             rescue Date::Error => ex
-
+              Rails.logger.warn(ex)
             end
             tweet_id = $2.to_i
             pic_no = $3.to_i
@@ -26,9 +26,14 @@ module TweetInfo
             pic_no = $2.to_i
         elsif filename =~ /TID\-unknown\-/
         elsif filename =~ /^[\w\-]{15}\./
-            #STDERR.puts %![dbg] #{filename}!
+            STDERR.puts %![dbg] #{filename}!
+            #Rails.logger.warn(filename)
         elsif filename =~ /^(\d{18,}) \w+/ #18は適当
           tweet_id = $1.to_i
+        # "20251208_193650"
+        elsif filename =~ /(\d{8})_\d{6}/
+          date = Date.parse $1
+          Twt::time2tweet_id(date.to_datetime)
         else
             STDERR.puts %!regex no hit:#{filename}!
         end
