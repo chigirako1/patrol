@@ -13,6 +13,7 @@ class Params
     :year_until,
     :display_number,
     :group_by,
+    :group_spec,
     :sort_by,
     :status,
     :amount_gt,
@@ -38,6 +39,7 @@ class Params
 
   def initialize(params)
     @group_by = params[:group_by]
+    @group_spec = params[:group_spec]
     @sort_by = params[:sort_by]
     @status = params[:status]
     @reverse_status = params[:reverse_status]
@@ -313,15 +315,16 @@ class ArtistsController < ApplicationController
     M_ARTWORKS_DISAPPEAR = "ほぼ消えた"
     F_ARTWORKS_DISAPPEAR = "一部消えた"
     
-=begin
-        ["取得途中", "取得途中"], 
-        ["最新から取得し直し中", "最新から取得し直し中"], 
-        ["最新追っかけ中", "最新追っかけ中"], 
-        ["彼岸", "彼岸"],
-        ["更新頻度低", "更新頻度低"],
-=end
+    STS_ONGOING = "取得途中" #???
+
+    STS_RESTART = "最新から取得し直し中"
+    STS_FOLLOW = "最新追っかけ中"
+    STS_OTHER_SIDE =  "彼岸"
+    STS_FEW_UPDATES = "更新頻度低"
 
     ADJUSTMENT = "(整理対象)"
+    EXCLD_NO_UPDATES = "「長期更新なし」を除外"
+    EXCLD_NO_UPDATES_AND_DONE = "「更新なし」&&「さかのぼり済み」を除外"
   end
 
   module DIR_TYPE
@@ -360,6 +363,8 @@ class ArtistsController < ApplicationController
     GROUP_RATING = "rating"
     GROUP_MONTH_PRED = "月/予測"
     GROUP_R_A_P = "評価/経過/予測"
+    GROUP_R_REST = "評価+年齢制限"
+    GROUP_SPEC = "(指定)"
   end
 
   module GRP_SORT
@@ -1146,7 +1151,9 @@ class ArtistsController < ApplicationController
 
       case prms.status
       when "(全て)"
-      when "「長期更新なし」を除外"
+      when Status::EXCLD_NO_UPDATES_AND_DONE
+        artists = artists.select {|x| x.has_leftovers?}
+      when Status::EXCLD_NO_UPDATES #"「長期更新なし」を除外"
         artists = index_select_status_exclude(artists)
       when Status::LONG_TERM_NO_UPDATS #"長期更新なし"
         artists = index_select_status_include(artists)
@@ -1223,16 +1230,17 @@ class ArtistsController < ApplicationController
       artists
     end
 
+    Exclude_list = [
+      Status::LONG_TERM_NO_UPDATS, #"長期更新なし",
+      Status::SIX_MONTH_NO_UPDATS, #"半年以上更新なし",
+      Status::DELETED, #"退会",
+      Status::SUSPEND, #"停止",
+      Status::NO_ARTWORKS, #"作品ゼロ",
+      Status::ACCOUNT_MIGRATION, #"別アカウントに移行",
+    ]
+
     def index_select_status_exclude(artists)
-      excl_list = [
-        "長期更新なし",
-        "半年以上更新なし",
-        "退会",
-        "停止",
-        "作品ゼロ",
-        "別アカウントに移行",
-      ]
-      artists = artists.select {|x| excl_list.include?(x.status) == false}
+      artists = artists.select {|x| Exclude_list.include?(x.status) == false}
       artists
     end
 
@@ -1306,12 +1314,12 @@ class ArtistsController < ApplicationController
       when SORT_TYPE::SORT_RATING_O2N
         artists = artists.sort_by {|x| [-(x.rating||0), x.last_access_datetime||"", x.last_ul_datetime||""]}
       when SORT_TYPE::SORT_ACCESS_OLD_TO_NEW
-        artists = artists.sort_by {|x| [x.last_access_datetime]}
+        artists = artists.sort_by {|x| [x.last_access_datetime||Time.new(2001,1,1)]}
       when SORT_TYPE::SORT_ACCESS_NEW_TO_OLD
-        artists = artists.sort_by {|x| [x.last_access_datetime]}.reverse
+        artists = artists.sort_by {|x| [x.last_access_datetime||Time.new(2001,1,1)]}.reverse
       else
         # デフォルト？
-        artists = artists.sort_by {|x| [-x.point, -(x.priority||0), -(x.recent_filenum||0), -(x.filenum||0), x.last_ul_datetime]}
+        artists = artists.sort_by {|x| [-x.point, -(x.priority||0), -(x.recent_filenum||0), -(x.filenum||0), x.last_ul_datetime||Time.new(2001,1,1)]}
       end
       artists
     end
@@ -1380,9 +1388,10 @@ class ArtistsController < ApplicationController
         artists_group = artists.group_by {|x| x.group_by_key()}.sort.reverse.to_h
       when GROUP_TYPE::GROUP_R_A_P
         artists_group = artists.group_by {|x| x.group_by_key(true)}.sort.reverse.to_h
-      when "評価+年齢制限"
+      when GROUP_TYPE::GROUP_R_REST#"評価+年齢制限"
         #artists_group = artists.group_by {|x| [-x.rating, x.r18]}.sort.to_h
-        artists_group = artists.group_by {|x| [x.rating, x.r18]}.sort.reverse.to_h
+        #artists_group = artists.group_by {|x| %!#{x.rating}|#{x.r18}!}.sort.reverse.to_h
+        artists_group = artists.group_by {|x| x.group_by_spec("{status}#{Artist::PXV_H_SEPARATOR}{r}|{restrict}")}.sort.reverse.to_h
       when "さかのぼり"
         artists_group = artists.group_by {|x| [
             if x.reverse_status
@@ -1395,8 +1404,10 @@ class ArtistsController < ApplicationController
       when "none"
         artists_group["none"] = artists
       when GROUP_TYPE::GROUP_ACCESS_OLD_TO_NEW
-        puts %![DBG] index_group_by::#{prms.group_by}!
+        #puts %![DBG] index_group_by::#{prms.group_by}!
         artists_group = artists.group_by {|x| x[:last_access_datetime].strftime("%Y-%m")}.sort.to_h
+      when GROUP_TYPE::GROUP_SPEC
+        artists_group = artists.group_by {|x| x.group_by_spec(prms.group_spec)}.sort.reverse.to_h
       else
         #artists_group = set_artist_group_pxv(artists)
         artists_group["all"] = artists

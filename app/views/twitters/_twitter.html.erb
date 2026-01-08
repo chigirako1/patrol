@@ -4,6 +4,7 @@
 
         <strong>全画像数：</strong>
         <%= twitter.filenum %>
+        <%= %!(#{twitter.video_cnt})! if twitter.video_cnt %>
 
         <%= %!「#{twitter.comment}」! if twitter.comment.presence %>
         <%= %!|「#{twitter.remarks}」! if twitter.remarks.presence %>

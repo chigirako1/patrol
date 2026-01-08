@@ -35,7 +35,7 @@ class Artist < ApplicationRecord
 
     PXV_USER_URL_REGEX = %r!pixiv\.net/users/(\d+)!
 
-    PXV_H_SEPARATOR = "::"
+    PXV_H_SEPARATOR = "||"
 
     module ReverseEnum
         REV_ON = "さかのぼり中"
@@ -50,6 +50,13 @@ class Artist < ApplicationRecord
 
     module COLUMN
         PXV_TWTID = "twtid"
+    end
+
+    module RESTRICT
+        R18 = "R18"
+        R15 = "R15"
+        R12 = "R12"
+        NOTHING = "全年齢"
     end
 
     #--------------------------------------------------------------------------
@@ -309,6 +316,51 @@ class Artist < ApplicationRecord
         end
     end
 
+    def inaccessible?
+        ary = [
+            ArtistsController::Status::DELETED,
+            ArtistsController::Status::SUSPEND,
+            ArtistsController::Status::ACCOUNT_MIGRATION,
+        ]
+        case self.status
+        when *ary
+            true
+        else
+            false
+        end
+    end
+
+    def no_updates?
+        ary = [
+            ArtistsController::Status::DELETED,
+            ArtistsController::Status::SUSPEND,
+            ArtistsController::Status::ACCOUNT_MIGRATION,
+        ]
+        case self.status
+        when *ary
+            true
+        else
+            false
+        end
+    end
+
+    def has_leftovers?
+        if inaccessible?
+            # アクセス不可なので残件取得不能
+            return false
+        end
+
+        if active?
+            return true
+        end
+
+        if self.reverse_status == ReverseEnum::REV_DONE
+            false
+        else
+            true
+        end
+    end
+
     def point
 
         pred_cnt = prediction_up_cnt(true)
@@ -326,11 +378,11 @@ class Artist < ApplicationRecord
 
         # R18
         case r18
-        when "R18"
+        when RESTRICT::R18#"R18"
             comp = 160
-        when "R15"
+        when RESTRICT::R15#"R15"
             comp = 130
-        when "R12"
+        when RESTRICT::R12#"R12"
             comp = 110
         when "cute"
             comp = 100
@@ -616,7 +668,7 @@ class Artist < ApplicationRecord
     def r18_disp()
         tag = ""
 
-        if r18.presence and r18 == "R18"
+        if r18.presence and r18 == RESTRICT::R18
             tag += "🔞" + r18
         else
             tag += r18
@@ -665,6 +717,73 @@ class Artist < ApplicationRecord
             w = (days + 6) / 7
             %!1:#{w}週!
         end
+    end
+
+    def group_sub(unit, number, gkey_work, x, digit=3)
+        w = Util::format_num(number, unit, digit)
+        gkey_work.gsub(x, w)
+    end
+
+    def group_by_spec(group_spec)
+        gkey_work = group_spec.gsub(/#.*/, "")
+
+        regexp_pattern = /\{[a-zA-Z_]+\d*\}/
+        matches = group_spec.scan(regexp_pattern)
+
+        matches.each do |x|
+            if x =~ /([a-zA-Z_]+)(\d*)/
+                start_str = $1
+                unit = $2.to_i if $2 != ""
+            end
+
+            case start_str
+            when "ad"
+                unit = 1 unless unit
+                number = self.last_access_datetime_days_elapsed
+                gkey_work = group_sub(unit, number, gkey_work, x)
+            when "am"
+                unit = 1 unless unit
+                number = self.last_access_datetime_days_elapsed / 30
+                gkey_work = group_sub(unit, number, gkey_work, x)
+            when "aw"
+                unit = 1 unless unit
+                number = self.last_access_datetime_days_elapsed / 7
+                gkey_work = group_sub(unit, number, gkey_work, x)
+            when "f"
+                unit = 500 unless unit
+                number = self.filenum
+                gkey_work = group_sub(unit, number, gkey_work, x, 4)
+            when "r"
+                unit = 1 unless unit
+                number = self.rating
+                gkey_work = group_sub(unit, number, gkey_work, x)
+            when "restrict"
+                gkey_work.gsub!(x, self.r18)
+            when "status"
+                str = ""
+
+                case self.status
+                when ArtistsController::Status::STS_RESTART, ArtistsController::Status::STS_FOLLOW
+                when ArtistsController::Status::NO_UPDATES_3M, ArtistsController::Status::NO_UPDATES_1M
+                when "", nil
+                else
+                    wrapup = true
+                end
+
+                if wrapup
+                    gkey_work = " " + self.status + PXV_H_SEPARATOR + " "
+                    break ###!!!
+                else
+                end
+
+                gkey_work.gsub!(x, str)
+            else
+                msg = %!wrong opt:"#{start_str}"!
+                Rails.logger.error(msg)
+            end
+        end
+
+        gkey_work
     end
 
     def group_by_key(rate = false)

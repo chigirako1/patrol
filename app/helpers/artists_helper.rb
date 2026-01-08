@@ -7,7 +7,7 @@ module ArtistsHelper
     PRIVATE_ICON = ApplicationHelper::PRIVATE_ICON
 
     def r18_disp(restr)
-        if restr == "R18"
+        if restr == Artist::RESTRICT::R18
             r18_icon = R18_ICON
         else
             r18_icon = ""
@@ -16,16 +16,35 @@ module ArtistsHelper
         (restr||"") + r18_icon
     end
 
+    def feature_icon(feat)
+        case feat
+        when Artist::FEATURE::AI
+            icon = DM_AI_ICON
+        when Artist::FEATURE::HAND, nil
+            #icon = DM_HAND_ICON
+            icon = ""
+        else
+            icon = ""
+        end
+    end
+    
+    def feature_disp(feat)
+        (feat||"") + feature_icon(feat)
+    end
+
     def page_title(artist)
+        feature = feature_icon(artist.feature)
+
         if artist.twtid.presence
             twt = ""
         else
-            twt = %!@\!!
+            #twt = %!@\!!
+            twt = %!❗️!
         end
         
         r = r18_disp(artist.r18)
 
-        twt + %![#{artist.rating}]#{artist.pxvname}【#{r}】!
+        feature + twt + %![#{artist.rating}]#{artist.pxvname}【#{r}】!
     end
 
     def page_header(artist)
@@ -37,7 +56,7 @@ module ArtistsHelper
         oldname = %!/旧名"#{artist.oldname}"! if artist.oldname.presence
         circle_name = %!/サークル名："#{artist.circle_name}"! if artist.circle_name.presence
 
-        %!【#{artist.rating}|#{r18_disp(artist.r18)}】#{artist.pxvname}(#{artist.pxvid})#{furigana}#{altname}#{oldname}#{circle_name}!
+        %!#{feature_icon(artist.feature)}【#{artist.rating}|#{r18_disp(artist.r18)}】#{artist.pxvname}(#{artist.pxvid})#{furigana}#{altname}#{oldname}#{circle_name}!
     end
 
     def pxvname_tag(artist)
@@ -89,11 +108,12 @@ module ArtistsHelper
             bgcolor = "lightgray"
         else
         end
+
         tag += %!<td bgcolor="#{bgcolor}">!
-        tag += artist.feature
+        tag += feature_disp(artist.feature)
         tag += %!【#{artist.rating}】!
         if artist.r18.presence
-            tag += %!#{artist.r18}<br />!
+            tag += %!#{r18_disp(artist.r18)}<br />!
         end
                 
         tag += %!</td>!

@@ -1,25 +1,4 @@
-<% if @twitters_total_count.presence %>
-  <% twitters_total_count = @twitters_total_count %>
-<% else %>
-  <% twitters_total_count = -1 %>
-<% end %>
-
-<% rem = twitters_total_count - @num_of_disp %>
-<% if rem > 0 %>
-  <% rem_str = %!/残り#{rem}件! %>
-<% end %>
-
-<% if params[:mode] == TwittersController::ModeEnum::SEARCH %>
-  <% page_title = "twt検索:「#{params[:search_word]}」" %>
-<% elsif twitters_total_count < 0 %>
-  <% page_title = "#{params[:page_title]}" %>
-<% elsif @twitters_total_count %>
-  <% page_title = "#{params[:page_title]} (#{@twitters_total_count}件)" %>
-<% else %>
-  <% page_title = "#{params[:page_title]} (#{twitters_total_count}件#{rem_str}) a" %>
-<% end %>
-<% page_title += " - TWT一覧 a" %>
-
+<% page_title = twitter_index_page_title(@twitters_group, @twitters_total_count, @num_of_disp) %>
 <% provide(:title, page_title) %>
 <p style="color: green"><%= notice %></p>
 
@@ -47,6 +26,22 @@
     <% if pt %>
       PXVには登録あり:"<%= pt.pxvname %>"[<%= link_to_ex "■pxv■", pt %>](@<%= pt.twtid %>)
     <% end %>
+  <% end %>
+  <br />
+<% end %>
+
+<% if params[:rating].presence %>
+  ・評価<%= params[:rating] %>以上<br />
+<% end %>
+<% if params[:sort_by].presence %>
+  ・ソート："<%= params[:sort_by] %>"<br />
+<% end %>
+<% if params[:grp_sort_by].presence %>
+  ・グループ："<%= params[:grp_sort_by] %>"
+  <% if params[:grp_sort_by] == TwittersController::GRP_SORT::GRP_SORT_SPEC %>
+    /"<%= params[:grp_sort_spec] %>"<br />
+  <% else %>
+    <br />
   <% end %>
 <% end %>
 
@@ -375,7 +370,11 @@ button.horizontal {
     <hr />
 
     <!-- ##################################### -->
-    <%= f.label :表示数 %>
+    <%= f.label :最大取得レコード数 %>
+    <%= f.number_field :select_max, :value => params[:select_max] %>
+    <br />
+
+    <%= f.label :各グループ表示数 %>
     <%= f.number_field :num_of_disp, :value => params[:num_of_disp] %>
     <br />
 
@@ -385,9 +384,12 @@ button.horizontal {
           ["予測降順(▽)", TwittersController::SORT_BY::PRED],
           ["予測昇順(△)", TwittersController::SORT_BY::PRED_ASC],
           ["アクセス日順（旧→新）", TwittersController::SORT_BY::ACCESS],
+          [TwittersController::SORT_BY::R_ACCESS],
           ["評価順", TwittersController::SORT_BY::RATING],
           ["登録日順", TwittersController::SORT_BY::SORT_CREATE],
           [TwittersController::SORT_BY::SORT_REGISTERED_DESC],
+          [TwittersController::SORT_BY::FILENUM],
+          [TwittersController::SORT_BY::SORT_POINT],
         ],
         selected: params[:sort_by] 
       )
@@ -414,6 +416,7 @@ button.horizontal {
           [TwittersController::GRP_SORT::GRP_SORT_DEL, TwittersController::GRP_SORT::GRP_SORT_DEL],
           [TwittersController::GRP_SORT::GRP_SORT_SPEC, TwittersController::GRP_SORT::GRP_SORT_SPEC],
           ["自動(おまかせ)", TwittersController::GRP_SORT::GRP_SORT_AUTO],
+          [TwittersController::GRP_SORT::GRP_SORT_NONE],
         ],
         selected: params[:grp_sort_by] 
       )

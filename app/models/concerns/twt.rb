@@ -950,6 +950,10 @@ module Twt
     def self.init_pic_infos()
         STDERR.puts "init_pic_infos()"
         path_list = get_pic_info_path_list
+        if path_list.size == 0
+            STDERR.puts %!list size == 0!
+        end
+
         hash = get_pic_infos(path_list)
         hash
     end
@@ -1148,6 +1152,10 @@ module Twt
         hash2
     end
 
+    def self.filesize_huge?(filesize)
+        (filesize||0) > Twt::FILESIZE_THRESHOLD
+    end
+
     def self.reg_filesize()
         STDERR.puts "### reg_filesize >>>"
         pic_infos = init_pic_infos
@@ -1163,9 +1171,10 @@ module Twt
                     if avg > twt.filesize
                         twt_params[:filesize] = avg
                     elsif avg == twt.filesize
-                    elsif (avg) < (twt.filesize * 90 / 100)
+                    elsif Twt::filesize_huge?(avg) and (avg) < (twt.filesize * 90 / 100)
                         percent = avg * 100 / twt.filesize
-                        msg = %!サイズが小さくなっている:#{twt.filesize} -> #{avg}(#{percent}%)[@#{k}]!
+                        #msg = %!サイズが小さくなっている:#{twt.filesize} -> #{avg}(#{percent}%)[@#{k}]!
+                        msg = %!サイズが小さくなっている:#{Util::formatFileSize twt.filesize} -> #{Util::formatFileSize avg}(#{percent}%)[@#{k}]!
                         Rails.logger.warn(msg)
                     end
                 else

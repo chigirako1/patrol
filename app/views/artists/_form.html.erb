@@ -206,7 +206,7 @@
         (@<%= twt.twtid %>)
         <br />
         <%= twt.twtname %>
-        [<%= twt.drawing_method %>]【<%= twt.rating %>|<%= twt.r18 %>】
+        [<%= dm_disp(twt.drawing_method) %>]【<%= twt.rating %>|<%= twt.r18 %>】
         [<%= link_to "■twt■", twitter_path(twt) %>]
         <b><%= %!(#{twt.status})! if twt.status != "TWT巡回" and twt.status != "" and twt.status != nil %></b>
         ACCS:<%= twt.get_date_info(twt.last_access_datetime) if twt.last_access_datetime.presence %>
@@ -276,7 +276,8 @@
         ["アート系", "アート系"],
         ["R36(危険)", "R36"]
       ],
-    include_blank: "選択して下さい" %>
+      include_blank: "選択して下さい"
+    %>
     <input type="button" value="R18" onclick="select_r(1);" class="btn" />
     <input type="button" value="R15" onclick="select_r(2);" class="btn" />
     <input type="button" value="R12" onclick="select_r(3);" class="btn" />

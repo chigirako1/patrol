@@ -862,8 +862,9 @@
             [<%= elem.twt.update_frequency %>]
             [<%= link_to_ex("■twt■", elem.twt) %>]
             【<%= elem.twt.rating %>|<%= elem.twt.r18 %>】
-            <%= elem.twt.twtname %>(@<%= elem.screen_name %>)
-            "<%= elem.dirname %>"
+            <b><%= elem.twt.twtname %></b>
+            (@<%= elem.screen_name %>)
+            「<%= elem.dirname %>｣
             <% if elem.twt.sp? %>
             <% else %>
                 <b>★対象外★</b>

@@ -6,6 +6,7 @@ module ApplicationHelper
     DM_HAND_ICON ="✍️"
     R18_ICON = "🔞"
     PXV_ICON = "🅿️"
+    TWT_ICON = "🆃" #X
     PRIVATE_ICON = "🔒️"
 
     def full_title(page_title)

@@ -360,7 +360,8 @@
           ['退会'],
           ['停止'], 
           ['長期更新なし'], 
-          ['「長期更新なし」を除外'], 
+          [ArtistsController::Status::EXCLD_NO_UPDATES],#['「長期更新なし」を除外'], 
+          [ArtistsController::Status::EXCLD_NO_UPDATES_AND_DONE],
           ['作品ゼロ'], 
           ['一部消えた'], 
           ['取得途中'], 
@@ -446,14 +447,18 @@
           ['予測'],
           ['rating'],
           [ArtistsController::GROUP_TYPE::GROUP_FEAT_STAT_RAT],
-          ['評価+年齢制限'],
+          [ArtistsController::GROUP_TYPE::GROUP_R_REST],#['評価+年齢制限'],
           ['さかのぼり'],
           [ArtistsController::GROUP_TYPE::GROUP_ACCESS_OLD_TO_NEW],
           [ArtistsController::GROUP_TYPE::GROUP_MONTH_PRED],
           [ArtistsController::GROUP_TYPE::GROUP_R_A_P],
+          [ArtistsController::GROUP_TYPE::GROUP_SPEC],
         ],
         selected: params[:group_by] 
       ) %>
+    <br />
+    <%= f.label :グループ化指定文字列 %>
+    <%= f.text_field :group_spec, :value => params[:group_spec] %>
     <br />
     
     <%= f.label :sort_by, style: "display: block" %>

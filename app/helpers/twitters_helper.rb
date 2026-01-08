@@ -56,6 +56,32 @@ module TwittersHelper
         end
     end
 
+    def twitter_index_page_title(twitters_group, total_count, num_of_disp)
+        cnt = twitters_group.sum {|k,v| v.count}
+        if total_count.presence
+            twitters_total_count = total_count
+        else
+            twitters_total_count = -1
+        end
+
+        rem = twitters_total_count - num_of_disp
+        if rem > 0
+            rem_str = %!/残り#{rem}件!
+        end
+
+        if params[:mode] == TwittersController::ModeEnum::SEARCH
+            page_title = "twt検索:「#{params[:search_word]}」(#{cnt}件)"
+        elsif twitters_total_count < 0
+            page_title = "#{params[:page_title]}"
+        elsif total_count
+            page_title = "#{params[:page_title]} (#{cnt}/#{total_count}件)"
+        else
+            page_title = "#{params[:page_title]} (#{cnt}/#{twitters_total_count}件#{rem_str}) a"
+        end
+        
+        page_title += " - TWT一覧"
+    end
+
     def twitter_show_page_title(twitter, r18=false)
         title = ""
 

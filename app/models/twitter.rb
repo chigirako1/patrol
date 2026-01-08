@@ -287,12 +287,14 @@ class Twitter < ApplicationRecord
         get_date_info(last_access_datetime)
     end
 
+=begin
     def last_access_datetime_days_elapsed
         get_date_delta(last_access_datetime)
     end
+=end
 
     def filesize_huge?
-        if filesize and filesize > Twt::FILESIZE_THRESHOLD
+        if Twt::filesize_huge?(self.filesize)
             true
         else
             false
@@ -379,6 +381,61 @@ class Twitter < ApplicationRecord
         else
             pred = 33
         end
+    end
+
+    def point
+        pt = self.rating||0
+        
+        case self.r18
+        when RESTRICT::R18
+            pt += 10
+        when RESTRICT::R15
+            pt += 5
+        when RESTRICT::R12
+        else
+        end
+
+        pt += self.prediction / 100
+
+        lan = self.last_access_day_num
+        if lan > 30
+            pt += 20
+        elsif lan > 20
+            pt += 10
+        elsif lan <= 1
+            pt -= 10
+        elsif lan <= 3
+            pt -= (lan * 3)
+        else
+        end
+
+        cdn = self.created_at_day_num
+        if cdn < 7
+            pt += 16
+        elsif cdn < 14
+            pt += 12
+        elsif cdn < 21
+            pt += 8
+        elsif cdn < 28
+            pt += 4
+        elsif cdn > 365
+            pt -= (cdn / (365 / 2))
+        elsif cdn > 180
+            pt -= 1
+        else
+        end
+
+        pd = self.prediction
+        if pd > 30
+            pt += 15
+        elsif pd > 20
+            pt += 10
+        elsif pd > 10
+            pt += 5
+        else
+        end
+
+        pt
     end
 
     def sort_val
@@ -595,17 +652,25 @@ class Twitter < ApplicationRecord
                 unit = 1 unless unit
                 number = self.last_access_datetime_days_elapsed
                 gkey_work = group_sub(unit, number, gkey_work, x)
-            when "c", "cm"
+            when "am", "m"
+                unit = 1 unless unit
+                number = self.last_access_datetime_days_elapsed / 30
+                gkey_work = group_sub(unit, number, gkey_work, x)
+            when "aw", "w"
+                unit = 1 unless unit
+                number = self.last_access_datetime_days_elapsed / 7
+                gkey_work = group_sub(unit, number, gkey_work, x)
+            when "cd"
+                unit = 1 unless unit
+                number = self.created_at_day_num
+                gkey_work = group_sub(unit, number, gkey_work, x)
+            when "cm", "c"
                 unit = 1 unless unit
                 number = self.created_at_day_num / 30
                 gkey_work = group_sub(unit, number, gkey_work, x)
             when "cw"
                 unit = 1 unless unit
                 number = self.created_at_day_num / 7
-                gkey_work = group_sub(unit, number, gkey_work, x)
-            when "cd"
-                unit = 1 unless unit
-                number = self.created_at_day_num
                 gkey_work = group_sub(unit, number, gkey_work, x)
             when "cyymm"
                 yymm = self.created_at.strftime("%Y-%m")
@@ -615,24 +680,39 @@ class Twitter < ApplicationRecord
                 unit = 500 unless unit
                 number = self.filenum
                 gkey_work = group_sub(unit, number, gkey_work, x, 4)
-            when "m", "am"
-                unit = 1 unless unit
-                number = self.last_access_datetime_days_elapsed / 30
-                gkey_work = group_sub(unit, number, gkey_work, x)
             when "p"
                 unit = 10 unless unit
                 number = self.prediction
                 gkey_work = group_sub(unit, number, gkey_work, x)
+            when "q"
+                unit = 500 unless unit
+                number = self.update_frequency
+                gkey_work = group_sub(unit, number, gkey_work, x, 4)
+            when "qq"
+                unit = 500 unless unit
+                if self.update_frequency >= unit
+                    number = self.update_frequency
+                    w = Util::format_num(number, unit, 4)
+
+                    unit2 = 500
+                    num2 = self.filenum / unit2 * unit2
+                    digit = 4
+                    max_n = 10 ** digit
+                    f = Util::format_num(max_n - num2, unit2, digit)
+
+                    gkey_work = "あとまわし(#{f})[約#{num2}ファイル～]" + TWT_H_SEPARATOR + "更新頻度#{w}～"
+                    break
+                else
+                    gkey_work.gsub!(x, "")
+                end
             when "r"
                 unit = 1 unless unit
                 number = self.rating
                 gkey_work = group_sub(unit, number, gkey_work, x)
+            when "method"
+                gkey_work.gsub!(x, self.drawing_method||"")
             when "restrict"
-                gkey_work.gsub!(x, self.r18)
-            when "w", "aw"
-                unit = 1 unless unit
-                number = self.last_access_datetime_days_elapsed / 7
-                gkey_work = group_sub(unit, number, gkey_work, x)
+                gkey_work.gsub!(x, self.r18||"")
             else
                 msg = %!wrong opt:"#{start_str}"!
                 Rails.logger.error(msg)

@@ -25,7 +25,8 @@ module TweetInfo
             tweet_id = $1.to_i
             pic_no = $2.to_i
         elsif filename =~ /TID\-unknown\-/
-        elsif filename =~ /^[\w\-]{15}\./
+        elsif filename =~ /^\d{8}_\d{6}$/
+        elsif filename =~ /^[\w\-]{15}\./ #????なにこれ
             STDERR.puts %![dbg] #{filename}!
             #Rails.logger.warn(filename)
         elsif filename =~ /^(\d{18,}) \w+/ #18は適当

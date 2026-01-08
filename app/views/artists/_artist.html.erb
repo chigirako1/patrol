@@ -26,7 +26,7 @@
           <td><%= artist.rating %></td>
         <% end %>
         <td><%= artist.r18 %></td>
-        <td><%= artist.twtid %></td>
+        <td><%= artist.twtid %><%= ApplicationHelper::TWT_ICON if artist.twtid.presence %></td>
         <td><%= artist.prediction_up_cnt(true) %></td>
         <td><%= artist.comment %></td>
         <td><%= artist.remarks %></td>
