@@ -284,6 +284,8 @@
     <% end %>
   </div>
 
+  <hr />
+  
   <div>
     <%= form.label :コメント, style: "display: block" %>
     <%= form.text_field :comment %>
@@ -529,25 +531,35 @@
     elem.value = val;
   }
 
-  function set_rate(elem_id, point) {
+  function getElemTwt(elem_id)
+  {
     let elem = document.getElementById("twitter_" + elem_id);
+    return elem;
+  }
+
+  function set_rate(elem_id, point) {
+    //let elem = document.getElementById("twitter_" + elem_id);
+    let elem = getElemTwt(elem_id);
     elem.value = point;
   }
 
   function plus_rate(elem_id, point) {
-    let elem = document.getElementById("twitter_" + elem_id);
+    //let elem = document.getElementById("twitter_" + elem_id);
+    let elem = getElemTwt(elem_id);
     let prio_val = parseInt(elem.value);
     elem.value = prio_val + point;
   }
 
   function multiple_val(elem_id, val) {
-    let elem = document.getElementById("twitter_" + elem_id);
+    //let elem = document.getElementById("twitter_" + elem_id);
+    let elem = getElemTwt(elem_id);
     let prio_val = parseInt(elem.value);
     elem.value = prio_val * val;
   }
 
   function div_val(elem_id, val) {
-    let elem = document.getElementById("twitter_" + elem_id);
+    //let elem = document.getElementById("twitter_" + elem_id);
+    let elem = getElemTwt(elem_id);
     let prio_val = parseInt(elem.value);
     elem.value = prio_val / val | 0;//整数にしたい
   }

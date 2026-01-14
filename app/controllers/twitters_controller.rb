@@ -17,9 +17,13 @@ class TwittersController < ApplicationController
   module SORT_BY
     ID = "id"
     PRED = "pred"
+    SORT_PRED = PRED
     PRED_ASC = "pred_asc"#desc?
+    R_PRED_DESC = "評価/予測▽順"
+
     ACCESS = "access"
     R_ACCESS = "評価/アクセス日順（旧→新）"
+
     RATING = "rating"
     FILENUM = "ファイル数順"#"filenum"
     SORT_CREATE = "create"
@@ -642,25 +646,6 @@ class TwittersController < ApplicationController
       twitters
     end
 
-    def index_sort(twitters, twt_params)
-      case twt_params.sort_by
-      when SORT_BY::SORT_POINT
-        twitters = twitters.sort_by {|x| x.point}.reverse
-      when SORT_BY::ACCESS
-        twitters = twitters.sort_by {|x| [x.last_access_datetime, (x.last_dl_datetime)]}#.reverse
-      when SORT_BY::R_ACCESS
-        twitters = twitters.sort_by {|x| [-x.rating, (x.last_dl_datetime)]}
-      when SORT_BY::PRED
-        twitters = twitters.sort_by {|x| [-x.prediction, x.last_access_datetime]}
-      when SORT_BY::SORT_CREATE
-        twitters = twitters.sort_by {|x| x.created_at}
-      when SORT_BY::SORT_REGISTERED_DESC
-        twitters = twitters.sort_by {|x| x.created_at}.reverse
-      else
-        twitters = twitters.sort_by {|x| [-(x.rating||0), -x.prediction, x.last_access_datetime]}
-      end
-    end
-
     def index_mode_all(twitters, twt_params)
       twitters = index_select(twitters, twt_params)
       @twitters_total_count = twitters.size
@@ -679,7 +664,8 @@ class TwittersController < ApplicationController
       twitters = twitters.select {|x| x.drawing_method == twt_params.param_target}
       twitters = twitters.select {|x| x.last_access_day_num >= twt_params.hide_within_days}
       #STDERR.puts %!#{twitters.size}!
-      twitters = twitters.select {|x| x.filesize_huge?}
+      #twitters = twitters.select {|x| x.filesize_huge?}
+      twitters = twitters.select {|x| x.sp?}
       #STDERR.puts %!#{twitters.size}!
       twitters = twitters.select {|x| (x.rating||0) >= twt_params.rating_gt}
       twitters = twitters.select {|x| x.prediction >= twt_params.pred_cond_gt}
@@ -1062,6 +1048,28 @@ class TwittersController < ApplicationController
       end
 
       group
+    end
+
+    def index_sort(twitters, twt_params)
+      case twt_params.sort_by
+      when SORT_BY::SORT_POINT
+        twitters = twitters.sort_by {|x| x.point}.reverse
+      when SORT_BY::ACCESS
+        twitters = twitters.sort_by {|x| [x.last_access_datetime, (x.last_access_datetime)]}#.reverse
+      when SORT_BY::R_ACCESS
+        twitters = twitters.sort_by {|x| [-x.rating, (x.last_access_datetime)]}
+      when SORT_BY::PRED
+        twitters = twitters.sort_by {|x| [-x.prediction, x.last_access_datetime]}
+      when SORT_BY::R_PRED_DESC
+        twitters = twitters.sort_by {|x| [-x.rating, -x.prediction]}
+      when SORT_BY::SORT_CREATE
+        twitters = twitters.sort_by {|x| x.created_at}
+      when SORT_BY::SORT_REGISTERED_DESC
+        twitters = twitters.sort_by {|x| x.created_at}.reverse
+      else
+        twitters = twitters.sort_by {|x| [-(x.rating||0), -x.prediction, x.last_access_datetime]}
+      end
+      twitters
     end
 
     def twt_sort_by(twitters, sort_by)

@@ -40,9 +40,10 @@ module Twt
     UL_FREQUECNTY_THRESHOLD = 150
     RATING_THRESHOLD = 80
 
-    FILESIZE_THRESHOLD_KB = 600
+    FILESIZE_THRESHOLD_KB = 540#600
     FILESIZE_THRESHOLD = FILESIZE_THRESHOLD_KB * 1024
 
+    FILESIZE_SAMPLE_N = 100
 
     def self.get_twt_tweet_ids_from_txts(twtid)
         txts = UrlTxtReader::get_url_txt_contents_uniq_ary([])
@@ -304,14 +305,19 @@ module Twt
         Util::string_to_datetime(datetime_str).in_time_zone('Tokyo')
     end
 
-    def self.get_sp_tweet_id_from_filename(filename)
+    def self.get_sp_datetime_from_filename(filename)
         if filename =~ TWT_SP_FILENAME_RGX
             datetime_str = $1
             datetime = sp_datetime_str_to_datetime(datetime_str)
-            time2tweet_id(datetime)
         else
-            nil
+            datetime = nil
         end
+        datetime
+    end
+
+    def self.get_sp_tweet_id_from_filename(filename)
+        datetime = get_sp_datetime_from_filename(filename)
+        time2tweet_id(datetime)
     end
 
     def self.get_sp_tweet_id_from_filepath(fpath)
@@ -961,7 +967,7 @@ module Twt
     Tmp_struct = Struct.new(:avg, :max, :min, :cnt)
 
     def self.map_pic_infos(hash, threshold_kb)
-
+=begin
         hash2 = hash.map {|k,v|
             [
                 k,
@@ -978,8 +984,44 @@ module Twt
                 ]
             ]
         }.to_h
+=end
 
-        STDERR.puts %!#{hash.size} => #{hash2.size}!
+        hash2 = hash.select {|k, v|
+            v.size > 30
+        }.map {|k,v|
+            tmp_v = v.last(FILESIZE_SAMPLE_N)
+            [
+                k,
+                #Tmp_struct.new(v.sum / v.size, v.max, v.min, v.size)
+                Tmp_struct.new(tmp_v.sum / tmp_v.size, tmp_v.max, tmp_v.min, tmp_v.size)
+            ]
+        }.map {|x|
+            [
+                x[0],
+                [
+                    x[1],
+                    Twitter.find_by(twtid: x[0])
+                ]
+            ]
+        }.to_h.select {|k, v|
+            v[1] != nil and v[1].filesize_huge?
+        }#.to_h
+
+=begin
+        chkid = ""
+        if hash.has_key? chkid
+            a = hash[chkid]
+            avg = a.sum / a.size
+            STDERR.puts %!"#{chkid}"(#{a.size}):#{avg}!
+            STDERR.puts a.size
+            STDERR.puts %!#{threshold_kb}!
+        end
+        if hash2.has_key? chkid
+            a = hash2[chkid]
+            STDERR.puts %!"#{chkid}"(#{a[1].twtname}|#{a[1].sp?})!
+        end
+=end
+        STDERR.puts %!map_pic_infos():#{hash.size} => #{hash2.size}!
 
         hash2
     end
@@ -1056,18 +1098,23 @@ module Twt
 
         #key = "#{Util::format_num(twt.update_frequency, 100, 4)}|||更新頻度:#{Util::format_num(twt.update_frequency, 50, 4)}"
 
-        if dayn >= 7
+        if dayn >= 21
+            dayn_s = "D"
+        elsif dayn >= 14
+            dayn_s = "C"
+        elsif dayn >= 7
             dayn_s = "B"
         else
             dayn_s = "A"
         end
-        key = "#{dayn_s}#{Util::format_num(twt.update_frequency, 100, 4)}|||更新頻度:#{Util::format_num(twt.update_frequency, 50, 4)}"
+        key = "#{dayn_s}|||#{Util::format_num(twt.update_frequency, 100, 4)}|||更新頻度:#{Util::format_num(twt.update_frequency, 50, 4)}"
 
         [key, elem]
     end
 
     def self.build_pic_info_list(hash)
 
+        STDERR.puts %!build_pic_info_list >>>!
         known_twt_url_list, _ = Twitter::url_list("all")
         #url_list_summary = Tweet::url_list_summary(known_twt_url_list)
         #url_list_summary_h = url_list_summary.map {|x| [x.screen_name, x]}.to_h
@@ -1125,6 +1172,8 @@ module Twt
     def self.load_pic_info_tsv()
         hash = get_pic_infos_ex
 
+        STDERR.puts %!load_pic_info_tsv:#{hash.size}!
+
         threshold_kb = FILESIZE_THRESHOLD
         hash2 = map_pic_infos(hash, threshold_kb)
 
@@ -1161,35 +1210,39 @@ module Twt
         pic_infos = init_pic_infos
         pic_infos.each do |k,v|
             twt = Twitter.find_by(twtid: k)
-            if twt
-                twt_params = {}
-                #avg = v.sum / v.size
-                tmp_v = v.last(100)
-                avg = tmp_v.sum / tmp_v.size
+            unless twt
+                msg = %!不明なID:"#{k}"!
+                Rails.logger.warn(msg)
+                next
+            end
 
-                if twt.filesize 
-                    if avg > twt.filesize
+            twt_params = {}
+            tmp_v = v.last(FILESIZE_SAMPLE_N)
+            avg = tmp_v.sum / tmp_v.size
+
+            if twt.filesize
+                if Twt::filesize_huge?(twt.filesize)
+                    if Twt::filesize_huge?(avg)
                         twt_params[:filesize] = avg
-                    elsif avg == twt.filesize
-                    elsif Twt::filesize_huge?(avg) and (avg) < (twt.filesize * 90 / 100)
+                    elsif (avg) < (twt.filesize * 90 / 100)
                         percent = avg * 100 / twt.filesize
-                        #msg = %!サイズが小さくなっている:#{twt.filesize} -> #{avg}(#{percent}%)[@#{k}]!
                         msg = %!サイズが小さくなっている:#{Util::formatFileSize twt.filesize} -> #{Util::formatFileSize avg}(#{percent}%)[@#{k}]!
                         Rails.logger.warn(msg)
+                        twt_params[:filesize] = avg
+                    else
                     end
                 else
                     twt_params[:filesize] = avg
                 end
-
-                if twt_params.size > 0
-                    msg = %!更新内容 => #{twt_params}\t@#{k}(#{twt.twtname})!
-                    #Rails.logger.info(msg)
-
-                    twt.update(twt_params)
-                end
             else
-                msg = %!不明なID:"#{k}"!
-                Rails.logger.warn(msg)
+                twt_params[:filesize] = avg
+            end
+
+            if twt_params.size > 0
+                msg = %!更新内容 => #{twt_params}\t@#{k}(#{twt.twtname})!
+                #Rails.logger.info(msg)
+
+                twt.update(twt_params)
             end
         end
 
@@ -1201,6 +1254,9 @@ module Twt
         twts.each do |twt|
             puts %!#{twt.twtid},"#{twt.twtname}",#{twt.video_cnt},#{twt.private_account}!
         end
+
+        puts "END"
+        puts "26//"
 
         twts.map {|x| x.twtid}
     end

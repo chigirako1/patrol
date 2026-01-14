@@ -278,7 +278,7 @@
       ],
       include_blank: "選択して下さい"
     %>
-    <input type="button" value="R18" onclick="select_r(1);" class="btn" />
+    <input type="button" value="R18<%= ArtistsHelper::R18_ICON %>" onclick="select_r(1);" class="btn" />
     <input type="button" value="R15" onclick="select_r(2);" class="btn" />
     <input type="button" value="R12" onclick="select_r(3);" class="btn" />
     <input type="button" value="全年齢" onclick="select_r(5);" class="btn" />
@@ -360,7 +360,7 @@
       ], include_blank: "選択して下さい" %>
     <input type="button" value="↑" onclick="options_up('artist_feature');" class="btn" />
     <input type="button" value="↓" onclick="options_down('artist_feature');" class="btn" />
-    <input type="button" value="AI" onclick="set_option('feature', 1);" class="btn" />
+    <input type="button" value="AI<%= ArtistsHelper::DM_AI_ICON %>" onclick="set_option('feature', 1);" class="btn" />
   </div>
   
   <div>

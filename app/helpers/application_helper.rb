@@ -8,6 +8,7 @@ module ApplicationHelper
     PXV_ICON = "🅿️"
     TWT_ICON = "🆃" #X
     PRIVATE_ICON = "🔒️"
+    SEARCH_EMOJI = "🔍️"
 
     def full_title(page_title)
         if page_title.blank?

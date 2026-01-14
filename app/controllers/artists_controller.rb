@@ -1391,7 +1391,8 @@ class ArtistsController < ApplicationController
       when GROUP_TYPE::GROUP_R_REST#"評価+年齢制限"
         #artists_group = artists.group_by {|x| [-x.rating, x.r18]}.sort.to_h
         #artists_group = artists.group_by {|x| %!#{x.rating}|#{x.r18}!}.sort.reverse.to_h
-        artists_group = artists.group_by {|x| x.group_by_spec("{status}#{Artist::PXV_H_SEPARATOR}{r}|{restrict}")}.sort.reverse.to_h
+        #artists_group = artists.group_by {|x| x.group_by_spec("{status}#{Artist::PXV_H_SEPARATOR}{r}|{restrict}")}.sort.reverse.to_h
+        artists_group = artists.group_by {|x| x.group_by_spec("{status}{r}#{Artist::PXV_H_SEPARATOR}{restrict}")}.sort.reverse.to_h
       when "さかのぼり"
         artists_group = artists.group_by {|x| [
             if x.reverse_status

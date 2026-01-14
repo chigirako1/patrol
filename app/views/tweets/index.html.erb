@@ -117,9 +117,10 @@
                 ]
 
                 [
+                <% nn = 50 %>
                 <% prediction = twt.prediction %>
-                <% if prediction > 50 %>
-                    <font color="orange">★★★予測数多い</font>
+                <% if prediction > nn %>
+                    <font color="orange">★★★予測数<%= nn %>以上</font>
                 <% end %>
                 予測:<%= prediction %>
                 <% if prediction > 50 %>

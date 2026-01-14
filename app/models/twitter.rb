@@ -627,6 +627,18 @@ class Twitter < ApplicationRecord
         gkey_work.gsub(x, w)
     end
 
+    def group_sub_r(unit, number, gkey_work, x, digit=3)
+
+        max_n = 10 ** digit
+        num_w = max_n - number
+
+        w = Util::format_num(num_w, unit, digit)
+
+        w2 = number / unit * unit
+
+        gkey_work.gsub(x, w + %!(#{w2})!)
+    end
+
     #
     # ""
     #
@@ -680,6 +692,10 @@ class Twitter < ApplicationRecord
                 unit = 500 unless unit
                 number = self.filenum
                 gkey_work = group_sub(unit, number, gkey_work, x, 4)
+            when "f_"
+                unit = 500 unless unit
+                number = self.filenum
+                gkey_work = group_sub_r(unit, number, gkey_work, x, 4)
             when "p"
                 unit = 10 unless unit
                 number = self.prediction
@@ -689,7 +705,7 @@ class Twitter < ApplicationRecord
                 number = self.update_frequency
                 gkey_work = group_sub(unit, number, gkey_work, x, 4)
             when "qq"
-                unit = 500 unless unit
+                unit = 1000 unless unit
                 if self.update_frequency >= unit
                     number = self.update_frequency
                     w = Util::format_num(number, unit, 4)
@@ -697,10 +713,11 @@ class Twitter < ApplicationRecord
                     unit2 = 500
                     num2 = self.filenum / unit2 * unit2
                     digit = 4
-                    max_n = 10 ** digit
-                    f = Util::format_num(max_n - num2, unit2, digit)
+                    max_n = 10 ** digit - self.filenum
+                    f = Util::format_num(max_n, unit2, digit)
 
-                    gkey_work = "あとまわし(#{f})[約#{num2}ファイル～]" + TWT_H_SEPARATOR + "更新頻度#{w}～"
+                    #gkey_work = "あとまわし(#{f})[約#{num2}ファイル～]" + TWT_H_SEPARATOR + "更新頻度#{w}～"
+                    gkey_work = "あとまわし" + TWT_H_SEPARATOR + "(#{f})約#{num2}ファイル～"
                     break
                 else
                     gkey_work.gsub!(x, "")
@@ -852,8 +869,14 @@ class Twitter < ApplicationRecord
     def group_key_test(grp_sort_by, status=false)
         gkey = ""
         if self.sp?
-            uf = Util::format_num(self.update_frequency, 100, 4)
-            gkey = "ファイルサイズ大&更新頻度高め#{Twitter::TWT_H_SEPARATOR}更新頻度#{uf}"
+            case grp_sort_by
+            when TwittersController::GRP_SORT::GRP_SORT_ACCESS_W
+                w = Util::format_num(self.last_access_datetime_days_elapsed / 7, 1)
+                gkey = "ファイルサイズ大&更新頻度高め#{Twitter::TWT_H_SEPARATOR}#{w}週"
+            else
+                uf = Util::format_num(self.update_frequency, 100, 4)
+                gkey = "ファイルサイズ大&更新頻度高め#{Twitter::TWT_H_SEPARATOR}更新頻度#{uf}"
+            end
         else
             case grp_sort_by
             when TwittersController::GRP_SORT::GRP_SORT_PRED

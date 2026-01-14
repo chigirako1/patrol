@@ -10,7 +10,7 @@
 
 <% search_word = params[:search_word] %>
 <% if search_word.presence %>
-  検索ワード：「<b><%= search_word %></b>」
+  検索ワード：「<b><%= search_word %></b>」<br />
 <% end %>
 
 <% if @twitters_group.size == 0 and params[:mode] == TwittersController::ModeEnum::SEARCH %>
@@ -290,6 +290,21 @@ button.horizontal {
   padding-right: 1em;
   height: 3em;
 }
+
+.btn_s {
+    padding-left: 1em;
+    padding-right: 1em;
+    height: 2em;
+    width: 50px;
+}
+
+.btn_s_plus {
+    background: lime;
+}
+
+.btn_s_minus {
+    background: yellow;
+}
 </style>
 
 <script>
@@ -305,6 +320,24 @@ button.horizontal {
           select_text();
       }
     });
+
+    function getElemTwt(elem_id)
+    {
+      //let elem = document.getElementById("twitter_" + elem_id);
+      let elem = document.getElementById(elem_id);
+      return elem;
+    }
+
+    function set_rate(elem_id, point) {
+      let elem = getElemTwt(elem_id);
+      elem.value = point;
+    }
+
+    function plus_rate(elem_id, point) {
+      let elem = getElemTwt(elem_id);
+      let prio_val = parseInt(elem.value);
+      elem.value = prio_val + point;
+    }
 </script>
 
 <div class="view_form">
@@ -347,7 +380,8 @@ button.horizontal {
     <%= f.number_field :rating, :value => params[:rating] %>以上
     <br />
     <%= f.label :非表示日数 %>
-    <%= f.number_field :hide_within_days, :value => params[:hide_within_days] %>日以内にアクセスがあれば対象外
+    <%= f.number_field :hide_within_days, :value => params[:hide_within_days] %>日以内にアクセスがあれば対象外<br />
+    <input type="button" value="+7" onclick="plus_rate('hide_within_days', +7);" class="btn_s" />
     <br />
     <%= f.label :強制表示日数 %>
     <%= f.number_field :force_disp_day, :value => params[:force_disp_day] %>
@@ -384,6 +418,7 @@ button.horizontal {
           ["予測降順(▽)", TwittersController::SORT_BY::PRED],
           ["予測昇順(△)", TwittersController::SORT_BY::PRED_ASC],
           ["アクセス日順（旧→新）", TwittersController::SORT_BY::ACCESS],
+          [TwittersController::SORT_BY::R_PRED_DESC],
           [TwittersController::SORT_BY::R_ACCESS],
           ["評価順", TwittersController::SORT_BY::RATING],
           ["登録日順", TwittersController::SORT_BY::SORT_CREATE],

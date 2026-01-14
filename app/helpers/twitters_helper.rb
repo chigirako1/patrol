@@ -37,6 +37,7 @@ module TwittersHelper
         tag += %!|U:#{Util.get_date_info twt.last_post_datetime}!
         tag += %!|#{PXV_ICON}:#{twt.pxvid}! if twt.pxvid.presence
         tag += %!|予測:#{twt.prediction}!
+        tag += %!|ファイル数:#{twt.filenum}!
 
         tag.html_safe
     end
@@ -69,17 +70,22 @@ module TwittersHelper
             rem_str = %!/残り#{rem}件!
         end
 
+        if params[:rating].presence
+            prm_rat = %![#{params[:rating]}↑]!
+        end
+
+        prm_page_title = params[:page_title]
         if params[:mode] == TwittersController::ModeEnum::SEARCH
-            page_title = "twt検索:「#{params[:search_word]}」(#{cnt}件)"
+            page_title = "#{prm_page_title}「#{params[:search_word]}」(#{cnt}件)"
         elsif twitters_total_count < 0
-            page_title = "#{params[:page_title]}"
+            page_title = "#{prm_page_title}"
         elsif total_count
-            page_title = "#{params[:page_title]} (#{cnt}/#{total_count}件)"
+            page_title = "#{prm_page_title} (#{cnt}/#{total_count}件)"
         else
-            page_title = "#{params[:page_title]} (#{cnt}/#{twitters_total_count}件#{rem_str}) a"
+            page_title = "#{prm_page_title} (#{cnt}/#{twitters_total_count}件#{rem_str})"
         end
         
-        page_title += " - TWT一覧"
+        ApplicationHelper::TWT_ICON + "#{prm_rat}#{page_title} - TWT一覧"
     end
 
     def twitter_show_page_title(twitter, r18=false)
@@ -104,7 +110,7 @@ module TwittersHelper
         end
         title += %!】!
         title += %!#{twitter.twtname}(@#{twitter.twtid})!
-        title
+        ApplicationHelper::TWT_ICON + title
     end
 
     def twitter_show_header_str(twitter)
