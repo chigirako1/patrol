@@ -9,10 +9,17 @@ module Util
     REMOVE_WORDS_FILE_PATH = "public/remove_words.txt"
 
     def self.get_param_num(params, symbol, def_val=0)
+=begin
         if params[symbol] == ""
             value = def_val
         else
             value = params[symbol].to_i
+        end
+=end
+        if params[symbol].presence
+            value = params[symbol].to_i
+        else
+            value = def_val
         end
         STDERR.puts %!#{symbol}="#{value}"!
         value
@@ -68,7 +75,8 @@ module Util
     def self.string_to_datetime(datetime_string, format = '%Y%m%d_%H%M%S')
         # strptimeはタイムゾーン情報を指定しない場合、協定世界時 (UTC) としてDateTimeオブジェクトを作成します。
         # ローカルタイムとして解釈したい場合は、適宜タイムゾーンの指定を追加してください。
-        DateTime.strptime(datetime_string, format)
+        #DateTime.strptime(datetime_string, format)
+        Time.zone.strptime(datetime_string, format)
     end
 
     def self.get_date_info(date)
@@ -105,8 +113,8 @@ module Util
     end
 
     def self.format_num(number, unit, digit=3)
-        w = (number||0) / unit
-        sprintf("%#{digit}d", w * unit)
+        w = (number||0) / unit * unit
+        sprintf("%#{digit}d", w)
     end
 
     def self.get_public_path(path)

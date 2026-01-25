@@ -190,6 +190,8 @@ class Params
     end
     puts %!num_of_times="#{@num_of_times}"!
 
+    @display_number = Util::get_param_num(params, :display_number, 3)
+=begin
     display_number = params[:display_number]
     if display_number == nil
       @display_number = 3
@@ -200,6 +202,7 @@ class Params
       @display_number = 3
     end
     puts %!@display_number=#{@display_number}!
+=end
 
     twt = params[:twt]
     if twt == "true"
@@ -351,6 +354,8 @@ class ArtistsController < ApplicationController
     SORT_ACCESS_OLD_TO_NEW = "ACCESS旧→新"
     SORT_ACCESS_NEW_TO_OLD = "ACCESS新→旧"
     SORT_PXV_USER_ID_ASC = "pxv-user-id(古い順)"
+    SORT_FILENUM_DSC = "ファイル数▽降順"
+    SORT_FILENUM_ASC = "ファイル数△昇順"
   end
 
   module GROUP_TYPE
@@ -1299,8 +1304,10 @@ class ArtistsController < ApplicationController
         artists = artists.sort_by {|x| [x.last_ul_datetime]}
       when "twtid"
         artists = artists.sort_by {|x| [x.twtid]}
-      when "filenum"
+      when SORT_TYPE::SORT_FILENUM_DSC #"filenum"
         artists = artists.sort_by {|x| [-x.filenum]}
+      when SORT_TYPE::SORT_FILENUM_ASC
+        artists = artists.sort_by {|x| [x.filenum]}
       when "recent_filenum"
         artists = artists.sort_by {|x| [-x.recent_filenum]}
       when "id"

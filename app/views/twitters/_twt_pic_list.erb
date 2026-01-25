@@ -143,7 +143,7 @@ textarea {
     <% if twitter.filenum != twt_pic_list.size %>
         <br />
         <b>読み込み:</b>
-        <%= twt_pic_list.size %>(←<%= twitter.filenum %>)
+        <%= twt_pic_list.size %>(←DB:<%= twitter.filenum %>)
     <% end %>
 
     <% if twt_pic_list.size > 0 %>
@@ -282,14 +282,19 @@ textarea {
         <% latest_file = filelist.last %>
         <% sp_datetime = Twt::get_sp_datetime_from_filename(File.basename latest_file) %>
         <% sp_tweet_id = Twt::time2tweet_id(sp_datetime) %>
-        <b><%= Twt::tweet_id_with_comma(sp_tweet_id) %></b>(DL日時からの推測)[<%= File::basename latest_file %>](ファイル数:<%= filelist.size %>)
+        <b><%= Twt::tweet_id_with_comma(sp_tweet_id) %></b>(<= DL日時からの推測)(<%= Twt::date_info(sp_tweet_id) %>)
+        [<%= File::basename latest_file %>](ファイル数:<%= filelist.size %>)
         <br />
         予測:<%= twitter.prediction(sp_datetime) %>
         <br />
         <% pic_mag_twt_b = '10%' %>
+        <% fsize_list = [] %>
         <% filelist.reverse.first(5).each do |fpath| %>
             <%= link_to_ex(image_tag(fpath, width: pic_mag_twt_b, height: pic_mag_twt_b), fpath) %>
+            <% phys_path = Util::get_public_path(fpath) %>
+            <% fsize_list << FileTest.size(phys_path) %>
         <% end %>
+        平均ファイルサイズ：<%= Util::formatFileSize fsize_list.sum / fsize_list.size %>
     <% else %>
     <% end %>
 

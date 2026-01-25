@@ -44,6 +44,13 @@
     <br />
   <% end %>
 <% end %>
+<% if params[:hide_within_days].presence %>
+  ・<%= params[:hide_within_days] %>日以内アクセスは非表示<br />
+<% end %>
+<% if params[:pred].presence %>
+  ・予測数<%= params[:pred] %>未満は非表示<br />
+<% end %>
+
 
 <div id="twitters">
 
@@ -346,17 +353,25 @@ button.horizontal {
     <%= f.submit("検索", name: nil, class: 'submit-btn') %>
     検索：<%= f.text_field :search_word, :value => params[:search_word] %>
     <br />
-    <%= f.select :match_method, options_for_select([
-      ["(自動判断)", "auto"],
-      ["を含む", "partial_match"],
-      ["完全一致","perfect_match"],
-      ["から始まる","begin_match"],
-      ["で終わる","end_match"]]) %>
+    <%= f.select :match_method, options_for_select(
+      [
+        ["(自動判断)", "auto"],
+        ["を含む", "partial_match"],
+        ["完全一致","perfect_match"],
+        ["から始まる","begin_match"],
+        ["で終わる","end_match"]
+      ],
+      :value => params[:match_method]
+    ) %>
     検索対象：
     <%= f.select :target_col, options_for_select(
-      [[Twitter::SEARCH_TARGET::AUTO],
-      [Twitter::SEARCH_TARGET::TWT_TWTID],
-      [Twitter::SEARCH_TARGET::TWT_TWTNAME]]) %>
+      [
+        [Twitter::SEARCH_TARGET::AUTO],
+        [Twitter::SEARCH_TARGET::TWT_TWTID],
+        [Twitter::SEARCH_TARGET::TWT_TWTNAME]
+      ],
+      :value => params[:target_col]
+    ) %>
     <!-- 
     <input type="button" value="select" onclick="select_text();" />
     <br />
@@ -378,10 +393,13 @@ button.horizontal {
     <br />
     <%= f.label :評価 %>
     <%= f.number_field :rating, :value => params[:rating] %>以上
+    <input type="button" value="-1" onclick="plus_rate('rating', -1);" class="btn_s" />
     <br />
     <%= f.label :非表示日数 %>
     <%= f.number_field :hide_within_days, :value => params[:hide_within_days] %>日以内にアクセスがあれば対象外<br />
     <input type="button" value="+7" onclick="plus_rate('hide_within_days', +7);" class="btn_s" />
+    <input type="button" value="+15" onclick="plus_rate('hide_within_days', +15);" class="btn_s" />
+    <input type="button" value="-15" onclick="plus_rate('hide_within_days', -15);" class="btn_s" />
     <br />
     <%= f.label :強制表示日数 %>
     <%= f.number_field :force_disp_day, :value => params[:force_disp_day] %>
@@ -391,6 +409,9 @@ button.horizontal {
     <br />
     <%= f.label :ファイル数 %>
     <%= f.number_field :pfilenum, :value => params[:pfilenum] %>以上
+    <br />
+    <%= f.label "ファイルサイズ(KB)" %>
+    <%= f.number_field :pfilesize, :value => params[:pfilesize] %>以上
     <br />
     <%= f.label :予測 %>
     <%= f.number_field :pred, :value => params[:pred] %>以上
@@ -424,6 +445,7 @@ button.horizontal {
           ["登録日順", TwittersController::SORT_BY::SORT_CREATE],
           [TwittersController::SORT_BY::SORT_REGISTERED_DESC],
           [TwittersController::SORT_BY::FILENUM],
+          [TwittersController::SORT_BY::R_FILENUM_ASC],
           [TwittersController::SORT_BY::SORT_POINT],
         ],
         selected: params[:sort_by] 

@@ -6,14 +6,17 @@ module ArtistsHelper
     PXV_ICON = ApplicationHelper::PXV_ICON
     PRIVATE_ICON = ApplicationHelper::PRIVATE_ICON
 
-    def r18_disp(restr)
+    def r18_icon(restr)
         if restr == Artist::RESTRICT::R18
-            r18_icon = R18_ICON
+            r18icon = R18_ICON
         else
-            r18_icon = ""
+            r18icon = ""
         end
+        r18icon
+    end
 
-        (restr||"") + r18_icon
+    def r18_disp(restr)
+        (restr||"") + r18_icon(restr)
     end
 
     def feature_icon(feat)
@@ -42,9 +45,9 @@ module ArtistsHelper
             twt = %!❗️!
         end
         
-        r = r18_disp(artist.r18)
+        r18icon = r18_icon(artist.r18)
 
-        feature + twt + %![#{artist.rating}]#{artist.pxvname}【#{r}】!
+        feature + twt + %![#{artist.rating}#{r18icon}]#{artist.pxvname}【#{artist.r18}】!
     end
 
     def page_header(artist)

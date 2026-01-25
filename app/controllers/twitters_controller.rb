@@ -25,7 +25,10 @@ class TwittersController < ApplicationController
     R_ACCESS = "評価/アクセス日順（旧→新）"
 
     RATING = "rating"
+
     FILENUM = "ファイル数順"#"filenum"
+    R_FILENUM_ASC = "評価/ファイル数△順"
+
     SORT_CREATE = "create"
     SORT_REGISTERED_DESC = "登録日順(新→旧)"
 
@@ -74,6 +77,7 @@ class TwittersController < ApplicationController
       :step,
       :ul_freq,
       :prm_filenum,
+      :prm_filesize,
       :pred_cond_gt,
       :param_target,
       :param_grp_sort_by,
@@ -92,9 +96,15 @@ class TwittersController < ApplicationController
       @param_grp_sort_spec = Util::get_param_str(params, :grp_sort_spec)
 
       @prm_filenum = Util::get_param_num(params, :pfilenum)
+      @prm_filesize = Util::get_param_num(params, :pfilesize) * 1024
       @pred_cond_gt = Util::get_param_num(params, :pred)
-      @num_of_disp = Util::get_param_num(params, :num_of_disp, 10)
       @select_max = Util::get_param_num(params, :select_max)
+      if @select_max > 0
+       num_of_disp_deflt = 20
+      else
+        num_of_disp_deflt = 10
+      end
+      @num_of_disp = Util::get_param_num(params, :num_of_disp, num_of_disp_deflt)
       @hide_within_days = Util::get_param_num(params, :hide_within_days)
       @force_disp_day = Util::get_param_num(params, :force_disp_day)
       @created_at = Util::get_param_num(params, :created_at)
@@ -258,7 +268,7 @@ class TwittersController < ApplicationController
         twitters = twitters.select {|x| x.rating == nil or x.rating == rating_gt}
       end
 
-      twitters = twt_sort_by(twitters, sort_by)
+      twitters = index_sort(twitters, twt_params)
 
       if twt_params.pred_cond_gt != 0
         if force_disp_day == 0
@@ -445,6 +455,8 @@ class TwittersController < ApplicationController
       index_mode_all(twitters, twt_params)
       return
     when ModeEnum::SEARCH
+      #twitters = index_select(twitters, twt_params)
+      twitters = twitters.select {|x| x.drawing_method == twt_params.param_target} if twt_params.param_target != ""
       @twitters_group = twt_group_by(twitters, param_grp_sort_by)
       @twitters_total_count = @twitters_group.sum {|k,v| v.count}
       return
@@ -617,6 +629,12 @@ class TwittersController < ApplicationController
         twitters = twitters.select {|x| (x.filenum||0) <= -twt_params.prm_filenum}
       end
 
+      if twt_params.prm_filesize >= 0
+        twitters = twitters.select {|x| (x.filesize||0) >= twt_params.prm_filesize}
+      else
+        twitters = twitters.select {|x| (x.filesize||0) <= -twt_params.prm_filesize}
+      end
+
       twitters = twitters.select {|x| x.drawing_method == twt_params.param_target} if twt_params.param_target != ""
 
       if @hide_within_days > 0
@@ -677,7 +695,7 @@ class TwittersController < ApplicationController
         twitters = twitters.select {|x| (x.update_frequency||0) >= (twt_params.ul_freq)}
       end
 
-      twitters = twt_sort_by(twitters, twt_params.sort_by)
+      twitters = index_sort(twitters, twt_params)
       twitters
     end
 
@@ -879,13 +897,13 @@ class TwittersController < ApplicationController
         twitters_wk = twitters_wk.select {|x| x.status == Twitter::TWT_STATUS::STATUS_PATROL}
         twitters_wk = twitters_wk.select {|x| x.select_cond_aio(twt_params.pred_cond_gt)}
 
-        case params[:sort_by]
-        when SORT_BY::PRED
-          twitters_wk = twt_sort_by(twitters_wk, SORT_BY::RATING)
-        else
-          twitters_wk = twt_sort_by(twitters_wk, params[:sort_by])
+        #case twt_params.sort_by#params[:sort_by]
+        #when SORT_BY::PRED
+        #  twitters_wk = index_sort(twitters_wk, SORT_BY::RATING)
+        #else
+          twitters_wk = index_sort(twitters_wk, twt_params)
           STDERR.puts %!sort_by=#{params[:sort_by]}!
-        end
+        #end
 
         twitters_group = twt_group_by(twitters_wk, params[:grp_sort_by], params[:grp_sort_spec])
       end
@@ -1052,12 +1070,21 @@ class TwittersController < ApplicationController
 
     def index_sort(twitters, twt_params)
       case twt_params.sort_by
+      when SORT_BY::ID
+        twitters = twitters.sort_by {|x| [-x.id]}
       when SORT_BY::SORT_POINT
-        twitters = twitters.sort_by {|x| x.point}.reverse
+        twitters = twitters.sort_by {|x| -x.point}
+      when SORT_BY::PRED_ASC
+        twitters = twitters.sort_by {|x| [x.prediction, x.last_access_datetime]}
       when SORT_BY::ACCESS
-        twitters = twitters.sort_by {|x| [x.last_access_datetime, (x.last_access_datetime)]}#.reverse
+        #twitters = twitters.sort_by {|x| [x.last_access_datetime, (x.last_access_datetime)]}#.reverse
+        twitters = twitters.sort_by {|x| [x.last_access_datetime, -(x.rating||0), -x.prediction]}
       when SORT_BY::R_ACCESS
         twitters = twitters.sort_by {|x| [-x.rating, (x.last_access_datetime)]}
+      when SORT_BY::FILENUM
+        twitters = twitters.sort_by {|x| [-(x.filenum||0)]}
+      when SORT_BY::R_FILENUM_ASC
+        twitters = twitters.sort_by {|x| [-x.rating, (x.filenum||0) / 25, -x.prediction]}
       when SORT_BY::PRED
         twitters = twitters.sort_by {|x| [-x.prediction, x.last_access_datetime]}
       when SORT_BY::R_PRED_DESC
@@ -1066,30 +1093,12 @@ class TwittersController < ApplicationController
         twitters = twitters.sort_by {|x| x.created_at}
       when SORT_BY::SORT_REGISTERED_DESC
         twitters = twitters.sort_by {|x| x.created_at}.reverse
-      else
-        twitters = twitters.sort_by {|x| [-(x.rating||0), -x.prediction, x.last_access_datetime]}
-      end
-      twitters
-    end
-
-    def twt_sort_by(twitters, sort_by)
-      case sort_by
-      when SORT_BY::ID
-        twitters = twitters.sort_by {|x| [x.id]}.reverse
-      when SORT_BY::PRED
-        twitters = twitters.sort_by {|x| [-x.prediction, x.last_access_datetime]}
-        #twitters = twitters.sort_by {|x| [-(x.rating||0), -x.prediction, x.last_access_datetime]}
-      when SORT_BY::PRED_ASC
-        twitters = twitters.sort_by {|x| [x.prediction, x.last_access_datetime]}
-      when SORT_BY::ACCESS
-        twitters = twitters.sort_by {|x| [x.last_access_datetime, -(x.rating||0), -x.prediction]}
       when SORT_BY::RATING
         twitters = twitters.sort_by {|x| [-(x.rating||0), -x.prediction, x.last_access_datetime]}
-      when SORT_BY::FILENUM
-        twitters = twitters.sort_by {|x| [-(x.filenum||0)]}.reverse
-      when SORT_BY::TODO_CNT
-      when SORT_BY::TOTAL_CNT
+      #when SORT_BY::TODO_CNT
+      #when SORT_BY::TOTAL_CNT
       else
+        twitters = twitters.sort_by {|x| [-(x.rating||0), -x.prediction, x.last_access_datetime]}
       end
       twitters
     end
@@ -1109,7 +1118,7 @@ class TwittersController < ApplicationController
         twitters_group = twitters.group_by {|x| x.a1o_auto_group_key(5, false, false)}
         grp_sort = -1
       when GRP_SORT::GRP_SORT_ACCESS
-        twitters_group = twitters.group_by {|x| %!#{x.last_access_datetime_days_elapsed / 30}|#{x.rating}|#{Util::format_num(x.prediction, 10)}!}
+        twitters_group = twitters.group_by {|x| %!#{x.last_access_datetime_days_elapsed / 30}ヶ月|評価#{x.rating}#{Twitter::TWT_H_SEPARATOR}#{Util::format_num(x.prediction, 10)}件!}
         grp_sort = -1
       when GRP_SORT::GRP_SORT_ACCESS_W
         twitters_group = twitters.group_by {|x| x.group_key_test(grp_sort_by)}

@@ -460,6 +460,8 @@ class Twitter < ApplicationRecord
         ]
     end
 
+    TwtStsStruct = Struct.new(:requiresChecking)
+
     def update_chk?
         pat = {
             TWT_STATUS::STATUS_PATROL => false,
@@ -706,7 +708,7 @@ class Twitter < ApplicationRecord
                 gkey_work = group_sub(unit, number, gkey_work, x, 4)
             when "qq"
                 unit = 1000 unless unit
-                if self.update_frequency >= unit
+                if self.update_frequency >= unit and self.filenum > 600
                     number = self.update_frequency
                     w = Util::format_num(number, unit, 4)
 

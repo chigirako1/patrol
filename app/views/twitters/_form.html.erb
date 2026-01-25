@@ -13,6 +13,10 @@
 .btn_s_minus {
     background: yellow;
 }
+
+.btn_s_abs {
+    background: lightblue;
+}
 </style>
 
 <%= form_with(model: twitter) do |form| %>
@@ -91,6 +95,7 @@
     <input type="button" value="+10" onclick="plus_rate('update_frequency', 10);" class="btn_s btn_s_plus" />
     <input type="button" value="-100" onclick="plus_rate('update_frequency', -100);" class="btn_s btn_s_minus" />
     <input type="button" value="-10" onclick="plus_rate('update_frequency', -10);" class="btn_s btn_s_minus" />
+    <input type="button" value="0" onclick="set_rate('update_frequency', 0);" class="btn_s btn_s_abs" />
   </div>
 
   <div>
@@ -124,8 +129,8 @@
     
     <br />
     <input type="button" value="TWT巡回に変更" onclick="set_noupdate(0);" />
-    <input type="button" value="最近更新してない？" onclick="set_noupdate(4);" />
-    <input type="button" value="長期更新なしに変更" onclick="set_noupdate(2);" />
+    <input type="button" value="最近更新してない？" onclick="set_noupdate(4); set_rate('update_frequency', 1);" />
+    <input type="button" value="長期更新なしに変更" onclick="set_noupdate(2); set_rate('update_frequency', 0);" />
     <script>
       function set_noupdate(idx) {
         let status_sel_box = document.getElementById("twitter_status");
@@ -241,11 +246,11 @@
           <br />
           <% if user_name.presence %>
             "<%= user_name %>"(DB未登録。フォルダはあり。)
-            <%= link_to_ex %!☆pxv☆:@#{user_name}!, artist_pxv_path(twitter.pxvid) %>
             <% dir_exist = true %>
           <% else %>
             ※フォルダなし？
           <% end %>
+            <%= link_to_ex %!☆pxv☆:@#{user_name}!, artist_pxv_path(twitter.pxvid) %>
         <% end %>
 
         <% unless dir_exist %>
@@ -484,13 +489,13 @@
     <%= form.number_field :filesize, value: avg_filesize %>
     
     <% if @twitter.filesize %>
-      <br />=>
+      =>
       <%= Util::formatFileSizeKB(@twitter.filesize) %>
     <% end %>
   </div>
 
   <div>
-    <%= form.label :動画数, style: "display: block" %>
+    <%= form.label :動画評価, style: "display: block" %>
     <%= form.number_field :video_cnt %>
   </div>
 

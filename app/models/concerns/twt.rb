@@ -309,6 +309,7 @@ module Twt
         if filename =~ TWT_SP_FILENAME_RGX
             datetime_str = $1
             datetime = sp_datetime_str_to_datetime(datetime_str)
+            STDERR.puts %!"#{filename}" => "#{datetime}"xx!
         else
             datetime = nil
         end
@@ -987,7 +988,7 @@ module Twt
 =end
 
         hash2 = hash.select {|k, v|
-            v.size > 30
+            v.size > 5#30
         }.map {|k,v|
             tmp_v = v.last(FILESIZE_SAMPLE_N)
             [
@@ -1098,14 +1099,18 @@ module Twt
 
         #key = "#{Util::format_num(twt.update_frequency, 100, 4)}|||更新頻度:#{Util::format_num(twt.update_frequency, 50, 4)}"
 
-        if dayn >= 21
-            dayn_s = "D"
+        if twt.update_frequency >= 400
+            dayn_s = "E(高頻度)"
+        elsif dayn >= 21
+            dayn_s = "D(21-)"
         elsif dayn >= 14
-            dayn_s = "C"
+            dayn_s = "C(14-)"
         elsif dayn >= 7
-            dayn_s = "B"
+            dayn_s = "B(7-)"
+        elsif dayn >= 3
+            dayn_s = "A(3-)"
         else
-            dayn_s = "A"
+            dayn_s = "0-"
         end
         key = "#{dayn_s}|||#{Util::format_num(twt.update_frequency, 100, 4)}|||更新頻度:#{Util::format_num(twt.update_frequency, 50, 4)}"
 
@@ -1169,6 +1174,15 @@ module Twt
         screen_names
     end
 
+    def self.sort_tmp(x)
+        twt = x[1]
+        if twt
+            [twt.last_post_datetime, -(twt.rating||0)]
+        else
+            [0]
+        end
+    end
+
     def self.load_pic_info_tsv()
         hash = get_pic_infos_ex
 
@@ -1179,8 +1193,10 @@ module Twt
 
         if hash2
             hash3 = hash2.sort_by {|k, x|
-                x[1]?(x[1].rating||0):0
-            }.reverse.to_h
+                #x[1]?(x[1].rating||0):0
+                sort_tmp(x)
+            #}.reverse.to_h
+            }.to_h
             list = build_pic_info_list(hash3)
 
             keys = output_csv(list)
