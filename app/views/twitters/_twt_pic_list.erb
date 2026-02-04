@@ -253,6 +253,14 @@ textarea {
     <% end %>
     計算結果"<%= avg %>"
     (<%= freq_90d %>/<%= freq_30d %>/<%= freq_15d %>)
+    <% avg_wk = (avg + 10) / 10 * 10 %>
+    <input type="button" value="設定:<%= avg_wk %>" onclick="set_vl('update_frequency', <%= avg_wk %>);" />
+    <script>
+        function set_vl(elem_id, value) {
+            let elem = getElemTwt(elem_id);
+            elem.value = value;
+        }
+    </script>
     
     <br />
 
@@ -282,7 +290,7 @@ textarea {
         <% latest_file = filelist.last %>
         <% sp_datetime = Twt::get_sp_datetime_from_filename(File.basename latest_file) %>
         <% sp_tweet_id = Twt::time2tweet_id(sp_datetime) %>
-        <b><%= Twt::tweet_id_with_comma(sp_tweet_id) %></b>(<= DL日時からの推測)(<%= Twt::date_info(sp_tweet_id) %>)
+        <b><%= Twt::tweet_id_with_comma(sp_tweet_id) %></b>(<= DL日時からの推測)(<%= time_ago_in_words(sp_datetime) %>) <%#= Twt::date_info(sp_tweet_id) %>
         [<%= File::basename latest_file %>](ファイル数:<%= filelist.size %>)
         <br />
         予測:<%= twitter.prediction(sp_datetime) %>

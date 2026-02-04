@@ -16,9 +16,13 @@ class TwittersController < ApplicationController
 
   module SORT_BY
     ID = "id"
+
     PRED = "pred"
     SORT_PRED = PRED
+    SORT_PRED_DESC = PRED
+    
     PRED_ASC = "pred_asc"#desc?
+
     R_PRED_DESC = "評価/予測▽順"
 
     ACCESS = "access"
@@ -27,6 +31,7 @@ class TwittersController < ApplicationController
     RATING = "rating"
 
     FILENUM = "ファイル数順"#"filenum"
+    FILENUM_ASC = "ファイル数△昇順"
     R_FILENUM_ASC = "評価/ファイル数△順"
 
     SORT_CREATE = "create"
@@ -70,6 +75,7 @@ class TwittersController < ApplicationController
       :select_max,
       :hide_within_days,
       :force_disp_day,
+      :filename,
       :created_at,
       :rating_gt,
       :rating_lt,
@@ -94,6 +100,7 @@ class TwittersController < ApplicationController
       @param_target = Util::get_param_str(params, :target)
       @param_grp_sort_by = Util::get_param_str(params, :grp_sort_by)
       @param_grp_sort_spec = Util::get_param_str(params, :grp_sort_spec)
+      @filename = Util::get_param_str(params, :filename)
 
       @prm_filenum = Util::get_param_num(params, :pfilenum)
       @prm_filesize = Util::get_param_num(params, :pfilesize) * 1024
@@ -223,7 +230,7 @@ class TwittersController < ApplicationController
 
       group_list = []
       tmp = twitters
-      group = index_all_in_1(tmp, params, twt_params, rating_gt)
+      group = index_all_in_1(tmp, params, twt_params)
       group_list << group
 
       group = index_unset(twitters_bak, 30, @hide_within_days)
@@ -427,7 +434,7 @@ class TwittersController < ApplicationController
       #pxv_id_list, twt_urls, misc_urls = UrlTxtReader::get_url_list([], false)
       #known_ids = twt_urls.keys
 
-      filename = params[:filename]
+      filename = twt_params.filename#params[:filename]
       known_twt_url_list, _ = Twitter::url_list(filename)
       @url_list_summary = Tweet::url_list_summary(known_twt_url_list)
 
@@ -666,6 +673,10 @@ class TwittersController < ApplicationController
 
     def index_mode_all(twitters, twt_params)
       twitters = index_select(twitters, twt_params)
+
+      @stats = {}
+      @stats = twitters.group_by {|x| x.rating}.sort.reverse.to_h.map {|k,v| [k,v.size]}.to_h
+
       @twitters_total_count = twitters.size
       twitters = index_sort(twitters, twt_params)
       if twt_params.select_max > 0
@@ -853,9 +864,9 @@ class TwittersController < ApplicationController
       [twitters_group, twitters_total_count]
     end
 
-    def index_all_in_1(twitters, params, twt_params, rating_gt)
+    def index_all_in_1(twitters, params, twt_params)
       
-      filename = params[:filename]
+      filename = twt_params.filename#params[:filename]
       STDERR.puts %!index_all_in_1:"#{filename}"(#{twitters.size})!
       if filename == "アクセス不可"
         grp = Tweet::get_unaccessible_twt_account_list
@@ -864,10 +875,10 @@ class TwittersController < ApplicationController
       end
       STDERR.puts %!index_all_in_1:"#{filename}"(#{twitters.size})!
 
-      twitters = twitters.select {|x| x.rating == nil or x.rating >= rating_gt }
+      twitters = twitters.select {|x| x.rating == nil or x.rating >= twt_params.rating_gt }
       twitters = twitters.select {|x| x.drawing_method == params[:target]}
 
-      ul_freq = Util::get_param_num(params, :ul_freq)
+      ul_freq = twt_params.ul_freq#Util::get_param_num(params, :ul_freq)
       if ul_freq == 0
       elsif ul_freq < 0
         twitters = twitters.select {|x| (x.update_frequency||0) <= -(ul_freq)}
@@ -875,7 +886,7 @@ class TwittersController < ApplicationController
         twitters = twitters.select {|x| (x.update_frequency||0) >= (ul_freq)}
       end
 
-      prm_filenum = Util::get_param_num(params, :pfilenum)
+      prm_filenum = twt_params.prm_filenum#Util::get_param_num(params, :pfilenum)
       if prm_filenum == 0
       elsif prm_filenum < 0
         twitters = twitters.select {|x| (x.filenum||0) <= -(prm_filenum)}
@@ -1083,6 +1094,15 @@ class TwittersController < ApplicationController
         twitters = twitters.sort_by {|x| [-x.rating, (x.last_access_datetime)]}
       when SORT_BY::FILENUM
         twitters = twitters.sort_by {|x| [-(x.filenum||0)]}
+      when SORT_BY::FILENUM_ASC
+        #twitters = twitters.sort_by {|x| [(x.filenum||0) / 25, -x.rating, -x.prediction]}
+        twitters = twitters.sort_by {|x| x.sort_cond_spec("f:a:25, r, p")}
+=begin arrayなのでorder使えない？よくわからん
+        sort_conditions = {}
+        sort_conditions[:filenum] = :asc
+        sort_conditions[:rating] = :desc
+        twitters = twitters.order(sort_conditions)
+=end
       when SORT_BY::R_FILENUM_ASC
         twitters = twitters.sort_by {|x| [-x.rating, (x.filenum||0) / 25, -x.prediction]}
       when SORT_BY::PRED

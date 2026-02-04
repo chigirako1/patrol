@@ -309,7 +309,7 @@ module Twt
         if filename =~ TWT_SP_FILENAME_RGX
             datetime_str = $1
             datetime = sp_datetime_str_to_datetime(datetime_str)
-            STDERR.puts %!"#{filename}" => "#{datetime}"xx!
+            #STDERR.puts %!"#{filename}" => "#{datetime}"xx!
         else
             datetime = nil
         end
@@ -768,7 +768,7 @@ module Twt
         tweet_id, _  = get_tweet_info(filename)
         time = get_timestamp(tweet_id)
         if tweet_id == 0
-            STDERR.puts %!#{tweet_id}:#{time}!
+            #STDERR.puts %!#{tweet_id}:#{time}\t"#{filepath}"!
         end
         time
     end
@@ -1100,17 +1100,17 @@ module Twt
         #key = "#{Util::format_num(twt.update_frequency, 100, 4)}|||更新頻度:#{Util::format_num(twt.update_frequency, 50, 4)}"
 
         if twt.update_frequency >= 400
-            dayn_s = "E(高頻度)"
+            dayn_s = "Z(高頻度)"
         elsif dayn >= 21
-            dayn_s = "D(21-)"
+            dayn_s = "Y(21-)"
         elsif dayn >= 14
-            dayn_s = "C(14-)"
+            dayn_s = "Y(14-)"
         elsif dayn >= 7
-            dayn_s = "B(7-)"
-        elsif dayn >= 3
-            dayn_s = "A(3-)"
+            dayn_s = "X(7-)"
+        elsif dayn < 3
+            dayn_s = "A"
         else
-            dayn_s = "0-"
+            dayn_s = "B"
         end
         key = "#{dayn_s}|||#{Util::format_num(twt.update_frequency, 100, 4)}|||更新頻度:#{Util::format_num(twt.update_frequency, 50, 4)}"
 
@@ -1242,7 +1242,7 @@ module Twt
                         twt_params[:filesize] = avg
                     elsif (avg) < (twt.filesize * 90 / 100)
                         percent = avg * 100 / twt.filesize
-                        msg = %!サイズが小さくなっている:#{Util::formatFileSize twt.filesize} -> #{Util::formatFileSize avg}(#{percent}%)[@#{k}]!
+                        msg = %![reg_filesize] サイズが小さくなっている:#{Util::formatFileSize twt.filesize} -> #{Util::formatFileSize avg}(#{percent}%)[@#{k}]!
                         Rails.logger.warn(msg)
                         twt_params[:filesize] = avg
                     else

@@ -30,7 +30,11 @@ module TwittersHelper
         tag += %!"#{twt.twtname}"!
         tag += "【"
         tag += PRIVATE_ICON if twt.private_account == Twitter::TWT_VISIBILITY::TV_PRIVATE
-        tag += %!#{twt.rating}|#{twt.r18}#{R18_ICON if twt.r18 == Twitter::RESTRICT::R18}|#{dm_disp(twt.drawing_method)}|#{twt.status}!
+        tag += %!#{twt.rating}|#{twt.r18}#{R18_ICON if twt.r18 == Twitter::RESTRICT::R18}|#{dm_disp(twt.drawing_method)}|!
+        tag += %!#{twt.status}!
+        if twt.status == Twitter::TWT_STATUS::STATUS_SCREEN_NAME_CHANGED
+            tag += %!(→#{twt.new_twtid})!
+        end
         tag += "】"
         tag += %![#{link_to_ex("■twt■", twt)}]!
         tag += %!|A:#{twt.last_access_datetime_disp}!

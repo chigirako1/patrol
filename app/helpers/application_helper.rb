@@ -75,4 +75,10 @@ module ApplicationHelper
         end
         bgcolor
     end
+
+    def percent_star(percent)
+        n10 = percent / 10
+        n2 = (percent - (n10 * 10)) / 2
+        %!#{"★" * n10}#{"*" * n2}!
+    end
 end

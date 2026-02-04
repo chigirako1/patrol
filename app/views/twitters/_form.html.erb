@@ -75,8 +75,8 @@
   <div>
     <%= form.label :評価, style: "display: block" %>
     <%= form.number_field :rating, in: 0..150 %>
-    <input type="button" value="+5" onclick="plus_rate('rating', 5);" class="btn_s" />
-    <input type="button" value="+1" onclick="plus_rate('rating', 1);" class="btn_s" />
+    <input type="button" value="+5" onclick="plus_rate('rating', 5);" class="btn_s btn_s_plus" />
+    <input type="button" value="+1" onclick="plus_rate('rating', 1);" class="btn_s btn_s_plus" />
     <input type="button" value="-5" onclick="plus_rate('rating', -5);" class="btn_s" />
     <input type="button" value="-1" onclick="plus_rate('rating', -1);" class="btn_s" />
     <br />
@@ -301,7 +301,7 @@
     <%= form.text_field :remarks %>
   </div>
 
-  <hr />
+  <hr size=”5” color="grey" />
 
   <div>
     <%= form.label :主ID, style: "display: block" %>

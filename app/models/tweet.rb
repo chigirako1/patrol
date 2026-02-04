@@ -53,7 +53,7 @@ class Tweet < ApplicationRecord
             
             tweet.update(twt_params)
 
-            puts %!@#{tweet_id}:#{twt_params}!
+            puts %![update_tweet_record] @#{tweet_id}:#{twt_params}!
         else
             STDERR.puts %!@#{tweet_id}の更新に失敗しました。未登録のIDです!
         end

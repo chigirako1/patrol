@@ -528,7 +528,7 @@ class Artist < ApplicationRecord
                 begin
                     date = Date.parse($1)
                 rescue Date::Error => ex
-                    puts %!#{ex}:#{path}!
+                    puts %![stats] #{ex}:#{path}!
                     next
                 end
                 year = date.year
@@ -563,7 +563,7 @@ class Artist < ApplicationRecord
             begin
                 date = Date.parse(date_str)
             rescue Date::Error => ex
-                STDERR.puts %!#{ex}:#{path}!
+                STDERR.puts %![artwork_list] #{ex}:#{path}!
                 next
             end
 

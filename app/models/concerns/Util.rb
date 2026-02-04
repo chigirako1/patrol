@@ -84,6 +84,9 @@ module Util
             return "(未設定)"
         end
 
+        #return view_context.distance_of_time_in_words(date, Time.zone.now)
+        #time_ago_in_words
+
         days = Util::get_date_delta(date)
         if days >= 365
             years, remain = days.divmod(365)
@@ -105,8 +108,12 @@ module Util
                 hour = 24
             else
                 hour = now.hour - date.hour
+                if hour > 0
+                    "#{hour}時間以内"
+                else
+                    "#{((now - date) / 1.minute).to_i}分以内"
+                end
             end
-            "#{hour}時間以内"
         else
             "#{days}日以内"
         end

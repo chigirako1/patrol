@@ -243,7 +243,9 @@
           <!-- pxv ul -->
           <td bgcolor="pink">
             <% if twitter.last_ul_datetime.presence %>
-              <% d = Date.parse(twitter.last_ul_datetime) %><!-- なぜかわからないがstring"22-11-31"になってる -->
+              <%# puts %!#{twitter.twtid}! %>2025-12-29 15:00:00 UTC/2025-12-29 15:00:00
+              <%# d = Date.parse(twitter.last_ul_datetime) %>
+              <% d = twitter.last_ul_datetime %>
               <%#= twitter.get_datetime_string(twitter.last_ul_datetime, true) %>
               <%#= twitter.get_datetime_string(d, true) %>
               <br />
@@ -393,16 +395,23 @@ button.horizontal {
     <br />
     <%= f.label :評価 %>
     <%= f.number_field :rating, :value => params[:rating] %>以上
+    <input type="button" value="+5" onclick="plus_rate('rating', +5);" class="btn_s" />
+    <input type="button" value="-5" onclick="plus_rate('rating', -5);" class="btn_s" />
+    <input type="button" value="+1" onclick="plus_rate('rating', +1);" class="btn_s" />
     <input type="button" value="-1" onclick="plus_rate('rating', -1);" class="btn_s" />
     <br />
     <%= f.label :非表示日数 %>
     <%= f.number_field :hide_within_days, :value => params[:hide_within_days] %>日以内にアクセスがあれば対象外<br />
-    <input type="button" value="+7" onclick="plus_rate('hide_within_days', +7);" class="btn_s" />
     <input type="button" value="+15" onclick="plus_rate('hide_within_days', +15);" class="btn_s" />
+    <input type="button" value="+7" onclick="plus_rate('hide_within_days', +7);" class="btn_s" />
     <input type="button" value="-15" onclick="plus_rate('hide_within_days', -15);" class="btn_s" />
+    <input type="button" value="-7" onclick="plus_rate('hide_within_days', -7);" class="btn_s" />
     <br />
     <%= f.label :強制表示日数 %>
     <%= f.number_field :force_disp_day, :value => params[:force_disp_day] %>
+    <br />
+    <%= f.label :予測 %>
+    <%= f.number_field :pred, :value => params[:pred] %>以上
     <br />
     <%= f.label :DB登録日 %>
     <%= f.number_field :created_at, :value => params[:created_at] %>日以内にDB登録されたレコード
@@ -412,9 +421,6 @@ button.horizontal {
     <br />
     <%= f.label "ファイルサイズ(KB)" %>
     <%= f.number_field :pfilesize, :value => params[:pfilesize] %>以上
-    <br />
-    <%= f.label :予測 %>
-    <%= f.number_field :pred, :value => params[:pred] %>以上
     <br />
     <%= f.label :更新頻度 %>
     <%= f.number_field :ul_freq, :value => params[:ul_freq] %>以上
@@ -438,13 +444,16 @@ button.horizontal {
         [
           ["予測降順(▽)", TwittersController::SORT_BY::PRED],
           ["予測昇順(△)", TwittersController::SORT_BY::PRED_ASC],
-          ["アクセス日順（旧→新）", TwittersController::SORT_BY::ACCESS],
           [TwittersController::SORT_BY::R_PRED_DESC],
+
+          ["アクセス日順（旧→新）", TwittersController::SORT_BY::ACCESS],
           [TwittersController::SORT_BY::R_ACCESS],
+          
           ["評価順", TwittersController::SORT_BY::RATING],
           ["登録日順", TwittersController::SORT_BY::SORT_CREATE],
           [TwittersController::SORT_BY::SORT_REGISTERED_DESC],
           [TwittersController::SORT_BY::FILENUM],
+          [TwittersController::SORT_BY::FILENUM_ASC],
           [TwittersController::SORT_BY::R_FILENUM_ASC],
           [TwittersController::SORT_BY::SORT_POINT],
         ],
@@ -513,6 +522,15 @@ button.horizontal {
 
 <hr />
 <%= link_to "New twitter", new_twitter_path %>
+
+<hr />
+<% if @stats.presence %>
+  <%= sum = @stats.sum {|k,v| v} %><br />
+  <% @stats.each do |key, val| %>
+    <% percent = val * 100 / sum %>
+    <%= key %>:<%= val %>(<%= percent %>%)<%= percent_star(percent) %><br />
+  <% end %>
+<% end %>
 
 <% if @rating_min.presence %>
   <% rating_lt = @rating_min %>

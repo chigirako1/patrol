@@ -197,6 +197,9 @@ class Twitter < ApplicationRecord
         [known_twt_url_list, unknown_twt_url_list]
     end
 
+    def self.grp_stat(twitters)
+    end
+
     def self.twt_user_classify(twt_url_infos, pxv_chk=true)
         pxvid_list = []
         registered_twt_acnt_list = {}
@@ -596,6 +599,60 @@ class Twitter < ApplicationRecord
         end
 
         false
+    end
+
+    def sort_cond_val(value, dir, opt)
+        val = value
+
+        unless dir == "a"
+            val = -val
+        end
+
+        if val and opt and opt =~ /^\d+$/
+            val /= opt.to_i
+        end
+
+        val
+    end
+
+    def sort_cond_spec(cond)
+        cond_array = []
+
+        conds = cond.split(",")
+        conds.each do |c|
+            val = nil
+            cs = c.strip.split(":")
+            case cs[0]
+            when "f"
+=begin
+        mapping = {
+            "f" => "@filenum",
+            "r" => "@rating"
+        }
+                var_name = mapping[cs[0]]
+                val = instance_variable_get(var_name)
+                if val
+                    val = sort_cond_val(val, cs[1], cs[2])
+                else
+                    STDERR.puts %!#{val}!
+                end
+=end
+                val = self.filenum
+                val = sort_cond_val(val, cs[1], cs[2])
+                #STDERR.puts %!#{self.filenum} => #{val}\t#{cs}!
+            when "r"
+                val = self.rating
+                val = sort_cond_val(val, cs[1], cs[2])
+            when "p"
+                val = self.prediction
+                val = sort_cond_val(val, cs[1], cs[2])
+            else
+                STDERR.puts %!unknown option:"#{cs[0]}"!
+            end
+            cond_array << val if val
+        end
+
+        cond_array
     end
 
     def key_for_group_by

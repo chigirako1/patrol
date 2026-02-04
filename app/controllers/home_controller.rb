@@ -11,7 +11,7 @@ class HomeController < ApplicationController
       # =====================================
       # 
       # =====================================
-      { :label => "std", :path => "" },
+      { :label => "pxv", :path => "" },
       { :label => "#pxv", :path => "" },
       { :label => "pxv",
         :path => artists_path
@@ -35,10 +35,52 @@ class HomeController < ApplicationController
             thumbnail: false,
           )
       },
+      { :label => "#pxv未設定", :path => "" },
+      { :label => "pxv 未設定 更新数[多]予測",
+          :path => artists_path(
+            page_title: "pxv 未設定 更新数[多]予測", 
+            #sort_by: "id",
+            sort_by: "予測▽",
+            group_by: ArtistsController::GROUP_TYPE::GROUP_SPEC,#FILENUM,
+            group_spec: "{am}ヶ月({aw}週)||ファイル{f10}",
+            #exclude_ai: "true",
+            #status: "「長期更新なし」を除外",
+            #point: 1, 
+            prediction: 0, 
+            #recent_filenum: 5,
+            rating: 0, 
+            #last_access_datetime: -100,#7,
+            created_at: 60,
+            display_number: 7,
+            #year: 2023, 
+            thumbnail: true
+          )
+      },
+      { :label => "twt", :path => "" },
       #----------------------------------------
       { :label => "#twt", :path => "" },
+      { :label => "#{ApplicationHelper::TWT_ICON}#{ApplicationHelper::DM_AI_ICON}優先",
+        :path => twitters_path(
+          #page_title: "all",
+          mode: TwittersController::ModeEnum::ALL,
+          target: Twitter::DRAWING_METHOD::DM_AI,
+          sort_by: TwittersController::SORT_BY::SORT_PRED,
+          grp_sort_by: TwittersController::GRP_SORT::GRP_SORT_SPEC,
+          grp_sort_spec: "予測{p50}～|{aw}週::予測{p10}～|評価{r1}# {cyymm}",#"{f_200}::予測{p10}～|評価{r1}# {cyymm}",
+          #"{ad2}日～|{cyymm}::予測{p10}～|評価{r1}", #"{ad}日|{cyymm}|予測{p10}～::評価{r1}", #"{cyymm}|予測{p10}～::評価{r1}",#予測{p10}～|{r5}～::{cm}|評価{r1},
+          rating: 87,
+          #hide_within_days: -21,
+          pfilenum: -1500,
+          select_max: 11,
+          #num_of_disp: 3,
+          ex_sp: true,
+          pred: 22,
+          #created_at: 180,
+          thumbnail: ""
+        )
+      },
       { :label => "-", :path => "" },
-      { :label => "#{ApplicationHelper::TWT_ICON}#{ApplicationHelper::DM_AI_ICON}予測順",
+      { :label => "#{ApplicationHelper::TWT_ICON}#{ApplicationHelper::DM_AI_ICON}評価/予測順",
         :path => twitters_path(
           #page_title: "all",
           mode: TwittersController::ModeEnum::ALL,
@@ -48,6 +90,24 @@ class HomeController < ApplicationController
           grp_sort_spec: "{qq450}評価{r1}::予測{p10}～|{m}ヶ月({w}週)～", #"{qq450}評価{r1}|{m}ヶ月({w}週)～::{p10}",
           rating: 86,
           hide_within_days: 3,
+          select_max: 11,
+          #num_of_disp: 3,
+          #ul_freq: -500,
+          ex_sp: true,
+          pred: 33,#18,
+          thumbnail: ""
+        )
+      },
+      { :label => "#{ApplicationHelper::TWT_ICON}#{ApplicationHelper::DM_AI_ICON}予測順",
+        :path => twitters_path(
+          #page_title: "all",
+          mode: TwittersController::ModeEnum::ALL,
+          target: Twitter::DRAWING_METHOD::DM_AI,
+          sort_by: TwittersController::SORT_BY::SORT_PRED_DESC,
+          grp_sort_by: TwittersController::GRP_SORT::GRP_SORT_SPEC,
+          grp_sort_spec: "{qq450}評価{r1}::予測{p10}～|{m}ヶ月({w}週)～", #"{qq450}評価{r1}|{m}ヶ月({w}週)～::{p10}",
+          rating: 85,
+          hide_within_days: 14,
           select_max: 11,
           #num_of_disp: 3,
           #ul_freq: -500,
@@ -107,23 +167,20 @@ class HomeController < ApplicationController
           thumbnail: ""
         )
       },
-      { :label => "#{ApplicationHelper::TWT_ICON}#{ApplicationHelper::DM_AI_ICON}優先",
+      { :label => "#{ApplicationHelper::TWT_ICON}#{ApplicationHelper::DM_AI_ICON}ファイル数△昇順",
         :path => twitters_path(
           #page_title: "all",
           mode: TwittersController::ModeEnum::ALL,
           target: Twitter::DRAWING_METHOD::DM_AI,
-          sort_by: TwittersController::SORT_BY::SORT_PRED,
+          sort_by: TwittersController::SORT_BY::FILENUM_ASC,
           grp_sort_by: TwittersController::GRP_SORT::GRP_SORT_SPEC,
-          grp_sort_spec: "{aw}週::予測{p10}～|評価{r1}# {cyymm}",#"{f_200}::予測{p10}～|評価{r1}# {cyymm}",
-          #"{ad2}日～|{cyymm}::予測{p10}～|評価{r1}", #"{ad}日|{cyymm}|予測{p10}～::評価{r1}", #"{cyymm}|予測{p10}～::評価{r1}",#予測{p10}～|{r5}～::{cm}|評価{r1},
-          rating: 87,
-          #hide_within_days: -21,
-          pfilenum: -1500,
+          grp_sort_spec: "{p50}件～|評価{r1}|{m}ヶ月({w}週)～::{p10}件～",
+          rating: 80,
+          pred: 22,
+          hide_within_days: 11,
           select_max: 11,
           #num_of_disp: 3,
           ex_sp: true,
-          pred: 22,
-          #created_at: 180,
           thumbnail: ""
         )
       },
@@ -212,6 +269,41 @@ class HomeController < ApplicationController
           thumbnail: ""
         )
       },
+      { :label => "-", :path => "" },
+      { :label => "#twt未設定", :path => "" },
+      { :label => "twt 未設定 予測数順",
+        :path => twitters_path(
+          #page_title: "未設定 id",
+          mode: TwittersController::ModeEnum::ALL,
+          sort_by: TwittersController::SORT_BY::PRED,
+          grp_sort_by: TwittersController::GRP_SORT::GRP_SORT_SPEC,
+          grp_sort_spec: "{aw2}週～|予測{p5}～::{w}週～|全{f20}ファイル",
+          #no_pxv: true,
+          rating: 0,
+          hide_within_days: 1,
+          created_at: 45,
+          select_max: 11,
+          #num_of_disp: 3, #NUM_OF_DISP,
+          #pred: 0,
+          target: "",
+          thumbnail: "t"
+        )
+      },
+      { :label => "twt 未設定 ファイル数順",
+        :path => twitters_path(
+          page_title: "未設定 id",
+          mode: TwittersController::ModeEnum::ALL,#"id",
+          sort_by: TwittersController::SORT_BY::FILENUM,
+          #no_pxv: true,
+          rating: 0,
+          hide_within_days: 1,
+          created_at: 90,
+          num_of_disp: NUM_OF_DISP,
+          pred: 0,
+          target: "",
+          thumbnail: "t"
+        )
+      },
       { :label => "#twtその他", :path => "" },
       { :label => "-", :path => "" },
       { :label => "twt(dir-sp fsチェック)", :path => artists_twt_index_path(dir: ArtistsController::DIR_TYPE::SMARTPHONE) },
@@ -253,63 +345,6 @@ class HomeController < ApplicationController
       # =====================================
       # 
       # =====================================
-      { :label => "未設定", :path => "" },
-      { :label => "#pxv", :path => "" },
-      { :label => "pxv 未設定 更新数[多]予測",
-          :path => artists_path(
-            page_title: "pxv 未設定 更新数[多]予測", 
-            #sort_by: "id",
-            sort_by: "予測▽",
-            group_by: ArtistsController::GROUP_TYPE::GROUP_SPEC,#FILENUM,
-            group_spec: "{am}ヶ月({aw}週)||ファイル{f10}",
-            #exclude_ai: "true",
-            #status: "「長期更新なし」を除外",
-            #point: 1, 
-            prediction: 0, 
-            #recent_filenum: 5,
-            rating: 0, 
-            #last_access_datetime: -100,#7,
-            created_at: 60,
-            display_number: 7,
-            #year: 2023, 
-            thumbnail: true
-          )
-      },
-      { :label => "-", :path => "" },
-      { :label => "#twt", :path => "" },
-      { :label => "twt 未設定 予測数順",
-        :path => twitters_path(
-          #page_title: "未設定 id",
-          mode: TwittersController::ModeEnum::ALL,
-          sort_by: TwittersController::SORT_BY::PRED,
-          grp_sort_by: TwittersController::GRP_SORT::GRP_SORT_SPEC,
-          grp_sort_spec: "{aw2}週～|予測{p5}～::{w}週～|全{f20}ファイル",
-          #no_pxv: true,
-          rating: 0,
-          hide_within_days: 1,
-          created_at: 45,
-          select_max: 11,
-          #num_of_disp: 3, #NUM_OF_DISP,
-          #pred: 0,
-          target: "",
-          thumbnail: "t"
-        )
-      },
-      { :label => "twt 未設定 ファイル数順",
-        :path => twitters_path(
-          page_title: "未設定 id",
-          mode: TwittersController::ModeEnum::ALL,#"id",
-          sort_by: TwittersController::SORT_BY::FILENUM,
-          #no_pxv: true,
-          rating: 0,
-          hide_within_days: 1,
-          created_at: 90,
-          num_of_disp: NUM_OF_DISP,
-          pred: 0,
-          target: "",
-          thumbnail: "t"
-        )
-      },
       # =====================================
       { :label => "DB更新", :path => "" },
       # ----------------------------
@@ -373,7 +408,7 @@ class HomeController < ApplicationController
           thumbnail: ""
         ) 
       },
-      { :label => "T|AI|all in 1 80△アクセス日数順、GRP:登録日",
+      { :label => "T|AI|all in 1 83△アクセス日順、GRP:登録日",
         :path => twitters_path(
           target: "AI",
           #page_title: "Twitter [AI] 80△",
@@ -381,6 +416,7 @@ class HomeController < ApplicationController
           rating: 83,
           #hide_within_days: 30,
           num_of_disp: 5,
+          created_at: 180,
           #pred: 5,
           #force_disp_day: 10,
           mode: TwittersController::ModeEnum::ALL_IN_1,
