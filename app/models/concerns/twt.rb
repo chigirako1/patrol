@@ -248,30 +248,47 @@ module Twt
         end
     end
 
-    def self.parse_dirname(path)
-        tmp_struct = Struct.new(:path, :dirname, :screen_name, :twt)
+    def self.parse_dirname(dirpath)
+        tmp_struct = Struct.new(:path, :dirname, :screen_name, :twt, :latest_date)
 
-        dirname = File.basename path
+        dirname = File.basename dirpath
         if dirname =~ TWT_AT_SCREEN_NAME_RGX
             screen_name = $1
             twt = Twitter.find_by_twtid_ignore_case(screen_name)
+
+            path_list = UrlTxtReader::get_path_list(dirpath)
+            if path_list.presence
+                latest_file = path_list.last
+                sp_datetime = Twt::get_sp_datetime_from_filename(File.basename latest_file)
+                latest_date = sp_datetime
+            end
         else
             screen_name = ""
         end
-        tmp_struct.new(path, dirname, screen_name, twt)
+        tmp_struct.new(dirpath, dirname, screen_name, twt, latest_date)
     end
 
     def self.sp_dirs()
         path_list = Util::glob("#{TWT_SP_DIR_PATH}")
         #path_list.map {|path| parse_dirname path}.sort_by {|x| x.screen_name}
         tmp = path_list.map {|path| parse_dirname path}
-        tmp.sort_by {|x|
-            if x.twt
-                x.twt.last_access_datetime
-            else
-                Time.new(2001,1,1)
-            end
-        }
+        if false
+            tmp.sort_by {|x|
+                if x.twt
+                    x.twt.last_access_datetime
+                else
+                    Time.new(2001,1,1)
+                end
+            }
+        else
+            tmp.sort_by {|x|
+                if x.latest_date
+                    x.latest_date
+                else
+                    Time.new(2001,1,1)
+                end
+            }
+        end
     end
 
     def self.get_sp_path(twtid)
@@ -398,6 +415,10 @@ module Twt
 
     def self.twt_tweet_url_dev(tweet_id)
         twt_tweet_url(TWT_USER_DEV, tweet_id)
+    end
+
+    def self.twt_tweet_url_i(tweet_id)
+        twt_tweet_url("i", tweet_id)
     end
 
     def self.search_tweet(twt_pic_path_list, search_tweet_id)
@@ -1099,8 +1120,12 @@ module Twt
 
         #key = "#{Util::format_num(twt.update_frequency, 100, 4)}|||更新頻度:#{Util::format_num(twt.update_frequency, 50, 4)}"
 
-        if twt.update_frequency >= 400
-            dayn_s = "Z(高頻度)"
+        if twt.update_frequency >= 450
+            if dayn < 3
+                dayn_s = "Z(高頻度)A"
+            else
+                dayn_s = "Z(高頻度)Z"
+            end
         elsif dayn >= 21
             dayn_s = "Y(21-)"
         elsif dayn >= 14
@@ -1268,6 +1293,10 @@ module Twt
     def self.list_vid
         twts = Twitter.select {|x| (x.video_cnt||0) > 0}.sort_by {|x| x.video_cnt}.reverse
         twts.each do |twt|
+            if twt.private_account == Twitter::TWT_VISIBILITY::TV_PRIVATE
+                next
+            end
+
             puts %!#{twt.twtid},"#{twt.twtname}",#{twt.video_cnt},#{twt.private_account}!
         end
 

@@ -1,3 +1,7 @@
+
+<% page_title = tweet_show_page_title() %>
+<% provide(:title, page_title) %>
+
 <p style="color: green"><%= notice %></p>
 
 <%= render @tweet %>
@@ -5,8 +9,8 @@
 <%= render "form", tweet: @tweet %>
 
 <div>
-  <%= link_to "Edit this tweet", edit_tweet_path(@tweet) %> |
-  <%= link_to "Back to tweets", tweets_path %>
+  <%#= link_to "Edit this tweet", edit_tweet_path(@tweet) %> |
+  <%#= link_to "Back to tweets", tweets_path %>
 
   <%= button_to "Destroy this tweet", @tweet, method: :delete %>
 </div>

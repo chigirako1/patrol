@@ -1,4 +1,13 @@
 module TweetsHelper
+    def tweet_show_page_title()
+        page_title = "🖼️"
+        if @tweet
+            page_title += "@" + @tweet.screen_name
+        else
+        end
+        page_title
+    end
+
     def url_list_sort_by(url_list_work, sort_type)
         case sort_type
         when TwittersController::SORT_BY::PRED

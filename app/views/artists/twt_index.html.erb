@@ -284,6 +284,38 @@
     <% disp_twt_pxv = false %>
 <% end %>
 
+<% if @tweet_i_ids.presence and @tweet_i_ids.size > 0 %>
+    <h2>ids (<%= @tweet_i_ids.size %>)</h2>
+    <%# tweet_ids = @tweet_i_ids.map {|x| [x, Tweet::get_tweet_record(x)]}.sort_by {|x| [x[1]&.tweet_id||Float::INFINITY, x[0]]} %>
+
+    <% tweets_grp = Tweet::group(@tweet_i_ids) %>
+    <% tweets_grp.each do |key, tweets| %>
+        <h3><%= key %>(<%= tweets.size %>)</h3>
+        <% tweets.each.with_index(1) do |x, idx| %>
+            <% tweet_id = x[0] %>
+            <% t = x[1] %>
+            <%= idx %>:
+            <%= tweet_id %>(<%= Twt::timestamp_str(tweet_id) %>)
+            <%= link_to_ex("▶x", Twt::twt_tweet_url_i(tweet_id)) %>
+            <% if t %>
+                (<%= t.status %>/<%= t.screen_name %>)
+                [<%= link_to_ex "■TWEET■", t %>]
+                <% twt = Twitter.find_by_twtid_ignore_case(t.screen_name) %>
+                <% if twt %>
+                    <%= twt.twtname %>
+                    [<%= link_to_ex "■TWT■", twt %>]
+                <% else %>
+                    ★未登録★
+                <% end %>
+                (@<%= t.screen_name %>)
+            <% else %>
+                [<%= link_to_ex "■New tweet■", new_tweet_path(tweet_id: tweet_id, status: Tweet::StatusEnum::SAVED) %>]
+            <% end %>
+            <br />
+        <% end %>
+    <% end %>
+<% end %>
+
 <% pxv_list_tmp = [] %>
 <% if @unknown_twt_url_list.presence %>
     <% STDERR.puts "[dbgx]#{@unknown_twt_url_list.size}" %>

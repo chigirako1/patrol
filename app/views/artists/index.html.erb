@@ -1,18 +1,27 @@
-<% page_title = "#{ApplicationHelper::PXV_ICON}#{params[:page_title]} - 一覧" %>
+
+<% search_word = params[:search_word] %>
+<% if @artists_group.size == 0 and params[:file] == ArtistsController::MethodEnum::SEARCH %>
+  <% if search_word =~ Artist::PXV_USER_URL_REGEX %>
+    <% pxv_user_id = $1 %>
+  <% end %>
+<% end %>
+
+<% page_title = "#{ApplicationHelper::PXV_ICON}#{params[:page_title]}#{%!「#{search_word}」! if search_word} - 一覧" %>
 <% provide(:title, page_title) %>
+
 <p style="color: green"><%= notice %></p>
 
 <%= link_to "Return", root_path %>
 
-<h1>Artists [<%= page_title %>]<%= %!(#{@artists_total_count}件)!%></h1>
+<% page_header_title = %![#{page_title}](#{@artists_total_count}件)!%>
+<h1><%= page_header_title %></h1>
 
 <% if @twt_urls.size > 0 %>
   <a href="#twt_url_list">twt_url_list</a>
 <% end %>
 
-<% search_word = params[:search_word] %>
 <% if search_word.presence %>
-  検索ワード：「<b><%= search_word %></b>」
+  検索ワード：「<b><%= search_word %></b>」<br />
 <% end %>
 
 <% h_bak = "" %>
@@ -97,7 +106,7 @@
             <br />
             [<%= artist.reverse_status %>]
             <% if artist.reverse_status == Artist::ReverseEnum::REV_DONE %>
-              ✔
+              ☑️
             <% end%>
           <% end%>
         </td>
@@ -119,6 +128,9 @@
           <% if artist.twtid.presence and artist.twtid != "-" %>
             @<%= artist.twtid %>
             <% if twt %>
+              <% unless twt.rating.presence %>
+                <font color="red"><b>★未設定★</b></font><br />
+              <% end %>
               |<%= twt.r18 %>|<%= twt.drawing_method %>
               <br />
               【<%= twt.rating %>】<%= twt.prediction %>[<%= link_to_ex "■twt■", twt %>]
@@ -131,6 +143,8 @@
               <br />
               <%= twt.get_date_info(twt.last_access_datetime) if twt.last_access_datetime.presence %>
               <br />
+            <% else %>
+              <font color="red"><b>★未登録★</b></font>
             <% end %>
           <% end %>
         </td>
@@ -181,18 +195,15 @@
 <%= link_to "next >", "../artists?#{get_url_params}&begin_no=#{@begin_no.to_i + @size_per_table}" %>
 <%#= link_to "last >>", "../artists?#{get_url_params}&begin_no=#{@artists_group.size - @size_per_table}" %>
 
-<% if @artists_group.size == 0 and params[:file] == ArtistsController::MethodEnum::SEARCH %>
-  <% if search_word =~ Artist::PXV_USER_URL_REGEX %>
-    <% pxv_user_id = $1 %>
-    <% dirlist = Pxv::stock_dir_list %>
-    <% user_name = Pxv::user_name(dirlist, pxv_user_id) %>
-    <% if user_name.presence %>
-      <h3>DB未登録だが、フォルダあり："<%= user_name %>"(<%= pxv_user_id %>)</h3>
-      <%= link_to_ex %!☆pxv☆:@#{pxv_user_id}!, artist_pxv_path(pxv_user_id) %>
-    <% else %>
-      <h3>pxv:"<%= pxv_user_id %>" not found</h3>
-      <%= link_to_ex "New Artist(#{pxv_user_id})", new_artist_path(pxvid: pxv_user_id) %>
-    <% end %>
+<% if pxv_user_id %>
+  <% dirlist = Pxv::stock_dir_list %>
+  <% user_name = Pxv::user_name(dirlist, pxv_user_id) %>
+  <% if user_name.presence %>
+    <h3>DB未登録だが、フォルダあり："<%= user_name %>"(<%= pxv_user_id %>)</h3>
+    <%= link_to_ex %!☆pxv☆:@#{pxv_user_id}!, artist_pxv_path(pxv_user_id) %>
+  <% else %>
+    <h3>pxv:"<%= pxv_user_id %>" not found</h3>
+    <%= link_to_ex "New Artist(#{pxv_user_id})", new_artist_path(pxvid: pxv_user_id) %>
   <% end %>
 <% end %>
 
@@ -248,8 +259,8 @@
 <hr />
 
 <script>
-    function select_text() {
-        let text_field = document.getElementById("search_word");
+    function select_text(elem_id) {
+        let text_field = document.getElementById(elem_id);
         text_field.select();
         //document.execCommand("copy");
     }
@@ -257,7 +268,7 @@
     document.addEventListener("visibilitychange", function() {
       if (document.visibilityState === "visible")
       {
-          select_text();
+          select_text("search_word");
       }
     });
 </script>
@@ -312,7 +323,7 @@
     <hr />
   
     検索ワード：
-    <%= f.text_field :search_word, :value => params[:search_word] %>
+    <%= f.text_field :search_word, :value => params[:search_word], autofocus: true %>
     <br />
     <%= f.select :match_method,
       options_for_select(
@@ -342,11 +353,6 @@
 
     <%= f.submit("検索", name: nil, class: 'submit-btn') %>
     <br />
-
-    <!-- 
-    <input type="button" value="select" onclick="select_text();" />
-    <br />
-    -->
 
     <%= f.label :page_title %>
     <%= f.text_field :page_title, :value => params[:page_title] %>

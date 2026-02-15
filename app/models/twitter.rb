@@ -134,6 +134,10 @@ class Twitter < ApplicationRecord
         end
     end
 
+    def self.get_records_by_pxvid(pxv_user_id)
+        Twitter.where(pxvid: pxv_user_id)
+    end
+
     def self.all_twt_id_list()
         ids = Twitter.all.map {|x| x.twtid}
     end
@@ -940,7 +944,7 @@ class Twitter < ApplicationRecord
             case grp_sort_by
             when TwittersController::GRP_SORT::GRP_SORT_PRED
                 p = Util::format_num(self.prediction, 10)
-                gkey = %!予測#{Twitter::TWT_H_SEPARATOR}#{p}!
+                gkey = %!#{Twitter::TWT_H_SEPARATOR}予測#{p}～!
             when TwittersController::GRP_SORT::GRP_SORT_ACCESS_W
                 w = %!#{sprintf("%3d", self.last_access_datetime_days_elapsed / 7)}週!
                 p = %!#{Util::format_num(self.prediction, 10)}!

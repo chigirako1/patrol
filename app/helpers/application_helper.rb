@@ -26,6 +26,17 @@ module ApplicationHelper
         end
     end
 
+    def get_val(orig_val, target_symbol)
+        if orig_val.presence
+            val = orig_val
+        elsif params[:target_symbol].presence
+            val = params[:target_symbol]
+        else
+            val = ""
+        end
+        val
+    end
+
     def td_date_bg_color(dayn)
         if dayn < 7
             #bgcolor = "palegreen"

@@ -39,9 +39,9 @@ module TwittersHelper
         tag += %![#{link_to_ex("■twt■", twt)}]!
         tag += %!|A:#{twt.last_access_datetime_disp}!
         tag += %!|U:#{Util.get_date_info twt.last_post_datetime}!
-        tag += %!|#{PXV_ICON}:#{twt.pxvid}! if twt.pxvid.presence
         tag += %!|予測:#{twt.prediction}!
-        tag += %!|ファイル数:#{twt.filenum}!
+        tag += %!(ファイル数:#{twt.filenum})!
+        tag += %!|#{PXV_ICON}:#{twt.pxvid}! if twt.pxvid.presence
 
         tag.html_safe
     end
@@ -75,7 +75,7 @@ module TwittersHelper
         end
 
         if params[:rating].presence
-            prm_rat = %![#{params[:rating]}↑]!
+            prm_rat = %![#{params[:rating]}↑]! unless params[:rating] == "0"
         end
 
         prm_page_title = params[:page_title]

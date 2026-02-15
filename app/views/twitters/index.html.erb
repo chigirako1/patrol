@@ -50,6 +50,9 @@
 <% if params[:pred].presence %>
   ・予測数<%= params[:pred] %>未満は非表示<br />
 <% end %>
+<% if params[:pfilenum].presence %>
+  ・ファイル数<%= params[:pfilenum] %>未満は非表示<br />
+<% end %>
 
 
 <div id="twitters">
@@ -124,6 +127,9 @@
             (@<%= twitter.twtid %>)
             <br />
             [<%= twitter.status %>]
+            <% if twitter.status == Twitter::TWT_STATUS::STATUS_SCREEN_NAME_CHANGED %>
+              =><%= twitter.new_twtid %>
+            <% end %>
             <br />
           
             <% if twitter.comment.presence %>
@@ -243,7 +249,7 @@
           <!-- pxv ul -->
           <td bgcolor="pink">
             <% if twitter.last_ul_datetime.presence %>
-              <%# puts %!#{twitter.twtid}! %>2025-12-29 15:00:00 UTC/2025-12-29 15:00:00
+              <%# puts %!#{twitter.twtid}! %>
               <%# d = Date.parse(twitter.last_ul_datetime) %>
               <% d = twitter.last_ul_datetime %>
               <%#= twitter.get_datetime_string(twitter.last_ul_datetime, true) %>
@@ -353,7 +359,7 @@ button.horizontal {
   <%= form_with url: twitters_path, local: true, method: :get do |f| %>
    
     <%= f.submit("検索", name: nil, class: 'submit-btn') %>
-    検索：<%= f.text_field :search_word, :value => params[:search_word] %>
+    検索：<%= f.text_field :search_word, :value => params[:search_word], autofocus: true %>
     <br />
     <%= f.select :match_method, options_for_select(
       [

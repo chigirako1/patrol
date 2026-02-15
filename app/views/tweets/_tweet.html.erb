@@ -14,13 +14,16 @@
 
     <% twt = Twitter.find_by(twtid: tweet.screen_name) %>
     <% if twt %>
-        [<%= link_to "■twt■(@#{tweet.screen_name})", twitter_path(twt) %>]
-        <br />
+        [<%= link_to_ex "■twt■(@#{tweet.screen_name})", twitter_path(twt) %>]<%= twitter_info_tag(twt) %>
+    <% else %>
+        [<%= link_to_ex %!☆twt☆:@#{tweet.screen_name}!, artist_twt_path(tweet.screen_name) %>]
     <% end %>
+    <br />
 
     <% @pic_list.each do |path| %>
         <% if path.include? tweet.tweet_id.to_s %>
             <%= link_to_ex image_tag(path, width: '10%', height: '10%', :alt => path), path %>
+            <%= link_to_ex("▶x", Twt::twt_tweet_url_i(tweet.tweet_id)) %><br />
         <% else %>
         <% end %>
     <% end %>

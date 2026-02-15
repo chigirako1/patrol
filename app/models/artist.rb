@@ -40,6 +40,8 @@ class Artist < ApplicationRecord
     module ReverseEnum
         REV_ON = "さかのぼり中"
         REV_DONE = "さかのぼり済"
+        REV_UNNECESSARY = "さかのぼり不要"
+        REV_NOT_AVAILABLE = "さかのぼり不可"#
     end
 
     module FEATURE
@@ -354,10 +356,11 @@ class Artist < ApplicationRecord
             return true
         end
 
-        if self.reverse_status == ReverseEnum::REV_DONE
-            false
-        else
+        case self.reverse_status
+        when ReverseEnum::REV_ON, "", nil
             true
+        else
+            false
         end
     end
 

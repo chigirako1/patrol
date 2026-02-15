@@ -295,6 +295,7 @@ class ArtistsController < ApplicationController
   end
 
   module FileTarget
+    TWT_I = "twt_i"
     TWT_UNKNOWN_ONLY = "unknown_twt_only"
     PXV_UNKNOWN_ONLY = "unknown_pxv_only"
     TWT_KNOWN_ONLY = "twt,twt既知"
@@ -883,20 +884,23 @@ class ArtistsController < ApplicationController
 
       if @target.size == 1 and @target[0] != "known_pxv"#適当すぎる。。。
         pxvid_list2 = []
-        if @target[0] == ArtistsController::FileTarget::PXV_UNKNOWN_ONLY
+        case @target[0]
+        when ArtistsController::FileTarget::TWT_I
+          @tweet_i_ids = UrlTxtReader::get_tweet_id_list(path)
+        when ArtistsController::FileTarget::PXV_UNKNOWN_ONLY
           @unknown_pxv_user_id_list = UrlTxtReader::get_unknown_pxv_id_list(path)
-        elsif @target[0] == ArtistsController::FileTarget::TWT_UNKNOWN_ONLY
+        when ArtistsController::FileTarget::TWT_UNKNOWN_ONLY
           @unknown_twt_url_list = UrlTxtReader::get_unknown_twt_url_list(path)
           puts %!size=#{@unknown_twt_url_list.size}!
-        elsif @target[0] == ArtistsController::FileTarget::PXV_EXPERIMENT
+        when ArtistsController::FileTarget::PXV_EXPERIMENT
           pxv_id_list, twt_url_infos, @misc_urls = UrlTxtReader::get_url_txt_info(path)
           known_pxv_user_id_list, unknown_pxv_user_id_list = Artist::pxv_user_id_classify([pxv_id_list, pxvid_list2].flatten)
           @known_pxv_user_id_list = known_pxv_user_id_list
-        elsif @target[0] == ArtistsController::FileTarget::TWT_EXPERIMENT
+        when ArtistsController::FileTarget::TWT_EXPERIMENT
           pxv_id_list, twt_url_infos, @misc_urls = UrlTxtReader::get_url_txt_info(path)
           known_twt_url_list, unknown_twt_url_list, pxvid_list2 = Twitter::twt_user_classify(twt_url_infos)
           @known_twt_url_list = known_twt_url_list
-        elsif @target[0] == ArtistsController::FileTarget::PXV_ARTWORK_LIST
+        when ArtistsController::FileTarget::PXV_ARTWORK_LIST
           _, _, _, @pxv_artwork_id_list = UrlTxtReader::get_url_txt_info(path, false, false, false, true)
         else
           puts %!????!
@@ -1158,9 +1162,9 @@ class ArtistsController < ApplicationController
       when "(全て)"
       when Status::EXCLD_NO_UPDATES_AND_DONE
         artists = artists.select {|x| x.has_leftovers?}
-      when Status::EXCLD_NO_UPDATES #"「長期更新なし」を除外"
+      when Status::EXCLD_NO_UPDATES
         artists = index_select_status_exclude(artists)
-      when Status::LONG_TERM_NO_UPDATS #"長期更新なし"
+      when Status::LONG_TERM_NO_UPDATS
         artists = index_select_status_include(artists)
       when Status::ADJUSTMENT
         artists = index_select_status_adjust(artists)
@@ -1173,7 +1177,7 @@ class ArtistsController < ApplicationController
       if prms.reverse_status == ""
       elsif prms.reverse_status == "「さかのぼり済」を除く"
         excl_list = [
-          "さかのぼり済",
+          Artist::ReverseEnum::REV_DONE, #"さかのぼり済",
         ]
         artists = artists.select {|x| excl_list.include?(x.reverse_status) == false}
       else

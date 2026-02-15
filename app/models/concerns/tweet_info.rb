@@ -28,7 +28,9 @@ module TweetInfo
         #elsif filename =~ /^\d{8}_\d{6}\./
         elsif filename =~ /(\d{8})_\d{6}/
           date = Date.parse $1
-          Twt::time2tweet_id(date.to_datetime)
+          tweet_id = Twt::time2tweet_id(date.to_datetime)
+          #STDERR.puts %!"#{filename}" => #{date}, #{tweet_id}/!
+          tweet_id
         elsif filename =~ /^[\w\-]{15}\./ #????なにこれ
             STDERR.puts %![dbg] #{filename}!
             #Rails.logger.warn(filename)

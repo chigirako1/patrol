@@ -17,6 +17,8 @@
 <% @pxv_pic_list.first(3).each do |path| %>
     <%= link_to_ex(image_tag(path, width: '10%', height: '10%', :alt => path), path) %>
     <%= path %>
+    <% artwork_id = Pxv::get_pxv_art_id(path) %>
+    <%= link_to_ex "#{artwork_id}", Pxv::pxv_artwork_url(artwork_id) %>
     <br />
 <% end %>
 <hr />

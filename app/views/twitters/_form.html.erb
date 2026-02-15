@@ -90,11 +90,11 @@
     <%= form.label "更新頻度(100日間での投稿数)", style: "display: block" %>
     <%= form.number_field :update_frequency %>
     <input type="button" value="*2" onclick="multiple_val('update_frequency', 2);" class="btn_s btn_s_plus" />
-    <input type="button" value="/2" onclick="div_val('update_frequency', 2);" class="btn_s btn_s_minus" />
+    <input type="button" value="/2" onclick="div_val('update_frequency', 2);" class="btn_s " />
     <input type="button" value="+100" onclick="plus_rate('update_frequency', 100);" class="btn_s btn_s_plus" />
     <input type="button" value="+10" onclick="plus_rate('update_frequency', 10);" class="btn_s btn_s_plus" />
-    <input type="button" value="-100" onclick="plus_rate('update_frequency', -100);" class="btn_s btn_s_minus" />
-    <input type="button" value="-10" onclick="plus_rate('update_frequency', -10);" class="btn_s btn_s_minus" />
+    <input type="button" value="-100" onclick="plus_rate('update_frequency', -100);" class="btn_s " />
+    <input type="button" value="-10" onclick="plus_rate('update_frequency', -10);" class="btn_s " />
     <input type="button" value="0" onclick="set_rate('update_frequency', 0);" class="btn_s btn_s_abs" />
   </div>
 
@@ -267,13 +267,13 @@
           類似名あり：<br />
           <% pxv3.each do |pxv_n| %>
             <%= pxv_n.feature %>【<%= pxv_n.pxvname %>(<%= pxv_n.pxvid %>)|<%= pxv_n.rating %>|<%= pxv_n.last_access_datetime_disp %>】
-            <% if pxv_n.twtid == @twitter.twtid %>
-              TWT ID一致
-            <% else %>
-              TWT ID不一致: ["<%= @twitter.twtid %>"(twt) != 
-            <% end %>
-            @"<%= pxv_n.twtid %>"(pxv)]
+            (@<%= pxv_n.twtid %>)
             <%= link_to_ex("■pxv■", artist_path(pxv_n.id, access_dt_update: "yes")) %>
+            <% if pxv_n.twtid == @twitter.twtid %>
+              [TWT ID一致]
+            <% else %>
+              [TWT ID不一致]
+            <% end %>
             <br />
           <% end %>
         <% end %>
@@ -517,9 +517,24 @@
     <%= form.label :最新アクセス日時, style: "display: block" %>
     <%= form.datetime_field :last_access_datetime %>
   </div>
+
+  <div>
+    <%= form.label :最小アクセス間隔, style: "display: block" %>
+    <%= form.number_field :min_interval %>
+  </div>
+
+  <div>
+    <%= form.label :最大アクセス日時, style: "display: block" %>
+    <%= form.number_field :max_interval %>
+  </div>
 <% end %>
 
 <script>
+  const e = document.getElementById('pxv_user_id_work');
+  e.addEventListener('change', (event) => {
+      get_pxv_user_id();
+  });
+
   function set_time(elem_id) {
     let elem = document.getElementById(elem_id);
     let date = new Date(elem.value);
@@ -573,14 +588,16 @@
       let text_box = document.getElementById("pxv_user_id_work");
       let text = text_box.value;
 
-      let datetxt = ""
-      let regex = /pixiv\.net\/\/users\/(\d+)/;
-      if (regex.test(text)) {
-          let r = text.match(regex)
-          let n = Number(r[1]);
+      let datetxt = "";
+      //let regex = /pixiv\.net\/users\/(\d+)/;
+      const regex = new RegExp('pixiv\.net/users/(\d+)');
+      const match = text.match(regex);
+      //if (regex.test(text)) {
+      if (match) {
+          let n = Number(match[1]);
           datetxt = n;
       } else {
-          let r = text.match(/(\d+)/)
+          let r = text.match(/(\d+)/);
           let n = Number(r[0]);
           datetxt = n;
       }

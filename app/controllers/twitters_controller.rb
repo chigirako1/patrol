@@ -1158,7 +1158,7 @@ class TwittersController < ApplicationController
         twitters_group = twitters.group_by {|x| x.group_key_test(grp_sort_by)}
         grp_sort = 1
       when GRP_SORT::GRP_SORT_PRED_DESC
-        twitters_group = twitters.group_by {|x| %!#{Util::format_num(x.prediction, 10)}!}
+        twitters_group = twitters.group_by {|x| %!予測:#{Util::format_num(x.prediction, 10)}!}
         grp_sort = -1
       when GRP_SORT::GRP_SORT_REGISTERED
         twitters_group = twitters.group_by {|x| %!#{Util::format_num(x.created_at_day_num / 30, 1)}!}

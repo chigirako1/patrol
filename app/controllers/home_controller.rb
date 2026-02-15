@@ -12,6 +12,7 @@ class HomeController < ApplicationController
       # 
       # =====================================
       { :label => "pxv", :path => "" },
+      #----------------------------------------
       { :label => "#pxv", :path => "" },
       { :label => "pxv",
         :path => artists_path
@@ -35,6 +36,25 @@ class HomeController < ApplicationController
             thumbnail: false,
           )
       },
+      { :label => "pxv AI アクセス日順",
+        :path => artists_path(
+            #file: ArtistsController::MethodEnum::ALL_IN_1,
+            #page_title: "",
+            exclude_ai: "",
+            ai: true,
+            status: ArtistsController::Status::EXCLD_NO_UPDATES_AND_DONE,
+            group_by: ArtistsController::GROUP_TYPE::GROUP_SPEC,
+            group_spec: "{status}{r}||{am}ヶ月({aw}週)",
+            sort_by: ArtistsController::SORT_TYPE::SORT_ACCESS_OLD_TO_NEW,
+            rating: 85,
+            #step: 1,
+            #num_of_times: 5,
+            display_number: 11,
+            last_access_datetime: 3,
+            thumbnail: false,
+          )
+      },
+      #----------------------------------------
       { :label => "#pxv未設定", :path => "" },
       { :label => "pxv 未設定 更新数[多]予測",
           :path => artists_path(
@@ -66,7 +86,8 @@ class HomeController < ApplicationController
           target: Twitter::DRAWING_METHOD::DM_AI,
           sort_by: TwittersController::SORT_BY::SORT_PRED,
           grp_sort_by: TwittersController::GRP_SORT::GRP_SORT_SPEC,
-          grp_sort_spec: "予測{p50}～|{aw}週::予測{p10}～|評価{r1}# {cyymm}",#"{f_200}::予測{p10}～|評価{r1}# {cyymm}",
+          grp_sort_spec: "予測{p25}～|評価{r10}～|{aw}週::予測{p10}～|評価{r1}# {cyymm}",#"予測{p50}～|{aw}週::予測{p10}～|評価{r1}# {cyymm}",
+          #"{f_200}::予測{p10}～|評価{r1}# {cyymm}",
           #"{ad2}日～|{cyymm}::予測{p10}～|評価{r1}", #"{ad}日|{cyymm}|予測{p10}～::評価{r1}", #"{cyymm}|予測{p10}～::評価{r1}",#予測{p10}～|{r5}～::{cm}|評価{r1},
           rating: 87,
           #hide_within_days: -21,
@@ -80,7 +101,7 @@ class HomeController < ApplicationController
         )
       },
       { :label => "-", :path => "" },
-      { :label => "#{ApplicationHelper::TWT_ICON}#{ApplicationHelper::DM_AI_ICON}評価/予測順",
+      { :label => "#{ApplicationHelper::TWT_ICON}#{ApplicationHelper::DM_AI_ICON}評価/予測順(予測数制限)",
         :path => twitters_path(
           #page_title: "all",
           mode: TwittersController::ModeEnum::ALL,
@@ -113,6 +134,23 @@ class HomeController < ApplicationController
           #ul_freq: -500,
           ex_sp: true,
           pred: 33,#18,
+          thumbnail: ""
+        )
+      },
+      { :label => "#{ApplicationHelper::TWT_ICON}#{ApplicationHelper::DM_AI_ICON}評価/アクセス日順(2週間空き+予測)",
+        :path => twitters_path(
+          #page_title: "all",
+          mode: TwittersController::ModeEnum::ALL,
+          target: Twitter::DRAWING_METHOD::DM_AI,
+          sort_by: TwittersController::SORT_BY::R_ACCESS,
+          grp_sort_by: TwittersController::GRP_SORT::GRP_SORT_SPEC,
+          grp_sort_spec: "評価{r1}|{m}ヶ月({w}週)～::{p10}件～",
+          rating: 85,
+          hide_within_days: 14,
+          select_max: 11,
+          #num_of_disp: 3,
+          ex_sp: true,
+          pred: 11,
           thumbnail: ""
         )
       },
@@ -294,11 +332,13 @@ class HomeController < ApplicationController
           page_title: "未設定 id",
           mode: TwittersController::ModeEnum::ALL,#"id",
           sort_by: TwittersController::SORT_BY::FILENUM,
+          grp_sort_by: TwittersController::GRP_SORT::GRP_SORT_PRED_DESC,
           #no_pxv: true,
           rating: 0,
           hide_within_days: 1,
           created_at: 90,
           num_of_disp: NUM_OF_DISP,
+          select_max: 11,
           pred: 0,
           target: "",
           thumbnail: "t"
@@ -1077,6 +1117,15 @@ class HomeController < ApplicationController
             pred: 5,
             rating: 80,
             target:"twt,twt既知,twt未知,known_pxv,unknown_pxv",
+          )
+      },
+      { :label => "全ファイル twt(i)",
+          :path => artists_twt_index_path(
+            filename: "all",
+            #hide_day: 30,
+            #show_times: 2,
+            #url_cnt: 2,
+            target: ArtistsController::FileTarget::TWT_I
           )
       },
       { :label => ".", :path => "" },

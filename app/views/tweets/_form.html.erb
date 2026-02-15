@@ -12,18 +12,30 @@
   <% end %>
 
   <div>
+    <% if tweet.tweet_id.presence %>
+      <% tweet_id_val = tweet.tweet_id %>
+    <% elsif params[:tweet_id].presence %>
+      <% tweet_id_val = params[:tweet_id] %>
+    <% else %>
+      <% tweet_id_val = "" %>
+    <% end %>
     <%= form.label :tweet_id, style: "display: block" %>
-    <%= form.number_field :tweet_id %>
+    <%= form.number_field :tweet_id, value: tweet_id_val %>
   </div>
 
   <div>
     <%= form.label :screen_name, style: "display: block" %>
-    <%= form.text_field :screen_name %>
+    <%= form.text_field :screen_name, autofocus: true %>
   </div>
 
   <div>
+    <% val = get_val(tweet.status, :status) %>
     <%= form.label :status, style: "display: block" %>
-    <%= form.text_field :status %>
+    <%= form.select :status,
+      Tweet::status_enum_array(),
+      { selected: val },
+      include_blank: "選択して下さい"
+    %>
   </div>
 
   <div>
@@ -45,3 +57,18 @@
     <%= form.submit %>
   </div>
 <% end %>
+
+<script>
+    function select_text(elem_id) {
+        let text_field = document.getElementById(elem_id);
+        text_field.select();
+        //document.execCommand("copy");
+    }
+
+    document.addEventListener("visibilitychange", function() {
+      if (document.visibilityState === "visible")
+      {
+          select_text("tweet_" + "screen_name");
+      }
+    });
+</script>

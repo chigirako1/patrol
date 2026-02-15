@@ -12,6 +12,18 @@ class Tweet < ApplicationRecord
         DUPLICATE = "重複"
     end
 
+    def self.status_enum_array()
+        [
+            [StatusEnum::SAVED],
+            [StatusEnum::TO_BE_REMOVED],
+            [StatusEnum::DELETED],
+            [StatusEnum::UNACCESSIBLE],
+            [StatusEnum::UNACCESSIBLE_FREEZED],
+            [StatusEnum::UNACCESSIBLE_PRIVATE],
+            [StatusEnum::DUPLICATE],
+        ]
+    end
+
     def self.create_record(screen_name, tweet_id, status=StatusEnum::SAVED, num=-1)
         twt_params = {}
         twt_params[:screen_name] = screen_name
@@ -43,7 +55,6 @@ class Tweet < ApplicationRecord
             tweet = Tweet.find_by(tweet_id: tweet_id)
         end
 
-
         if tweet
             twt_params = {}
 
@@ -55,8 +66,44 @@ class Tweet < ApplicationRecord
 
             puts %![update_tweet_record] @#{tweet_id}:#{twt_params}!
         else
-            STDERR.puts %!@#{tweet_id}の更新に失敗しました。未登録のIDです!
+            msg = %!@#{tweet_id}の更新に失敗しました。未登録のIDです!
+            #STDERR.puts %!@#{tweet_id}の更新に失敗しました。未登録のIDです!
+            Rails.logger.error(msg)
         end
+    end
+
+    def self.get_tweet_record(tweet_id)
+        tweet = Tweet.find_by(tweet_id: tweet_id)
+    end
+
+    def self.group(tweet_i_ids)
+        #work = tweet_i_ids.map {|x| [x, Tweet::get_tweet_record(x)]}.sort_by {|x| [x[1]&.tweet_id||Float::INFINITY, x[0]]}
+        tweets_grp = Hash.new { |h, k| h[k] = [] }
+        work = tweet_i_ids.each do |x|
+            r =  Tweet::get_tweet_record(x)
+            if r
+                if Util::get_date_delta(r.created_at) == 0
+                    key = "10.本日登録"
+                else
+                    key = "99.昨日以前登録"
+                end
+            else
+                key = "01.未登録"
+            end
+            tweets_grp[key] << [x, r]
+        end
+
+        tweets_grp.each do |key, val|
+            case key
+            when "99.昨日以前登録"
+                val.sort_by! {|x| x[1].screen_name}
+            when "01.未登録"
+                val.sort_by! {|x| x[0]}
+            else
+            end
+        end
+
+        tweets_grp.sort.to_h
     end
 
     def self.check_registered_record(url_list)

@@ -196,8 +196,8 @@ textarea {
                 <b><%= Twt::tweet_id_with_comma(twitter.latest_tweet_id) %></b>
                 (公開日時：<%= Twt::date_info(twitter.latest_tweet_id) %>)
 
-                <% tweet_id_c = Twt::sp_tweet_id_with_comma(@twitter.twtid) %>
-                <% if tweet_id_c %>
+                <%# tweet_id_c = Twt::sp_tweet_id_with_comma(@twitter.twtid) %>
+                <% if false#tweet_id_c %>
                     <br />
                     <h3>SP</h3>
                     <b><%= tweet_id_c %></b> (DL日時からの推測)
@@ -297,7 +297,8 @@ textarea {
         <br />
         <% pic_mag_twt_b = '10%' %>
         <% fsize_list = [] %>
-        <% filelist.reverse.first(5).each do |fpath| %>
+        <%# if params[:picn] == "" %>
+        <% filelist.reverse.first(show_pic_num).each do |fpath| %>
             <%= link_to_ex(image_tag(fpath, width: pic_mag_twt_b, height: pic_mag_twt_b), fpath) %>
             <% phys_path = Util::get_public_path(fpath) %>
             <% fsize_list << FileTest.size(phys_path) %>
