@@ -201,7 +201,7 @@
     @<%= form.text_field :twtid, :value => twtid_val %>
 
     <% if artist.twtid.presence %>
-      <%= link_to_ex "@#{artist.twtid}", artist.twt_user_url %>
+      <%= link_to_ex "@#{artist.twtid}", artist.twt_user_media_url %>
       <% if twt.presence %>
         (@<%= twt.twtid %>)
         <br />

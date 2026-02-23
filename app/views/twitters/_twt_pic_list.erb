@@ -79,7 +79,7 @@ textarea {
         <h3>検索ID:"<%= search_tweet_id %>"</h3>
         <br />
 
-        <% s_tweet_id = Twt::get_tweet_id_from_url(search_tweet_id) %>
+        <% s_tweet_id = Twt::get_tweet_id_from_url(search_tweet_id, true) %>
         <% paths = Twt::search_tweet(@twt_pic_path_list, s_tweet_id) %>
         <% if paths %>
             <%= paths.size %>件ヒット<br />
@@ -184,7 +184,7 @@ textarea {
         <% end %>
     <% end %>
 
-    <% if twitter.sp? %>
+    <% if twitter.sp? and twitter.rating >= Twt::RATING_THRESHOLD %>
         <h3>SP対象？</h3>
     <% end %>
     
@@ -275,7 +275,7 @@ textarea {
         </b>
         (公開日時：<%= Twt::date_info(tweet_id) %>)
         <% dt = Twt::get_time_from_path(twt_pic_list[0][1]) %>
-        【以降の投稿数予測】<%= twitter.prediction(dt) %>
+        【以降の投稿数予測】<b><%= twitter.prediction(dt) %></b>
         <% #if @twitter.status == Twitter::TWT_STATUS::STATUS_NOT_EXIST %>
             (id変わったとき用→)
             <%= link_to_ex tweet_id, Twt::twt_tweet_url_dev(tweet_id) %>

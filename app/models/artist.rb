@@ -504,6 +504,10 @@ class Artist < ApplicationRecord
         Twt::twt_user_url(twtid)
     end
 
+    def twt_user_media_url
+        Twt::twt_user_media_url(twtid)
+    end
+
     def pxv_user_url
         Pxv::pxv_user_url(pxvid)
     end

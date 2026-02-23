@@ -8,6 +8,7 @@ class Twitter < ApplicationRecord
 
     module TWT_STATUS
         STATUS_PATROL = "TWT巡回"
+        STATUS_VID_PATROL = "動画チェック"
         STATUS_NO_PATROL = "TWT巡回不要"
         STATUS_NO_UPDATE_LT = "長期更新なし"
         STATUS_NO_PATROL_PXV_CHECK = "TWT巡回不要(PXVチェック)"
@@ -329,6 +330,7 @@ class Twitter < ApplicationRecord
             if ul_freq_low?
                 false
             else
+                #if rating >= RATING_THRESHOLD
                 true
             end
         else
@@ -843,7 +845,7 @@ class Twitter < ApplicationRecord
         ndays_s = 7
         rat_1 = 90
         rat_a = 87
-        rat_b = 85
+        rat_b = 84
         if daysn <= ndays_s
             if daysn < 1
                 recent = "[20.本日アクセス]"
@@ -861,7 +863,7 @@ class Twitter < ApplicationRecord
                 #recent = "[56.高評価(#{rat_a}↑)]最近アクセス"
                 recent = "[56.高評価(#{self.rating})]最近アクセス"
                 p_unit = 5
-            elsif rating < 85
+            elsif rating < rat_b
                 recent = "[24.1週間以内アクセス](#{rat_b}↓)"
                 p_unit = 5
             else
@@ -900,7 +902,7 @@ class Twitter < ApplicationRecord
 
                 lad_n2 = %!|#{Util::format_num(daysn / 7, 4)}週～!
             elsif daysn >= 30
-                recent = "[55.1カ月以上経過]"
+                recent = "[55.#{daysn / 30}カ月経過]"
             elsif self.prediction > 40
                 recent = "[54.予測多い]"
             elsif daysn < 7 and self.prediction < 10
@@ -993,7 +995,7 @@ class Twitter < ApplicationRecord
         end
 
         p = Util::format_num(self.prediction, p_unit)
-        "#{month_s}:#{p}件～"
+        "#{month_s}～:予測#{p}件～"
     end
 
     def a1o_auto_group_key_xx(e, hide_within_days, rating_gt, sort_by)

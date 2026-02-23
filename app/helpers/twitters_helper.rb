@@ -24,6 +24,14 @@ module TwittersHelper
         tag.html_safe
     end
 
+    def twitter_link_tag(twtid)
+        tag = ""
+        if twtid.presence
+            tag = "▷" + link_to_ex("@#{twtid}", Twt::twt_user_media_url(twtid))
+        end
+        tag.html_safe
+    end
+
     def twitter_info_tag(twt)
         tag = ""
 

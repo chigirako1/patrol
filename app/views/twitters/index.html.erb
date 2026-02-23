@@ -359,7 +359,12 @@ button.horizontal {
   <%= form_with url: twitters_path, local: true, method: :get do |f| %>
    
     <%= f.submit("検索", name: nil, class: 'submit-btn') %>
-    検索：<%= f.text_field :search_word, :value => params[:search_word], autofocus: true %>
+    <% if params[:mode] == TwittersController::ModeEnum::SEARCH %>
+      <% afocus = true %>
+    <% else %>
+      <% afocus = false %>
+    <% end %>
+    検索：<%= f.text_field :search_word, :value => params[:search_word], autofocus: afocus %>
     <br />
     <%= f.select :match_method, options_for_select(
       [

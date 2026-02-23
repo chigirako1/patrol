@@ -499,13 +499,15 @@ class TwittersController < ApplicationController
       force_read_all = true
     else
       force_read_all = false
-      dn = Util::get_date_delta(@twitter.last_access_datetime)
-      if dn > 0 or @twitter.last_access_datetime == nil
-        @twitter.update(last_access_datetime: Time.now)
-      else
-        STDERR.puts "更新不要:#{dn}"
-      end
     end
+
+    dn = Util::get_date_delta(@twitter.last_access_datetime)
+    if dn > 0 or @twitter.last_access_datetime == nil
+      @twitter.update(last_access_datetime: Time.now)
+    else
+      #STDERR.puts "更新不要:#{dn}"
+    end
+    
     @twt_pic_path_list = @twitter.get_pic_filelist(force_read_all)
   end
 

@@ -51,9 +51,11 @@ module Twt
         twt_ids
     end
 
-    def self.get_tweet_id_from_url(url)
+    def self.get_tweet_id_from_url(url, hoge=false)
         tweet_id = nil
         if url =~ TWT_RGX_URL
+            tweet_id = $1.to_i
+        elsif hoge and url.strip =~ /^(\d+)$/
             tweet_id = $1.to_i
         end
         tweet_id
@@ -282,7 +284,9 @@ module Twt
             }
         else
             tmp.sort_by {|x|
-                if x.latest_date
+                if x.twt and x.twt.last_access_datetime and x.twt.last_access_datetime_days_elapsed < 1
+                    x.twt.last_access_datetime
+                elsif x.latest_date
                     x.latest_date
                 else
                     Time.new(2001,1,1)
@@ -1121,10 +1125,11 @@ module Twt
         #key = "#{Util::format_num(twt.update_frequency, 100, 4)}|||更新頻度:#{Util::format_num(twt.update_frequency, 50, 4)}"
 
         if twt.update_frequency >= 450
-            if dayn < 3
-                dayn_s = "Z(高頻度)A"
+            day_std = 3
+            if dayn < day_std
+                dayn_s = "Z(高頻度)A#{day_std}"
             else
-                dayn_s = "Z(高頻度)Z"
+                dayn_s = "Z(高頻度)Z#{day_std}"
             end
         elsif dayn >= 21
             dayn_s = "Y(21-)"
@@ -1158,7 +1163,7 @@ module Twt
                 next
             end
 
-            if twt.status != Twitter::TWT_STATUS::STATUS_PATROL
+            if twt.status != Twitter::TWT_STATUS::STATUS_PATROL and twt.status != Twitter::TWT_STATUS::STATUS_VID_PATROL
                 next
             end
 
@@ -1166,7 +1171,7 @@ module Twt
                 next
             end
 
-            if (twt.rating||0) < 80
+            if (twt.rating||0) < RATING_THRESHOLD #80
                 next
             end
 
