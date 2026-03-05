@@ -3,6 +3,7 @@
 class Tweet < ApplicationRecord
 
     module StatusEnum
+        TO_BE_OBTAIN = "取得予定"
         SAVED = "保存済み"
         TO_BE_REMOVED = "削除予定"
         DELETED = "削除"
@@ -21,6 +22,7 @@ class Tweet < ApplicationRecord
             [StatusEnum::UNACCESSIBLE_FREEZED],
             [StatusEnum::UNACCESSIBLE_PRIVATE],
             [StatusEnum::DUPLICATE],
+            [StatusEnum::TO_BE_OBTAIN],
         ]
     end
 
@@ -76,28 +78,35 @@ class Tweet < ApplicationRecord
         tweet = Tweet.find_by(tweet_id: tweet_id)
     end
 
-    def self.group(tweet_i_ids)
+    C_YET = "01.未登録"
+    C_TODAY = "10.本日登録"
+    C_YESTERDAY = "90.昨日以前登録"
+    C_TBO = "99.#{StatusEnum::TO_BE_OBTAIN}"
+    
+    def self.tweet_group(tweet_i_ids)
         #work = tweet_i_ids.map {|x| [x, Tweet::get_tweet_record(x)]}.sort_by {|x| [x[1]&.tweet_id||Float::INFINITY, x[0]]}
         tweets_grp = Hash.new { |h, k| h[k] = [] }
         work = tweet_i_ids.each do |x|
             r =  Tweet::get_tweet_record(x)
             if r
                 if Util::get_date_delta(r.created_at) == 0
-                    key = "10.本日登録"
+                    key = C_TODAY
+                elsif r.status == StatusEnum::TO_BE_OBTAIN
+                    key = C_TBO
                 else
-                    key = "99.昨日以前登録"
+                    key = C_YESTERDAY
                 end
             else
-                key = "01.未登録"
+                key = C_YET
             end
             tweets_grp[key] << [x, r]
         end
 
         tweets_grp.each do |key, val|
             case key
-            when "99.昨日以前登録"
-                val.sort_by! {|x| x[1].screen_name}
-            when "01.未登録"
+            when C_YESTERDAY
+                val.sort_by! {|x| [x[1].status, x[1].screen_name]}
+            when C_YET
                 val.sort_by! {|x| x[0]}
             else
             end

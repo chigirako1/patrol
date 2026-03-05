@@ -75,15 +75,16 @@
   <div>
     <%= form.label :評価, style: "display: block" %>
     <%= form.number_field :rating, in: 0..150 %>
-    <input type="button" value="+5" onclick="plus_rate('rating', 5);" class="btn_s btn_s_plus" />
     <input type="button" value="+1" onclick="plus_rate('rating', 1);" class="btn_s btn_s_plus" />
-    <input type="button" value="-5" onclick="plus_rate('rating', -5);" class="btn_s" />
     <input type="button" value="-1" onclick="plus_rate('rating', -1);" class="btn_s" />
     <br />
     <input type="button" value="90" onclick="set_rate('rating', 90);" class="btn_s" />
     <input type="button" value="85" onclick="set_rate('rating', 85);" class="btn_s" />
     <input type="button" value="80" onclick="set_rate('rating', 80);" class="btn_s" />
     <input type="button" value="75" onclick="set_rate('rating', 75);" class="btn_s" />
+
+    <input type="button" value="+5" onclick="plus_rate('rating', 5);" class="btn_s btn_s_plus" />
+    <input type="button" value="-5" onclick="plus_rate('rating', -5);" class="btn_s" />
   </div>
 
   <div>
@@ -112,7 +113,6 @@
     <%= form.select :status,
       [
         ["TWT巡回", "TWT巡回"],
-        [Twitter::TWT_STATUS::STATUS_VID_PATROL],
         ["TWT巡回不要", "TWT巡回不要"],
         ["長期更新なし★", "長期更新なし"], 
         ["TWT巡回不要(PXVチェック)", "TWT巡回不要(PXVチェック)"],
@@ -124,6 +124,7 @@
         [Twitter::TWT_STATUS::STATUS_WAITING, Twitter::TWT_STATUS::STATUS_WAITING],
         ["別アカウントに移行（存在はするが更新していない？）", "別アカウントに移行"],
         ["アカウントID(スクリーンネーム)変更", "アカウントID変更"],
+        [Twitter::TWT_STATUS::STATUS_VID_PATROL],
       ],
       { selected: status_value },
       include_blank: "選択して下さい" %>
@@ -236,7 +237,7 @@
         [<%= link_to_ex("■pxv■", artist_path(pxv2.id, access_dt_update: "yes")) %>]
         A:<%= pxv2.last_access_datetime_disp %>(最新UL:<%= pxv2.last_ul_datetime_disp %>)
         <br />
-        <% if pxv2.filenum < 500 %>
+        <% if pxv2.filenum < Twt::FILENUM_T %>
           <%= pic_path_tag(@twitter.pxvid, 5, '10%', true) %>
           <br />
         <% end %>
@@ -297,9 +298,10 @@
     @<%= form.text_field :main_twtid %>
     <%#= link_to_ex "@#{@twitter.main_twtid}", Twt::twt_user_media_url(@twitter.main_twtid) if @twitter.main_twtid.presence %>
     <%= twitter_link_tag(@twitter.main_twtid) %>
-    <% main_twtid = Twitter.find_by_twtid_ignore_case(@twitter.main_twtid) %>
-    <% if main_twtid.presence %>
-      <%= twitter_info_tag(main_twtid) %>
+    
+    <% main_twt = Twitter.find_by_twtid_ignore_case(@twitter.main_twtid) %>
+    <% if main_twt.presence %>
+      <%= twitter_info_tag(main_twt) %>
     <% elsif @twitter.main_twtid.presence %>
       <% user_exist = Twt::user_exist?(@twitter.main_twtid) %>
       <% if user_exist %>
@@ -314,6 +316,7 @@
     @<%= form.text_field :sub_twtid %>
     <%#= link_to_ex "@#{@twitter.sub_twtid}", Twt::twt_user_media_url(@twitter.sub_twtid) if @twitter.sub_twtid.presence %>
     <%= twitter_link_tag(@twitter.sub_twtid) %>
+
     <% sub_twt = Twitter.find_by_twtid_ignore_case(@twitter.sub_twtid) %>
     <% if sub_twt.presence %>
       <%= twitter_info_tag(sub_twt) %>
@@ -327,10 +330,13 @@
     @<%= form.text_field :alt_twtid %>
     <%#= link_to_ex "@#{@twitter.alt_twtid}", Twt::twt_user_media_url(@twitter.alt_twtid) if @twitter.alt_twtid.presence %>
     <%= twitter_link_tag(@twitter.alt_twtid) %>
+
+    <%= twitter_info_tag_ex(@twitter.alt_twtid) %>
+    <!--
     <% alt_twt = Twitter.find_by_twtid_ignore_case(@twitter.alt_twtid) %>
     <% if alt_twt.presence %>
       <%= twitter_info_tag(alt_twt) %>
-    <% end %>
+    <% end %>-->
   </div>
 
   <div>
@@ -370,12 +376,21 @@
   <hr />
 
   <div>
-    <%= form.label :公開範囲, style: "display: block" %>
-    <%= form.select :private_account,
+    <%= TwittersHelper::PRIVATE_ICON %>
+    <%= form.label :private_account, style: "display: block" %>
+    <%#= form.select :private_account,
       tw_visibility_list,
       include_blank: "選択して下さい"
     %>
-    <%= TwittersHelper::PRIVATE_ICON %>
+
+    <%= form.radio_button :private_account, Twitter::TWT_VISIBILITY::TV_OPEN %>
+    <%= form.label "private_account_#{Twitter::TWT_VISIBILITY::TV_OPEN}", Twitter::TWT_VISIBILITY::TV_OPEN %>
+    <br />
+
+    <%= form.radio_button :private_account, Twitter::TWT_VISIBILITY::TV_PRIVATE %>
+    <%= form.label "private_account_#{Twitter::TWT_VISIBILITY::TV_PRIVATE}", Twitter::TWT_VISIBILITY::TV_PRIVATE %>
+    <br />
+
   </div>
 
   <div>
@@ -530,12 +545,12 @@
   </div>
 
   <div>
-    <%= form.label :最小アクセス間隔, style: "display: block" %>
+    <%= form.label "最小アクセス間隔(日)", style: "display: block" %>
     <%= form.number_field :min_interval %>
   </div>
 
   <div>
-    <%= form.label :最大アクセス日時, style: "display: block" %>
+    <%= form.label "最大アクセス間隔(日)", style: "display: block" %>
     <%= form.number_field :max_interval %>
   </div>
 <% end %>

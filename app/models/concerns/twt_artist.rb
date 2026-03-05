@@ -23,7 +23,7 @@ class TwtArtist
                 path = Util::get_public_path(wpath)
                 @ctime = File.birthtime(path)
             else
-                STDERR.puts %!#{twt_name} @#{twt_id}!
+                STDERR.puts %!ctime:#{twt_name} @#{twt_id}!
                 @ctime = Time.now
             end
         end

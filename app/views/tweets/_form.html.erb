@@ -29,14 +29,7 @@
     <%= form.label :screen_name, style: "display: block" %>
     <%= form.text_field :screen_name, autofocus: true %>
 
-    <% twt = Twitter.find_by(twtid: tweet.screen_name) %>
-    <% if twt %>
-      <% if twt.sp? %>
-          <h3>SP対象？</h3>
-      <% end %>
-      [<%= link_to_ex "■twt■(@#{tweet.screen_name})", twitter_path(twt, refresh: "y") %>]
-      A:<%= twt.last_access_datetime_disp %>
-    <% end %>
+    <%= twitter_info_tag_ex(tweet.screen_name) %>
   </div>
 
   <div>

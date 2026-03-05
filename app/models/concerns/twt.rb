@@ -40,8 +40,13 @@ module Twt
     UL_FREQUECNTY_THRESHOLD = 150
     RATING_THRESHOLD = 80
 
+    FILENUM_T = 750
+
     FILESIZE_THRESHOLD_KB = 540#600
     FILESIZE_THRESHOLD = FILESIZE_THRESHOLD_KB * 1024
+
+    FILESIZE_V_HUGE_KB = 1500
+    FILESIZE_V_HUGE = FILESIZE_V_HUGE_KB * 1024
 
     FILESIZE_SAMPLE_N = 100
 
@@ -61,19 +66,6 @@ module Twt
         tweet_id
     end
     
-=begin
-    def self.get_tweet_id_from_url(url)
-        search_tweet_id = nil
-        if url =~ /status\/(\d+)/
-            search_tweet_id = $1.to_i
-        elsif url =~ /(\d+)/
-            search_tweet_id = $1.to_i
-        else
-        end
-        search_tweet_id
-    end
-=end
-
     def self.get_tweet_ids(txts, twtid)
         twt_ids = []
         rgx = %r!https?://(?:x|twitter)\.com/#{twtid}/status/(\d+)!
@@ -274,7 +266,20 @@ module Twt
         path_list = Util::glob("#{TWT_SP_DIR_PATH}")
         #path_list.map {|path| parse_dirname path}.sort_by {|x| x.screen_name}
         tmp = path_list.map {|path| parse_dirname path}
-        if false
+        if true
+            use_fs_date = false
+            tmp.sort_by {|x|
+                if x.twt and x.twt.last_access_datetime and x.twt.last_access_datetime_days_elapsed < 1
+                    x.twt.last_access_datetime
+                elsif use_fs_date and x.latest_date
+                    x.latest_date
+                elsif x.twt and x.twt.last_access_datetime
+                    x.twt.last_access_datetime
+                else
+                    Time.new(2001,1,1)
+                end
+            }
+        elsif false
             tmp.sort_by {|x|
                 if x.twt
                     x.twt.last_access_datetime
@@ -462,6 +467,9 @@ module Twt
         twt_params[:filenum] = val.num_of_files
         twt_params[:recent_filenum] = val.num_of_files
         twt_params[:update_frequency] = val.calc_freq(pic_path_list)
+        twt_params[:filesize] = calc_filesize_avg(pic_path_list)
+        #STDERR.puts %!avg = #{calc_filesize_avg(pic_path_list)}!
+        
         pxv = Artist.find_by_twtid_ignore_case(val.twt_id)
         if pxv
             twt_params[:pxvid] = pxv.pxvid
@@ -798,6 +806,21 @@ module Twt
         time
     end
 
+    def self.calc_filesize_avg(pic_path_list)
+        work_list = pic_path_list.last(FILESIZE_SAMPLE_N)
+
+        fsize_list = []
+        work_list.each do |fpath|
+            phys_path = Util::get_public_path(fpath)
+            fsize = FileTest.size(phys_path)
+            #STDERR.puts %!"#{fpath}" = #{fsize}!
+            fsize_list << fsize
+        end
+
+        avg = fsize_list.sum / fsize_list.size
+        avg
+    end
+
     CALC_FREQ_DAY_NUM = 30
     CALC_FREQ_UNIT = 100
 
@@ -870,7 +893,7 @@ module Twt
         end
 
         if str != screen_name
-            puts %![LOG]変更あり "#{screen_name}" <= "#{str}"!
+            STDERR.puts %![LOG]変更あり "#{screen_name}" <= "#{str}"!
         end
 
         return screen_name
@@ -964,12 +987,6 @@ module Twt
     @@hoge = nil #controllerからだと毎回初期化される？？？よくわからん。DBに保存しないとだめぽい
 
     def self.get_pic_infos_ex()
-=begin
-        AppData::FILESIZE_HASH.each do |k,v|
-            puts %!@#{k}:#{v}!
-        end
-=end
-        #AppData::FILESIZE_HASH
 
         if @@hoge == nil or @@hoge.size == 0
             @@hoge = init_pic_infos
@@ -993,24 +1010,6 @@ module Twt
     Tmp_struct = Struct.new(:avg, :max, :min, :cnt)
 
     def self.map_pic_infos(hash, threshold_kb)
-=begin
-        hash2 = hash.map {|k,v|
-            [
-                k,
-                Tmp_struct.new(v.sum / v.size, v.max, v.min, v.size)
-            ]
-        }.select {|x|
-            x[1].cnt > 30 and x[1].avg > threshold_kb
-        }.map {|x|
-            [
-                x[0],
-                [
-                    x[1],
-                    Twitter.find_by(twtid: x[0])
-                ]
-            ]
-        }.to_h
-=end
 
         hash2 = hash.select {|k, v|
             v.size > 5#30
@@ -1033,20 +1032,6 @@ module Twt
             v[1] != nil and v[1].filesize_huge?
         }#.to_h
 
-=begin
-        chkid = ""
-        if hash.has_key? chkid
-            a = hash[chkid]
-            avg = a.sum / a.size
-            STDERR.puts %!"#{chkid}"(#{a.size}):#{avg}!
-            STDERR.puts a.size
-            STDERR.puts %!#{threshold_kb}!
-        end
-        if hash2.has_key? chkid
-            a = hash2[chkid]
-            STDERR.puts %!"#{chkid}"(#{a[1].twtname}|#{a[1].sp?})!
-        end
-=end
         STDERR.puts %!map_pic_infos():#{hash.size} => #{hash2.size}!
 
         hash2
@@ -1124,7 +1109,7 @@ module Twt
 
         #key = "#{Util::format_num(twt.update_frequency, 100, 4)}|||更新頻度:#{Util::format_num(twt.update_frequency, 50, 4)}"
 
-        if twt.update_frequency >= 450
+        if twt.update_frequency >= 400
             day_std = 3
             if dayn < day_std
                 dayn_s = "Z(高頻度)A#{day_std}"
@@ -1251,6 +1236,11 @@ module Twt
         (filesize||0) > Twt::FILESIZE_THRESHOLD
     end
 
+    def self.filesize_v_huge?(filesize)
+        #STDERR.puts %!filesize_v_huge?:#{filesize}\t#{Twt::FILESIZE_V_HUGE}!
+        (filesize||0) > Twt::FILESIZE_V_HUGE
+    end
+
     def self.reg_filesize()
         STDERR.puts "### reg_filesize >>>"
         pic_infos = init_pic_infos
@@ -1302,7 +1292,7 @@ module Twt
                 next
             end
 
-            puts %!#{twt.twtid},"#{twt.twtname}",#{twt.video_cnt},#{twt.private_account}!
+            puts %!#{twt.twtid},"#{twt.twtname}",#{twt.video_cnt},#{twt.private_account},#{twt.rating}!
         end
 
         puts "END"

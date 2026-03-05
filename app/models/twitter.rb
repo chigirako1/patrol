@@ -326,7 +326,13 @@ class Twitter < ApplicationRecord
     end
 
     def sp?
-        if filesize_huge?
+        #STDERR.puts %!sp?:#{0}!
+        
+        if Twt::filesize_v_huge?(self.filesize)
+            #STDERR.puts %!sp?:#{2}!
+            true
+        elsif filesize_huge?
+            #STDERR.puts %!sp?:#{1}!
             if ul_freq_low?
                 false
             else
@@ -361,7 +367,7 @@ class Twitter < ApplicationRecord
     end
 
     def get_pic_filelist(force_read_all=true)
-        if filenum == nil or filenum < 500 or force_read_all
+        if filenum == nil or filenum < Twt::FILENUM_T or force_read_all
             read_archive = true
         else
             read_archive = false
@@ -1043,7 +1049,8 @@ class Twitter < ApplicationRecord
             t = Util::format_num(e.todo_cnt, 3)
             p = days_str(daysn)
 
-            gkey = pxv + TWT_H_SEPARATOR + %!#{t}件～|! + p
+            #gkey = pxv + TWT_H_SEPARATOR + %!#{t}件～|! + p
+            gkey = pxv + TWT_H_SEPARATOR + p
         else
             #self.group_key2(hide_within_days, rating_gt)
             %!00.#{self.drawing_method}#{TWT_H_SEPARATOR}#{self.status}!

@@ -175,6 +175,8 @@
     <% else %>
       <% url = artist.pxv_artwork_url(oldest_artwork_id) %>
       最古(TSV)：(<%= link_to_ex(oldest_artwork_id, url) %>)
+      
+      <input type="button" value="<%= oldest_artwork_id %>" onclick="set_rate('oldest_artwork_id', <%= oldest_artwork_id %>);" class="btn" />
 
       <%= artist.get_datetime_string @artist.earliest_ul_date, true %>
       (<%= artist.reverse_status %>)

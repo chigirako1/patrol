@@ -32,6 +32,27 @@ module TwittersHelper
         tag.html_safe
     end
 
+    def twitter_info_tag_ex(twtid)
+        twt = Twitter.find_by_twtid_ignore_case(twtid)
+        if twt
+            tag = twitter_info_tag(twt)
+            if twt.sp?
+                tag = %!<h3>SP対象？</h3>! + tag
+            else
+                tag = "<br />" + tag
+            end
+            tag.html_safe
+        elsif twtid.presence
+            tag = ""
+            user_exist = Twt::user_exist?(twtid)
+            if user_exist
+                tag += "※フォルダあり※"
+            end
+            tag += %![#{link_to_ex("☆twt☆:@#{twtid}", artist_twt_path(twtid))}]!
+            tag.html_safe
+        end
+    end
+
     def twitter_info_tag(twt)
         tag = ""
 
@@ -46,9 +67,9 @@ module TwittersHelper
         tag += "】"
         tag += %![#{link_to_ex("■twt■", twt)}]!
         tag += %!|A:#{twt.last_access_datetime_disp}!
+        tag += %!|予測:<b>#{twt.prediction}</b>!
         tag += %!|U:#{Util.get_date_info twt.last_post_datetime}!
-        tag += %!|予測:#{twt.prediction}!
-        tag += %!(ファイル数:#{twt.filenum})!
+        tag += %!|ファイル数:#{twt.filenum}!
         tag += %!|#{PXV_ICON}:#{twt.pxvid}! if twt.pxvid.presence
 
         tag.html_safe

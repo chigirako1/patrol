@@ -1,9 +1,10 @@
 module TweetsHelper
     def tweet_show_page_title()
         page_title = "🖼️"
-        if @tweet
+        if @tweet and @tweet.screen_name.presence
             page_title += "@" + @tweet.screen_name
         else
+            page_title += "new tweet"
         end
         page_title
     end

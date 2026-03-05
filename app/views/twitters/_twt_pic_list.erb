@@ -184,7 +184,7 @@ textarea {
         <% end %>
     <% end %>
 
-    <% if twitter.sp? and twitter.rating >= Twt::RATING_THRESHOLD %>
+    <% if twitter.sp? and (twitter.rating and twitter.rating >= Twt::RATING_THRESHOLD) %>
         <h3>SP対象？</h3>
     <% end %>
     
@@ -274,14 +274,15 @@ textarea {
         <%= Twt::tweet_id_with_comma(tweet_id) %>
         </b>
         (公開日時：<%= Twt::date_info(tweet_id) %>)
-        <% dt = Twt::get_time_from_path(twt_pic_list[0][1]) %>
-        【以降の投稿数予測】<b><%= twitter.prediction(dt) %></b>
+
         <% #if @twitter.status == Twitter::TWT_STATUS::STATUS_NOT_EXIST %>
             (id変わったとき用→)
             <%= link_to_ex tweet_id, Twt::twt_tweet_url_dev(tweet_id) %>
         <% #end %>
+
         <br />
-       
+        <% dt = Twt::get_time_from_path(twt_pic_list[0][1]) %>
+        【以降の投稿数予測】<b><%= twitter.prediction(dt) %></b>
     <% end %>
 
     <% filelist = Twt::get_sp_pic_filelist_by_twtid(@twitter.twtid) %>
@@ -387,6 +388,7 @@ textarea {
             <h2>db</h2>
             [<%= tmp_ary.join(",") %>]
             <br />
+            <!-- TODO:★取得予定の表示 -->
             <%= link_to_ex("tweets db", tweets_path(screen_name: @twitter.twtid)) %>
         <% end %>
     <% end %>

@@ -28,13 +28,15 @@ class TwittersController < ApplicationController
     ACCESS = "access"
     R_ACCESS = "評価/アクセス日順（旧→新）"
 
+    R_ACCESS_W_PRED_A = "評価/アクセス週順（旧→新）/予測△昇順"
+
     RATING = "rating"
 
     FILENUM = "ファイル数順"#"filenum"
     FILENUM_ASC = "ファイル数△昇順"
     R_FILENUM_ASC = "評価/ファイル数△順"
 
-    SORT_CREATE = "create"
+    SORT_CREATE = "登録日順(旧→新)"
     SORT_REGISTERED_DESC = "登録日順(新→旧)"
 
     SORT_POINT = "ポイント"
@@ -48,11 +50,13 @@ class TwittersController < ApplicationController
     GRP_SORT_PRED = "予測△順"
     GRP_SORT_PRED_DESC = "予測▽順"
     GRP_SORT_UL_FREQ = "更新頻度"
+
     GRP_SORT_ACCESS = "アクセス日順"
     GRP_SORT_ACCESS_W = "アクセス日順(週)"
     GRP_SORT_ACCESS_W_P = "アクセス日順(週)|予想数順"
+
     GRP_SORT_R_A_P = "評価|アクセス日|予想数順"
-    GRP_SORT_R_A = "評価|アクセス日||予想数順"
+    GRP_SORT_R_A = "評価|アクセス日"#"評価|アクセス日||予想数順"
     GRP_SORT_R_P = "評価||予想数順"
     GRP_SORT_RATE = "評価順"
     GRP_SORT_UL = "投稿日順"
@@ -1089,6 +1093,8 @@ class TwittersController < ApplicationController
         twitters = twitters.sort_by {|x| -x.point}
       when SORT_BY::PRED_ASC
         twitters = twitters.sort_by {|x| [x.prediction, x.last_access_datetime]}
+      when SORT_BY::R_ACCESS_W_PRED_A
+        twitters = twitters.sort_by {|x| [-x.rating, x.last_access_day_num / 7, x.prediction]}
       when SORT_BY::ACCESS
         #twitters = twitters.sort_by {|x| [x.last_access_datetime, (x.last_access_datetime)]}#.reverse
         twitters = twitters.sort_by {|x| [x.last_access_datetime, -(x.rating||0), -x.prediction]}
@@ -1114,7 +1120,7 @@ class TwittersController < ApplicationController
       when SORT_BY::SORT_CREATE
         twitters = twitters.sort_by {|x| x.created_at}
       when SORT_BY::SORT_REGISTERED_DESC
-        twitters = twitters.sort_by {|x| x.created_at}.reverse
+        twitters = twitters.sort_by {|x| x.created_at_day_num / 7}#.reverse
       when SORT_BY::RATING
         twitters = twitters.sort_by {|x| [-(x.rating||0), -x.prediction, x.last_access_datetime]}
       #when SORT_BY::TODO_CNT

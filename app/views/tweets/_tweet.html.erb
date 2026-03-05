@@ -14,7 +14,7 @@
 
     <% twt = Twitter.find_by(twtid: tweet.screen_name) %>
     <% if twt %>
-        <%= twitter_info_tag(twt) %>
+        <%#= twitter_info_tag(twt) %>
     <% elsif tweet.screen_name.presence %>
         [<%= link_to_ex %!☆twt☆:@#{tweet.screen_name}!, artist_twt_path(tweet.screen_name) %>]
     <% end %>

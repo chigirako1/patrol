@@ -1,7 +1,7 @@
 <% title = %!@#{@twtid}:画像一覧! %>
 <% provide(:title, title) %>
 
-<h3 id="twt_pic_list">twt pic (<%= link_to "@#{@twtid}", Twt::twt_user_url(@twtid), target: :_blank, rel: "noopener noreferrer" %>)</h3>
+<h3 id="twt_pic_list">twt pic (<%= link_to "@#{@twtid}", Twt::twt_user_media_url(@twtid), target: :_blank, rel: "noopener noreferrer" %>)</h3>
 
 <% twt_acnt = Twitter.find_by_twtid_ignore_case(@twtid) %>
 <% if twt_acnt == nil %>

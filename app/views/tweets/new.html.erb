@@ -1,3 +1,6 @@
+<% page_title = tweet_show_page_title() %>
+<% provide(:title, page_title) %>
+
 <h1>New tweet</h1>
 
 <%= render "form", tweet: @tweet %>

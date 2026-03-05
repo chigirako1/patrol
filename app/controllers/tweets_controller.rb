@@ -80,6 +80,8 @@ class TweetsController < ApplicationController
 
   # POST /tweets or /tweets.json
   def create
+    params[:tweet][:screen_name] = Twt::get_screen_name(params[:tweet][:screen_name])
+    
     @tweet = Tweet.new(tweet_params)
 
     respond_to do |format|
@@ -95,6 +97,8 @@ class TweetsController < ApplicationController
 
   # PATCH/PUT /tweets/1 or /tweets/1.json
   def update
+    params[:tweet][:screen_name] = Twt::get_screen_name(params[:tweet][:screen_name])
+
     respond_to do |format|
       if @tweet.update(tweet_params)
         format.html { redirect_to tweet_url(@tweet), notice: "Tweet was successfully updated." }

@@ -267,7 +267,7 @@
           <td>
             <% if @thumbnail or (!twitter.status.presence and (twitter.filenum||0) < 100) %>
               <% list = twitter.get_pic_filelist() %>
-              <% if list.size < 500 %>
+              <% if list.size < Twt::FILENUM_T %>
                 <% thumbnail = true %>
               <% end %>
             <% end %>
@@ -457,11 +457,13 @@ button.horizontal {
           ["予測昇順(△)", TwittersController::SORT_BY::PRED_ASC],
           [TwittersController::SORT_BY::R_PRED_DESC],
 
-          ["アクセス日順（旧→新）", TwittersController::SORT_BY::ACCESS],
-          [TwittersController::SORT_BY::R_ACCESS],
+          [TwittersController::SORT_BY::R_ACCESS_W_PRED_A],
           
-          ["評価順", TwittersController::SORT_BY::RATING],
-          ["登録日順", TwittersController::SORT_BY::SORT_CREATE],
+          [TwittersController::SORT_BY::R_ACCESS],
+          ["アクセス日順（旧→新）", TwittersController::SORT_BY::ACCESS],
+          
+          [TwittersController::SORT_BY::RATING],
+          [TwittersController::SORT_BY::SORT_CREATE],
           [TwittersController::SORT_BY::SORT_REGISTERED_DESC],
           [TwittersController::SORT_BY::FILENUM],
           [TwittersController::SORT_BY::FILENUM_ASC],

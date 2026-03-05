@@ -285,10 +285,8 @@
 <% end %>
 
 <% if @tweet_i_ids.presence and @tweet_i_ids.size > 0 %>
-    <h2>ids (<%= @tweet_i_ids.size %>)</h2>
-    <%# tweet_ids = @tweet_i_ids.map {|x| [x, Tweet::get_tweet_record(x)]}.sort_by {|x| [x[1]&.tweet_id||Float::INFINITY, x[0]]} %>
-
-    <% tweets_grp = Tweet::group(@tweet_i_ids) %>
+    <h2>tweet_i_ids (<%= @tweet_i_ids.size %>)</h2>
+    <% tweets_grp = Tweet::tweet_group(@tweet_i_ids) %>
     <% tweets_grp.each do |key, tweets| %>
         <h3><%= key %>(<%= tweets.size %>)</h3>
         <% tweets.each.with_index(1) do |x, idx| %>
@@ -303,6 +301,7 @@
                 <%#= t.screen_name %>
                 <% twt = Twitter.find_by_twtid_ignore_case(t.screen_name) %>
                 <% if twt %>
+                    【<%= twt.rating %>】
                     <%= twt.twtname %>
                     [<%= link_to_ex "■TWT■", twt %>]
                     A:<%= twt.last_access_datetime_disp %>
@@ -310,6 +309,15 @@
                     ★未登録★
                 <% end %>
                 (@<%= t.screen_name %>)
+
+                <% pic_list = []#Twt::get_pic_filelist(t.screen_name) %>
+                <% pic_list.each do |path| %>
+                    <% if path.include? tweet_id.to_s %>
+                        <%= link_to_ex image_tag(path, width: '10%', height: '10%', :alt => path), path %>
+                        <%#= link_to_ex("▶x", Twt::twt_tweet_url_i(tweet.tweet_id)) %><br />
+                    <% else %>
+                    <% end %>
+                <% end %>
             <% else %>
                 [<%= link_to_ex "■New tweet■", new_tweet_path(tweet_id: tweet_id, status: Tweet::StatusEnum::SAVED) %>]
             <% end %>
@@ -888,7 +896,7 @@
 <% end %>
 
 <% if @sp_dirs.presence %>
-    <h2>sp(<%= @sp_dirs.size %>)</h2>
+    <h2>sp dir一覧(<%= @sp_dirs.size %>)</h2>
     <% @sp_dirs.each.with_index(1) do |elem, idx| %>
         <% if elem.twt %>
             <%= idx %>.
