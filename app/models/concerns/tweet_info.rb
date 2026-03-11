@@ -10,6 +10,9 @@ module TweetInfo
             #puts fn
             tweet_id = $1.to_i
             pic_no = $2.to_i
+        elsif filename =~ /(\d+)\s\w+\s(\d+\-\d+\-\d+)/
+            tweet_id = $1.to_i
+            pic_no = -1
         elsif filename =~ /(\d+)\s(\d+)\s(\d+)/
             dl_date_str = $1
             begin

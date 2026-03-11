@@ -32,13 +32,13 @@ module TwittersHelper
         tag.html_safe
     end
 
-    def twitter_info_tag_ex(twtid)
+    def twitter_info_tag_ex(twtid, br=false)
         twt = Twitter.find_by_twtid_ignore_case(twtid)
         if twt
             tag = twitter_info_tag(twt)
             if twt.sp?
                 tag = %!<h3>SP対象？</h3>! + tag
-            else
+            elsif br
                 tag = "<br />" + tag
             end
             tag.html_safe

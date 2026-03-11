@@ -28,8 +28,9 @@
   <div>
     <%= form.label :screen_name, style: "display: block" %>
     <%= form.text_field :screen_name, autofocus: true %>
+    <%= link_to_ex("▶@" + tweet.screen_name, Twt::twt_user_media_url(tweet.screen_name)) if tweet.screen_name.presence %>
 
-    <%= twitter_info_tag_ex(tweet.screen_name) %>
+    <%= twitter_info_tag_ex(tweet.screen_name, true) %>
   </div>
 
   <div>

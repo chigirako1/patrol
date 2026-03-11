@@ -338,6 +338,7 @@ class ArtistsController < ApplicationController
     ARCHIVE_CHECK = "archive-check"
     SMARTPHONE = "SMARTPHONE"
     REG_FILESIZE = "ファイルサイズ登録"
+    DIR_TWEET = "tweet"
   end
 
   module ShowMode
@@ -874,6 +875,10 @@ class ArtistsController < ApplicationController
         end
       when DIR_TYPE::REG_FILESIZE
         Twt::reg_filesize()
+      when DIR_TYPE::DIR_TWEET
+        #h = Tweet::screen_name_cnt_list()
+        #@known_twt_url_list = Tweet.distinct.pluck(:screen_name).map {|x| [x, nil]}.to_h
+        @known_twt_url_list = Tweet.where.not(screen_name: [nil, ""]).distinct.pluck(:screen_name).map {|x| [x, Twt::twt_user_url(x)]}.to_h
       else
       end
     elsif filename == ""

@@ -50,6 +50,7 @@
                 <% end %>
             ]
             A:<%= twt.last_access_datetime_disp %>
+            <%= link_to_ex("tweets", tweets_path(screen_name: twt.twtid)) %>
             <br />
         <% end %>
     <% end %>
@@ -278,7 +279,9 @@
         <h2>@unknown_twt_url_list</h2>
         <% @unknown_twt_url_list.each.with_index(1) do |(key, url_list), idx| %>
             <%# break %>
-            <%= key %><%= url_list.size %><br />
+            @<%= key %>(<%= url_list.size %>)
+            <%= link_to_ex %!☆twt☆:@#{key}!, artist_twt_path(key) %>
+            <br />
         <% end %>
     <% end %>
 
@@ -310,7 +313,7 @@
             <br>
 
             <% hit = false %>
-            <% @pic_list.each do |path| %>
+            <% (@pic_list||[]).each do |path| %>
                 <% if path.include? x.to_s %>
                     <%= link_to_ex image_tag(path, width: '10%', height: '10%', :alt => path), path %>
                     <% hit = true %>

@@ -67,6 +67,9 @@
         <% end %>
 
         <% twt_account = Twitter.find_by_twtid_ignore_case(key) %>
+        <% unless twt_account %>
+            <% next %>
+        <% end %>
 
         <% if @pred %>
             <% pred = @pred %>
@@ -286,7 +289,7 @@
 
 <% if @tweet_i_ids.presence and @tweet_i_ids.size > 0 %>
     <h2>tweet_i_ids (<%= @tweet_i_ids.size %>)</h2>
-    <% tweets_grp = Tweet::tweet_group(@tweet_i_ids) %>
+    <% tweets_grp, twt_grp2 = Tweet::tweet_group(@tweet_i_ids) %>
     <% tweets_grp.each do |key, tweets| %>
         <h3><%= key %>(<%= tweets.size %>)</h3>
         <% tweets.each.with_index(1) do |x, idx| %>
@@ -322,6 +325,26 @@
                 [<%= link_to_ex "■New tweet■", new_tweet_path(tweet_id: tweet_id, status: Tweet::StatusEnum::SAVED) %>]
             <% end %>
             <br />
+        <% end %>
+    <% end %>
+
+    <% if twt_grp2 %>
+        <h2>twt_grp2(<%= twt_grp2.size %>)</h2>
+        <% twt_grp2.each do |key_header, value| %>
+            <h3><%= key_header %>(<%= twt_grp2.size %>)</h3>
+            <% value.each.with_index(1) do |twt, idx| %>
+                <%= idx %>:
+                <% if twt.sp? %>
+                    ★大★
+                <% end %>
+                予測:<%= twt.prediction %>
+                【<%= twt.rating %>】
+                <%= twt.twtname %>
+                (@<%= twt.twtid %>)
+                [<%= link_to_ex("■TWT■", twt) %>]
+                A:<%= twt.last_access_datetime_disp %>
+                <br />
+            <% end %>
         <% end %>
     <% end %>
 <% end %>

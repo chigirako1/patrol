@@ -86,6 +86,8 @@ class Tweet < ApplicationRecord
     def self.tweet_group(tweet_i_ids)
         #work = tweet_i_ids.map {|x| [x, Tweet::get_tweet_record(x)]}.sort_by {|x| [x[1]&.tweet_id||Float::INFINITY, x[0]]}
         tweets_grp = Hash.new { |h, k| h[k] = [] }
+        screen_name_set = Set.new
+
         work = tweet_i_ids.each do |x|
             r =  Tweet::get_tweet_record(x)
             if r
@@ -95,6 +97,12 @@ class Tweet < ApplicationRecord
                     key = C_TBO
                 else
                     key = C_YESTERDAY
+                    if screen_name_set.include?(r.screen_name)
+                        next
+                    end
+
+                    screen_name_set.add(r.screen_name)
+                    next
                 end
             else
                 key = C_YET
@@ -104,7 +112,7 @@ class Tweet < ApplicationRecord
 
         tweets_grp.each do |key, val|
             case key
-            when C_YESTERDAY
+            when C_TODAY, C_YESTERDAY
                 val.sort_by! {|x| [x[1].status, x[1].screen_name]}
             when C_YET
                 val.sort_by! {|x| x[0]}
@@ -112,7 +120,21 @@ class Tweet < ApplicationRecord
             end
         end
 
-        tweets_grp.sort.to_h
+        twt_grp = Hash.new { |h, k| h[k] = [] }
+        screen_name_set.each do |screen_name|
+            twt = Twitter.find_by_twtid_ignore_case(screen_name)
+            if twt
+                #key_header = "#{Util::format_num(twt.prediction, 10)}"
+                key_header = twt.group_spec("{aw}週{_ad}|予測{p10}～", screen_name_set.size)
+                twt_grp[key_header] << twt
+            end
+        end
+
+        twt_grp.each do |key, value|
+            value.sort_by! {|v| [-(v.rating||0), -v.prediction, v.last_access_datetime]}
+        end
+
+        [tweets_grp.sort.to_h, twt_grp.sort_by {|k,v| k}.reverse.to_h]
     end
 
     def self.check_registered_record(url_list)
@@ -131,6 +153,29 @@ class Tweet < ApplicationRecord
             end
         end
         exist
+    end
+
+    def self.has_acquisition_schedule?(screen_name)
+        tweets = Tweet.where(screen_name: screen_name, status: StatusEnum::TO_BE_OBTAIN)
+        STDERR.puts %!@#{screen_name}, #{tweets.size}!
+        if tweets.size > 0
+            true
+        else
+            false
+        end
+    end
+
+    def self.hoge()
+        tweet_cnt_list = Tweet.group("screen_name").count.sort_by {|x| x[1]}.reverse
+
+        tweet_h = {}
+        tweet_cnt_list.each do |elem|
+            screen_name = elem[0]
+            cnt = elem[1]
+            twt = Twitter.where(twtid: screen_name)
+            tweet_h[screen_name] = [twt, cnt]
+        end
+        tweet_h
     end
 
     def self.summary()
@@ -204,6 +249,12 @@ class Tweet < ApplicationRecord
     
     def self.summary_cnt(tweet_sum_hash, screen_name, status)
         tweet_sum_hash[screen_name][status]
+    end
+
+    def self.to_be_obtain_list()
+        t = Tweet.select {|x| x.status == StatusEnum::TO_BE_OBTAIN}
+        grp = t.group_by {|x| x.screen_name}
+        grp
     end
 
     def self.get_unaccessible_twt_account_list()

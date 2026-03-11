@@ -351,10 +351,12 @@ textarea {
                 <%= %!#{Twt::timestamp_str tweet_id}(#{tweet_id}))! %> no hit...
                 <%= link_to_ex(tweet_id, Twt::twt_tweet_url(@twitter.twtid, tweet_id)) %>
                 <% if tweet.presence %>
-                    <% if true #tweet.status == Tweet::StatusEnum::UNACCESSIBLE or @twitter.status == Twitter::TWT_STATUS::STATUS_NOT_EXIST %>
+                    <% if true %>
                         "<b><%= tweet.status %></b>"
-                        (id変わったとき用→)
-                        <%= link_to_ex(tweet_id, Twt::twt_tweet_url_dev(tweet_id)) %>
+                        <% if tweet.status != Tweet::StatusEnum::DUPLICATE %>
+                            (id変わったとき用→)
+                            <%= link_to_ex(tweet_id, Twt::twt_tweet_url_dev(tweet_id)) %>
+                        <% end %>
                     <% elsif params[:tweet_id].to_i == tweet_id and params[:tweet_st] == Tweet::StatusEnum::DELETED %>
                         <% Tweet::update_record(tweet_id, Tweet::StatusEnum::DELETED) %>
                         '削除済み'として更新しました。

@@ -1109,23 +1109,28 @@ module Twt
 
         #key = "#{Util::format_num(twt.update_frequency, 100, 4)}|||更新頻度:#{Util::format_num(twt.update_frequency, 50, 4)}"
 
-        if twt.update_frequency >= 400
+        r_x = 82
+        if Tweet.has_acquisition_schedule?(twt.twtid)
+            dayn_s = "ZZ取得対象物件あり"
+        elsif twt.update_frequency >= 400
             day_std = 3
             if dayn < day_std
-                dayn_s = "Z(高頻度)A#{day_std}"
+                dayn_s = "Z(高頻度)Z至近#{day_std}日以内"
             else
-                dayn_s = "Z(高頻度)Z#{day_std}"
+                dayn_s = "Z(高頻度)A#{day_std}日以上"
             end
         elsif dayn >= 21
-            dayn_s = "Y(21-)"
+            dayn_s = "Y(21日以上)"
         elsif dayn >= 14
-            dayn_s = "Y(14-)"
+            dayn_s = "Y(14日以上)"
+        elsif twt.rating <= r_x
+            dayn_s = "0(#{r_x}以下)"
         elsif dayn >= 7
-            dayn_s = "X(7-)"
+            dayn_s = "X(7日以上)"
         elsif dayn < 3
-            dayn_s = "A"
+            dayn_s = "A(直近アクセス)"
         else
-            dayn_s = "B"
+            dayn_s = "B(最近アクセス)"
         end
         key = "#{dayn_s}|||#{Util::format_num(twt.update_frequency, 100, 4)}|||更新頻度:#{Util::format_num(twt.update_frequency, 50, 4)}"
 
@@ -1296,7 +1301,7 @@ module Twt
         end
 
         puts "END"
-        puts "26//"
+        puts Time.now.strftime("%Y/%m/%d")
 
         twts.map {|x| x.twtid}
     end

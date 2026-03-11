@@ -249,10 +249,10 @@
           <% if user_name.presence %>
             "<%= user_name %>"(DB未登録。フォルダはあり。)
             <% dir_exist = true %>
+            <%= link_to_ex %!☆pxv☆:"#{user_name}"!, artist_pxv_path(twitter.pxvid) %>
           <% else %>
             ※フォルダなし？
           <% end %>
-            <%= link_to_ex %!☆pxv☆:"#{user_name}"!, artist_pxv_path(twitter.pxvid) %>
         <% end %>
 
         <% unless dir_exist %>
@@ -296,7 +296,6 @@
   <div>
     <%= form.label :主ID, style: "display: block" %>
     @<%= form.text_field :main_twtid %>
-    <%#= link_to_ex "@#{@twitter.main_twtid}", Twt::twt_user_media_url(@twitter.main_twtid) if @twitter.main_twtid.presence %>
     <%= twitter_link_tag(@twitter.main_twtid) %>
     
     <% main_twt = Twitter.find_by_twtid_ignore_case(@twitter.main_twtid) %>
@@ -314,51 +313,30 @@
   <div>
     <%= form.label :副ID, style: "display: block" %>
     @<%= form.text_field :sub_twtid %>
-    <%#= link_to_ex "@#{@twitter.sub_twtid}", Twt::twt_user_media_url(@twitter.sub_twtid) if @twitter.sub_twtid.presence %>
     <%= twitter_link_tag(@twitter.sub_twtid) %>
-
-    <% sub_twt = Twitter.find_by_twtid_ignore_case(@twitter.sub_twtid) %>
-    <% if sub_twt.presence %>
-      <%= twitter_info_tag(sub_twt) %>
-    <% elsif @twitter.sub_twtid.presence %>
-      [<%= link_to_ex %!☆twt☆:@#{@twitter.sub_twtid}!, artist_twt_path(@twitter.sub_twtid) %>]
-    <% end %>
+    <%= twitter_info_tag_ex(@twitter.sub_twtid) %>
   </div>
 
   <div>
     <%= form.label :別ID, style: "display: block" %>
     @<%= form.text_field :alt_twtid %>
-    <%#= link_to_ex "@#{@twitter.alt_twtid}", Twt::twt_user_media_url(@twitter.alt_twtid) if @twitter.alt_twtid.presence %>
     <%= twitter_link_tag(@twitter.alt_twtid) %>
-
     <%= twitter_info_tag_ex(@twitter.alt_twtid) %>
-    <!--
-    <% alt_twt = Twitter.find_by_twtid_ignore_case(@twitter.alt_twtid) %>
-    <% if alt_twt.presence %>
-      <%= twitter_info_tag(alt_twt) %>
-    <% end %>-->
   </div>
 
   <div>
     <%= form.label "新ID(screen name)", style: "display: block" %>
     @<%= form.text_field :new_twtid %>
-    <%#= link_to_ex "@#{@twitter.new_twtid}", Twt::twt_user_media_url(@twitter.new_twtid) if @twitter.new_twtid.presence %>
     <%= twitter_link_tag(@twitter.new_twtid) %>
-    <% new_twt = Twitter.find_by_twtid_ignore_case(@twitter.new_twtid) %>
-    <% if new_twt.presence %>
-      <%= twitter_info_tag(new_twt) %>
-    <% end %>
+    <%= twitter_info_tag_ex(@twitter.new_twtid) %>
   </div>
 
   <div>
     <%= form.label "旧ID(screen name)", style: "display: block" %>
     @<%= form.text_field :old_twtid %>
-    <%#= link_to_ex "@#{@twitter.old_twtid}", Twt::twt_user_media_url(@twitter.old_twtid) if @twitter.old_twtid.presence %>
     <%= twitter_link_tag(@twitter.old_twtid) %>
     <% old_twt = Twitter.find_by_twtid_ignore_case(@twitter.old_twtid) %>
-    <% if old_twt.presence %>
-      <%= twitter_info_tag(old_twt) %>
-    <% end %>
+    <%= twitter_info_tag_ex(@twitter.old_twtid) %>
   </div>
 
   <hr />

@@ -463,6 +463,12 @@ class TwittersController < ApplicationController
       @twitters_total_count = @twitters_group.sum {|k,v| v.count}
       return
     when ModeEnum::ALL
+      if params[:filename] == "<tweet>"
+        STDERR.puts %!1#{twitters.size}!
+        tweet_ids = Tweet.where.not(screen_name: [nil, ""]).distinct.pluck(:screen_name)
+        twitters = twitters.select {|x| tweet_ids.include?(x.twtid) }
+        STDERR.puts %!2#{twitters.size}!
+      end
       index_mode_all(twitters, twt_params)
       return
     when ModeEnum::SEARCH

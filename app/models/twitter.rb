@@ -329,7 +329,7 @@ class Twitter < ApplicationRecord
         #STDERR.puts %!sp?:#{0}!
         
         if Twt::filesize_v_huge?(self.filesize)
-            #STDERR.puts %!sp?:#{2}!
+            STDERR.puts %!sp?: #{self.filesize} bytes, #{self.update_frequency}/100!
             true
         elsif filesize_huge?
             #STDERR.puts %!sp?:#{1}!
@@ -743,6 +743,15 @@ class Twitter < ApplicationRecord
                 unit = 1 unless unit
                 number = self.last_access_datetime_days_elapsed / 7
                 gkey_work = group_sub(unit, number, gkey_work, x)
+            when "_ad"
+                unit = 1 unless unit
+                n = self.last_access_datetime_days_elapsed
+                if n < 4
+                    w = "(#{n})"
+                else
+                    w = ""
+                end
+                gkey_work = gkey_work.gsub(x, w)
             when "cd"
                 unit = 1 unless unit
                 number = self.created_at_day_num
@@ -809,8 +818,10 @@ class Twitter < ApplicationRecord
 
         if self.sp?
             "ファイルサイズ大#{TWT_H_SEPARATOR}."# + gkey_work
-        else
+        elsif self.rating.presence
             gkey_work
+        else
+            "未設定#{TWT_H_SEPARATOR}" + gkey_work
         end
     end
 
@@ -841,7 +852,7 @@ class Twitter < ApplicationRecord
 
     def a1o_auto_group_key(r_unit=5, newc=true, fs_chk=true)
         if fs_chk and sp?
-            return "00.ファイルサイズ大#{Twitter::TWT_H_SEPARATOR}更新頻度#{Util::format_num(self.update_frequency, 100, 4)}"
+            return "00.ファイルサイズ大#{Twitter::TWT_H_SEPARATOR}更新頻度#{Util::format_num(self.update_frequency, 100, 4)}～"
         end
 
         daysn =  self.last_access_datetime_days_elapsed
