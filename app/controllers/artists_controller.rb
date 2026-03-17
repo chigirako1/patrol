@@ -793,6 +793,7 @@ class ArtistsController < ApplicationController
   end
 
   def stats
+    STDERR.puts "stats->"
     @stats = {}
 
     col = [:rating, :r18, :status, :drawing_method, :warning]
@@ -817,6 +818,7 @@ class ArtistsController < ApplicationController
       @stats[key].delete("")
       @stats[key].delete(0)
     end
+    STDERR.puts "<-stats"
   end
 
   # GET /artists/pxv/1

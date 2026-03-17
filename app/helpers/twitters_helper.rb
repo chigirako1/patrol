@@ -70,6 +70,7 @@ module TwittersHelper
         tag += %!|予測:<b>#{twt.prediction}</b>!
         tag += %!|U:#{Util.get_date_info twt.last_post_datetime}!
         tag += %!|ファイル数:#{twt.filenum}!
+        tag += %!(頻度:#{twt.update_frequency})!
         tag += %!|#{PXV_ICON}:#{twt.pxvid}! if twt.pxvid.presence
 
         tag.html_safe

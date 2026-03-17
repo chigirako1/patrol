@@ -411,15 +411,15 @@ button.horizontal {
     <input type="button" value="+1" onclick="plus_rate('rating', +1);" class="btn_s" />
     <input type="button" value="-1" onclick="plus_rate('rating', -1);" class="btn_s" />
     <br />
-    <%= f.label :非表示日数 %>
-    <%= f.number_field :hide_within_days, :value => params[:hide_within_days] %>日以内にアクセスがあれば対象外<br />
+    <%= f.label :強制表示日数 %>
+    <%= f.number_field :force_disp_day, :value => params[:force_disp_day] %>
+    <br />
+    <%= f.label :経過日数 %>
+    <%= f.number_field :hide_within_days, :value => params[:hide_within_days] %>前回アクセスからn日以上経過<br />
     <input type="button" value="+15" onclick="plus_rate('hide_within_days', +15);" class="btn_s" />
     <input type="button" value="+7" onclick="plus_rate('hide_within_days', +7);" class="btn_s" />
     <input type="button" value="-15" onclick="plus_rate('hide_within_days', -15);" class="btn_s" />
     <input type="button" value="-7" onclick="plus_rate('hide_within_days', -7);" class="btn_s" />
-    <br />
-    <%= f.label :強制表示日数 %>
-    <%= f.number_field :force_disp_day, :value => params[:force_disp_day] %>
     <br />
     <%= f.label :予測 %>
     <%= f.number_field :pred, :value => params[:pred] %>以上
@@ -456,6 +456,7 @@ button.horizontal {
           ["予測降順(▽)", TwittersController::SORT_BY::PRED],
           ["予測昇順(△)", TwittersController::SORT_BY::PRED_ASC],
           [TwittersController::SORT_BY::R_PRED_DESC],
+          [TwittersController::SORT_BY::R_PRED_ASC],
 
           [TwittersController::SORT_BY::R_ACCESS_W_PRED_A],
           

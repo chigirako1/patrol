@@ -37,7 +37,7 @@ module Twt
     TWT_ARCHIVE_DIR_PATH = "public/twt"
     TWT_DIRLIST_TXT_PATH = "#{TWT_ARCHIVE_DIR_PATH}/dirlist.txt"
 
-    UL_FREQUECNTY_THRESHOLD = 150
+    UL_FREQUECNTY_THRESHOLD = 50#150
     RATING_THRESHOLD = 80
 
     FILENUM_T = 750
@@ -1112,21 +1112,23 @@ module Twt
         r_x = 82
         if Tweet.has_acquisition_schedule?(twt.twtid)
             dayn_s = "ZZ取得対象物件あり"
+        elsif twt.update_frequency < 150
+            dayn_s = "0低頻度"
+        elsif twt.rating <= r_x
+            dayn_s = "1(#{r_x}以下)"
         elsif twt.update_frequency >= 400
             day_std = 3
             if dayn < day_std
-                dayn_s = "Z(高頻度)Z至近#{day_std}日以内"
+                dayn_s = "Z(高頻度)A至近#{day_std}日以内"
             else
-                dayn_s = "Z(高頻度)A#{day_std}日以上"
+                dayn_s = "Z(高頻度)Z#{day_std}日以上"
             end
         elsif dayn >= 21
-            dayn_s = "Y(21日以上)"
+            dayn_s = "E(21日以上)"
         elsif dayn >= 14
-            dayn_s = "Y(14日以上)"
-        elsif twt.rating <= r_x
-            dayn_s = "0(#{r_x}以下)"
+            dayn_s = "D(14日以上)"
         elsif dayn >= 7
-            dayn_s = "X(7日以上)"
+            dayn_s = "C(7日以上)"
         elsif dayn < 3
             dayn_s = "A(直近アクセス)"
         else
@@ -1141,9 +1143,11 @@ module Twt
 
         STDERR.puts %!build_pic_info_list >>>!
         known_twt_url_list, _ = Twitter::url_list("all")
+        STDERR.puts %!build_pic_info_list yyy!
         #url_list_summary = Tweet::url_list_summary(known_twt_url_list)
         #url_list_summary_h = url_list_summary.map {|x| [x.screen_name, x]}.to_h
         url_list_summary_h = Tweet::url_list_summary_hash(known_twt_url_list)
+        STDERR.puts %!build_pic_info_list xxx!
 
         list = Hash.new { |h, k| h[k] = [] }
         hash.each do |k,val|
@@ -1174,6 +1178,7 @@ module Twt
             list[key] << elem
         end
 
+        STDERR.puts %!<<< build_pic_info_list !
         list
     end
 
@@ -1201,6 +1206,27 @@ module Twt
         else
             [0]
         end
+    end
+
+    def self.get_sp_ids()
+        twts = Twitter.select {|x| x.sp?}.sort_by {|twt| [twt.last_post_datetime, -(twt.rating||0)]}
+        STDERR.puts %!get_sp_ids:#{twts.size}!
+
+        hash3 = twts.map {|x|
+            [
+                x.twtid,
+                [
+                    Tmp_struct.new(x.filesize, x.filesize, x.filesize, 0),
+                    x
+                ]
+            ]
+        }
+        STDERR.puts %!get_sp_ids:#{hash3.size}!
+
+        list = build_pic_info_list(hash3)
+
+        keys = output_csv(list)
+        keys
     end
 
     def self.load_pic_info_tsv()

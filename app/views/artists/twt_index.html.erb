@@ -296,8 +296,8 @@
             <% tweet_id = x[0] %>
             <% t = x[1] %>
             <%= idx %>:
-            <%= tweet_id %>(<%= Twt::timestamp_str(tweet_id) %>)
-            <%#= link_to_ex("▶x", Twt::twt_tweet_url_i(tweet_id)) %>
+            <% timestamp = Twt::get_timestamp(tweet_id) %>
+            <%= tweet_id %>(<%= timestamp.strftime("%Y/%m/%d %H:%M") %>)
             <% if t %>
                 (<%= t.status %>)
                 [<%= link_to_ex "■TWEET■", t %>]
@@ -306,6 +306,12 @@
                 <% if twt %>
                     【<%= twt.rating %>】
                     <%= twt.twtname %>
+                    <% if t.status == Tweet::StatusEnum::TO_BE_OBTAIN %>
+                        <% if timestamp > twt.last_access_datetime %>
+                            <% STDERR.puts %!#{timestamp} < #{twt.last_access_datetime}! %>
+                            ★たぶん未取得★
+                        <% end %>
+                    <% end %>
                     [<%= link_to_ex "■TWT■", twt %>]
                     A:<%= twt.last_access_datetime_disp %>
                 <% else %>
@@ -329,9 +335,15 @@
     <% end %>
 
     <% if twt_grp2 %>
-        <h2>twt_grp2(<%= twt_grp2.size %>)</h2>
+        <h1>twt_grp2(<%= twt_grp2.size %>)</h1>
+        <% header_a_save = "" %>
         <% twt_grp2.each do |key_header, value| %>
-            <h3><%= key_header %>(<%= twt_grp2.size %>)</h3>
+            <% header_a, header_b = key_header.split(Twitter::TWT_H_SEPARATOR) %>
+            <% if header_a != header_a_save %>
+                <h2><%= header_a %></h2>
+                <% header_a_save = header_a %>
+            <% end %>
+            <h3><%= header_b %>(<%= twt_grp2.size %>)</h3>
             <% value.each.with_index(1) do |twt, idx| %>
                 <%= idx %>:
                 <% if twt.sp? %>

@@ -23,8 +23,8 @@
     <% (@pic_list||[]).each do |path| %>
         <% if path.include? tweet.tweet_id.to_s %>
             <%= link_to_ex image_tag(path, width: '10%', height: '10%', :alt => path), path %>
-            <%= link_to_ex("▶x", Twt::twt_tweet_url_i(tweet.tweet_id)) %><br />
         <% else %>
         <% end %>
     <% end %>
+    <%= link_to_ex("▶x", Twt::twt_tweet_url_i(tweet.tweet_id)) %><br />
 </div>

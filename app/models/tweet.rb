@@ -125,7 +125,7 @@ class Tweet < ApplicationRecord
             twt = Twitter.find_by_twtid_ignore_case(screen_name)
             if twt
                 #key_header = "#{Util::format_num(twt.prediction, 10)}"
-                key_header = twt.group_spec("{aw}週{_ad}|予測{p10}～", screen_name_set.size)
+                key_header = twt.group_spec("{aw}週{_ad2}#{Twitter::TWT_H_SEPARATOR}予測{p10}～", screen_name_set.size)
                 twt_grp[key_header] << twt
             end
         end
@@ -157,7 +157,7 @@ class Tweet < ApplicationRecord
 
     def self.has_acquisition_schedule?(screen_name)
         tweets = Tweet.where(screen_name: screen_name, status: StatusEnum::TO_BE_OBTAIN)
-        STDERR.puts %!@#{screen_name}, #{tweets.size}!
+        #STDERR.puts %!has_acquisition_schedule?: @#{screen_name}, #{tweets.size}!
         if tweets.size > 0
             true
         else

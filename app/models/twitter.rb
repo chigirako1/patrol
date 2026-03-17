@@ -329,7 +329,7 @@ class Twitter < ApplicationRecord
         #STDERR.puts %!sp?:#{0}!
         
         if Twt::filesize_v_huge?(self.filesize)
-            STDERR.puts %!sp?: #{self.filesize} bytes, #{self.update_frequency}/100!
+            STDERR.puts %!sp?: #{self.filesize} bytes, #{self.update_frequency}/100 "#{self.twtname}[@#{self.twtid}]"!
             true
         elsif filesize_huge?
             #STDERR.puts %!sp?:#{1}!
@@ -746,7 +746,7 @@ class Twitter < ApplicationRecord
             when "_ad"
                 unit = 1 unless unit
                 n = self.last_access_datetime_days_elapsed
-                if n < 4
+                if n < unit
                     w = "(#{n})"
                 else
                     w = ""
@@ -780,6 +780,15 @@ class Twitter < ApplicationRecord
                 unit = 10 unless unit
                 number = self.prediction
                 gkey_work = group_sub(unit, number, gkey_work, x)
+            when "_p"
+                unit = 10 unless unit
+                number = self.prediction
+                if number >= unit
+                    w = "#{unit}-"
+                else
+                    w = "-"
+                end
+                gkey_work = gkey_work.gsub(x, w)
             when "q"
                 unit = 500 unless unit
                 number = self.update_frequency
@@ -1220,5 +1229,15 @@ class Twitter < ApplicationRecord
             twt.a1o_auto_group_key_xx(e, hide_within_days, rating_gt, sort_by)
         }
         hash.sort_by {|k,v| k}.reverse.to_h
+    end
+
+    def interval_exceeded?
+        if self.max_interval
+            STDERR.puts %!#{self.last_access_day_num} <> #{self.max_interval} [#{self.twtname}(#{self.twtid})]!
+            if self.last_access_day_num >= self.max_interval
+                return true
+            end
+        end
+        false
     end
 end

@@ -63,7 +63,8 @@
 <% if params[:vid] %>
 <% else %>
     <h2>huge</h2>
-    <% ids = Twt::load_pic_info_tsv() %>
+    <%# ids = Twt::load_pic_info_tsv() %>
+    <% ids = Twt::get_sp_ids() %>
     <% ids.each do |screen_name| %>
         <%= screen_name %><br />
     <% end %>
