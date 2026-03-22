@@ -33,6 +33,7 @@ module Twt
     TWT_TMP_DIR_PATH     = TMP_DIR_PATH + "Twitter-/"
     TWT_TMP_DIR_PATH_A   = TMP_DIR_PATH + "Twitter-/a/"
     TWT_SP_DIR_PATH      = TMP_DIR_PATH + "twitter_sp/"
+    TWT_SP_DIR2_PATH      = TMP_DIR_PATH + "twitter_sp2/"
 
     TWT_ARCHIVE_DIR_PATH = "public/twt"
     TWT_DIRLIST_TXT_PATH = "#{TWT_ARCHIVE_DIR_PATH}/dirlist.txt"
@@ -271,6 +272,12 @@ module Twt
             tmp.sort_by {|x|
                 if x.twt and x.twt.last_access_datetime and x.twt.last_access_datetime_days_elapsed < 1
                     x.twt.last_access_datetime
+                elsif x.dirname.end_with?("マイナス")
+                    #Date.today
+                    Time.new(2001,1,2)
+                elsif x.dirname.end_with?("なし")
+                    #Date.today - 1
+                    Time.new(2001,1,3)
                 elsif use_fs_date and x.latest_date
                     x.latest_date
                 elsif x.twt and x.twt.last_access_datetime
@@ -301,21 +308,29 @@ module Twt
     end
 
     def self.get_sp_path(twtid)
-        target_path = nil
-        base_path = UrlTxtReader::public_path(TWT_SP_DIR_PATH) + "*/"
+        paths = get_sp_paths(twtid)
+        if paths.size > 0
+            path = paths.first 
+        else
+            path = nil
+        end
+        STDERR.puts %!twtid=@#{twtid}, path="#{path}"!
+        path
+    end
+
+    def self.get_sp_paths(twtid, sp_dir_path=TWT_SP_DIR_PATH)
+        target_path = []
+        base_path = UrlTxtReader::public_path(sp_dir_path) + "*/"
         Dir.glob(base_path).each do |path|
             if File.basename(path) =~ TWT_AT_SCREEN_NAME_RGX
                 id = $1
                 #STDERR.puts %!"#{path}", "#{id}"!
                 if twtid == id
-                    target_path = path
-                    break
+                    target_path << path
                 end
             end
         end
-
-        STDERR.puts %!twtid=@#{twtid}, base_path="#{base_path}", target_path="#{target_path}"!
-
+        STDERR.puts %!twtid=@#{twtid}, base_path="#{base_path}", target_path="#{target_path.size}"!
         target_path
     end
 
@@ -381,6 +396,15 @@ module Twt
         else
             nil
         end
+    end
+
+    def self.get_sp_pic_filelist2_by_twtid(twtid)
+        pahtlist = []
+        dirpaths = Twt::get_sp_paths(twtid, TWT_SP_DIR2_PATH)
+        dirpaths.each do |dirpath|
+            pahtlist << UrlTxtReader::get_path_list(dirpath)
+        end
+        pahtlist.flatten#.sort
     end
 
     def self.twt_user_infos()
@@ -1070,6 +1094,8 @@ module Twt
         end
     end
 
+    LOW_PRIORITY_IGNORE_KEY = "X00.低頻度&優先度低(最近アクセス)"
+
     def self.get_key_elem(twt, k, v, url_list)
         postdate = twt.last_post_datetime.in_time_zone('Tokyo').strftime("%y/%m/%d %H:%M")
         dayn = Util::get_date_delta(twt.last_post_datetime)
@@ -1111,28 +1137,32 @@ module Twt
 
         r_x = 82
         if Tweet.has_acquisition_schedule?(twt.twtid)
-            dayn_s = "ZZ取得対象物件あり"
-        elsif twt.update_frequency < 150
-            dayn_s = "0低頻度"
-        elsif twt.rating <= r_x
-            dayn_s = "1(#{r_x}以下)"
+            dayn_s = "001.取得対象物件あり"
+        elsif dayn >= 21
+            dayn_s = "011.(21日以上)"
+        elsif twt.update_frequency < 150 and twt.rating < 85
+            if dayn < 7
+                dayn_s = LOW_PRIORITY_IGNORE_KEY
+            else
+                dayn_s = "600.低頻度&優先度低"
+            end
+        #elsif twt.rating <= r_x
+        #    dayn_s = "9(#{r_x}以下)"
+        elsif dayn >= 14
+            dayn_s = "021.(14日以上)"
         elsif twt.update_frequency >= 400
             day_std = 3
             if dayn < day_std
-                dayn_s = "Z(高頻度)A至近#{day_std}日以内"
+                dayn_s = "801.(高頻度)A至近#{day_std}日以内"
             else
-                dayn_s = "Z(高頻度)Z#{day_std}日以上"
+                dayn_s = "802.(高頻度)Z#{day_std}日以上"
             end
-        elsif dayn >= 21
-            dayn_s = "E(21日以上)"
-        elsif dayn >= 14
-            dayn_s = "D(14日以上)"
         elsif dayn >= 7
-            dayn_s = "C(7日以上)"
+            dayn_s = "031.(7日以上)"
         elsif dayn < 3
-            dayn_s = "A(直近アクセス)"
+            dayn_s = "702.(直近アクセス)"
         else
-            dayn_s = "B(最近アクセス)"
+            dayn_s = "701.(最近アクセス)"
         end
         key = "#{dayn_s}|||#{Util::format_num(twt.update_frequency, 100, 4)}|||更新頻度:#{Util::format_num(twt.update_frequency, 50, 4)}"
 
@@ -1175,6 +1205,9 @@ module Twt
 
             key, elem = get_key_elem(twt, k, v, url_list_summary_h[k])
 
+            if key.start_with?(LOW_PRIORITY_IGNORE_KEY)
+                next
+            end
             list[key] << elem
         end
 
@@ -1184,7 +1217,8 @@ module Twt
 
     def self.output_csv(list)
         screen_names = []
-        list2 = list.sort_by {|k,v| k}.reverse.to_h
+        #list2 = list.sort_by {|k,v| k}.reverse.to_h
+        list2 = list.sort_by {|k,v| k}.to_h
         list2.each do |k, v|
             v.each do |line|
                 #puts line
@@ -1202,14 +1236,16 @@ module Twt
     def self.sort_tmp(x)
         twt = x[1]
         if twt
-            [twt.last_post_datetime, -(twt.rating||0)]
+            #[twt.last_post_datetime, -(twt.rating||0)]
+            [twt.prediction2]
         else
             [0]
         end
     end
 
     def self.get_sp_ids()
-        twts = Twitter.select {|x| x.sp?}.sort_by {|twt| [twt.last_post_datetime, -(twt.rating||0)]}
+        #twts = Twitter.select {|x| x.sp?}.sort_by {|twt| [twt.last_post_datetime, -(twt.rating||0)]}
+        twts = Twitter.select {|x| x.sp?}.sort_by {|twt| [twt.last_post_datetime, (twt.rating||0)]}.reverse
         STDERR.puts %!get_sp_ids:#{twts.size}!
 
         hash3 = twts.map {|x|
@@ -1226,6 +1262,10 @@ module Twt
         list = build_pic_info_list(hash3)
 
         keys = output_csv(list)
+
+        puts "END"
+        puts Time.now.strftime("%Y/%m/%d")
+
         keys
     end
 

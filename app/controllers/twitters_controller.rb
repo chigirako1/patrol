@@ -27,7 +27,8 @@ class TwittersController < ApplicationController
     R_PRED_ASC = "評価/予測△順"
     R_PRED_DESC = "評価/予測▽順"
 
-    ACCESS = "access"
+    ACCESS = "アクセス日順（旧→新）" #"access"
+    ACCESS_W = "アクセス日(週)順（旧→新）"
     R_ACCESS = "評価/アクセス日順（旧→新）"
 
     R_ACCESS_W_PRED_A = "評価/アクセス週順（旧→新）/予測△昇順"
@@ -77,6 +78,7 @@ class TwittersController < ApplicationController
 
   class TwtParams
     attr_accessor :mode,
+      :cond_or,
       :num_of_disp,
       :select_max,
       :hide_within_days,
@@ -99,7 +101,6 @@ class TwittersController < ApplicationController
       :ex_sp,
       :thumbnail
 
-    
     def initialize(params)
       @mode = Util::get_param_str(params, :mode, "id")
       @sort_by = Util::get_param_str(params, :sort_by)
@@ -127,6 +128,7 @@ class TwittersController < ApplicationController
       @ul_freq = Util::get_param_num(params, :ul_freq)
       @prm_todo_cnt = Util::get_param_num(params, :todo_cnt)
 
+      @cond_or = Util::get_param_bool(params, :cond_or)
       @no_pxv = Util::get_param_bool(params, :no_pxv)
       @ex_sp = Util::get_param_bool(params, :ex_sp)
       @thumbnail = Util::get_param_bool(params, :thumbnail)
@@ -666,7 +668,7 @@ class TwittersController < ApplicationController
 
       twitters = twitters.select {|x| x.drawing_method == twt_params.param_target} if twt_params.param_target != ""
 
-      if false and (twt_params.hide_within_days > 0 and twt_params.pred_cond_gt > 0)
+      if twt_params.cond_or and (twt_params.hide_within_days > 0 and twt_params.pred_cond_gt > 0)
         # OR条件
         twitters = twitters.select {|x|
           x.last_access_day_num >= twt_params.hide_within_days or
@@ -1160,7 +1162,10 @@ class TwittersController < ApplicationController
         twitters = twitters.sort_by {|x| [-x.rating, x.last_access_day_num / 7, x.prediction]}
       when SORT_BY::ACCESS
         #twitters = twitters.sort_by {|x| [x.last_access_datetime, (x.last_access_datetime)]}#.reverse
-        twitters = twitters.sort_by {|x| [x.last_access_datetime, -(x.rating||0), -x.prediction]}
+        #twitters = twitters.sort_by {|x| [x.last_access_datetime, -(x.rating||0), -x.prediction]}
+        twitters = twitters.sort_by {|x| [-x.last_access_datetime_days_elapsed, -(x.rating||0), -x.prediction]}
+      when SORT_BY::ACCESS_W
+        twitters = twitters.sort_by {|x| [-(x.last_access_day_num / 7), -x.rating, -x.prediction]}
       when SORT_BY::R_ACCESS
         twitters = twitters.sort_by {|x| [-x.rating, (x.last_access_datetime)]}
       when SORT_BY::FILENUM

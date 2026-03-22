@@ -187,6 +187,13 @@ textarea {
     <% if twitter.sp? and (twitter.rating and twitter.rating >= Twt::RATING_THRESHOLD) %>
         <h3>SP対象？</h3>
     <% end %>
+    <% tweets = Tweet.get_records(twitter.twtid, Tweet::StatusEnum::TO_BE_OBTAIN) %>
+    <% if tweets.size > 0 %>
+        <h3>取得対象あり</h3>
+        <% tweets.each do |tweet| %>
+            <%= link_to_ex("■tweet■", tweet) %><br />
+        <% end %>
+    <% end %>
     
     <% if twitter.filenum and twitter.filenum > twt_pic_list.size %>
         <h3>すべての画像が表示されていない可能性があります(<%= twt_pic_list.size %>/<%= twitter.filenum %>)</h3>
@@ -287,24 +294,37 @@ textarea {
 
     <% filelist = Twt::get_sp_pic_filelist_by_twtid(@twitter.twtid) %>
     <% if filelist.presence %>
-        <h4>SP</h4>
+        <h4>SP(<%= File.dirname filelist.first %>)[<%= filelist.size %>ファイル]</h4>
+
         <% latest_file = filelist.last %>
         <% sp_datetime = Twt::get_sp_datetime_from_filename(File.basename latest_file) %>
         <% sp_tweet_id = Twt::time2tweet_id(sp_datetime) %>
         <b><%= Twt::tweet_id_with_comma(sp_tweet_id) %></b>(<= DL日時からの推測)(<%= time_ago_in_words(sp_datetime) %>) <%#= Twt::date_info(sp_tweet_id) %>
-        [<%= File::basename latest_file %>](ファイル数:<%= filelist.size %>)
+        [<%= File::basename latest_file %>]
         <br />
         予測:<%= twitter.prediction(sp_datetime) %>
         <br />
         <% pic_mag_twt_b = '10%' %>
         <% fsize_list = [] %>
-        <%# if params[:picn] == "" %>
-        <% filelist.reverse.first(show_pic_num).each do |fpath| %>
+        <% if params[:picn_sp] =~ /(\d+)/ %>
+            <% show_pic_num_sp = $1.to_i %>
+        <% else %>
+            <% show_pic_num_sp = show_pic_num * 2 %>
+        <% end %>
+        <% filelist.reverse.first(show_pic_num_sp).each do |fpath| %>
             <%= link_to_ex(image_tag(fpath, width: pic_mag_twt_b, height: pic_mag_twt_b), fpath) %>
             <% phys_path = Util::get_public_path(fpath) %>
             <% fsize_list << FileTest.size(phys_path) %>
         <% end %>
         平均ファイルサイズ：<%= Util::formatFileSize fsize_list.sum / fsize_list.size %>
+
+        <% filelist2 = Twt::get_sp_pic_filelist2_by_twtid(@twitter.twtid) %>
+        <% if filelist2.size > 0 %>
+            <h4>SP2(<%= File.dirname filelist2.first %>)[<%= filelist2.size %>ファイル]</h4>
+        <% end %>
+        <% filelist2.reverse.first(show_pic_num_sp).each.with_index(1) do |fpath, idx| %>
+            <% idx %>.<%= link_to_ex(image_tag(fpath, width: pic_mag_twt_b, height: pic_mag_twt_b), fpath) %>
+        <% end %>
     <% else %>
     <% end %>
 

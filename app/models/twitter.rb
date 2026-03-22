@@ -398,6 +398,12 @@ class Twitter < ApplicationRecord
         end
     end
 
+    def prediction2()
+        delta_d = get_date_delta(dt) + 1
+        pred = update_frequency * delta_d / 100
+        pred
+    end
+
     def point
         pt = self.rating||0
         
@@ -714,6 +720,7 @@ class Twitter < ApplicationRecord
     # ""
     #
     def group_spec(grp_sort_spec_arg, total_cnt)
+        unset_disp = true
         gkey_work = grp_sort_spec_arg.gsub(/#.*/, "")
 
         #regexp_pattern = /\{\w+\d*\}/
@@ -746,7 +753,7 @@ class Twitter < ApplicationRecord
             when "_ad"
                 unit = 1 unless unit
                 n = self.last_access_datetime_days_elapsed
-                if n < unit
+                if n <= unit
                     w = "(#{n})"
                 else
                     w = ""
@@ -819,18 +826,27 @@ class Twitter < ApplicationRecord
                 gkey_work.gsub!(x, self.drawing_method||"")
             when "restrict"
                 gkey_work.gsub!(x, self.r18||"")
+            when "unset"
+                unset_disp = false
+                gkey_work.gsub!(x, "")
             else
                 msg = %!wrong opt:"#{start_str}"!
                 Rails.logger.error(msg)
             end
         end
 
-        if self.sp?
-            "ファイルサイズ大#{TWT_H_SEPARATOR}."# + gkey_work
-        elsif self.rating.presence
-            gkey_work
+        if self.rating.presence
+            if self.sp?
+                "ファイルサイズ大#{TWT_H_SEPARATOR}."# + gkey_work
+            else
+                gkey_work
+            end
         else
-            "未設定#{TWT_H_SEPARATOR}" + gkey_work
+            if unset_disp
+                "未設定#{TWT_H_SEPARATOR}" + gkey_work
+            else
+                gkey_work
+            end
         end
     end
 

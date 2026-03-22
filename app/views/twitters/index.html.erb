@@ -44,12 +44,20 @@
     <br />
   <% end %>
 <% end %>
-<% if params[:hide_within_days].presence %>
-  ・<%= params[:hide_within_days] %>日以内アクセスは非表示<br />
+
+<% if params[:cond_or] == "true" %>
+  OR非表示<br />
+  >・<%= params[:hide_within_days] %>日以内アクセス<br />
+  >・予測数<%= params[:pred] %>未満<br />
+<% else %>
+  <% if params[:hide_within_days].presence %>
+    ・<%= params[:hide_within_days] %>日以内アクセスは非表示<br />
+  <% end %>
+  <% if params[:pred].presence %>
+    ・予測数<%= params[:pred] %>未満は非表示<br />
+  <% end %>
 <% end %>
-<% if params[:pred].presence %>
-  ・予測数<%= params[:pred] %>未満は非表示<br />
-<% end %>
+
 <% if params[:pfilenum].presence %>
   ・ファイル数<%= params[:pfilenum] %>未満は非表示<br />
 <% end %>
@@ -424,6 +432,9 @@ button.horizontal {
     <%= f.label :予測 %>
     <%= f.number_field :pred, :value => params[:pred] %>以上
     <br />
+    <%= f.check_box :cond_or, {checked: params[:cond_or] == "true"}, true, false %>
+    <%= f.label :OR条件 %>
+    <br />
     <%= f.label :DB登録日 %>
     <%= f.number_field :created_at, :value => params[:created_at] %>日以内にDB登録されたレコード
     <br />
@@ -461,7 +472,8 @@ button.horizontal {
           [TwittersController::SORT_BY::R_ACCESS_W_PRED_A],
           
           [TwittersController::SORT_BY::R_ACCESS],
-          ["アクセス日順（旧→新）", TwittersController::SORT_BY::ACCESS],
+          [TwittersController::SORT_BY::ACCESS],
+          [TwittersController::SORT_BY::ACCESS_W],
           
           [TwittersController::SORT_BY::RATING],
           [TwittersController::SORT_BY::SORT_CREATE],

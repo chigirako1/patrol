@@ -71,7 +71,8 @@
 <% end %>
 
 <h2>vid</h2>
-<% ids = Twt::list_vid() %>
+<%# ids = Twt::list_vid() %>
+<% ids = [] %>
 <% ids.each do |screen_name| %>
     <%= screen_name %><br />
 <% end %>

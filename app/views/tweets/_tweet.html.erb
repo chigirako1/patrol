@@ -1,11 +1,13 @@
 <div id="<%= dom_id tweet %>">
     <p>
+        <% if tweet.status != Tweet::StatusEnum::SAVED %>
+            <h3><%= tweet.status %></h3>
+        <% end %>
         <strong>Tweet:</strong>
         <%= tweet.tweet_id %>
+        (<%= l Twt::get_timestamp(tweet.tweet_id) %>)
         <strong>Screen name:</strong>
         <%= tweet.screen_name %>
-        <strong>Status:</strong>
-        <%= tweet.status %>
         <strong>Rating:</strong>
         <%= tweet.rating %>
         <strong>Num:</strong>

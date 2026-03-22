@@ -931,6 +931,7 @@
 <% end %>
 
 <% if @sp_dirs.presence %>
+    <% to_be_obtain_list = Tweet.to_be_obtain_list %>
     <h2>sp dir一覧(<%= @sp_dirs.size %>)</h2>
     <% @sp_dirs.each.with_index(1) do |elem, idx| %>
         <% if elem.twt %>
@@ -945,6 +946,10 @@
             <% if elem.twt.sp? %>
             <% else %>
                 <b>★対象外★</b>
+            <% end %>
+
+            <% if to_be_obtain_list.has_key?(elem.screen_name) %>
+                <b>★取得対象あり★</b>
             <% end %>
 
             <% if false %>
