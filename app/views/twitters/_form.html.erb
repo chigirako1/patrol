@@ -80,6 +80,7 @@
     <br />
     <input type="button" value="90" onclick="set_rate('rating', 90);" class="btn_s" />
     <input type="button" value="85" onclick="set_rate('rating', 85);" class="btn_s" />
+    <input type="button" value="84" onclick="set_rate('rating', 84);" class="btn_s" />
     <input type="button" value="80" onclick="set_rate('rating', 80);" class="btn_s" />
     <input type="button" value="75" onclick="set_rate('rating', 75);" class="btn_s" />
 
@@ -394,6 +395,9 @@
     <% ul_date = nil %>
   <% end %>
 
+  <input type="button" value="最新tweet id/日時設定" onclick="set_latest_info();" />
+  <input type=”text” id="latest_info_work" value="" />
+
   <div>
     <% tweet_id = twitter.latest_tweet_id %>
     <% if latest_tweet_id %>
@@ -405,7 +409,7 @@
     <% end %>
     <% puts %!#{twitter.latest_tweet_id}/#{latest_tweet_id}/#{tweet_id}! %>
 
-    <%= form.label :最新tweetId, style: "display: block" %>
+    <%= form.label "最新tweet Id", style: "display: block" %>
 
     <% if tweet_id != twitter.latest_tweet_id %>
       現在の値:"<%= twitter.latest_tweet_id %>"↓<font color='red'>更新あり</font><br />
@@ -534,10 +538,10 @@
 <% end %>
 
 <script>
-  const e = document.getElementById('pxv_user_id_work');
+  /*const e = document.getElementById('pxv_user_id_work');
   e.addEventListener('change', (event) => {
       get_pxv_user_id();
-  });
+  });*/
 
   function set_time(elem_id) {
     let elem = document.getElementById(elem_id);
@@ -593,8 +597,10 @@
       let text = text_box.value;
 
       let datetxt = "";
-      //let regex = /pixiv\.net\/users\/(\d+)/;
-      const regex = new RegExp('pixiv\.net/users/(\d+)');
+      const regex = /pixiv\.net\/users\/(\d+)/;
+      //const regex = new RegExp('pixiv\.net/users/(\d+)');
+      console.log(regex);
+
       const match = text.match(regex);
       //if (regex.test(text)) {
       if (match) {
@@ -608,5 +614,44 @@
       
       const result = document.getElementById('twitter_pxvid');
       result.value = datetxt;
+  }
+
+  function get_date_from_tweet_id(tweet_id) {
+      let a = BigInt(tweet_id) >> 22n;
+      let b = Number(a + 1288834974657n);
+      let date = new Date(b);
+      const formatted = new Intl.DateTimeFormat('sv-SE', {
+        year: 'numeric', month: '2-digit', day: '2-digit',
+        hour: '2-digit', minute: '2-digit'
+      }).format(date).replace(' ', 'T');
+      return formatted;
+  }
+
+  function set_latest_info() {
+      let text_box = document.getElementById("latest_info_work");
+      let text = text_box.value;
+
+      let tw_id = "";
+      const regex = /x\.com\/\w+\/status\/(\d+)/;
+      console.log(regex);
+
+      const match = text.match(regex);
+      if (match) {
+          let n = BigInt(match[1]);
+          console.log(n);
+          tw_id = n;
+      } else {
+          let r = text.match(/(\d+)/);
+          let n = BigInt(r[0]);
+          tw_id = n;
+      }
+
+      const l_tw_id = document.getElementById('twitter_latest_tweet_id');
+      l_tw_id.value = tw_id;
+      //alert(tw_id);
+
+      let date = get_date_from_tweet_id(tw_id);
+      const l_tw_date = document.getElementById('twitter_last_post_datetime');
+      l_tw_date.value = date;
   }
 </script>

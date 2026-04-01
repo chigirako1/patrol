@@ -27,3 +27,7 @@ button, input[type=submit] { height: 1.4rem; width: 10rem; margin-bottom: .5rem;
     background: orange;
 }
 
+.fixed-height-img {
+  height: 150px;  /* 固定したい高さ */
+  width: auto;    /* アスペクト比を維持して自動計算 */
+}

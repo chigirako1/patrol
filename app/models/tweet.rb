@@ -69,7 +69,6 @@ class Tweet < ApplicationRecord
             puts %![update_tweet_record] @#{tweet_id}:#{twt_params}!
         else
             msg = %!@#{tweet_id}の更新に失敗しました。未登録のIDです!
-            #STDERR.puts %!@#{tweet_id}の更新に失敗しました。未登録のIDです!
             Rails.logger.error(msg)
         end
     end
@@ -83,7 +82,7 @@ class Tweet < ApplicationRecord
     C_YESTERDAY = "90.昨日以前登録"
     C_TBO = "99.#{StatusEnum::TO_BE_OBTAIN}"
     
-    def self.tweet_group(tweet_i_ids)
+    def self.tweet_group(tweet_i_ids, spec_str)
         #work = tweet_i_ids.map {|x| [x, Tweet::get_tweet_record(x)]}.sort_by {|x| [x[1]&.tweet_id||Float::INFINITY, x[0]]}
         tweets_grp = Hash.new { |h, k| h[k] = [] }
         screen_name_set = Set.new
@@ -126,11 +125,12 @@ class Tweet < ApplicationRecord
         screen_name_set.each do |screen_name|
             twt = Twitter.find_by_twtid_ignore_case(screen_name)
             if twt
-                #key_header = "#{Util::format_num(twt.prediction, 10)}"
+                #spec = "{p30}件↑|{aw}週#{Twitter::TWT_H_SEPARATOR}予測{p20}～"
+                spec = spec_str
                 #key_header = twt.group_spec("{aw}週{_ad3}#{Twitter::TWT_H_SEPARATOR}予測{p10}～", screen_name_set.size)
                 #key_header = twt.group_spec("【{r}】|{aw}週#{Twitter::TWT_H_SEPARATOR}予測{p10}～", screen_name_set.size)
                 #key_header = twt.group_spec("{aw}週|【{r}】#{Twitter::TWT_H_SEPARATOR}予測{p10}～", screen_name_set.size)
-                key_header = twt.group_spec("{p30}件↑|{aw}週#{Twitter::TWT_H_SEPARATOR}予測{p20}～", screen_name_set.size)
+                key_header = twt.group_spec(spec, screen_name_set.size)
                 twt_grp[key_header] << twt
             end
         end
@@ -186,6 +186,18 @@ class Tweet < ApplicationRecord
             tweet_h[screen_name] = [twt, cnt]
         end
         tweet_h
+    end
+
+    def self.get_unregistered_tweet_ids(tweet_id_list)
+        ids = []
+        tweet_id_list.each do |tweet_id|
+            tweet_rcd = Tweet.find_by(tweet_id: tweet_id)
+            if tweet_rcd and (tweet_rcd.status == StatusEnum::SAVED or tweet_rcd.status == StatusEnum::UNACCESSIBLE)
+            else
+                ids << tweet_id
+            end
+        end
+        ids
     end
 
     def self.summary()

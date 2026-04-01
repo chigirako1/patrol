@@ -119,6 +119,11 @@
           <td>
             <%#= link_to twitter["id"], twitter %>
             <%= twitter.id %>
+            <% cdw = twitter.created_at_day_num / 7 %>
+            <% if cdw < 15 %>
+              <br />
+              [登録<%= cdw %>週前]
+            <% end %>
           </td>
           <td>
             <% if @url_list_summary %>
@@ -154,7 +159,7 @@
             <%= prediction %><%= %!(#{pred})! if pred - prediction > 5  %>
             
             <% if twitter.filesize %>
-              <% if twitter.sp? #filesize_huge? %>
+              <% if twitter.sp? %>
                 <font color="red">
                   <%= twitter.filesize_kb %>
                   <% if twitter.ul_freq_low? %>
@@ -478,6 +483,7 @@ button.horizontal {
           [TwittersController::SORT_BY::RATING],
           [TwittersController::SORT_BY::SORT_CREATE],
           [TwittersController::SORT_BY::SORT_REGISTERED_DESC],
+          [TwittersController::SORT_BY::R_SORT_REGISTERED_DESC],
           [TwittersController::SORT_BY::FILENUM],
           [TwittersController::SORT_BY::FILENUM_ASC],
           [TwittersController::SORT_BY::R_FILENUM_ASC],

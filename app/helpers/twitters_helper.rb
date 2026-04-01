@@ -36,7 +36,8 @@ module TwittersHelper
         twt = Twitter.find_by_twtid_ignore_case(twtid)
         if twt
             tag = twitter_info_tag(twt)
-            if twt.sp?
+            #if twt.sp?
+            if twt.sp? and (twt.rating and twt.rating >= Twt::RATING_THRESHOLD)
                 tag = %!<h3>SP対象？</h3>! + tag
             elsif br
                 tag = "<br />" + tag

@@ -3,23 +3,26 @@
         <% if tweet.status != Tweet::StatusEnum::SAVED %>
             <h3><%= tweet.status %></h3>
         <% end %>
-        <strong>Tweet:</strong>
+        <strong>Tweet ID:</strong>
         <%= tweet.tweet_id %>
         (<%= l Twt::get_timestamp(tweet.tweet_id) %>)
-        <strong>Screen name:</strong>
+        <strong>スクリーンネーム:</strong>
         <%= tweet.screen_name %>
-        <strong>Rating:</strong>
+        <strong>評価:</strong>
         <%= tweet.rating %>
-        <strong>Num:</strong>
+        <strong>枚数:</strong>
         <%= tweet.num %>
+        <strong>備考:</strong>
+        <%= tweet.remarks %>
     </p>
 
     <% twt = Twitter.find_by(twtid: tweet.screen_name) %>
     <% if twt %>
         <%#= twitter_info_tag(twt) %>
     <% elsif tweet.screen_name.presence %>
-        [<%= link_to_ex %!☆twt☆:@#{tweet.screen_name}!, artist_twt_path(tweet.screen_name) %>]
     <% end %>
+    [<%= link_to_ex %!☆twt☆:@#{tweet.screen_name}!, artist_twt_path(tweet.screen_name, picn: 33) %>]
+    [<%= link_to_ex("tweets db", tweets_path(screen_name: tweet.screen_name)) %>]
     <br />
 
     <% (@pic_list||[]).each do |path| %>

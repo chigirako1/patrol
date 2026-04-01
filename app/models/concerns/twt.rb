@@ -1140,17 +1140,23 @@ module Twt
             dayn_s = "001.取得対象物件あり"
         elsif dayn >= 21
             dayn_s = "011.(21日以上)"
-        elsif twt.update_frequency < 150 and twt.rating < 85
-            if dayn < 7
-                dayn_s = LOW_PRIORITY_IGNORE_KEY
+        elsif dayn >= 14
+            dayn_s = "021.(14日以上)"
+        elsif twt.update_frequency < 200
+            if twt.rating < 86
+                if dayn < 7 and twt.update_frequency < 150
+                    dayn_s = LOW_PRIORITY_IGNORE_KEY
+                elsif dayn < 14
+                    dayn_s = LOW_PRIORITY_IGNORE_KEY
+                else
+                    dayn_s = "600.低頻度&優先度低"
+                end
             else
-                dayn_s = "600.低頻度&優先度低"
+                dayn_s = "601.低頻度"
             end
         #elsif twt.rating <= r_x
         #    dayn_s = "9(#{r_x}以下)"
-        elsif dayn >= 14
-            dayn_s = "021.(14日以上)"
-        elsif twt.update_frequency >= 400
+        elsif twt.update_frequency >= 300
             day_std = 3
             if dayn < day_std
                 dayn_s = "801.(高頻度)A至近#{day_std}日以内"
@@ -1346,8 +1352,10 @@ module Twt
             end
 
             if twt_params.size > 0
-                msg = %!更新内容 => #{twt_params}\t@#{k}(#{twt.twtname})!
-                #Rails.logger.info(msg)
+                if filesize_huge?(avg)
+                    msg = %!更新内容 => #{twt_params}\t@#{k}(#{twt.twtname})!
+                    Rails.logger.info(msg)
+                end
 
                 twt.update(twt_params)
             end

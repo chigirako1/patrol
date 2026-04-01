@@ -31,7 +31,6 @@
 <% end %>
 <hr />
 
-
 <% twt_pic_list = @twt_pic_path_list.map {|x| [Twt::twt_path_str(x), x]}.sort.reverse %>
 
 <% freq = (Twt::calc_freq(twt_pic_list.map {|x| x[1]})).to_f %>
@@ -54,10 +53,13 @@
 <% else %>
     <% show_pic_num = 15 %>
 <% end %>
+<%# pic_mag_twt_b = '10%' %>
+
 <% twt_pic_list.first(show_pic_num).each.with_index(1) do |elem, idx| %>
     <% path = elem[1] %>
     <%= idx %>.
-    <%= link_to image_tag(path, width: '10%', height: '10%', :alt => path), path, target: :_blank, rel: "noopener noreferrer" %>
+    <%#= link_to image_tag(path, width: pic_mag_twt_b, height: pic_mag_twt_b, class: "fixed-height-img", :alt => path), path, target: :_blank, rel: "noopener noreferrer" %>
+    <%= link_to image_tag(path, class: "fixed-height-img", :alt => path), path, target: :_blank, rel: "noopener noreferrer" %>
 <% end %>
 <br />
 
@@ -66,6 +68,14 @@
 <% end %>
 <%= twt_pic_list.size %>
 <br />
+
+<% filelist2 = Twt::get_sp_pic_filelist2_by_twtid(@twtid) %>
+<% if filelist2.size > 0 %>
+    <h4>SP2(<%= File.dirname filelist2.first %>)[<%= filelist2.size %>ファイル]</h4>
+<% end %>
+<% filelist2.reverse.first(show_pic_num).each.with_index(1) do |fpath, idx| %>
+    <%= idx %>.<%= link_to_ex(image_tag(fpath, class: "fixed-height-img"), fpath) %>
+<% end %>
 
 <h2>url txt</h2>
 <% tweet_ids = Twt::get_twt_tweet_ids_from_txts(@twtid) %>

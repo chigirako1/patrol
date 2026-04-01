@@ -289,7 +289,9 @@
 
 <% if @tweet_i_ids.presence and @tweet_i_ids.size > 0 %>
     <h2>tweet_i_ids (<%= @tweet_i_ids.size %>)</h2>
-    <% tweets_grp, twt_grp2 = Tweet::tweet_group(@tweet_i_ids) %>
+    <% spec = "{p30}件↑|{aw}週#{Twitter::TWT_H_SEPARATOR}予測{p20}～" %>
+    <% spec = "評価{r}#{Twitter::TWT_H_SEPARATOR}{aw}週" %>
+    <% tweets_grp, twt_grp2 = Tweet::tweet_group(@tweet_i_ids, spec) %>
     <% tweets_grp.each do |key, tweets| %>
         <h3><%= key %>(<%= tweets.size %>)</h3>
         <% tweets.each.with_index(1) do |x, idx| %>
@@ -304,6 +306,9 @@
                 <%#= t.screen_name %>
                 <% twt = Twitter.find_by_twtid_ignore_case(t.screen_name) %>
                 <% if twt %>
+                    <% if twt.sp? %>
+                        ★大★
+                    <% end %>
                     【<%= twt.rating %>】
                     <%= twt.twtname %>
                     <% if t.status == Tweet::StatusEnum::TO_BE_OBTAIN %>

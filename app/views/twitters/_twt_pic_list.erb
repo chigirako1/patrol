@@ -292,6 +292,12 @@ textarea {
         【以降の投稿数予測】<b><%= twitter.prediction(dt) %></b>
     <% end %>
 
+    <% if params[:picn_sp] =~ /(\d+)/ %>
+        <% show_pic_num_sp = $1.to_i %>
+    <% else %>
+        <% show_pic_num_sp = show_pic_num * 2 %>
+    <% end %>
+    <% pic_mag_twt_b = '10%' %>
     <% filelist = Twt::get_sp_pic_filelist_by_twtid(@twitter.twtid) %>
     <% if filelist.presence %>
         <h4>SP(<%= File.dirname filelist.first %>)[<%= filelist.size %>ファイル]</h4>
@@ -304,13 +310,7 @@ textarea {
         <br />
         予測:<%= twitter.prediction(sp_datetime) %>
         <br />
-        <% pic_mag_twt_b = '10%' %>
         <% fsize_list = [] %>
-        <% if params[:picn_sp] =~ /(\d+)/ %>
-            <% show_pic_num_sp = $1.to_i %>
-        <% else %>
-            <% show_pic_num_sp = show_pic_num * 2 %>
-        <% end %>
         <% filelist.reverse.first(show_pic_num_sp).each do |fpath| %>
             <%= link_to_ex(image_tag(fpath, width: pic_mag_twt_b, height: pic_mag_twt_b), fpath) %>
             <% phys_path = Util::get_public_path(fpath) %>
@@ -318,14 +318,15 @@ textarea {
         <% end %>
         平均ファイルサイズ：<%= Util::formatFileSize fsize_list.sum / fsize_list.size %>
 
-        <% filelist2 = Twt::get_sp_pic_filelist2_by_twtid(@twitter.twtid) %>
-        <% if filelist2.size > 0 %>
-            <h4>SP2(<%= File.dirname filelist2.first %>)[<%= filelist2.size %>ファイル]</h4>
-        <% end %>
-        <% filelist2.reverse.first(show_pic_num_sp).each.with_index(1) do |fpath, idx| %>
-            <% idx %>.<%= link_to_ex(image_tag(fpath, width: pic_mag_twt_b, height: pic_mag_twt_b), fpath) %>
-        <% end %>
     <% else %>
+    <% end %>
+    
+    <% filelist2 = Twt::get_sp_pic_filelist2_by_twtid(@twitter.twtid) %>
+    <% if filelist2.size > 0 %>
+        <h4>SP2(<%= File.dirname filelist2.first %>)[<%= filelist2.size %>ファイル]</h4>
+    <% end %>
+    <% filelist2.reverse.first(show_pic_num_sp).each.with_index(1) do |fpath, idx| %>
+        <%= idx %>.<%= link_to_ex(image_tag(fpath, width: pic_mag_twt_b, height: pic_mag_twt_b), fpath) %>
     <% end %>
 
     <!-- URLのテキストファイルに含まれる画像が存在するかチェック -->

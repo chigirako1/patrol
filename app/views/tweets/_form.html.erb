@@ -61,6 +61,29 @@
   <div>
     <%= form.submit %>
   </div>
+
+  <% if tweet.screen_name.presence %>
+    <% tweet_ids = Twt::get_twt_tweet_ids_from_txts(tweet.screen_name) %>
+    <% ids = Tweet::get_unregistered_tweet_ids(tweet_ids) %>
+    <% if ids.size > 0 %>
+      <h2>url txt</h2>
+    <% end %>
+    <% ids.each do |x| %>
+        <% url = Twt::twt_tweet_url(tweet.screen_name, x) %>
+        <%= link_to_ex(url, url) %>
+        [<%= Twt::timestamp_str(x) %>]
+
+        <% twt_pic_path_list = Twt::get_pic_filelist(tweet.screen_name) %>
+        <% paths = Twt::search_tweet(twt_pic_path_list, x) %>
+        <% if paths.size > 0 %>
+            ファイルあり
+        <% else %>
+            <% url2 = Twt::twt_tweet_url_dev(x) %>
+            <%= link_to_ex(url2, url2) %>
+        <% end %>
+        <br>
+    <% end %>
+  <% end %>
 <% end %>
 
 <script>

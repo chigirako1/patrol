@@ -325,8 +325,20 @@ class Twitter < ApplicationRecord
         end
     end
 
+    def private?
+        self.private_account == Twitter::TWT_VISIBILITY::TV_PRIVATE
+    end
+
     def sp?
         #STDERR.puts %!sp?:#{0}!
+        
+        if self.private?
+            return false
+        end
+
+        #unless (twitter.rating and twitter.rating >= Twt::RATING_THRESHOLD)
+        #    return false
+        #end
         
         if Twt::filesize_v_huge?(self.filesize)
             STDERR.puts %!sp?: #{self.filesize} bytes, #{self.update_frequency}/100 "#{self.twtname}[@#{self.twtid}]"!
@@ -763,16 +775,16 @@ class Twitter < ApplicationRecord
                 unit = 1 unless unit
                 number = self.created_at_day_num
                 gkey_work = group_sub(unit, number, gkey_work, x)
-            when "cm", "c"
-                unit = 1 unless unit
-                number = self.created_at_day_num / 30
-                gkey_work = group_sub(unit, number, gkey_work, x)
             when "cw"
                 unit = 1 unless unit
                 number = self.created_at_day_num / 7
                 gkey_work = group_sub(unit, number, gkey_work, x)
+            when "cm", "c"
+                unit = 1 unless unit
+                number = self.created_at_day_num / 30
+                gkey_work = group_sub(unit, number, gkey_work, x)
             when "cyymm"
-                yymm = self.created_at.strftime("%Y-%m")
+                yymm = self.created_at.strftime("%y/%m")
                 gkey_work.gsub!(x, yymm)
                 #STDERR.puts %!"#{x}"\t"#{yymm}"\t"#{gkey_work}"!
             when "f"
@@ -836,8 +848,8 @@ class Twitter < ApplicationRecord
         end
 
         if self.rating.presence
-            if self.sp?
-                "ファイルサイズ大#{TWT_H_SEPARATOR}."# + gkey_work
+            if self.sp? and (self.rating and self.rating >= Twt::RATING_THRESHOLD)
+                "SP#{TWT_H_SEPARATOR}."# + gkey_work
             else
                 gkey_work
             end

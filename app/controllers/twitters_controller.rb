@@ -28,6 +28,7 @@ class TwittersController < ApplicationController
     R_PRED_DESC = "評価/予測▽順"
 
     ACCESS = "アクセス日順（旧→新）" #"access"
+    SORT_ACCESS = ACCESS
     ACCESS_W = "アクセス日(週)順（旧→新）"
     R_ACCESS = "評価/アクセス日順（旧→新）"
 
@@ -41,6 +42,7 @@ class TwittersController < ApplicationController
 
     SORT_CREATE = "登録日順(旧→新)"
     SORT_REGISTERED_DESC = "登録日順(新→旧)"
+    R_SORT_REGISTERED_DESC = "評価/登録日順(新→旧)"
 
     SORT_POINT = "ポイント"
 
@@ -926,11 +928,19 @@ class TwittersController < ApplicationController
       twitters_group = {}
 
       if twitters_intvl.size > 0
-        tmp_grp = twitters_intvl.group_by {|x| %!zzz#{Twitter::TWT_H_SEPARATOR}#{x.status}!}
-        twitters_group.merge!(tmp_grp)
+        #tmp_grp = twitters_intvl.group_by {|x| %!zzz#{Twitter::TWT_H_SEPARATOR}#{x.status}!}
+        #twitters_group.merge!(tmp_grp)
+
+        twitters_intvl = index_sort(twitters_intvl, twt_params)
+        if twt_params.select_max > 0
+          twitters_intvl = twitters_intvl.first(twt_params.select_max)
+        end
+        
+        twitters_group = twt_group_by(twitters_intvl, twt_params.param_grp_sort_by, twt_params.param_grp_sort_spec)
       else
         STDERR.puts %!|zzz|ゼロ件!
       end
+
 
       twitters_group
     end
@@ -1190,7 +1200,9 @@ class TwittersController < ApplicationController
       when SORT_BY::SORT_CREATE
         twitters = twitters.sort_by {|x| x.created_at}
       when SORT_BY::SORT_REGISTERED_DESC
-        twitters = twitters.sort_by {|x| x.created_at_day_num / 7}#.reverse
+        twitters = twitters.sort_by {|x| x.created_at_day_num / 7}
+      when SORT_BY::R_SORT_REGISTERED_DESC
+        twitters = twitters.sort_by {|x| [-x.rating, x.created_at_day_num / 7]}
       when SORT_BY::RATING
         twitters = twitters.sort_by {|x| [-(x.rating||0), -x.prediction, x.last_access_datetime]}
       #when SORT_BY::TODO_CNT
