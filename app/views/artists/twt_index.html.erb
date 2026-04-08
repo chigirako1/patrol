@@ -291,14 +291,22 @@
     <h2>tweet_i_ids (<%= @tweet_i_ids.size %>)</h2>
     <% spec = "{p30}件↑|{aw}週#{Twitter::TWT_H_SEPARATOR}予測{p20}～" %>
     <% spec = "評価{r}#{Twitter::TWT_H_SEPARATOR}{aw}週" %>
+    <% spec = "{aw}週#{Twitter::TWT_H_SEPARATOR}{r}" %>
     <% tweets_grp, twt_grp2 = Tweet::tweet_group(@tweet_i_ids, spec) %>
     <% tweets_grp.each do |key, tweets| %>
         <h3><%= key %>(<%= tweets.size %>)</h3>
+        <% date_bak = nil %>
         <% tweets.each.with_index(1) do |x, idx| %>
             <% tweet_id = x[0] %>
             <% t = x[1] %>
-            <%= idx %>:
             <% timestamp = Twt::get_timestamp(tweet_id) %>
+            <% date_wk = timestamp.to_date %>
+            <% if key == "01.未登録" and tweets.size > 30 and date_bak != date_wk %>
+                <h4><%= date_wk.strftime("%Y/%m/%d") %>(<%= (Date.today - date_wk).to_i %>日前)</h4>
+                <% date_bak = date_wk %>
+            <% end %>
+
+            <%= idx %>:
             <%= tweet_id %>(<%= timestamp.strftime("%Y/%m/%d %H:%M") %>)
             <% if t %>
                 (<%= t.status %>)
@@ -342,24 +350,40 @@
     <% if twt_grp2 %>
         <h1>twt_grp2(<%= twt_grp2.size %>)</h1>
         <% header_a_save = "" %>
-        <% twt_grp2.each do |key_header, value| %>
+        <% twt_grp2.sort_by {|k,v| k}.reverse.to_h.each do |key_header, value| %>
             <% header_a, header_b = key_header.split(Twitter::TWT_H_SEPARATOR) %>
             <% if header_a != header_a_save %>
                 <h2><%= header_a %></h2>
                 <% header_a_save = header_a %>
             <% end %>
-            <h3><%= header_b %>(<%= twt_grp2.size %>)</h3>
+            <h3><%= header_b %>(<%= value.size %>)</h3>
             <% value.each.with_index(1) do |twt, idx| %>
+                <% pred = twt.prediction %>
+                <% if pred > 25 %>
+                    <%# bgcolorz = "orange" %>
+                    <% bgcolorz = yellow_shade(pred) %>
+                <% elsif pred < 1 %>
+                    <% bgcolorz = "lightgray" %>
+                <% end %>
+                <% if bgcolorz %>
+                    <!-- <div style="background-color: #e0f7fa; padding: 10px;"> -->
+                    <span style="background-color: <%= bgcolorz %>;">
+                <% end %>
                 <%= idx %>:
                 <% if twt.sp? %>
                     ★大★
                 <% end %>
-                予測:<%= twt.prediction %>
+                予測:<%= pred %>
                 【<%= twt.rating %>】
                 <%= twt.twtname %>
                 (@<%= twt.twtid %>)
                 [<%= link_to_ex("■TWT■", twt) %>]
                 A:<%= twt.last_access_datetime_disp %>
+                <% if bgcolorz %>
+                    <!--</div>-->
+                    </span>
+                <% else %>
+                <% end %>
                 <br />
             <% end %>
         <% end %>

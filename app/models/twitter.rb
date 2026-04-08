@@ -276,17 +276,6 @@ class Twitter < ApplicationRecord
         }
     end
 
-=begin
-    def twt_screen_name
-        twtname
-        if twtname == ""
-            return ""
-        else
-            return twtname
-        end
-    end
-=end
-
     def last_dl_datetime_disp
         get_date_info(last_dl_datetime)
     end
@@ -294,12 +283,6 @@ class Twitter < ApplicationRecord
     def last_access_datetime_disp
         get_date_info(last_access_datetime)
     end
-
-=begin
-    def last_access_datetime_days_elapsed
-        get_date_delta(last_access_datetime)
-    end
-=end
 
     def filesize_huge?
         if Twt::filesize_huge?(self.filesize)
@@ -497,17 +480,19 @@ class Twitter < ApplicationRecord
 
     def update_chk?
         pat = {
-            TWT_STATUS::STATUS_PATROL => false,
-            TWT_STATUS::STATUS_NO_PATROL => false,
-            TWT_STATUS::STATUS_NO_UPDATE_LT => true,
-            TWT_STATUS::STATUS_NO_PATROL_PXV_CHECK => false,
-            TWT_STATUS::STATUS_NO_UPDATE_IM => true,
+            TWT_STATUS::STATUS_PATROL => false,#すでにしている
+            TWT_STATUS::STATUS_NO_PATROL => false,#しない
+            TWT_STATUS::STATUS_NO_PATROL_PXV_CHECK => false,#pxvでよい
             TWT_STATUS::STATUS_DELETED => false,#存在しないのでチェック不能
             TWT_STATUS::STATUS_NOT_EXIST => false,#存在しないのでチェック不能
+
+            TWT_STATUS::STATUS_ANOTHER => true,#別アカウントで運用なので不要？
+
+            TWT_STATUS::STATUS_NO_UPDATE_LT => true,
+            TWT_STATUS::STATUS_NO_UPDATE_IM => true,
             TWT_STATUS::STATUS_FROZEN => true,#凍結は解除される場合がある？
             TWT_STATUS::STATUS_PRIVATE => true,#フォロー申請通った？
             TWT_STATUS::STATUS_WAITING => true,#フォロー申請通った？
-            TWT_STATUS::STATUS_ANOTHER => true,#
             TWT_STATUS::STATUS_SCREEN_NAME_CHANGED => false,
         }
 
@@ -600,10 +585,13 @@ class Twitter < ApplicationRecord
     end
 
     def select_cond_post_date
-        num_of_days_elapased = get_date_delta(last_post_datetime)
+        if self.last_post_datetime
+            num_of_days_elapased = get_date_delta(self.last_post_datetime)
+            cond_day = num_of_days_elapased / 3
+        else
+            cond_day = 30
+        end
 
-        cond_day = num_of_days_elapased / 3
-        #cond_day = 30
         if last_access_datetime_p(cond_day)
             #指定日以内にアクセスしているので対象外
 
@@ -731,7 +719,8 @@ class Twitter < ApplicationRecord
     #
     # ""
     #
-    def group_spec(grp_sort_spec_arg, total_cnt)
+    #def group_spec(grp_sort_spec_arg, total_cnt)
+    def group_spec(grp_sort_spec_arg)
         unset_disp = true
         gkey_work = grp_sort_spec_arg.gsub(/#.*/, "")
 
@@ -762,6 +751,21 @@ class Twitter < ApplicationRecord
                 unit = 1 unless unit
                 number = self.last_access_datetime_days_elapsed / 7
                 gkey_work = group_sub(unit, number, gkey_work, x)
+            when "az"
+                if false and self.last_access_datetime_days_elapsed < 3
+                    if self.last_access_datetime_days_elapsed < 1
+                        "\t01.本日アクセス#{TWT_H_SEPARATOR}"
+                    elsif self.last_access_datetime_days_elapsed < 2
+                        "\t02.昨日アクセス#{TWT_H_SEPARATOR}"
+                    else
+                        "\t03.一昨日アクセス#{TWT_H_SEPARATOR}"
+                    end
+                    gkey_work = group_sub(unit, number, gkey_work, x)
+                else
+                    unit = 1 unless unit
+                    number = self.last_access_datetime_days_elapsed / 7
+                    gkey_work = group_sub(unit, number, gkey_work, x)
+                end
             when "_ad"
                 unit = 1 unless unit
                 n = self.last_access_datetime_days_elapsed
@@ -849,15 +853,32 @@ class Twitter < ApplicationRecord
 
         if self.rating.presence
             if self.sp? and (self.rating and self.rating >= Twt::RATING_THRESHOLD)
-                "SP#{TWT_H_SEPARATOR}."# + gkey_work
+                "\tSP#{TWT_H_SEPARATOR}-"# + gkey_work
+            elsif self.last_access_datetime_days_elapsed < 3
+                w = self.prediction
+                str = Util::format_num(w, 10, 3)
+                if self.last_access_datetime_days_elapsed < 1
+                    "\t01.本日アクセス#{TWT_H_SEPARATOR}#{str}↑"
+                elsif self.last_access_datetime_days_elapsed < 2
+                    "\t02.昨日アクセス#{TWT_H_SEPARATOR}#{str}↑"
+                else
+                    "\t03.一昨日アクセス#{TWT_H_SEPARATOR}#{str}↑"
+                end
             else
                 gkey_work
             end
         else
             if unset_disp
-                "未設定#{TWT_H_SEPARATOR}" + gkey_work
+                #"未設定#{TWT_H_SEPARATOR}" + gkey_work
+                w = self.last_access_datetime_days_elapsed / 7
+                str = Util::format_num(w, 1, 3)
+                "未設定#{TWT_H_SEPARATOR}#{str}週-" 
             else
-                gkey_work
+                if self.filesize_huge?
+                    "ファイルサイズ大#{TWT_H_SEPARATOR}-" 
+                else
+                    gkey_work
+                end
             end
         end
     end
@@ -1143,6 +1164,7 @@ class Twitter < ApplicationRecord
             #key = %!999.#{a1o_auto_group_key(3, false)}!
             #r = 999
             #key = %!評価#{r}～.#{a1o_auto_group_key(5, false)}!
+
             key = a1o_auto_group_key(5, false)
         else
             key = status unless key
@@ -1267,5 +1289,15 @@ class Twitter < ApplicationRecord
             end
         end
         false
+    end
+
+    def min_interval_exceeded?
+        if self.min_interval
+            STDERR.puts %!#{self.last_access_day_num} <> #{self.min_interval} [#{self.twtname}(#{self.twtid})]!
+            if self.last_access_day_num < self.min_interval
+                return false
+            end
+        end
+        true
     end
 end

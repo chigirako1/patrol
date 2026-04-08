@@ -79,6 +79,26 @@ module Util
         Time.zone.strptime(datetime_string, format)
     end
 
+    def self.datetime_disp(datetime, day_disp = false)
+        %!#{Util::get_datetime_string(datetime, day_disp)}(#{Util::get_date_info(datetime)})!
+    end
+
+    def self.get_datetime_string(datetime, day_disp = false)
+        if datetime == nil
+            return "(未設定)"
+        end
+
+        now = Time.zone.now
+        if datetime.year == now.year
+          ym_format = "%m月%d日"
+        elsif day_disp
+            ym_format = "%Y年%m月%d日"
+        else
+            ym_format = "%Y年%m月"
+        end
+        datetime_str = datetime.in_time_zone('Tokyo').strftime(ym_format)
+    end
+
     def self.get_date_info(date)
         if date == nil
             return "(未設定)"
@@ -119,11 +139,17 @@ module Util
         end
     end
 
+    #============================================================
+    # 文字列関連
+    #============================================================
     def self.format_num(number, unit, digit=3)
         w = (number||0) / unit * unit
         sprintf("%#{digit}d", w)
     end
 
+    #============================================================
+    # パス関連
+    #============================================================
     def self.get_public_path(path)
         Rails.root.join("public" + path).to_s
     end
@@ -145,6 +171,22 @@ module Util
         end
         STDERR.puts %!Util::glob():"#{root_path}", param="#{glob_param}", path_list.size=#{path_list.size}!
         path_list
+    end
+
+    #============================================================
+    # 時間関連
+    #============================================================
+    def self.find_missing_dates(dates)
+        return [] if dates.empty?
+
+        # 昇順にソート（念のため）
+        sorted_dates = dates.sort
+        
+        # 開始日から終了日までの全日付範囲を生成
+        full_range = (sorted_dates.first..sorted_dates.last).to_a
+        
+        # 差分を抽出して返却
+        full_range - sorted_dates
     end
 
     def self.month_enumrator(head, tail)

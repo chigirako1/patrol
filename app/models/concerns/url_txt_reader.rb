@@ -27,6 +27,26 @@ module UrlTxtReader
     def last_access_datetime_days_elapsed
         get_date_delta(last_access_datetime)
     end
+
+    def round_days(days)
+        #years, remain = days.divmod(365)
+        #months, remain = remain.divmod(30)
+
+        if days >= 365
+            return days / 365 * 365
+        elsif days >= 30
+            return days / 30 * 30
+        elsif days >= 7
+            return days / 7 * 7
+        else
+            return days
+        end
+    end
+
+    def last_access_datetime_z
+        days = get_date_delta(last_access_datetime)
+        round_days(days)
+    end
     
     def last_access_datetime_p(day = 13)
         delta = Util::get_date_delta(last_access_datetime)
@@ -74,7 +94,8 @@ module UrlTxtReader
     end
 
     def datetime_disp(datetime, day_disp = false)
-        %!#{get_datetime_string(datetime, day_disp)}(#{Util.get_date_info(datetime)})!
+        #%!#{get_datetime_string(datetime, day_disp)}(#{Util.get_date_info(datetime)})!
+        Util::datetime_disp(datetime, day_disp)
     end
 
     def select_group(pxvname)

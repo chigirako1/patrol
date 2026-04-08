@@ -6,6 +6,7 @@ class TwittersController < ApplicationController
     ALL_IN_ONE = 'all in one'
     ALL_IN_1 = 'all in 1'
     HIGH_PRIORITY = '優先'
+    SPEC_NON_DISP = '非表示指定'
     ALL = 'all'
     FILE = 'file'
     URL_TXT = 'url txt'
@@ -27,12 +28,16 @@ class TwittersController < ApplicationController
     R_PRED_ASC = "評価/予測△順"
     R_PRED_DESC = "評価/予測▽順"
 
+    R_ACCESS = "評価/アクセス日順（旧→新）"
     ACCESS = "アクセス日順（旧→新）" #"access"
     SORT_ACCESS = ACCESS
-    ACCESS_W = "アクセス日(週)順（旧→新）"
-    R_ACCESS = "評価/アクセス日順（旧→新）"
 
+    ACCESS_W = "アクセス日(週)順（旧→新）"
     R_ACCESS_W_PRED_A = "評価/アクセス週順（旧→新）/予測△昇順"
+    R_ACCESS_W_PRED_D = "評価/アクセス週順（旧→新）/予測▽降順"
+    ACCESS_W_PRED_A = "アクセス週順（旧→新）/予測△昇順"
+    
+    SORT_ACCESS_Z_R = "アクセス順(月/週/日)（旧→新）/評価"
 
     RATING = "rating"
 
@@ -43,6 +48,8 @@ class TwittersController < ApplicationController
     SORT_CREATE = "登録日順(旧→新)"
     SORT_REGISTERED_DESC = "登録日順(新→旧)"
     R_SORT_REGISTERED_DESC = "評価/登録日順(新→旧)"
+
+    SORT_FILESIZZE_DSC = "ファイルサイズ(降順)"
 
     SORT_POINT = "ポイント"
 
@@ -236,10 +243,10 @@ class TwittersController < ApplicationController
       @twitters_group = {}
       @twitters_group[mode] = twitters
       return
-    when TwittersController::ModeEnum::HIGH_PRIORITY
+    when TwittersController::ModeEnum::HIGH_PRIORITY, TwittersController::ModeEnum::SPEC_NON_DISP
       group_list = []
       tmp = twitters
-      group = index_high_priority(tmp, twt_params)
+      group = index_high_priority(tmp, twt_params, mode == TwittersController::ModeEnum::HIGH_PRIORITY)
       group_list << group
 
       @twitters_group = group_list[0].merge(*group_list)
@@ -898,9 +905,16 @@ class TwittersController < ApplicationController
     end
 
     # 優先
-    def index_high_priority(twitters, twt_params)
+    def index_high_priority(twitters, twt_params, prio)
       twitters = twitters.select {|x| x.rating == nil or x.rating >= twt_params.rating_gt }
       twitters = twitters.select {|x| x.drawing_method == twt_params.param_target}
+      if twt_params.ex_sp
+        twitters = twitters.select {|x| !x.sp?}
+      end
+
+      twitters_check = index_chk(twitters)
+
+      twitters = twitters.select {|x| x.status == Twitter::TWT_STATUS::STATUS_PATROL}
 
       ul_freq = twt_params.ul_freq
       if ul_freq == 0
@@ -923,7 +937,11 @@ class TwittersController < ApplicationController
       end
       
       STDERR.puts %!|zzz|#{twitters.size}xxx!
-      twitters_intvl = twitters.select {|x| x.interval_exceeded?}
+      if prio
+        twitters_intvl = twitters.select {|x| x.interval_exceeded?}
+      else
+        twitters_intvl = twitters.select {|x| x.min_interval_exceeded?}
+      end
 
       twitters_group = {}
 
@@ -941,6 +959,12 @@ class TwittersController < ApplicationController
         STDERR.puts %!|zzz|ゼロ件!
       end
 
+      if false
+        if twitters_check.size > 0
+          tmp_grp = twitters_check.group_by {|x| %!更新チェック#{Twitter::TWT_H_SEPARATOR}#{x.status}!}
+          twitters_group.merge!(tmp_grp)
+        end
+      end
 
       twitters_group
     end
@@ -1001,15 +1025,8 @@ class TwittersController < ApplicationController
       end
 
       if true
-        twitters_check = twitters.select {|x| x.update_chk?}
-        #STDERR.puts %!|xxx|[#{rating_gt}](twitters_check.size)=#{twitters_check.size}!
-        twitters_check = twitters_check.select {|x| x.select_cond_post_date}
-        #twitters_check = twitters_check.select {|x| x.status != Twitter::TWT_STATUS::STATUS_WAITING}
-
-        twitters_check = twitters_check.sort_by {|x| [-(x.rating||0), x.last_access_datetime, -x.prediction]}
-
+        twitters_check = index_chk(twitters)
         if twitters_check.size > 0
-          #twitters_group["#{rating_gt}:更新なし"] = twitters_check
           tmp_grp = twitters_check.group_by {|x| %!更新チェック#{Twitter::TWT_H_SEPARATOR}#{x.status}!}
           twitters_group.merge!(tmp_grp)
         else
@@ -1018,6 +1035,13 @@ class TwittersController < ApplicationController
       end
 
       twitters_group
+    end
+
+    def index_chk(twitters)
+        twitters_check = twitters.select {|x| x.update_chk?}
+        twitters_check = twitters_check.select {|x| x.select_cond_post_date}
+        twitters_check = twitters_check.sort_by {|x| [-(x.rating||0), x.last_access_datetime, -x.prediction]}
+        twitters_check
     end
 
     def index_unset(twitters, nday, hide_within_days)
@@ -1168,14 +1192,21 @@ class TwittersController < ApplicationController
         twitters = twitters.sort_by {|x| -x.point}
       when SORT_BY::PRED_ASC
         twitters = twitters.sort_by {|x| [x.prediction, x.last_access_datetime]}
-      when SORT_BY::R_ACCESS_W_PRED_A
-        twitters = twitters.sort_by {|x| [-x.rating, x.last_access_day_num / 7, x.prediction]}
+      when SORT_BY::SORT_ACCESS_Z_R
+        #twitters = twitters.sort_by {|x| [-x.last_access_datetime_z, -(x.rating||0), -x.prediction]}
+        twitters = twitters.sort_by {|x| [-x.last_access_datetime_z, -(x.rating||0), x.prediction]}
       when SORT_BY::ACCESS
         #twitters = twitters.sort_by {|x| [x.last_access_datetime, (x.last_access_datetime)]}#.reverse
         #twitters = twitters.sort_by {|x| [x.last_access_datetime, -(x.rating||0), -x.prediction]}
         twitters = twitters.sort_by {|x| [-x.last_access_datetime_days_elapsed, -(x.rating||0), -x.prediction]}
+      when SORT_BY::R_ACCESS_W_PRED_A
+        twitters = twitters.sort_by {|x| [-x.rating, x.last_access_day_num / 7, x.prediction]}
+      when SORT_BY::R_ACCESS_W_PRED_D
+        twitters = twitters.sort_by {|x| [-x.rating, x.last_access_day_num / 7, -x.prediction]}
       when SORT_BY::ACCESS_W
         twitters = twitters.sort_by {|x| [-(x.last_access_day_num / 7), -x.rating, -x.prediction]}
+      when SORT_BY::ACCESS_W_PRED_A
+        twitters = twitters.sort_by {|x| [-(x.last_access_day_num / 7), -x.rating, x.prediction]}
       when SORT_BY::R_ACCESS
         twitters = twitters.sort_by {|x| [-x.rating, (x.last_access_datetime)]}
       when SORT_BY::FILENUM
@@ -1203,6 +1234,8 @@ class TwittersController < ApplicationController
         twitters = twitters.sort_by {|x| x.created_at_day_num / 7}
       when SORT_BY::R_SORT_REGISTERED_DESC
         twitters = twitters.sort_by {|x| [-x.rating, x.created_at_day_num / 7]}
+      when SORT_BY::SORT_FILESIZZE_DSC
+        twitters = twitters.sort_by {|x| [-(x.filesize||0)]}
       when SORT_BY::RATING
         twitters = twitters.sort_by {|x| [-(x.rating||0), -x.prediction, x.last_access_datetime]}
       #when SORT_BY::TODO_CNT
@@ -1221,7 +1254,8 @@ class TwittersController < ApplicationController
         twitters_group = {}
         twitters_group[""] = twitters
       when GRP_SORT::GRP_SORT_SPEC
-        twitters_group = twitters.group_by {|x| x.group_spec(grp_sort_spec_arg, twitters.size)}
+        #twitters_group = twitters.group_by {|x| x.group_spec(grp_sort_spec_arg, twitters.size)}
+        twitters_group = twitters.group_by {|x| x.group_spec(grp_sort_spec_arg)}
         grp_sort = -1
       when GRP_SORT::GRP_SORT_AUTO
         #twitters_group = twitters.group_by {|x| x.a1o_auto_group_key}

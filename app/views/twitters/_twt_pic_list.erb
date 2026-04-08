@@ -76,10 +76,14 @@ textarea {
 
     <% search_tweet_id = params[:search_id]%>
     <% if search_tweet_id.presence %>
-        <h3>検索ID:"<%= search_tweet_id %>"</h3>
-        <br />
-
         <% s_tweet_id = Twt::get_tweet_id_from_url(search_tweet_id, true) %>
+        <% if s_tweet_id != search_tweet_id %>
+            <% header_str = %!"#{s_tweet_id}"(#{search_tweet_id})! %>
+        <% else %>
+            <% header_str = %!"#{s_tweet_id}"! %>
+        <% end %>
+        <h3>検索ID:<%= header_str %></h3>
+
         <% paths = Twt::search_tweet(@twt_pic_path_list, s_tweet_id) %>
         <% if paths %>
             <%= paths.size %>件ヒット<br />
@@ -92,6 +96,7 @@ textarea {
         <% else %>
             見つかりませんでした。
         <% end %>
+        <%= Util::datetime_disp(Twt::get_timestamp(s_tweet_id)) %>
         <hr />
     <% end %>
 
@@ -103,9 +108,9 @@ textarea {
             <% path = elem[1] %>
             <% if elem[2][1] != 0 %>
                 (<%= "複" %>)
-                <% d_ratio = '5%' %>
+                <% class_str = "fixed-height-mini-img" %>
             <% else %>
-                <% d_ratio = '10%' %>
+                <% class_str = "fixed-height-img" %>
             <% end %>
             .
 
@@ -113,7 +118,7 @@ textarea {
             <% filesize = FileTest.size(phys_path) %>
             <% fsize_list << filesize %>
 
-            <%= link_to_ex(image_tag(path, width: d_ratio, height: d_ratio, :alt => path), path) %>
+            <%= link_to_ex(image_tag(path, class: class_str, :alt => path), path) %>
             <% if corr != 0 and corr == idx %>
                 <br />
             <% end %>
@@ -139,17 +144,27 @@ textarea {
     <br />
     <%#= link_to("url txtチェック", twitter_path(file_check: 't', picn: 'all', pic_lf: '', corr: '0'), class: 'button') %>
     <%= link_to("url txtチェック", twitter_path(file_check: 't', pic_lf: '', corr: '0'), class: 'button') %>
+    <%= link_to(%!期間チェック!, twitter_path(twitter, refresh: "y", seq_chk: true)) if twitter.twtid %>
 
+    <% if params[:seq_chk] == "true" %>
+        <% since_s = "2026-4-1_00:00:00_JST" %>
+        <% until_s = "2026-4-3_00:00:00_JST" %>
+        <%= %!from:#{twitter.twtid} filter:#{"images"} since:#{since_s} until:#{until_s}! %>
+        <% Twt::check_seq twt_pic_list %>
+    <% else %>
+        <% STDERR.puts %!seq_chk="#{params[:seq_chk]}"! %>
+    <% end %>
+
+    <br />
+    読み込み:<b><%= twt_pic_list.size %></b>
     <% if twitter.filenum != twt_pic_list.size %>
-        <br />
-        <b>読み込み:</b>
-        <%= twt_pic_list.size %>(←DB:<%= twitter.filenum %>)
+        (←DB:<%= twitter.filenum %>)
     <% end %>
 
     <% if twt_pic_list.size > 0 %>
         <% if show_pic_num > 0 %>
             <% fsize_avg = fsize_list.sum / fsize_list.size %>
-            <b>ファイルサイズ平均：</b>
+            ファイルサイズ平均：
             <% fcolor = "red" %>
             <% if fsize_avg > 2 * 1024 * 1024 %>
                 <% cmnt = "かなり大" %>
@@ -166,7 +181,7 @@ textarea {
                 <% cmnt = nil %>
                 <% fcolor = "black" %>
             <% end %>
-            <font color="<%= fcolor %>"><%= Util.formatFileSize(fsize_avg) %><%= %!←★#{cmnt}★! if cmnt %></font>
+            <b><font color="<%= fcolor %>"><%= Util.formatFileSize(fsize_avg) %><%= %!←★#{cmnt}★! if cmnt %></font></b>
 
             <% if twitter.filesize %>
                 (DB:<b><%= Util.formatFileSize twitter.filesize %></b>)
@@ -297,7 +312,6 @@ textarea {
     <% else %>
         <% show_pic_num_sp = show_pic_num * 2 %>
     <% end %>
-    <% pic_mag_twt_b = '10%' %>
     <% filelist = Twt::get_sp_pic_filelist_by_twtid(@twitter.twtid) %>
     <% if filelist.presence %>
         <h4>SP(<%= File.dirname filelist.first %>)[<%= filelist.size %>ファイル]</h4>
@@ -312,7 +326,7 @@ textarea {
         <br />
         <% fsize_list = [] %>
         <% filelist.reverse.first(show_pic_num_sp).each do |fpath| %>
-            <%= link_to_ex(image_tag(fpath, width: pic_mag_twt_b, height: pic_mag_twt_b), fpath) %>
+            <%= link_to_ex(image_tag(fpath, class: "fixed-height-img"), fpath) %>
             <% phys_path = Util::get_public_path(fpath) %>
             <% fsize_list << FileTest.size(phys_path) %>
         <% end %>
@@ -326,7 +340,7 @@ textarea {
         <h4>SP2(<%= File.dirname filelist2.first %>)[<%= filelist2.size %>ファイル]</h4>
     <% end %>
     <% filelist2.reverse.first(show_pic_num_sp).each.with_index(1) do |fpath, idx| %>
-        <%= idx %>.<%= link_to_ex(image_tag(fpath, width: pic_mag_twt_b, height: pic_mag_twt_b), fpath) %>
+        <%= idx %>.<%= link_to_ex(image_tag(fpath, class: "fixed-height-img"), fpath) %>
     <% end %>
 
     <!-- URLのテキストファイルに含まれる画像が存在するかチェック -->

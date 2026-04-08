@@ -17,6 +17,7 @@ module Twt
     TWT_HTTP_URL = %!https://#{TWT_DOMAIN_NAME}!
 
     TWT_USER_DEV = "TwitterDev" #"i"でよい?
+    TWT_USER_I = "i"
 
     TWT_RGX_URL_BASE = ""
     TWT_RGX_URL = %r!https?://(?:x|twitter)\.com/\w+/status/(\d+)!
@@ -38,12 +39,13 @@ module Twt
     TWT_ARCHIVE_DIR_PATH = "public/twt"
     TWT_DIRLIST_TXT_PATH = "#{TWT_ARCHIVE_DIR_PATH}/dirlist.txt"
 
-    UL_FREQUECNTY_THRESHOLD = 50#150
-    RATING_THRESHOLD = 80
+    UL_FREQUECNTY_THRESHOLD = 25#50#150
+    RATING_THRESHOLD = 78#80
 
     FILENUM_T = 750
 
-    FILESIZE_THRESHOLD_KB = 540#600
+    #FILESIZE_THRESHOLD_KB = 540#600
+    FILESIZE_THRESHOLD_KB = 500
     FILESIZE_THRESHOLD = FILESIZE_THRESHOLD_KB * 1024
 
     FILESIZE_V_HUGE_KB = 1500
@@ -273,11 +275,11 @@ module Twt
                 if x.twt and x.twt.last_access_datetime and x.twt.last_access_datetime_days_elapsed < 1
                     x.twt.last_access_datetime
                 elsif x.dirname.end_with?("マイナス")
-                    #Date.today
                     Time.new(2001,1,2)
                 elsif x.dirname.end_with?("なし")
-                    #Date.today - 1
                     Time.new(2001,1,3)
+                elsif x.dirname.end_with?("少ない")
+                    Time.new(2001,1,4)
                 elsif use_fs_date and x.latest_date
                     x.latest_date
                 elsif x.twt and x.twt.last_access_datetime
@@ -451,7 +453,7 @@ module Twt
     end
 
     def self.twt_tweet_url_i(tweet_id)
-        twt_tweet_url("i", tweet_id)
+        twt_tweet_url(TWT_USER_I, tweet_id)
     end
 
     def self.search_tweet(twt_pic_path_list, search_tweet_id)
@@ -717,6 +719,36 @@ module Twt
                 end
             end
         end
+    end
+
+    def self.check_seq(pic_list)
+        list = []
+        pic_list.each do |x|
+            t_info = x[2]
+            tweet_id = t_info[0]
+            list << tweet_id
+        end
+        twt_id_list = list.uniq.sort
+=begin
+         count_h = twt_id_list.map {|x| Twt::get_timestamp(x).to_date}.tally
+         count_h.each do |k,v|
+            STDERR.puts %!#{k}:#{v}!
+         end
+=end
+        hash = Hash.new { |h, k| h[k] = [] }
+        twt_id_list.each do |x|
+            ts = Twt::get_timestamp(x)
+            hash[ts.to_date] << [x, ts]
+        end
+
+         hash.each do |k,v|
+            #STDERR.puts %!#{k}:#{v.size}!
+         end
+
+         missing_dates = Util::find_missing_dates(hash.keys)
+         missing_dates.each do |v|
+            STDERR.puts %!#{v}!
+         end
     end
 
     def self.db_update_dup_files(pic_list, screen_name_arg="", db_update=true)
@@ -1138,12 +1170,22 @@ module Twt
         r_x = 82
         if Tweet.has_acquisition_schedule?(twt.twtid)
             dayn_s = "001.取得対象物件あり"
+        elsif twt.rating < 80
+            if dayn >= 21
+                dayn_s = "011.(21日以上)低優先度"
+            else
+                dayn_s = LOW_PRIORITY_IGNORE_KEY
+            end 
+        elsif dayn >= 30
+            dayn_s = "010.(30日以上)"
         elsif dayn >= 21
             dayn_s = "011.(21日以上)"
         elsif dayn >= 14
             dayn_s = "021.(14日以上)"
         elsif twt.update_frequency < 200
-            if twt.rating < 86
+            if dayn < 2
+                dayn_s = LOW_PRIORITY_IGNORE_KEY
+            elsif twt.rating < 86
                 if dayn < 7 and twt.update_frequency < 150
                     dayn_s = LOW_PRIORITY_IGNORE_KEY
                 elsif dayn < 14
@@ -1156,7 +1198,7 @@ module Twt
             end
         #elsif twt.rating <= r_x
         #    dayn_s = "9(#{r_x}以下)"
-        elsif twt.update_frequency >= 300
+        elsif twt.update_frequency >= 350
             day_std = 3
             if dayn < day_std
                 dayn_s = "801.(高頻度)A至近#{day_std}日以内"

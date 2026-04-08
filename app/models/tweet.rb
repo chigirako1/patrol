@@ -125,12 +125,9 @@ class Tweet < ApplicationRecord
         screen_name_set.each do |screen_name|
             twt = Twitter.find_by_twtid_ignore_case(screen_name)
             if twt
-                #spec = "{p30}件↑|{aw}週#{Twitter::TWT_H_SEPARATOR}予測{p20}～"
                 spec = spec_str
-                #key_header = twt.group_spec("{aw}週{_ad3}#{Twitter::TWT_H_SEPARATOR}予測{p10}～", screen_name_set.size)
-                #key_header = twt.group_spec("【{r}】|{aw}週#{Twitter::TWT_H_SEPARATOR}予測{p10}～", screen_name_set.size)
-                #key_header = twt.group_spec("{aw}週|【{r}】#{Twitter::TWT_H_SEPARATOR}予測{p10}～", screen_name_set.size)
-                key_header = twt.group_spec(spec, screen_name_set.size)
+                #key_header = twt.group_spec(spec, screen_name_set.size)
+                key_header = twt.group_spec(spec)
                 twt_grp[key_header] << twt
             end
         end
