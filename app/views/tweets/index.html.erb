@@ -297,7 +297,7 @@
 
     <% if @tweet_ids %>
         <% scrn_name = params[:screen_name] %>
-        <h2>@<%= scrn_name %></h2>
+        <h2>@tweet_ids(@<%= scrn_name %>) URL list</h2>
         <% @tweet_ids.each do |x| %>
             [<%= Twt::timestamp_str(x) %>]
             <% url = Twt::twt_tweet_url(scrn_name, x) %>

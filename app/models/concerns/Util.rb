@@ -173,6 +173,24 @@ module Util
         path_list
     end
 
+    def self.get_filesize(path)
+        phys_path = get_public_path(path)
+        FileTest.size(phys_path)
+    end
+
+    def self.find_duplicate_sizes(file_paths)
+        # 1. パスが存在するか確認し、サイズをキーにしたハッシュを作成
+        size_map = file_paths.each_with_object(Hash.new { |h, k| h[k] = [] }) do |path, hash|
+            if File.exist?(path) && File.file?(path)
+                size = File.size(path)
+                hash[size] << path
+            end
+        end
+
+        # 2. 要素が2つ以上（重複している）ものだけを抽出
+        size_map.select { |_size, paths| paths.size > 1 }
+    end
+
     #============================================================
     # 時間関連
     #============================================================
@@ -187,6 +205,39 @@ module Util
         
         # 差分を抽出して返却
         full_range - sorted_dates
+    end
+
+    def self.filter_consecutive_dates(dates)
+        return dates if dates.size <= 2
+
+        # 念のため日付順にソート
+        sorted_dates = dates.sort
+
+        sorted_dates.select.with_index do |date, i|
+            # 最初と最後は必ず残す
+            next true if i == 0 || i == sorted_dates.size - 1
+
+            # 前後の日付を取得
+            prev_date = sorted_dates[i - 1]
+            next_date = sorted_dates[i + 1]
+
+            # 「前日との差が1日」かつ「翌日との差が1日」であれば、それは中間日なので削除する
+            # つまり、それ以外の場合のみ残す
+            !((date - prev_date == 1) && (next_date - date == 1))
+        end
+    end
+
+    def self.group_consecutive_dates(dates)
+        return [] if dates.empty?
+
+        # 1. 昇順にソート（念のため）
+        sorted_dates = dates.sort
+
+        # 2. 隣り合う日付が「1日差」でない場所で分割する
+        # chunk_while は、隣り合う要素 (prev, curr) を比較して
+        # trueを返す間は同じグループ、falseを返すと新しいグループにします
+        sorted_dates.chunk_while { |prev, curr| (curr - prev).to_i == 1 }
+                    .map { |group| [group.first, group.last] }
     end
 
     def self.month_enumrator(head, tail)

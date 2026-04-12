@@ -66,18 +66,39 @@
 <% twt_pic_list.first(show_pic_num).each.with_index(1) do |elem, idx| %>
     <%= idx %>:<%= elem[0] %><br />
 <% end %>
-<%= twt_pic_list.size %>
+総数:<%= twt_pic_list.size %>
 <br />
 
+<!-- ########################## --
+ ! SP
+ !-- ########################## -->
+<% filelist = Twt::get_sp_pic_filelist_by_twtid(@twtid) %>
+<% if filelist.size > 0 %>
+    <h4>SP(<%= File.dirname filelist.first %>)[<%= filelist.size %>ファイル]</h4>
+    <% filelist.reverse.first(show_pic_num).each.with_index(1) do |fpath, idx| %>
+        <%= idx %>.<%= link_to_ex(image_tag(fpath, class: "fixed-height-img"), fpath) %>
+    <% end %>
+    <br />
+<% else %>
+    spなし<br />
+<% end %>
+
+<!-- ########################## --
+ ! SP2
+ !-- ########################## -->
 <% filelist2 = Twt::get_sp_pic_filelist2_by_twtid(@twtid) %>
 <% if filelist2.size > 0 %>
     <h4>SP2(<%= File.dirname filelist2.first %>)[<%= filelist2.size %>ファイル]</h4>
-<% end %>
-<% filelist2.reverse.first(show_pic_num).each.with_index(1) do |fpath, idx| %>
-    <%= idx %>.<%= link_to_ex(image_tag(fpath, class: "fixed-height-img"), fpath) %>
+    <% filelist2.reverse.first(show_pic_num).each.with_index(1) do |fpath, idx| %>
+        <%= idx %>.<%= link_to_ex(image_tag(fpath, class: "fixed-height-img"), fpath) %>
+    <% end %>
+<% else %>
+    sp2なし<br />
 <% end %>
 
+<!-- ########################## -->
 <h2>url txt</h2>
+<!-- ########################## -->
 <% tweet_ids = Twt::get_twt_tweet_ids_from_txts(@twtid) %>
 <% if tweet_ids.size == 0 %>
     なし

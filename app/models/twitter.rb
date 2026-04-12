@@ -339,6 +339,14 @@ class Twitter < ApplicationRecord
         end
     end
 
+    def low_priority_and_recently_accessed?
+        if (self.rating||0) < 85 and self.last_access_day_num < 3
+            true
+        else
+            false
+        end
+    end
+
     def has_unaccessible_tweet?
         if self.unaccessible_tweet_count > 0
             true

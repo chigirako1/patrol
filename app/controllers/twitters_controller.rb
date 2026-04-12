@@ -572,7 +572,7 @@ class TwittersController < ApplicationController
   # PATCH/PUT /twitters/1 or /twitters/1.json
   def update
     twtname = params[:twitter][:twtname]
-    twtname_mod = Twt::sanitize_filename(twtname)
+    twtname_mod = Twt::sanitize_filename(twtname.strip)
     if twtname != twtname_mod
       msg = %![update] 置換文字あり："#{twtname}" => "#{twtname_mod}"!
       Rails.logger.info(msg)

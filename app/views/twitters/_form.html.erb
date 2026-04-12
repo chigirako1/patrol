@@ -44,8 +44,20 @@
     <h3>アクセス不可URLあり(<%= unaccessible_tw_cnt %>件)</h3>
   <% end %>
 
+  <% if @twt_pic_path_list %>
+    <% twt_pic_list = @twt_pic_path_list.map {|x| [Twt::twt_path_str(x), x, Twt::get_tweet_info_from_filepath(x)]}.sort.reverse %>
+  <% end %>
+
   <% if @twitter.twtid %>
-    <h3>TWTを開く→<%= link_to_ex(%!@#{@twitter.twtid}!, Twt::twt_user_media_url(@twitter.twtid)) %></h3>
+    <% tweet_id_list = twt_pic_list.first(100).map {|x| x[2][0]} %>
+    <% pnum = Twt::image_num_a_post(tweet_id_list) %>
+    <h3>
+      TWTを開く→
+      <%= link_to_ex(%!@#{@twitter.twtid}!, Twt::twt_user_media_url(@twitter.twtid)) %>
+      <% if pnum > 1 %>
+        (<%= link_to_ex(%!■■■■!, Twt::twt_user_url(@twitter.twtid)) %>)複数枚(<%= pnum %>)投稿が多い
+      <% end %>
+    </h3>
   <% end %>
 
   <div>
@@ -384,8 +396,7 @@
 
   <hr />
 
-  <% if @twt_pic_path_list %>
-    <% twt_pic_list = @twt_pic_path_list.map {|x| [Twt::twt_path_str(x), x]}.sort.reverse %>
+  <% if twt_pic_list %>
     <% if twt_pic_list and twt_pic_list[0] != nil %>
       <% latest_tweet_id, _ = Twt::get_tweet_info_from_filepath(twt_pic_list[0][1]) %>
       <% oldest_tweet_id, _ = Twt::get_tweet_info_from_filepath(twt_pic_list[-1][1]) %>
@@ -457,13 +468,13 @@
       <% #p @twitter.last_post_datetime %>
       "<%= l @twitter.last_post_datetime %>"↓<font color='red'>更新あり</font>
       <br />
-      <%= form.datetime_field :last_post_datetime, value: ul_date.strftime("%Y-%m-%d %H:%M:%S") %><!-- step: 1 ???-->
+      <%= form.datetime_field :last_post_datetime, value: ul_date.strftime("%Y-%m-%d %H:%M:%S"), step: 1 %><!-- step: 1 ???-->
     <% elsif ul_date and @twitter.last_post_datetime == nil %>
       <font color='red'>new</font>↓
       <br />
-      <%= form.datetime_field :last_post_datetime, value: ul_date.strftime("%Y-%m-%d %H:%M:%S") %>
+      <%= form.datetime_field :last_post_datetime, value: ul_date.strftime("%Y-%m-%d %H:%M:%S"), step: 1 %>
     <% else %>
-      <%= form.datetime_field :last_post_datetime %>
+      <%= form.datetime_field :last_post_datetime, step: 1 %>
     <% end %>
   </div>
   
@@ -646,10 +657,12 @@
           tw_id = n;
       }
 
+      //id
       const l_tw_id = document.getElementById('twitter_latest_tweet_id');
       l_tw_id.value = tw_id;
       //alert(tw_id);
 
+      //日時
       let date = get_date_from_tweet_id(tw_id);
       const l_tw_date = document.getElementById('twitter_last_post_datetime');
       l_tw_date.value = date;

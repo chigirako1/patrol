@@ -280,6 +280,8 @@ module Twt
                     Time.new(2001,1,3)
                 elsif x.dirname.end_with?("少ない")
                     Time.new(2001,1,4)
+                elsif x.dirname.end_with?("凍結")
+                    Time.new(2001,1,5)
                 elsif use_fs_date and x.latest_date
                     x.latest_date
                 elsif x.twt and x.twt.last_access_datetime
@@ -454,6 +456,28 @@ module Twt
 
     def self.twt_tweet_url_i(tweet_id)
         twt_tweet_url(TWT_USER_I, tweet_id)
+    end
+
+    def self.twt_img_search_str(screen_name, date_since, date_until)
+        STDERR.puts %!@#{screen_name}\t#{date_since}\t#{date_until}!
+        ary = []
+
+        ary << "from:#{screen_name}"
+
+        filter = "images"
+        ary << "filter:#{filter}"
+
+        if date_since
+            since_s = (date_since - 10).strftime("%Y-%m-%d_%H:%M:%S_JST")
+            ary << "since:#{since_s}"
+        end
+
+        if date_until
+            until_s = (date_until + 10).strftime("%Y-%m-%d_%H:%M:%S_JST")
+            ary << "until:#{until_s}"
+        end
+
+        ary.join(" ")
     end
 
     def self.search_tweet(twt_pic_path_list, search_tweet_id)
@@ -652,12 +676,12 @@ module Twt
     end
 
     def self.get_hash_val_hash(pic_list)
+        dup_sizes_hash = Util::find_duplicate_sizes(pic_list)
+        paths = dup_sizes_hash.values.flatten
+
         hash_hash = Hash.new { |h, k| h[k] = [] }
         i = 0
-        pic_list.each do |path|
-            #unless db_update
-                #STDERR.puts %!(#{pic_list.size})"#{path}"!
-            #end
+        paths.each do |path|
             hash_val = Util::file_hash path
             filesize = FileTest.size(path)
             hash_hash[[hash_val, filesize]] << path
@@ -741,19 +765,17 @@ module Twt
             hash[ts.to_date] << [x, ts]
         end
 
-         hash.each do |k,v|
-            #STDERR.puts %!#{k}:#{v.size}!
-         end
-
          missing_dates = Util::find_missing_dates(hash.keys)
          missing_dates.each do |v|
-            STDERR.puts %!#{v}!
+            #STDERR.puts %!#{v}!
          end
     end
 
     def self.db_update_dup_files(pic_list, screen_name_arg="", db_update=true)
-        STDERR.puts %!### 重複チェック ### ===>!
-        puts %!(#{__FILE__}:#{__LINE__}) #{__method__}():n=#{pic_list.size}!
+        msg = %!### 重複チェック ### ===>!
+        Rails.logger.info(msg)
+        msg = %!(#{__FILE__}:#{__LINE__}) #{__method__}():n=#{pic_list.size}!
+        Rails.logger.info(msg)
 
         dup_path_list = []
         hash_hash = get_hash_val_hash(pic_list)
@@ -778,7 +800,8 @@ module Twt
 
             scrn_names = dup_tweet_list.map {|x| x[0]}
             if scrn_names.uniq.size != 1
-                puts %!異なるスクリーンネームに保存されているファイルがあります:#{scrn_names.uniq}!
+                msg = %!異なるスクリーンネームに保存されているファイルがあります:#{scrn_names.uniq}!
+                Rails.logger.warn(msg)
             end
 
             create_tweet_record(dup_tweet_list, db_update)
@@ -821,7 +844,6 @@ module Twt
 
     def self.twt_path_str(path)
         fn = File.basename path
-
         tweet_id, pic_no = get_tweet_info(fn)
 
         if tweet_id == 0
@@ -911,10 +933,14 @@ module Twt
     end
 
     def self.image_num_a_post(tweet_id_list)
-        hash = Hash.new {|h, k| h[k] = []}
+        hash = {}#Hash.new {|h, k| h[k] = []}
 
         tweet_id_list.each do |x|
-            tweet_id, pic_no = x
+            #tweet_id, pic_no = x
+            tweet_id = x
+            #if tweet_id == 0
+            #    next
+            #end
             
             if hash.has_key?(tweet_id)
                 hash[tweet_id] += 1
@@ -922,10 +948,19 @@ module Twt
                 hash[tweet_id] = 1
             end
         end
+        #STDERR.puts %!#{hash}!
 
-        v = hash.values
+        #hash.each {|k,v| STDERR.puts %!#{v}(#{k})! if v > 4}
+
+        #v = hash.values.map {|n| n > 4 ? 4 : n}
+        # 1投稿にn枚以上は異常なので無視する
+        n = 4
+        v = hash.values.select {|x| x <= n}
+
         if v.size > 0
-            (v.sum * 10 / v.size + 5) / 10
+            n = 5
+            ((v.sum * 10 / v.size) + n) / 10
+            
         else
             0
         end
@@ -1170,6 +1205,8 @@ module Twt
         r_x = 82
         if Tweet.has_acquisition_schedule?(twt.twtid)
             dayn_s = "001.取得対象物件あり"
+        elsif twt.low_priority_and_recently_accessed?
+            dayn_s = LOW_PRIORITY_IGNORE_KEY
         elsif twt.rating < 80
             if dayn >= 21
                 dayn_s = "011.(21日以上)低優先度"
@@ -1193,8 +1230,10 @@ module Twt
                 else
                     dayn_s = "600.低頻度&優先度低"
                 end
+            elsif twt.rating > 87
+                dayn_s = "601.低頻度&高優先度"
             else
-                dayn_s = "601.低頻度"
+                dayn_s = "611.低頻度"
             end
         #elsif twt.rating <= r_x
         #    dayn_s = "9(#{r_x}以下)"
@@ -1292,8 +1331,8 @@ module Twt
     end
 
     def self.get_sp_ids()
-        #twts = Twitter.select {|x| x.sp?}.sort_by {|twt| [twt.last_post_datetime, -(twt.rating||0)]}
-        twts = Twitter.select {|x| x.sp?}.sort_by {|twt| [twt.last_post_datetime, (twt.rating||0)]}.reverse
+        twts = Twitter.select {|x| x.sp?}
+        twts = twts.sort_by {|twt| [twt.last_post_datetime, (twt.rating||0)]}.reverse
         STDERR.puts %!get_sp_ids:#{twts.size}!
 
         hash3 = twts.map {|x|

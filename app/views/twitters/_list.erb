@@ -1,0 +1,70 @@
+
+<div id="<%= dom_id twitter %>">
+
+    <% twt_pic_list = TwtImageList.new(@twt_pic_path_list) %>
+    <% date_group = twt_pic_list.group_by_date %>
+
+    <% class_str = "fixed-height-img" %>
+    <h2>ファイル数(<%= twt_pic_list.list.size %>)</h2>
+
+    <% key_dates = Util::group_consecutive_dates(date_group.keys) %>
+
+    <!-- ### ### -->
+    <% last = key_dates.last.last %>
+    <% elem = date_group[last].last %>
+    <h3>最新(<%= elem.tweet_id %>)</h3>
+    <%= link_to_ex(image_tag(elem.file_path, class: class_str, :alt => elem.file_path), elem.file_path) %>
+    <br />
+
+    <% since_date = Twt::get_timestamp(elem.tweet_id) %>
+    <b><%= Twt::twt_img_search_str(twitter.twtid, since_date, nil) %></b>
+
+    <!-- ### ### -->
+    <% first = key_dates.first.first %>
+    <% elem = date_group[first].first %>
+    <h3>最古(<%= elem.tweet_id %>)</h3>
+    <%= link_to_ex(image_tag(elem.file_path, class: class_str, :alt => elem.file_path), elem.file_path) %>
+    <br />
+    <% until_date = Twt::get_timestamp(elem.tweet_id) %>
+    <b><%= Twt::twt_img_search_str(twitter.twtid, nil, until_date) %></b>
+
+    <!-- ### ### -->
+    <h3>途中</h3>
+    <% if key_dates.size > 1 %>
+        <% (key_dates.size - 1).times do |i| %>
+            <% elem = date_group[key_dates[i].last].last %>
+            <% since_date = Twt::get_timestamp(elem.tweet_id) %>
+
+            <%= Twt::get_timestamp(elem.tweet_id) %><br />
+            <%= %!#{elem.tweet_id}##{elem.pic_no}"#{elem.file_path}"! %><br />
+            <%= link_to_ex(image_tag(elem.file_path, class: class_str, :alt => elem.file_path), elem.file_path) %>
+            <br />
+
+            <% elem = date_group[key_dates[i + 1].first].first %>
+            <% until_date = Twt::get_timestamp(elem.tweet_id) %>
+
+            <%= (until_date.to_date - since_date.to_date).to_i %>日<br />
+            <b><%= Twt::twt_img_search_str(twitter.twtid, since_date, until_date) %></b>
+            <br />
+
+            <%= Twt::get_timestamp(elem.tweet_id) %><br />
+            <%= %!#{elem.tweet_id}##{elem.pic_no}"#{elem.file_path}"! %><br />
+            <%= link_to_ex(image_tag(elem.file_path, class: class_str, :alt => elem.file_path), elem.file_path) %>
+            <br />
+            <hr />
+        <% end %>
+    <% end %>
+
+    
+    <h2><%= twt_pic_list.list.size %></h2>
+    <% {}.each.with_index(1) do |(k, v), idx| %>
+        <h3><%= k %>(<%= v.size %>)</h3>
+        <% v.each do |elem| %>
+            <%= %!#{elem.tweet_id}##{elem.pic_no}"#{elem.file_path}"! %><br />
+        <% end %>
+    <% end %>
+    <% date_group.each do |k, v| %>
+        <%= %!#{k}:#{v.size}! %><br />
+    <% end %>
+    
+</div>

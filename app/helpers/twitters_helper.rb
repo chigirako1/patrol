@@ -150,12 +150,19 @@ module TwittersHelper
 
     def twitter_show_header_str(twitter)
         str = twitter_show_page_title(twitter, true)
+
         if twitter.old_twtid.presence
             str += %!←#{twitter.old_twtid}!
         end
+
         if twitter.new_twtid.presence
             str += %!→#{twitter.new_twtid}!
         end
+
+        if twitter.max_interval.presence
+            str += %!MAX:#{twitter.max_interval}!
+        end
+
         str
     end
 

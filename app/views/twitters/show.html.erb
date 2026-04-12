@@ -14,12 +14,16 @@
 <%= render @twitter %>
 <hr />
 
-<%= render "twt_pic_list", twitter: @twitter %>
-<hr />
+<% if params[:seq_chk] == "true" %>
+  <%= render "list", twitter: @twitter %>
+  <hr />
+<% else %>
+  <%= render "twt_pic_list", twitter: @twitter %>
+  <hr />
 
-<%= render "form", twitter: @twitter %>
-<hr />
-
+  <%= render "form", twitter: @twitter %>
+  <hr />
+<% end %>
 
 <div class="view_form">
   <%= form_with(url: twitter_path, local: true, method: :get) do |f| %>
