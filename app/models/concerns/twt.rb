@@ -276,6 +276,10 @@ module Twt
                     x.twt.last_access_datetime
                 elsif x.dirname.end_with?("マイナス")
                     Time.new(2001,1,2)
+                elsif x.dirname.end_with?("更新なし")
+                    Time.new(2001,1,6)
+                elsif x.dirname.end_with?("更新停止")
+                    Time.new(2001,1,7)
                 elsif x.dirname.end_with?("なし")
                     Time.new(2001,1,3)
                 elsif x.dirname.end_with?("少ない")
@@ -629,7 +633,7 @@ module Twt
     def self.db_update_by_newdir()
         twt_id_list = twt_user_list("new")
 
-        STDERR.puts %!db_update_by_newdir:xx!
+        STDERR.puts %!db_update_by_newdir():\t#{twt_id_list.size}!
         twt_id_list.each do |key, val|
             twt = Twitter.find_by_twtid_ignore_case(key)
             if twt == nil
@@ -654,7 +658,7 @@ module Twt
         dir_path = TWT_CURRENT_DIR_PATH
         pic_list = UrlTxtReader::get_path_list(dir_path)
 
-        #STDERR.puts %!#{pic_list.size}!
+        STDERR.puts %!update_tweet_records_by_fs():#{pic_list.size}!
         pic_list.each do |path|
             tweet_id, pic_no = get_tweet_info_from_filepath(path)
             tweet_rcd = Tweet.find_by(tweet_id: tweet_id)
@@ -678,6 +682,8 @@ module Twt
     def self.get_hash_val_hash(pic_list)
         dup_sizes_hash = Util::find_duplicate_sizes(pic_list)
         paths = dup_sizes_hash.values.flatten
+        msg = %!#{__method__}:#{pic_list.size} => 同一サイズ=#{paths.size}!
+        Rails.logger.info(msg)
 
         hash_hash = Hash.new { |h, k| h[k] = [] }
         i = 0
@@ -1207,18 +1213,26 @@ module Twt
             dayn_s = "001.取得対象物件あり"
         elsif twt.low_priority_and_recently_accessed?
             dayn_s = LOW_PRIORITY_IGNORE_KEY
+        elsif dayn >= 60
+            dayn_s = "009.(60日以上)"
         elsif twt.rating < 80
             if dayn >= 21
-                dayn_s = "011.(21日以上)低優先度"
+                dayn_s = "012.(21日以上)低優先度"
             else
                 dayn_s = LOW_PRIORITY_IGNORE_KEY
             end 
+        elsif twt.rating < 85 and twt.prediction < 15
+            dayn_s = "003.予測少数"
         elsif dayn >= 30
             dayn_s = "010.(30日以上)"
         elsif dayn >= 21
             dayn_s = "011.(21日以上)"
         elsif dayn >= 14
-            dayn_s = "021.(14日以上)"
+            if twt.rating > 87
+                dayn_s = "021.14日以上(#{87}以上)"
+            else
+                dayn_s = "025.14日以上"
+            end
         elsif twt.update_frequency < 200
             if dayn < 2
                 dayn_s = LOW_PRIORITY_IGNORE_KEY
@@ -1231,25 +1245,31 @@ module Twt
                     dayn_s = "600.低頻度&優先度低"
                 end
             elsif twt.rating > 87
-                dayn_s = "601.低頻度&高優先度"
+                dayn_s = "501.低頻度&高優先度"
             else
                 dayn_s = "611.低頻度"
             end
         #elsif twt.rating <= r_x
         #    dayn_s = "9(#{r_x}以下)"
+        elsif twt.update_frequency >= 600
+            dayn_s = "803.超高頻度"
         elsif twt.update_frequency >= 350
             day_std = 3
             if dayn < day_std
-                dayn_s = "801.(高頻度)A至近#{day_std}日以内"
+                dayn_s = "801.高頻度(A至近#{day_std}日以内)"
             else
-                dayn_s = "802.(高頻度)Z#{day_std}日以上"
+                dayn_s = "802.高頻度(Z#{day_std}日以上)"
             end
         elsif dayn >= 7
-            dayn_s = "031.(7日以上)"
+            if twt.rating > 87
+                dayn_s = "031.7日以上(#{87}以上)"
+            else
+                dayn_s = "035.7日以上"
+            end
         elsif dayn < 3
-            dayn_s = "702.(直近アクセス)"
+            dayn_s = "702.直近アクセス"
         else
-            dayn_s = "701.(最近アクセス)"
+            dayn_s = "701.最近アクセス"
         end
         key = "#{dayn_s}|||#{Util::format_num(twt.update_frequency, 100, 4)}|||更新頻度:#{Util::format_num(twt.update_frequency, 50, 4)}"
 

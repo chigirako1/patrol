@@ -54,7 +54,8 @@
     <h3>
       TWTを開く→
       <%= link_to_ex(%!@#{@twitter.twtid}!, Twt::twt_user_media_url(@twitter.twtid)) %>
-      <% if pnum > 1 %>
+      <% pnum_n = 1 %>
+      <% if pnum > pnum_n %>
         (<%= link_to_ex(%!■■■■!, Twt::twt_user_url(@twitter.twtid)) %>)複数枚(<%= pnum %>)投稿が多い
       <% end %>
     </h3>
@@ -546,7 +547,19 @@
     <%= form.label "最大アクセス間隔(日)", style: "display: block" %>
     <%= form.number_field :max_interval %>
   </div>
+
+  <div>
+    <%= form.label "取得候補表示基準値", style: "display: block" %>
+    <%= form.number_field :fetch_pred_n %>
+  </div>
+
+  <div>
+    <%= form.label :表示タブ, style: "display: block" %>
+    <%= form.text_field :disp_tab_target %>
+  </div>
+  
 <% end %>
+
 
 <script>
   /*const e = document.getElementById('pxv_user_id_work');

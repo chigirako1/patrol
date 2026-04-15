@@ -10,72 +10,72 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.0].define(version: 2025_11_09_035449) do
+ActiveRecord::Schema[8.1].define(version: 2026_04_14_220516) do
   create_table "artists", force: :cascade do |t|
-    t.string "pxvname"
-    t.integer "pxvid"
-    t.integer "filenum"
-    t.datetime "last_dl_datetime"
-    t.datetime "last_ul_datetime"
-    t.datetime "last_access_datetime"
-    t.integer "priority"
-    t.datetime "created_at", null: false
-    t.datetime "updated_at", null: false
-    t.string "furigana"
+    t.string "altname"
+    t.string "append_info"
+    t.string "bad_point"
+    t.string "change_history"
+    t.string "chara"
     t.string "circle_name"
     t.string "comment"
-    t.integer "recent_filenum"
-    t.string "status"
-    t.string "twtid"
-    t.integer "njeid"
-    t.string "warnings"
-    t.string "remarks"
-    t.integer "rating"
-    t.string "r18"
-    t.string "feature"
-    t.string "chara"
-    t.string "work"
-    t.string "altname"
-    t.string "oldname"
-    t.datetime "earliest_ul_date"
-    t.string "pxv_path"
-    t.integer "tech_point"
-    t.integer "sense_point"
-    t.string "good_point"
-    t.string "bad_point"
-    t.integer "pxv_fav_artwork_id"
-    t.string "fetish"
-    t.string "obtain_direction"
-    t.integer "next_obtain_artwork_id"
-    t.string "twt_check"
-    t.string "web_url"
-    t.datetime "djn_check_date"
-    t.integer "zip"
-    t.string "append_info"
-    t.datetime "twt_checked_date"
-    t.datetime "nje_checked_date"
-    t.integer "show_count"
-    t.string "reverse_status"
-    t.integer "latest_artwork_id"
-    t.integer "oldest_artwork_id"
-    t.datetime "zipped_at"
+    t.datetime "created_at", null: false
     t.integer "del_cnt"
-    t.string "change_history"
     t.string "del_info"
+    t.datetime "djn_check_date"
+    t.datetime "earliest_ul_date"
+    t.string "feature"
+    t.string "fetish"
+    t.integer "filenum"
+    t.string "furigana"
+    t.string "good_point"
+    t.datetime "last_access_datetime"
+    t.datetime "last_dl_datetime"
+    t.datetime "last_ul_datetime"
+    t.integer "latest_artwork_id"
+    t.integer "next_obtain_artwork_id"
+    t.datetime "nje_checked_date"
+    t.integer "njeid"
+    t.string "obtain_direction"
+    t.integer "oldest_artwork_id"
+    t.string "oldname"
+    t.integer "priority"
+    t.integer "pxv_fav_artwork_id"
+    t.string "pxv_path"
+    t.integer "pxvid"
+    t.string "pxvname"
+    t.string "r18"
+    t.integer "rating"
+    t.integer "recent_filenum"
+    t.string "remarks"
+    t.string "reverse_status"
+    t.integer "sense_point"
+    t.integer "show_count"
+    t.string "status"
+    t.integer "tech_point"
+    t.string "twt_check"
+    t.datetime "twt_checked_date"
+    t.string "twtid"
+    t.datetime "updated_at", null: false
+    t.string "warnings"
+    t.string "web_url"
+    t.string "work"
+    t.integer "zip"
+    t.datetime "zipped_at"
     t.index ["pxvid"], name: "index_artists_on_pxvid", unique: true
   end
 
   create_table "books", force: :cascade do |t|
-    t.string "title"
     t.string "author"
     t.datetime "created_at", null: false
+    t.string "title"
     t.datetime "updated_at", null: false
   end
 
   create_table "comments", force: :cascade do |t|
-    t.string "commenter"
     t.text "body"
     t.integer "book_id", null: false
+    t.string "commenter"
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
     t.index ["book_id"], name: "index_comments_on_book_id"
@@ -83,76 +83,78 @@ ActiveRecord::Schema[8.0].define(version: 2025_11_09_035449) do
 
   create_table "pxv_artworks", force: :cascade do |t|
     t.integer "artwork_id", null: false
-    t.integer "user_id"
-    t.string "title"
-    t.string "state"
+    t.datetime "created_at", null: false
+    t.integer "number_of_pic"
     t.integer "rating"
     t.datetime "release_date"
-    t.integer "number_of_pic"
     t.string "remarks"
-    t.datetime "created_at", null: false
+    t.string "state"
+    t.string "title"
     t.datetime "updated_at", null: false
+    t.integer "user_id"
     t.index ["artwork_id"], name: "index_pxv_artworks_on_artwork_id", unique: true
   end
 
   create_table "tweets", force: :cascade do |t|
-    t.integer "tweet_id", null: false
+    t.datetime "created_at", null: false
+    t.integer "num"
+    t.integer "rating"
+    t.string "remarks"
     t.string "screen_name", null: false
     t.string "status"
-    t.integer "rating"
-    t.integer "num"
-    t.string "remarks"
-    t.datetime "created_at", null: false
+    t.integer "tweet_id", null: false
     t.datetime "updated_at", null: false
     t.index ["tweet_id"], name: "index_tweets_on_tweet_id", unique: true
   end
 
-  create_table "twitters", force: :cascade do |t|
+  create_table "twitters", id: :integer, default: nil, force: :cascade do |t|
+    t.string "alt_twtid"
+    t.string "change_history"
+    t.string "comment"
+    t.datetime "created_at", null: false
+    t.string "disp_tab_target"
+    t.string "drawing_method"
+    t.datetime "earliest_dl_datetime"
+    t.integer "fetch_pred_n"
+    t.integer "filenum"
+    t.integer "filesize"
+    t.datetime "last_access_datetime"
+    t.datetime "last_dl_datetime"
+    t.datetime "last_post_datetime"
+    t.integer "latest_tweet_id"
+    t.string "main_twtid"
+    t.integer "max_interval"
+    t.integer "min_interval"
+    t.string "new_twtid"
+    t.string "old_twtid"
+    t.integer "oldest_tweet_id"
+    t.string "private_account"
+    t.integer "pxvid"
+    t.string "r18"
+    t.integer "rating"
+    t.integer "recent_filenum"
+    t.string "remarks"
+    t.string "reverse_status"
+    t.string "sensitive"
+    t.string "status"
+    t.string "sub_twtid"
     t.string "twtid"
     t.string "twtname"
-    t.integer "filenum"
-    t.integer "recent_filenum"
-    t.datetime "last_dl_datetime"
-    t.datetime "earliest_dl_datetime"
-    t.datetime "last_access_datetime"
-    t.string "comment"
-    t.string "remarks"
-    t.string "status"
-    t.integer "pxvid"
-    t.datetime "created_at", null: false
-    t.datetime "updated_at", null: false
-    t.string "drawing_method"
-    t.string "warning"
-    t.string "alt_twtid"
-    t.string "old_twtid"
-    t.integer "rating"
-    t.string "r18"
     t.integer "update_frequency"
-    t.datetime "last_post_datetime"
-    t.string "sensitive"
-    t.string "private_account"
-    t.string "reverse_status"
-    t.string "new_twtid"
-    t.string "sub_twtid"
-    t.string "main_twtid"
-    t.integer "latest_tweet_id"
-    t.integer "oldest_tweet_id"
-    t.datetime "zipped_at"
-    t.string "change_history"
-    t.integer "filesize"
+    t.datetime "updated_at", null: false
     t.integer "video_cnt"
-    t.integer "min_interval"
-    t.integer "max_interval"
+    t.string "warning"
+    t.datetime "zipped_at"
     t.index ["twtid"], name: "index_twitters_on_twtid", unique: true
   end
 
   create_table "users", force: :cascade do |t|
-    t.string "name"
+    t.datetime "access_datetime"
     t.integer "age"
     t.datetime "created_at", null: false
-    t.datetime "updated_at", null: false
     t.integer "height"
-    t.datetime "access_datetime"
+    t.string "name"
+    t.datetime "updated_at", null: false
   end
 
   add_foreign_key "comments", "books"

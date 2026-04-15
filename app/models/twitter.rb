@@ -56,6 +56,12 @@ class Twitter < ApplicationRecord
         NOTHING = "全年齢"
     end
 
+    module DISP_TAB #disp_tab_target
+        DT_POST = "ポスト"
+        DT_REPLY = "返信"
+        DT_MEDIA = "メディア"
+    end
+        
     def self.find_by_twtid_ignore_case(twtid, ignore=true)
         if twtid == nil
             return nil
@@ -387,14 +393,14 @@ class Twitter < ApplicationRecord
     end
 
     def prediction(datetime_arg=nil)
-        if update_frequency.presence
+        if self.update_frequency.presence
             if datetime_arg == nil
-                dt = last_access_datetime
+                dt = self.last_access_datetime
             else
                 dt = datetime_arg
             end
             delta_d = get_date_delta(dt)
-            pred = update_frequency * delta_d / 100
+            pred = self.update_frequency * delta_d / 100
             pred
         else
             pred = 33
@@ -548,7 +554,7 @@ class Twitter < ApplicationRecord
         [0,  [200, 360, 100]],
     ]
     def select_cond_aio(pred_cond_gt)
-        if rating == nil
+        if self.rating == nil
             return true
         end
 
@@ -560,11 +566,11 @@ class Twitter < ApplicationRecord
 
         cond_data.each do |x|
             rat = x[0]
-            if rating >= rat
+            if self.rating >= rat
                 pred = x[1][0]
                 max_intvl = x[1][1]
                 min_intvl = x[1][2]
-                elapsed = last_access_datetime_days_elapsed
+                elapsed = self.last_access_datetime_days_elapsed
 
                 # インターバル
                 if min_intvl > elapsed
@@ -707,9 +713,9 @@ class Twitter < ApplicationRecord
         %!#{rate_n}#{Twitter::TWT_H_SEPARATOR}#{lad_n}週|#{pred_n}!
     end
 
-    def group_sub(unit, number, gkey_work, x, digit=3)
+    def group_sub(unit, number, gkey_work, x, digit:3, append_pre:"", append:"")
         w = Util::format_num(number, unit, digit)
-        gkey_work.gsub(x, w)
+        gkey_work.gsub(x, append_pre + w + append)
     end
 
     def group_sub_r(unit, number, gkey_work, x, digit=3)
@@ -760,7 +766,7 @@ class Twitter < ApplicationRecord
                 number = self.last_access_datetime_days_elapsed / 7
                 gkey_work = group_sub(unit, number, gkey_work, x)
             when "az"
-                if false and self.last_access_datetime_days_elapsed < 3
+                if self.last_access_datetime_days_elapsed < 3
                     if self.last_access_datetime_days_elapsed < 1
                         "\t01.本日アクセス#{TWT_H_SEPARATOR}"
                     elsif self.last_access_datetime_days_elapsed < 2
@@ -769,10 +775,14 @@ class Twitter < ApplicationRecord
                         "\t03.一昨日アクセス#{TWT_H_SEPARATOR}"
                     end
                     gkey_work = group_sub(unit, number, gkey_work, x)
-                else
+                elsif self.last_access_datetime_days_elapsed < 31
                     unit = 1 unless unit
                     number = self.last_access_datetime_days_elapsed / 7
-                    gkey_work = group_sub(unit, number, gkey_work, x)
+                    gkey_work = group_sub(unit, number, gkey_work, x, append_pre: "", append:"週")
+                else
+                    unit = 1 unless unit
+                    number = self.last_access_datetime_days_elapsed / 30
+                    gkey_work = group_sub(unit, number, gkey_work, x, append_pre: "z", append:"月")
                 end
             when "_ad"
                 unit = 1 unless unit
@@ -802,11 +812,11 @@ class Twitter < ApplicationRecord
             when "f"
                 unit = 500 unless unit
                 number = self.filenum
-                gkey_work = group_sub(unit, number, gkey_work, x, 4)
+                gkey_work = group_sub(unit, number, gkey_work, x, digit:4)
             when "f_"
                 unit = 500 unless unit
                 number = self.filenum
-                gkey_work = group_sub_r(unit, number, gkey_work, x, 4)
+                gkey_work = group_sub_r(unit, number, gkey_work, x, digit:4)
             when "p"
                 unit = 10 unless unit
                 number = self.prediction
@@ -823,7 +833,7 @@ class Twitter < ApplicationRecord
             when "q"
                 unit = 500 unless unit
                 number = self.update_frequency
-                gkey_work = group_sub(unit, number, gkey_work, x, 4)
+                gkey_work = group_sub(unit, number, gkey_work, x, digit:4)
             when "qq"
                 unit = 1000 unless unit
                 if self.update_frequency >= unit and self.filenum > 600
@@ -1289,13 +1299,51 @@ class Twitter < ApplicationRecord
         hash.sort_by {|k,v| k}.reverse.to_h
     end
 
+    C_VAL_TBL = [
+        [95, [ 14, 22]],
+        [90, [ 21, 44]],
+        [85, [ 30, 66]],
+        [80, [ 60, 77]],
+        [75, [180,200]],
+        [ 0, [  0,  0]],
+    ]
+
+    def self.find_config_by_val(val)
+        C_VAL_TBL.find { |row| val >= row[0] }
+    end
+
     def interval_exceeded?
         if self.max_interval
             STDERR.puts %!#{self.last_access_day_num} <> #{self.max_interval} [#{self.twtname}(#{self.twtid})]!
             if self.last_access_day_num >= self.max_interval
                 return true
             end
+        else
+            set = self.class.find_config_by_val(self.rating)
+            daysn = set[1][0]
+            if self.last_access_day_num >= daysn
+                return true
+            else
+                #STDERR.puts %!#{self.last_access_day_num} <> #{daysn} [#{self.twtname}(#{self.twtid})]!
+            end
         end
+
+        if self.fetch_pred_n
+            if self.prediction >= self.fetch_pred_n
+                return true
+            end
+        else
+            unless set
+                set = self.class.find_config_by_val(self.rating)
+            end
+
+            predn = set[1][1]
+            if self.prediction >= predn
+                return true
+            else
+            end
+        end
+
         false
     end
 

@@ -121,6 +121,7 @@ module Util
             "#{months}ヶ月以上前"
         elsif days >= 14
             weeks = days / 7
+            #"#{weeks}週間(#{days}日)以上前"
             "#{weeks}週間以上前"
         elsif days == 0
             now = Time.zone.now

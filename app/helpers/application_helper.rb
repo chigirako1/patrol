@@ -92,4 +92,18 @@ module ApplicationHelper
         n2 = (percent - (n10 * 10)) / 2
         %!#{"★" * n10}#{"*" * n2}!
     end
+
+    def smart_date(date)
+        return "" if date.blank?
+    
+        if date.year == Date.current.year
+            if date.today?
+                "今日(#{date.strftime("%-m月%-d日")})"
+            else
+                date.strftime("%-m月%-d日")
+            end
+        else
+            date.strftime("%Y年%-m月%-d日")
+        end
+    end
 end

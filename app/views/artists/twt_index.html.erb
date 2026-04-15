@@ -962,6 +962,10 @@
 <% if @sp_dirs.presence %>
     <% to_be_obtain_list = Tweet.to_be_obtain_list %>
     <h2>sp dir一覧(<%= @sp_dirs.size %>)</h2>
+    <% duplicates = @sp_dirs.map {|x| x.screen_name}.tally.select { |key, count| count > 1 }.keys %>
+    <% duplicates.each do |x| %>
+        "<%= x %>"<br />
+    <% end %>
     <% @sp_dirs.each.with_index(1) do |elem, idx| %>
         <% if elem.twt %>
             <%= idx %>.

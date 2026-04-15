@@ -73,7 +73,7 @@
  ! SP
  !-- ########################## -->
 <% filelist = Twt::get_sp_pic_filelist_by_twtid(@twtid) %>
-<% if filelist.size > 0 %>
+<% if filelist and filelist.size > 0 %>
     <h4>SP(<%= File.dirname filelist.first %>)[<%= filelist.size %>ファイル]</h4>
     <% filelist.reverse.first(show_pic_num).each.with_index(1) do |fpath, idx| %>
         <%= idx %>.<%= link_to_ex(image_tag(fpath, class: "fixed-height-img"), fpath) %>

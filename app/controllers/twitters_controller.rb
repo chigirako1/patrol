@@ -650,7 +650,9 @@ class TwittersController < ApplicationController
         :filesize,
         :video_cnt,
         :min_interval,
-        :max_interval
+        :max_interval,
+        :fetch_pred_n,
+        :disp_tab_target
         )
     end
 

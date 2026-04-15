@@ -5,8 +5,6 @@
         <% end %>
         <strong>Tweet ID:</strong>
         <%= tweet.tweet_id %>
-        <% time = Twt::get_timestamp(tweet.tweet_id) %>
-        (<%= l time %>[<%= Util::get_date_info time %>])
         <strong>スクリーンネーム:</strong>
         <%= tweet.screen_name %>
         <strong>評価:</strong>

@@ -1133,7 +1133,7 @@ class ArtistsController < ApplicationController
       #puts %!artists.size=#{artists.size}!
 
       if prms.rating_upper_limit >= 0
-        STDERR.puts %!rating_upper_limit=#{rating_upper_limit}!
+        STDERR.puts %!rating_upper_limit=#{prms.rating_upper_limit}!
         artists = artists.select {|x| x.rating < prms.rating_upper_limit}
       end
 
