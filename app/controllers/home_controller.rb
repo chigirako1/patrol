@@ -100,21 +100,21 @@ class HomeController < ApplicationController
           thumbnail: "",
         ) 
       },
-      { :label => "#{ApplicationHelper::TWT_ICON}#{ApplicationHelper::DM_AI_ICON}優先|アクセス日順(非表示日数指定)a",
+      { :label => "#{ApplicationHelper::TWT_ICON}#{ApplicationHelper::DM_AI_ICON}優先|アクセス日順(非表示日数指定)87",
         :path => twitters_path(
           mode: TwittersController::ModeEnum::SPEC_NON_DISP,
           #target: "AI",
           target: Twitter::DRAWING_METHOD::DM_AI,
           rating: 87,
-          pred: 22,
-          hide_within_days: 14,
+          pred: 11,
+          hide_within_days: 21,
           cond_or: true,
           select_max: 22,
           num_of_disp: 5,
           #force_disp_day: 10,
           grp_sort_by: TwittersController::GRP_SORT::GRP_SORT_SPEC,
           grp_sort_spec: "{az}::評価{r}",
-          sort_by: TwittersController::SORT_BY::R_ACCESS_W_PRED_D,
+          sort_by: TwittersController::SORT_BY::M_R_ACCESS_W_PRED_A,#R_ACCESS_W_PRED_D,
           ex_sp: true,
           #step: -3,
           #num_of_times: 4,
@@ -122,7 +122,7 @@ class HomeController < ApplicationController
           thumbnail: ""
         ) 
       },
-      { :label => "#{ApplicationHelper::TWT_ICON}#{ApplicationHelper::DM_AI_ICON}優先|アクセス日順(非表示日数指定)b",
+      { :label => "#{ApplicationHelper::TWT_ICON}#{ApplicationHelper::DM_AI_ICON}優先|アクセス日順(非表示日数指定)85",
         :path => twitters_path(
           mode: TwittersController::ModeEnum::SPEC_NON_DISP,
           #target: "AI",
@@ -135,8 +135,8 @@ class HomeController < ApplicationController
           num_of_disp: 5,
           #force_disp_day: 10,
           grp_sort_by: TwittersController::GRP_SORT::GRP_SORT_SPEC,
-          grp_sort_spec: "評価{r}",
-          sort_by: TwittersController::SORT_BY::R_ACCESS_W_PRED_D,
+          grp_sort_spec: "{az}::評価{r}",
+          sort_by: TwittersController::SORT_BY::M_R_ACCESS_W_PRED_A,
           ex_sp: true,
           #step: -3,
           #num_of_times: 4,
@@ -684,25 +684,6 @@ class HomeController < ApplicationController
           thumbnail: "t"
         )
       },
-      { :label => "twt 未設定 ファイル数順",
-        :path => twitters_path(
-          page_title: "未設定 id",
-          mode: TwittersController::ModeEnum::ALL,#"id",
-          sort_by: TwittersController::SORT_BY::FILENUM,
-          #grp_sort_by: TwittersController::GRP_SORT::GRP_SORT_PRED_DESC,
-          grp_sort_by: TwittersController::GRP_SORT::GRP_SORT_SPEC,
-          grp_sort_spec: "({w}週)～|{p5}件～",
-          #no_pxv: true,
-          rating: 0,
-          hide_within_days: 7,
-          created_at: 90,
-          num_of_disp: NUM_OF_DISP,
-          select_max: 11,
-          pred: 0,
-          target: "",
-          thumbnail: "t"
-        )
-      },
       { :label => "twt 未設定 アクセス日順",
         :path => twitters_path(
           page_title: "未設定 id",
@@ -714,6 +695,25 @@ class HomeController < ApplicationController
           #no_pxv: true,
           rating: 0,
           hide_within_days: 22,
+          created_at: 90,
+          num_of_disp: NUM_OF_DISP,
+          select_max: 11,
+          pred: 0,
+          target: "",
+          thumbnail: "t"
+        )
+      },
+      { :label => "twt 未設定 ファイル数順",
+        :path => twitters_path(
+          page_title: "未設定 id",
+          mode: TwittersController::ModeEnum::ALL,#"id",
+          sort_by: TwittersController::SORT_BY::FILENUM,
+          #grp_sort_by: TwittersController::GRP_SORT::GRP_SORT_PRED_DESC,
+          grp_sort_by: TwittersController::GRP_SORT::GRP_SORT_SPEC,
+          grp_sort_spec: "({w}週)～|{p5}件～",
+          #no_pxv: true,
+          rating: 0,
+          hide_within_days: 7,
           created_at: 90,
           num_of_disp: NUM_OF_DISP,
           select_max: 11,

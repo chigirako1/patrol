@@ -322,8 +322,13 @@
     ("latest", "yy", "yymm", "yymmdd", )
     <hr />
   
+    <% if params[:file] == ArtistsController::MethodEnum::SEARCH %>
+      <% afocus = true %>
+    <% else %>
+      <% afocus = false %>
+    <% end %>
     検索ワード：
-    <%= f.text_field :search_word, :value => params[:search_word], autofocus: true %>
+    <%= f.text_field :search_word, :value => params[:search_word], autofocus: afocus %>
     <br />
     <%= f.select :match_method,
       options_for_select(

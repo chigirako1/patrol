@@ -45,6 +45,23 @@ module Util
         value
     end
 
+    def self.hours_from_now(target_datetime)
+        # 引数が文字列の場合はTimeオブジェクトに変換
+        target_time = target_datetime.is_a?(String) ? Time.parse(target_datetime) : target_datetime
+        
+        # 現在時刻との差分（秒）を計算
+        diff_seconds = Time.now - target_time
+
+        return (diff_seconds / 3600).to_i
+        
+        # 秒を時間に変換（1時間 = 3,600秒）
+        # .to_f で浮動小数点数にして精度を保つ
+        diff_hours = diff_seconds / 3600.0
+        
+        # 読みやすさのために小数点第2位で丸める（任意）
+        diff_hours.round(2)
+    end
+
     # よくわからないが、
     # ・"24-09-22".to_date => 0024-09-22
     # ・Date.parse("24-09-22") => 2024-09-22

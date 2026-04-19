@@ -50,13 +50,23 @@
 
   <% if @twitter.twtid %>
     <% tweet_id_list = twt_pic_list.first(100).map {|x| x[2][0]} %>
-    <% pnum = Twt::image_num_a_post(tweet_id_list) %>
     <h3>
       TWTを開く→
       <%= link_to_ex(%!@#{@twitter.twtid}!, Twt::twt_user_media_url(@twitter.twtid)) %>
-      <% pnum_n = 1 %>
-      <% if pnum > pnum_n %>
-        (<%= link_to_ex(%!■■■■!, Twt::twt_user_url(@twitter.twtid)) %>)複数枚(<%= pnum %>)投稿が多い
+
+      <% if @twitter.disp_tab_target == Twitter::DISP_TAB::DT_POST %>
+        <% post_tab = true %>
+      <% elsif @twitter.disp_tab_target == Twitter::DISP_TAB::DT_MEDIA %>
+      <% else %>
+        <% pnum = Twt::image_num_a_post(tweet_id_list) %>
+        <% pnum_n = 1 %>
+        <% if pnum > pnum_n %>
+          <% post_tab = true %>
+        <% end %>
+      <% end %>
+
+      <% if post_tab %>
+        (<%= link_to_ex(%!★★★!, Twt::twt_user_url(@twitter.twtid)) %>)複数(<%= pnum %>)枚投稿が多い
       <% end %>
     </h3>
   <% end %>
@@ -338,6 +348,8 @@
     <%= twitter_info_tag_ex(@twitter.alt_twtid) %>
   </div>
 
+  <hr />
+
   <div>
     <%= form.label "新ID(screen name)", style: "display: block" %>
     @<%= form.text_field :new_twtid %>
@@ -354,7 +366,7 @@
   </div>
 
   <hr />
-  
+
   <div>
     <%= form.label :コメント, style: "display: block" %>
     <%= form.text_field :comment %>
@@ -370,17 +382,13 @@
   <div>
     <%= TwittersHelper::PRIVATE_ICON %>
     <%= form.label :private_account, style: "display: block" %>
-    <%#= form.select :private_account,
-      tw_visibility_list,
-      include_blank: "選択して下さい"
-    %>
-
-    <%= form.radio_button :private_account, Twitter::TWT_VISIBILITY::TV_OPEN %>
-    <%= form.label "private_account_#{Twitter::TWT_VISIBILITY::TV_OPEN}", Twitter::TWT_VISIBILITY::TV_OPEN %>
-    <br />
 
     <%= form.radio_button :private_account, Twitter::TWT_VISIBILITY::TV_PRIVATE %>
     <%= form.label "private_account_#{Twitter::TWT_VISIBILITY::TV_PRIVATE}", Twitter::TWT_VISIBILITY::TV_PRIVATE %>
+    <br />
+
+    <%= form.radio_button :private_account, Twitter::TWT_VISIBILITY::TV_OPEN %>
+    <%= form.label "private_account_#{Twitter::TWT_VISIBILITY::TV_OPEN}", Twitter::TWT_VISIBILITY::TV_OPEN %>
     <br />
 
   </div>
@@ -539,6 +547,19 @@
   </div>
 
   <div>
+    <%= form.label :表示タブ, style: "display: block" %>
+    <%= form.select :disp_tab_target,
+      [
+        [Twitter::DISP_TAB::DT_POST],
+        #[Twitter::DISP_TAB::DT_REPLY],
+        [Twitter::DISP_TAB::DT_MEDIA],
+      ],
+      include_blank: "選択して下さい" %>
+  </div>
+
+  <hr />
+  
+  <div>
     <%= form.label "最小アクセス間隔(日) - 表示を抑制したいとき", style: "display: block" %>
     <%= form.number_field :min_interval %>
   </div>
@@ -552,12 +573,6 @@
     <%= form.label "取得候補表示基準値", style: "display: block" %>
     <%= form.number_field :fetch_pred_n %>
   </div>
-
-  <div>
-    <%= form.label :表示タブ, style: "display: block" %>
-    <%= form.text_field :disp_tab_target %>
-  </div>
-  
 <% end %>
 
 
@@ -679,5 +694,7 @@
       let date = get_date_from_tweet_id(tw_id);
       const l_tw_date = document.getElementById('twitter_last_post_datetime');
       l_tw_date.value = date;
+
+      l_tw_id.select();
   }
 </script>

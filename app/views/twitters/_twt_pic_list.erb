@@ -83,9 +83,10 @@ textarea {
             <% header_str = %!"#{s_tweet_id}"! %>
         <% end %>
         <h3>検索ID:<%= header_str %></h3>
+        <%= Util::datetime_disp(Twt::get_timestamp(s_tweet_id)) %><br />
 
         <% paths = Twt::search_tweet(@twt_pic_path_list, s_tweet_id) %>
-        <% if paths %>
+        <% if paths and paths.size > 0 %>
             <%= paths.size %>件ヒット<br />
             <% d_ratio = '10%' %>
 
@@ -94,9 +95,14 @@ textarea {
                 <%= link_to_ex(image_tag(path, width: d_ratio, height: d_ratio, :alt => path), path) %>
             <% end %>
         <% else %>
-            見つかりませんでした。
+            ファイルは見つかりませんでした。<br />
+            <% tweet = Tweet.find_by(tweet_id: s_tweet_id) %>
+            <% if tweet %>
+                "<%= tweet.status %>"<br />
+            <% else %>
+                DBにも登録無し
+            <% end %>
         <% end %>
-        <%= Util::datetime_disp(Twt::get_timestamp(s_tweet_id)) %>
         <hr />
     <% end %>
 
@@ -340,7 +346,7 @@ textarea {
         <b><%= Twt::tweet_id_with_comma(sp_tweet_id) %></b>(<= DL日時からの推測)(<%= time_ago_in_words(sp_datetime) %>) <%#= Twt::date_info(sp_tweet_id) %>
         [<%= File::basename latest_file %>]
         <br />
-        予測:<%= twitter.prediction(sp_datetime) %>
+        予測:<%= twitter.prediction_h(sp_datetime) %>
         <br />
         <% fsize_list = [] %>
         <% filelist.reverse.first(show_pic_num_sp).each do |fpath| %>
@@ -362,7 +368,7 @@ textarea {
 
     <!-- URLのテキストファイルに含まれる画像が存在するかチェック -->
     <% if @twt_ids #.presence %>
-        <h2>チェック</h2>
+        <h2>URL_TEXTチェック</h2>
 
         <% if @twt_ids.size == 0 %>
             対象なし
@@ -373,7 +379,7 @@ textarea {
             <% tweet = Tweet.find_by(tweet_id: tweet_id) %>
             <% hit = false %>
             <% @twt_pic_path_list.each do |path| %>
-                <% if path.include? tweet_id.to_s %><!-- TODO:これはだめでは？ -->
+                <% if path.include? tweet_id.to_s %><!-- TODO:これはだめでは？BUG: -->
                     <% hit = true %>
                     hit!(<%= Twt::timestamp_str(tweet_id) %>)|<%= tweet_id %> 
                     <% if params[:show_pic].presence %>

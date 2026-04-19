@@ -83,6 +83,15 @@ class Twitter < ApplicationRecord
         end
     end
 
+    def self.search_records(search_word)
+        search_word_p = "%#{search_word}%"
+        where_phrase = %!twtid LIKE "#{search_word_p}" OR twtname LIKE "#{search_word_p}"!
+
+        twitters = Twitter.all
+        twitters = twitters.where(where_phrase)
+        twitters.select {|x| x.status == TWT_STATUS::STATUS_PATROL and !x.sp?}.sort_by {|x| [x.drawing_method||"", -(x.rating||0)]}
+    end
+
     def self.looks(target_col, search_word, match_method)
         search_word.strip!
         puts %!["#{target_col}", "#{search_word}", "#{match_method}"]!
@@ -410,6 +419,12 @@ class Twitter < ApplicationRecord
     def prediction2()
         delta_d = get_date_delta(dt) + 1
         pred = update_frequency * delta_d / 100
+        pred
+    end
+
+    def prediction_h(dt)
+        hours = Util::hours_from_now(dt)
+        pred = (self.update_frequency / 24) * hours / 100
         pred
     end
 
@@ -774,6 +789,7 @@ class Twitter < ApplicationRecord
                     else
                         "\t03.一昨日アクセス#{TWT_H_SEPARATOR}"
                     end
+                    unit = 1 unless unit
                     gkey_work = group_sub(unit, number, gkey_work, x)
                 elsif self.last_access_datetime_days_elapsed < 31
                     unit = 1 unless unit
@@ -863,6 +879,8 @@ class Twitter < ApplicationRecord
             when "unset"
                 unset_disp = false
                 gkey_work.gsub!(x, "")
+            when "status"
+                gkey_work.gsub!(x, self.status)
             else
                 msg = %!wrong opt:"#{start_str}"!
                 Rails.logger.error(msg)
@@ -1300,10 +1318,13 @@ class Twitter < ApplicationRecord
     end
 
     C_VAL_TBL = [
-        [95, [ 14, 22]],
-        [90, [ 21, 44]],
-        [85, [ 30, 66]],
-        [80, [ 60, 77]],
+        [95, [ 14, 15]],
+        [90, [ 21, 30]],
+        [87, [ 30, 33]],
+        [85, [ 30, 44]],
+        [82, [ 40, 55]],
+        [80, [ 60, 66]],
+        [78, [120,100]],
         [75, [180,200]],
         [ 0, [  0,  0]],
     ]
@@ -1312,13 +1333,13 @@ class Twitter < ApplicationRecord
         C_VAL_TBL.find { |row| val >= row[0] }
     end
 
-    def interval_exceeded?
+    def interval_exceeded?(flg = false)
         if self.max_interval
             STDERR.puts %!#{self.last_access_day_num} <> #{self.max_interval} [#{self.twtname}(#{self.twtid})]!
             if self.last_access_day_num >= self.max_interval
                 return true
             end
-        else
+        elsif flg
             set = self.class.find_config_by_val(self.rating)
             daysn = set[1][0]
             if self.last_access_day_num >= daysn
@@ -1332,7 +1353,7 @@ class Twitter < ApplicationRecord
             if self.prediction >= self.fetch_pred_n
                 return true
             end
-        else
+        elsif flg
             unless set
                 set = self.class.find_config_by_val(self.rating)
             end
@@ -1354,6 +1375,7 @@ class Twitter < ApplicationRecord
                 return false
             end
         end
-        true
+
+        interval_exceeded?(true)
     end
 end

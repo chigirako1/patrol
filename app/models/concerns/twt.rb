@@ -658,6 +658,8 @@ module Twt
         dir_path = TWT_CURRENT_DIR_PATH
         pic_list = UrlTxtReader::get_path_list(dir_path)
 
+        r_cnt = 0
+
         STDERR.puts %!update_tweet_records_by_fs():#{pic_list.size}!
         pic_list.each do |path|
             tweet_id, pic_no = get_tweet_info_from_filepath(path)
@@ -670,12 +672,15 @@ module Twt
                     # DBに登録
                     twt_screen_name = Util.parent_dirname path
                     Tweet::create_record(twt_screen_name, tweet_id, Tweet::StatusEnum::SAVED, pic_no)
+                    r_cnt += 1
                     STDERR.puts %!@#{twt_screen_name}\t#{tweet_id}\t##{pic_no}\t"#{path}"!
                 end
             end
-
-            #break
         end
+
+        msg = %!新規登録:#{r_cnt}件!
+        Rails.logger.info(msg)
+
         [pic_list, tweet_list]
     end
 
@@ -1208,6 +1213,7 @@ module Twt
 
         #key = "#{Util::format_num(twt.update_frequency, 100, 4)}|||更新頻度:#{Util::format_num(twt.update_frequency, 50, 4)}"
 
+        r_h = 87
         r_x = 82
         if Tweet.has_acquisition_schedule?(twt.twtid)
             dayn_s = "001.取得対象物件あり"
@@ -1215,14 +1221,14 @@ module Twt
             dayn_s = LOW_PRIORITY_IGNORE_KEY
         elsif dayn >= 60
             dayn_s = "009.(60日以上)"
-        elsif twt.rating < 80
-            if dayn >= 21
-                dayn_s = "012.(21日以上)低優先度"
+        elsif twt.rating < 80 and dayn < 30
+            dayn_s = LOW_PRIORITY_IGNORE_KEY
+        elsif twt.rating < 85 and twt.prediction < 15
+            if dayn >= 30
+                dayn_s = "003.予測少数"
             else
                 dayn_s = LOW_PRIORITY_IGNORE_KEY
-            end 
-        elsif twt.rating < 85 and twt.prediction < 15
-            dayn_s = "003.予測少数"
+            end
         elsif dayn >= 30
             dayn_s = "010.(30日以上)"
         elsif dayn >= 21
@@ -1236,7 +1242,7 @@ module Twt
         elsif twt.update_frequency < 200
             if dayn < 2
                 dayn_s = LOW_PRIORITY_IGNORE_KEY
-            elsif twt.rating < 86
+            elsif twt.rating < r_h
                 if dayn < 7 and twt.update_frequency < 150
                     dayn_s = LOW_PRIORITY_IGNORE_KEY
                 elsif dayn < 14
@@ -1244,15 +1250,17 @@ module Twt
                 else
                     dayn_s = "600.低頻度&優先度低"
                 end
-            elsif twt.rating > 87
-                dayn_s = "501.低頻度&高優先度"
+            elsif twt.rating > r_h
+                dayn_s = "500.低頻度&高優先度"
+            elsif twt.rating > 83
+                dayn_s = "501.低頻度&中優先度"
             else
                 dayn_s = "611.低頻度"
             end
         #elsif twt.rating <= r_x
         #    dayn_s = "9(#{r_x}以下)"
         elsif twt.update_frequency >= 600
-            dayn_s = "803.超高頻度"
+            dayn_s = "803.超高頻度"#当日
         elsif twt.update_frequency >= 350
             day_std = 3
             if dayn < day_std
@@ -1261,7 +1269,7 @@ module Twt
                 dayn_s = "802.高頻度(Z#{day_std}日以上)"
             end
         elsif dayn >= 7
-            if twt.rating > 87
+            if twt.rating > r_h
                 dayn_s = "031.7日以上(#{87}以上)"
             else
                 dayn_s = "035.7日以上"
@@ -1440,7 +1448,7 @@ module Twt
                         twt_params[:filesize] = avg
                     elsif (avg) < (twt.filesize * 90 / 100)
                         percent = avg * 100 / twt.filesize
-                        msg = %![reg_filesize] サイズが小さくなっている:#{Util::formatFileSize twt.filesize} -> #{Util::formatFileSize avg}(#{percent}%)[@#{k}]!
+                        msg = %![reg_filesize] サイズが小さくなっている:#{Util::formatFileSize twt.filesize} -> #{Util::formatFileSize avg}(#{percent}%)[@#{k}(#{twt.twtname})]!
                         Rails.logger.warn(msg)
                         twt_params[:filesize] = avg
                     else

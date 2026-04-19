@@ -159,8 +159,8 @@ module TwittersHelper
             str += %!→#{twitter.new_twtid}!
         end
 
-        if twitter.max_interval.presence
-            str += %!MAX:#{twitter.max_interval}!
+        if twitter.max_interval.presence or twitter.fetch_pred_n.presence
+            str += %![MAX:#{twitter.max_interval}|#{twitter.fetch_pred_n}]!
         end
 
         str

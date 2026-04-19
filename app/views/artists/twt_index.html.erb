@@ -369,7 +369,7 @@
                     <!-- <div style="background-color: #e0f7fa; padding: 10px;"> -->
                     <span style="background-color: <%= bgcolorz %>;">
                 <% end %>
-                <%= idx %>:
+                <%= Util::format_num idx, 1, 2 %>:
                 <% if twt.sp? %>
                     ★大★
                 <% end %>
@@ -961,10 +961,10 @@
 
 <% if @sp_dirs.presence %>
     <% to_be_obtain_list = Tweet.to_be_obtain_list %>
-    <h2>sp dir一覧(<%= @sp_dirs.size %>)</h2>
+    <h2>sp_dir一覧(<%= @sp_dirs.size %>)</h2>
     <% duplicates = @sp_dirs.map {|x| x.screen_name}.tally.select { |key, count| count > 1 }.keys %>
     <% duplicates.each do |x| %>
-        "<%= x %>"<br />
+        複数："<%= x %>"<br />
     <% end %>
     <% @sp_dirs.each.with_index(1) do |elem, idx| %>
         <% if elem.twt %>
@@ -1001,8 +1001,9 @@
     <% end %>
 <% end %>
 
+<% s_words = [] %>
 <% if @misc_urls and @misc_urls.size != 0 %>
-    <h2>misc url list(<%= @misc_urls.size %>)</h2>
+    <h2>misc url list @misc_urls(<%= @misc_urls.size %>)</h2>
     <% @misc_urls.sort.uniq.each do |url| %>
         <% if url =~ %r!#{Pxv::PXV_HTTP_ARTWORKS_BASE}/(\d+)! %>
             <% artwork_id = $1.to_i %>
@@ -1015,11 +1016,69 @@
             <% else %>
                 [<%= link_to_ex("★New★", new_pxv_artwork_path(artwork_id: artwork_id)) %>]
             <% end %>
+            <br />
         <% elsif url =~ /^\https?:/ %>
             <%= link_to_ex url, url %>
-        <% else %>
+            <br />
+        <% elsif url =~ /、/ %>
+            <% s_words << url %>
+        <% elsif url.presence %>
             <%= url %>
+            <br />
+        <% else %>
         <% end %>
+    <% end %>
+<% end %>
+
+<% if s_words.size > 0 %>
+    <% find_word_list = [] %>
+    <h2>s_words</h2>
+    <% s_words.each do |words| %>
+        <%= words %><br />
+    <% end %>
+    <% words = s_words.join("、") %>
+    <h2>twt</h2>
+    <% words.split(/、/).sort.uniq.each do |word| %>
+        <% unless word.presence %>
+            <% next %>
+        <% end %>
+        <% result = Twitter.search_records(word) %>
+        <% if result.size > 0 and result.size < 10 %>
+            <h4>■<%= word %></h4>
+            <% result.each do |twt| %>
+                <% if twt.last_access_day_num < 2 %>
+                    <% bgcolorz = "lightgray" %>
+                    ✔
+                <% else %>
+                    ・
+                    <% pred = twt.prediction %>
+                    <% if pred > 25 %>
+                        <% bgcolorz = yellow_shade(pred) %>
+                    <% end %>
+                <% end %>
+
+                <% if bgcolorz %>
+                    <span style="background-color: <%= bgcolorz %>;">
+                <% end %>
+
+                <%= "【#{dm_icon(twt.drawing_method)}#{twt.rating}】#{twt.twtname}(@#{twt.twtid})" %>
+                |A:<%= twt.last_access_datetime_disp %>
+                (P:<%= twt.prediction %>)
+                [<%= link_to_ex("■twt■", twt) %>]
+                <% if bgcolorz %>
+                    </span>
+                <% end %>
+                <br />
+            <% end %>
+        <% else %>
+            <% find_word_list << word %>
+        <% end %>
+    <% end %>
+
+    <h2>s</h2>
+    <% find_word_list.each do |word| %>
+        <% s_url = twitters_path(mode: TwittersController::ModeEnum::SEARCH, search_word: word, grp_sort_by: TwittersController::GRP_SORT::GRP_SORT_SPEC, grp_sort_spec: "{status}::評価{r}") %>
+        →[<%= link_to_ex("■検索■", s_url) %>]<%= word %>
         <br />
     <% end %>
 <% end %>

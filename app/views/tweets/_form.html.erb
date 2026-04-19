@@ -1,102 +1,105 @@
 <%= form_with(model: tweet) do |form| %>
-  <% if tweet.errors.any? %>
-    <div style="color: red">
-      <h2><%= pluralize(tweet.errors.count, "error") %> prohibited this tweet from being saved:</h2>
+    <% if tweet.errors.any? %>
+        <div style="color: red">
+        <h2><%= pluralize(tweet.errors.count, "error") %> prohibited this tweet from being saved:</h2>
 
-      <ul>
-        <% tweet.errors.each do |error| %>
-          <li><%= error.full_message %></li>
-        <% end %>
-      </ul>
-    </div>
-  <% end %>
-
-  <div>
-    <% if tweet.tweet_id.presence %>
-      <% tweet_id_val = tweet.tweet_id %>
-    <% elsif params[:tweet_id].presence %>
-      <% tweet_id_val = params[:tweet_id] %>
-    <% else %>
-      <% tweet_id_val = "" %>
+        <ul>
+            <% tweet.errors.each do |error| %>
+                <li><%= error.full_message %></li>
+            <% end %>
+        </ul>
+        </div>
     <% end %>
-    <%= form.label :tweet_id, style: "display: block" %>
-    <%= form.number_field :tweet_id, value: tweet_id_val %>
 
-    <%= link_to_ex("▶x(#{tweet_id_val})", Twt::twt_tweet_url_i(tweet_id_val)) %>
-    <br />
-  </div>
-
-
-  <div>
-    <%= form.label :screen_name, style: "display: block" %>
-    <%= form.text_field :screen_name, autofocus: true %>
-    <%= link_to_ex("▶@" + tweet.screen_name, Twt::twt_user_media_url(tweet.screen_name)) if tweet.screen_name.presence %>
-
-    <%= twitter_info_tag_ex(tweet.screen_name, true) %>
-
-    <% if tweet.tweet_id.presence %>
-      <br />
-      <% time = Twt::get_timestamp(tweet.tweet_id) %>
-      (<%= smart_date time %>[<%= Util::get_date_info time %>])
-
-      <% twt = Twitter.find_by_twtid_ignore_case(tweet.screen_name) %>
-      <% if twt and twt.last_access_datetime > time %>
-        最後のアクセスより前のツイート
-      <% end %>
-    <% end %>
-  </div>
-
-  <div>
-    <% val = get_val(tweet.status, :status) %>
-    <%= form.label :status, style: "display: block" %>
-    <%= form.select :status,
-      Tweet::status_enum_array(),
-      { selected: val },
-      include_blank: "選択して下さい"
-    %>
-  </div>
-
-  <div>
-    <%= form.label :rating, style: "display: block" %>
-    <%= form.number_field :rating %>
-  </div>
-
-  <div>
-    <%= form.label :num, style: "display: block" %>
-    <%= form.number_field :num %>
-  </div>
-  
-  <div>
-    <%= form.label :remarks, style: "display: block" %>
-    <%= form.text_field :remarks %>
-  </div>
-
-  <div>
-    <%= form.submit %>
-  </div>
-
-  <% if tweet.screen_name.presence and tweet.screen_name != Twt::TWT_USER_I %>
-    <% tweet_ids = Twt::get_twt_tweet_ids_from_txts(tweet.screen_name) %>
-    <% ids = Tweet::get_unregistered_tweet_ids(tweet_ids) %>
-    <% if ids.size > 0 %>
-      <h2>url txt</h2>
-    <% end %>
-    <% ids.each do |x| %>
-        <% url = Twt::twt_tweet_url(tweet.screen_name, x) %>
-        <%= link_to_ex(url, url) %>
-        [<%= Twt::timestamp_str(x) %>]
-
-        <% twt_pic_path_list = Twt::get_pic_filelist(tweet.screen_name) %>
-        <% paths = Twt::search_tweet(twt_pic_path_list, x) %>
-        <% if paths.size > 0 %>
-            ファイルあり
+    <div>
+        <% if tweet.tweet_id.presence %>
+            <% tweet_id_val = tweet.tweet_id %>
+        <% elsif params[:tweet_id].presence %>
+            <% tweet_id_val = params[:tweet_id] %>
         <% else %>
-            <% url2 = Twt::twt_tweet_url_dev(x) %>
-            <%= link_to_ex(url2, url2) %>
+            <% tweet_id_val = "" %>
         <% end %>
-        <br>
+        <%= form.label :tweet_id, style: "display: block" %>
+        <%= form.number_field :tweet_id, value: tweet_id_val %>
+
+        <%= link_to_ex("▶x(#{tweet_id_val})", Twt::twt_tweet_url_i(tweet_id_val)) %>
+        <br />
+    </div>
+
+
+    <div>
+        <%= form.label :screen_name, style: "display: block" %>
+        <%= form.text_field :screen_name, autofocus: true %>
+        <%= link_to_ex("▶@" + tweet.screen_name, Twt::twt_user_media_url(tweet.screen_name)) if tweet.screen_name.presence %>
+
+        <%= twitter_info_tag_ex(tweet.screen_name, true) %>
+
+        <% if tweet.tweet_id.presence %>
+        <br />
+        <% time = Twt::get_timestamp(tweet.tweet_id) %>
+        (<%= smart_date time %>[<%= Util::get_date_info time %>])
+
+        <% twt = Twitter.find_by_twtid_ignore_case(tweet.screen_name) %>
+        <% if twt and twt.last_access_datetime > time %>
+            最後のアクセスより前のツイート
+        <% end %>
+        <% end %>
+    </div>
+
+    <div>
+        <% val = get_val(tweet.status, :status) %>
+        <%= form.label :status, style: "display: block" %>
+        <%= form.select :status,
+            Tweet::status_enum_array(),
+            { selected: val },
+            include_blank: "選択して下さい"
+        %>
+    </div>
+
+    <div>
+        <%= form.label :rating, style: "display: block" %>
+        <%= form.number_field :rating %>
+    </div>
+
+    <div>
+        <%= form.label :num, style: "display: block" %>
+        <%= form.number_field :num %>
+    </div>
+    
+    <div>
+        <%= form.label :remarks, style: "display: block" %>
+        <%= form.text_field :remarks %>
+        ←
+        <input type="button" value="ファイル名取り出し" onclick="get_filename();" />
+        <input type=”text” id="url_filepath" value="" />
+    </div>
+
+    <div>
+            <%= form.submit %>
+    </div>
+
+    <% if tweet.screen_name.presence and tweet.screen_name != Twt::TWT_USER_I %>
+        <% tweet_ids = Twt::get_twt_tweet_ids_from_txts(tweet.screen_name) %>
+        <% ids = Tweet::get_unregistered_tweet_ids(tweet_ids) %>
+        <% if ids.size > 0 %>
+            <h2>url txt</h2>
+        <% end %>
+        <% ids.each do |x| %>
+            <% url = Twt::twt_tweet_url(tweet.screen_name, x) %>
+            <%= link_to_ex(url, url) %>
+            [<%= Twt::timestamp_str(x) %>]
+
+            <% twt_pic_path_list = Twt::get_pic_filelist(tweet.screen_name) %>
+            <% paths = Twt::search_tweet(twt_pic_path_list, x) %>
+            <% if paths.size > 0 %>
+                ファイルあり
+            <% else %>
+                <% url2 = Twt::twt_tweet_url_dev(x) %>
+                <%= link_to_ex(url2, url2) %>
+            <% end %>
+            <br>
+        <% end %>
     <% end %>
-  <% end %>
 <% end %>
 
 <script>
@@ -107,9 +110,58 @@
     }
 
     document.addEventListener("visibilitychange", function() {
-      if (document.visibilityState === "visible")
-      {
-          select_text("tweet_" + "screen_name");
-      }
+        if (document.visibilityState === "visible")
+        {
+            select_text("tweet_" + "screen_name");
+        }
     });
+
+    function get_filename() {
+        let text_box = document.getElementById("url_filepath");
+        let text = text_box.value;
+
+        let filename = "";
+        const regex = /.*\/(.+)$/;
+        //console.log(regex);
+
+        const match = text.match(regex);
+        //if (regex.test(text)) {
+        if (match) {
+            filename = match[1];
+        } else {
+            filename = text;
+        }
+        
+        const remarks_e = document.getElementById('tweet_remarks');
+        remarks_e.value = filename;
+
+        const status_e = document.getElementById('tweet_status');
+        //let options = status_e.options;
+        //options[idx].selected = true;
+        selectOptionByText(status_e, "<%= Tweet::StatusEnum::SAVED %>")
+    }
+
+    /**
+     * セレクトボックスの項目名（テキスト）を指定して選択状態にする
+     * @param {HTMLSelectElement} selectObj - セレクトボックスのDOMオブジェクト
+     * @param {string} targetText - 選択したい項目の表示文字列
+     */
+    function selectOptionByText(selectObj, targetText) {
+        // セレクトボックス内の全てのoption要素をループ
+        for (let i = 0; i < selectObj.options.length; i++) {
+            // 項目のテキストが引数と一致するか確認
+            if (selectObj.options[i].text === targetText) {
+                // 一致した項目のインデックスを選択状態にする
+                selectObj.selectedIndex = i;
+                
+                // 値の変更をプログラムから行った場合、changeイベントは自動で発火しないため
+                // 必要に応じて手動でディスパッチすることも可能です
+                // selectObj.dispatchEvent(new Event('change'));
+                
+                return true; // 見つかったので終了
+            }
+        }
+        console.warn("指定された項目名が見つかりませんでした: " + targetText);
+        return false;
+    }
 </script>

@@ -295,7 +295,7 @@
                 <% fnum = 3 %>
                 <% list = twt_pic_list.map {|x| x[1]}.first(fnum) %>
                 <% list.each do |filepath| %>
-                  <%= link_to image_tag(filepath, width: pic_disp_mag, height: pic_disp_mag), filepath, target: :_blank, rel: "noopener noreferrer" if filepath.presence %>
+                  <%= link_to_ex image_tag(filepath, width: pic_disp_mag, height: pic_disp_mag), filepath if filepath.presence %>
                 <% end %>
             <% else %>
               <%= twitter.filenum %>
@@ -474,8 +474,9 @@ button.horizontal {
           [TwittersController::SORT_BY::R_PRED_DESC],
           [TwittersController::SORT_BY::R_PRED_ASC],
 
-          [TwittersController::SORT_BY::R_ACCESS_W_PRED_A],
           [TwittersController::SORT_BY::R_ACCESS_W_PRED_D],
+          [TwittersController::SORT_BY::R_ACCESS_W_PRED_A],
+          [TwittersController::SORT_BY::M_R_ACCESS_W_PRED_A],
           [TwittersController::SORT_BY::ACCESS_W_PRED_A],
           [TwittersController::SORT_BY::SORT_ACCESS_Z_R],
           

@@ -49,6 +49,9 @@ class TwtImageList
         hash = Hash.new { |h, k| h[k] = [] }
 
         list.each do |twt_img|
+            if twt_img.tweet_id == 0
+                next
+            end
             ts = Twt::get_timestamp(twt_img.tweet_id)
             hash[ts.to_date] << twt_img
         end
