@@ -358,6 +358,7 @@ class ArtistsController < ApplicationController
     SORT_PXV_USER_ID_ASC = "pxv-user-id(古い順)"
     SORT_FILENUM_DSC = "ファイル数▽降順"
     SORT_FILENUM_ASC = "ファイル数△昇順"
+    SORT_REGISTER_O2N = "登録日(旧→新)"
   end
 
   module GROUP_TYPE

@@ -121,22 +121,36 @@ class Tweet < ApplicationRecord
             end
         end
 
-        twt_grp = Hash.new { |h, k| h[k] = [] }
+        twitters = build_twitters(screen_name_set)
+        twt_grp = build_twt_grp(twitters, spec_str)
+
+        [tweets_grp.sort.to_h, twt_grp.sort_by {|k,v| k}.reverse.to_h]
+    end
+
+    def self.build_twitters(screen_name_set)
+        twitters = []
         screen_name_set.each do |screen_name|
             twt = Twitter.find_by_twtid_ignore_case(screen_name)
             if twt
-                spec = spec_str
-                #key_header = twt.group_spec(spec, screen_name_set.size)
-                key_header = twt.group_spec(spec)
-                twt_grp[key_header] << twt
+                twitters << twt
             end
+        end
+        twitters
+    end
+
+    def self.build_twt_grp(twitters, spec_str)
+        twt_grp = Hash.new { |h, k| h[k] = [] }
+        twitters.each do |twt|
+            spec = spec_str
+            key_header = twt.group_spec(spec)
+            twt_grp[key_header] << twt
         end
 
         twt_grp.each do |key, value|
             value.sort_by! {|v| [-(v.rating||0), -v.prediction, v.last_access_datetime]}
         end
 
-        [tweets_grp.sort.to_h, twt_grp.sort_by {|k,v| k}.reverse.to_h]
+        twt_grp
     end
 
     def self.check_registered_record(url_list)

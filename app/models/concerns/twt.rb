@@ -284,8 +284,10 @@ module Twt
                     Time.new(2001,1,3)
                 elsif x.dirname.end_with?("少ない")
                     Time.new(2001,1,4)
-                elsif x.dirname.end_with?("凍結")
+                elsif x.dirname.end_with?("多い")
                     Time.new(2001,1,5)
+                elsif x.dirname.end_with?("凍結")
+                    Time.new(2001,1,9)
                 elsif use_fs_date and x.latest_date
                     x.latest_date
                 elsif x.twt and x.twt.last_access_datetime
@@ -946,7 +948,7 @@ module Twt
     def self.image_num_a_post(tweet_id_list)
         hash = {}#Hash.new {|h, k| h[k] = []}
 
-        tweet_id_list.each do |x|
+        tweet_id_list.first(100).each do |x|
             #tweet_id, pic_no = x
             tweet_id = x
             #if tweet_id == 0
@@ -969,9 +971,9 @@ module Twt
         v = hash.values.select {|x| x <= n}
 
         if v.size > 0
+            STDERR.puts %!sum=#{v.sum} size=#{v.size} #{tweet_id_list[0]},#{tweet_id_list[1]}!
             n = 5
             ((v.sum * 10 / v.size) + n) / 10
-            
         else
             0
         end
@@ -1179,6 +1181,7 @@ module Twt
         dayn = Util::get_date_delta(twt.last_post_datetime)
         avg = v.avg / 1024
         pred = twt.prediction
+        lad_n = twt.last_access_datetime_days_elapsed
 
         elem = []
         elem << k
@@ -1213,7 +1216,7 @@ module Twt
 
         #key = "#{Util::format_num(twt.update_frequency, 100, 4)}|||更新頻度:#{Util::format_num(twt.update_frequency, 50, 4)}"
 
-        r_h = 87
+        r_h = 86
         r_x = 82
         if Tweet.has_acquisition_schedule?(twt.twtid)
             dayn_s = "001.取得対象物件あり"
@@ -1229,6 +1232,8 @@ module Twt
             else
                 dayn_s = LOW_PRIORITY_IGNORE_KEY
             end
+        elsif lad_n < 1
+            dayn_s = "601.本日アクセス"
         elsif dayn >= 30
             dayn_s = "010.(30日以上)"
         elsif dayn >= 21

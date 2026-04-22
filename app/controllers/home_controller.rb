@@ -157,7 +157,7 @@ class HomeController < ApplicationController
           num_of_disp: 5,
           #force_disp_day: 10,
           grp_sort_by: TwittersController::GRP_SORT::GRP_SORT_SPEC,
-          grp_sort_spec: "評価{r}",
+          grp_sort_spec: "{az}::評価{r}",
           sort_by: TwittersController::SORT_BY::PRED,
           ex_sp: true,
           #step: -3,
@@ -633,10 +633,11 @@ class HomeController < ApplicationController
       { :label => "-", :path => "" },
       { :label => " twt(i)最近",
           :path => artists_twt_index_path(
-            filename: "latest 5",
+            filename: "latest 15",
             #hide_day: 30,
             #show_times: 2,
             #url_cnt: 2,
+            grp_sort_spec: "{az}#{Twitter::TWT_H_SEPARATOR}{r}",
             target: ArtistsController::FileTarget::TWT_I
           )
       },
@@ -767,6 +768,7 @@ class HomeController < ApplicationController
             #show_times: 2,
             pred: 5,
             target:"twt,twt既知,twt未知,known_pxv,unknown_pxv",
+            grp_sort_spec: "{az}#{Twitter::TWT_H_SEPARATOR}{r}",
           )
       },
       { :label => "今月ファイル ",

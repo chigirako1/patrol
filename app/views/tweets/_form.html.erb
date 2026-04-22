@@ -23,9 +23,21 @@
         <%= form.number_field :tweet_id, value: tweet_id_val %>
 
         <%= link_to_ex("▶x(#{tweet_id_val})", Twt::twt_tweet_url_i(tweet_id_val)) %>
-        <br />
-    </div>
 
+        <% if tweet.tweet_id.presence %>
+            <% time = Twt::get_timestamp(tweet.tweet_id) %>
+
+            <% twt = Twitter.find_by_twtid_ignore_case(tweet.screen_name) %>
+            <% if twt and twt.last_access_datetime > time %>
+                <h4>
+                最後のアクセスより前のツイート
+                [<%= smart_date time %>(<%= Util::get_date_info time %>)]
+                </h4>
+            <% else %>
+                <%= smart_date time %>[<%= Util::get_date_info time %>]
+            <% end %>
+        <% end %>
+    </div>
 
     <div>
         <%= form.label :screen_name, style: "display: block" %>
@@ -33,17 +45,6 @@
         <%= link_to_ex("▶@" + tweet.screen_name, Twt::twt_user_media_url(tweet.screen_name)) if tweet.screen_name.presence %>
 
         <%= twitter_info_tag_ex(tweet.screen_name, true) %>
-
-        <% if tweet.tweet_id.presence %>
-        <br />
-        <% time = Twt::get_timestamp(tweet.tweet_id) %>
-        (<%= smart_date time %>[<%= Util::get_date_info time %>])
-
-        <% twt = Twitter.find_by_twtid_ignore_case(tweet.screen_name) %>
-        <% if twt and twt.last_access_datetime > time %>
-            最後のアクセスより前のツイート
-        <% end %>
-        <% end %>
     </div>
 
     <div>

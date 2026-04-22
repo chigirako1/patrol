@@ -83,13 +83,19 @@ class Twitter < ApplicationRecord
         end
     end
 
-    def self.search_records(search_word)
+    def self.search_records(search_word, drawing_method=nil)
         search_word_p = "%#{search_word}%"
         where_phrase = %!twtid LIKE "#{search_word_p}" OR twtname LIKE "#{search_word_p}"!
 
         twitters = Twitter.all
         twitters = twitters.where(where_phrase)
-        twitters.select {|x| x.status == TWT_STATUS::STATUS_PATROL and !x.sp?}.sort_by {|x| [x.drawing_method||"", -(x.rating||0)]}
+        twitters = twitters.select {|x| x.status == TWT_STATUS::STATUS_PATROL and !x.sp?}.sort_by {|x| [x.drawing_method||"", -(x.rating||0)]}
+
+        if drawing_method
+            twitters = twitters.select {|x| x.drawing_method == DRAWING_METHOD::DM_AI}
+        end
+
+        twitters
     end
 
     def self.looks(target_col, search_word, match_method)
@@ -573,7 +579,7 @@ class Twitter < ApplicationRecord
             return true
         end
 
-        if drawing_method == DRAWING_METHOD::DM_AI
+        if self.drawing_method == DRAWING_METHOD::DM_AI
             cond_data = COND_DATA_AI
         else
             cond_data = COND_DATA_HD
@@ -798,7 +804,7 @@ class Twitter < ApplicationRecord
                 else
                     unit = 1 unless unit
                     number = self.last_access_datetime_days_elapsed / 30
-                    gkey_work = group_sub(unit, number, gkey_work, x, append_pre: "z", append:"月")
+                    gkey_work = group_sub(unit, number, gkey_work, x, append_pre: "z", append:"ヶ月")
                 end
             when "_ad"
                 unit = 1 unless unit
@@ -880,7 +886,7 @@ class Twitter < ApplicationRecord
                 unset_disp = false
                 gkey_work.gsub!(x, "")
             when "status"
-                gkey_work.gsub!(x, self.status)
+                gkey_work.gsub!(x, self.status||"")
             else
                 msg = %!wrong opt:"#{start_str}"!
                 Rails.logger.error(msg)
@@ -1162,9 +1168,38 @@ class Twitter < ApplicationRecord
         end
     end
 
+    def group_key_hoge()
+        case self.drawing_method
+        when DRAWING_METHOD::DM_AI
+            dm = %!980.AI!
+        when DRAWING_METHOD::DM_HAND
+            return %!910.#{drawing_method}#{TWT_H_SEPARATOR}.!
+        when DRAWING_METHOD::DM_3D, DRAWING_METHOD::DM_REPRINT
+            return %!905.その他#{TWT_H_SEPARATOR}#{drawing_method}!
+        when "", nil
+            daysn = self.last_access_datetime_days_elapsed
+            if daysn > 90
+                dm = %!998.未設定(古め)!
+            else
+                dm = %!999.未設定(最近)!
+            end
+        else
+            dm = %!900.#{drawing_method}!
+        end
+
+        case status
+        when Twitter::TWT_STATUS::STATUS_PATROL
+            key = self.group_spec("{az}#{TWT_H_SEPARATOR}評価{r}")
+            %![#{dm}]#{key}!
+        else
+            key = status unless key
+            %!#{dm}#{TWT_H_SEPARATOR}#{key}!
+        end
+    end
+
     def group_key()
 
-        case drawing_method
+        case self.drawing_method
         when DRAWING_METHOD::DM_HAND
             if self.pxvid
                 dm = %!970.手(pxvあり)!
@@ -1201,7 +1236,8 @@ class Twitter < ApplicationRecord
             #r = 999
             #key = %!評価#{r}～.#{a1o_auto_group_key(5, false)}!
 
-            key = a1o_auto_group_key(5, false)
+            #key = a1o_auto_group_key(5, false)
+            key = self.group_spec("評価{r}#{Twitter::TWT_H_SEPARATOR}{az}")
         else
             key = status unless key
         end

@@ -80,7 +80,7 @@
             <%# next %>
         <% end %>
 
-        <% key_twt = twt_account.group_key() %>
+        <% key_twt = twt_account.group_key_hoge() %>
         <% twt_group[key_twt] << [twt_account, url_list] %>
     <% end %>
 <% end %>
@@ -287,11 +287,17 @@
     <% disp_twt_pxv = false %>
 <% end %>
 
+<% if params[:grp_sort_spec].presence %>
+    <% spec = params[:grp_sort_spec] %>
+<% else %>
+    <% spec = "{p30}件↑|{aw}週#{Twitter::TWT_H_SEPARATOR}予測{p20}～" %>
+    <% spec = "{aw}週#{Twitter::TWT_H_SEPARATOR}{r}" %>
+    <% spec = "評価{r}#{Twitter::TWT_H_SEPARATOR}{az}" %>
+<% end %>
+
 <% if @tweet_i_ids.presence and @tweet_i_ids.size > 0 %>
     <h2>tweet_i_ids (<%= @tweet_i_ids.size %>)</h2>
-    <% spec = "{p30}件↑|{aw}週#{Twitter::TWT_H_SEPARATOR}予測{p20}～" %>
-    <% spec = "評価{r}#{Twitter::TWT_H_SEPARATOR}{aw}週" %>
-    <% spec = "{aw}週#{Twitter::TWT_H_SEPARATOR}{r}" %>
+
     <% tweets_grp, twt_grp2 = Tweet::tweet_group(@tweet_i_ids, spec) %>
     <% tweets_grp.each do |key, tweets| %>
         <h3><%= key %>(<%= tweets.size %>)</h3>
@@ -347,47 +353,6 @@
         <% end %>
     <% end %>
 
-    <% if twt_grp2 %>
-        <h1>twt_grp2(<%= twt_grp2.size %>)</h1>
-        <% header_a_save = "" %>
-        <% twt_grp2.sort_by {|k,v| k}.reverse.to_h.each do |key_header, value| %>
-            <% header_a, header_b = key_header.split(Twitter::TWT_H_SEPARATOR) %>
-            <% if header_a != header_a_save %>
-                <h2><%= header_a %></h2>
-                <% header_a_save = header_a %>
-            <% end %>
-            <h3><%= header_b %>(<%= value.size %>)</h3>
-            <% value.each.with_index(1) do |twt, idx| %>
-                <% pred = twt.prediction %>
-                <% if pred > 25 %>
-                    <%# bgcolorz = "orange" %>
-                    <% bgcolorz = yellow_shade(pred) %>
-                <% elsif pred < 1 %>
-                    <% bgcolorz = "lightgray" %>
-                <% end %>
-                <% if bgcolorz %>
-                    <!-- <div style="background-color: #e0f7fa; padding: 10px;"> -->
-                    <span style="background-color: <%= bgcolorz %>;">
-                <% end %>
-                <%= Util::format_num idx, 1, 2 %>:
-                <% if twt.sp? %>
-                    ★大★
-                <% end %>
-                予測:<%= pred %>
-                【<%= twt.rating %>】
-                <%= twt.twtname %>
-                (@<%= twt.twtid %>)
-                [<%= link_to_ex("■TWT■", twt) %>]
-                A:<%= twt.last_access_datetime_disp %>
-                <% if bgcolorz %>
-                    <!--</div>-->
-                    </span>
-                <% else %>
-                <% end %>
-                <br />
-            <% end %>
-        <% end %>
-    <% end %>
 <% end %>
 
 <% pxv_list_tmp = [] %>
@@ -1020,6 +985,9 @@
         <% elsif url =~ /^\https?:/ %>
             <%= link_to_ex url, url %>
             <br />
+        <% elsif url =~ /^・/ %>
+            <%= url %>
+            <br />
         <% elsif url =~ /、/ %>
             <% s_words << url %>
         <% elsif url.presence %>
@@ -1034,25 +1002,28 @@
     <% find_word_list = [] %>
     <h2>s_words</h2>
     <% s_words.each do |words| %>
-        <%= words %><br />
+        ■<%= words %><br />
     <% end %>
-    <% words = s_words.join("、") %>
-    <h2>twt</h2>
+
+    <% twitters = [] %>
+    <% words = s_words.join("、").compact %>
     <% words.split(/、/).sort.uniq.each do |word| %>
         <% unless word.presence %>
             <% next %>
         <% end %>
-        <% result = Twitter.search_records(word) %>
+        <%# result = Twitter.search_records(word, Twitter::DRAWING_METHOD::DM_AI) %>
+        <% result = [] %>
         <% if result.size > 0 and result.size < 10 %>
             <h4>■<%= word %></h4>
             <% result.each do |twt| %>
+                <% twitters << twt %>
                 <% if twt.last_access_day_num < 2 %>
                     <% bgcolorz = "lightgray" %>
                     ✔
                 <% else %>
                     ・
                     <% pred = twt.prediction %>
-                    <% if pred > 25 %>
+                    <% if pred > 20 %>
                         <% bgcolorz = yellow_shade(pred) %>
                     <% end %>
                 <% end %>
@@ -1075,10 +1046,56 @@
         <% end %>
     <% end %>
 
+    <% if twitters.size > 0 %>
+        <% twt_grp2 = Tweet::build_twt_grp(twitters, spec) %>
+    <% end %>
+
     <h2>s</h2>
     <% find_word_list.each do |word| %>
         <% s_url = twitters_path(mode: TwittersController::ModeEnum::SEARCH, search_word: word, grp_sort_by: TwittersController::GRP_SORT::GRP_SORT_SPEC, grp_sort_spec: "{status}::評価{r}") %>
         →[<%= link_to_ex("■検索■", s_url) %>]<%= word %>
         <br />
+    <% end %>
+<% end %>
+
+<% if twt_grp2 %>
+    <h1>twt_grp2(<%= twt_grp2.size %>)</h1>
+    <% header_a_save = "" %>
+    <% twt_grp2.sort_by {|k,v| k}.reverse.to_h.each do |key_header, value| %>
+        <% header_a, header_b = key_header.split(Twitter::TWT_H_SEPARATOR) %>
+        <% if header_a != header_a_save %>
+            <h2><%= header_a %></h2>
+            <% header_a_save = header_a %>
+        <% end %>
+        <h3><%= header_b %>(<%= value.size %>)</h3>
+        <% value.each.with_index(1) do |twt, idx| %>
+            <% pred = twt.prediction %>
+            <% if pred > 25 %>
+                <%# bgcolorz = "orange" %>
+                <% bgcolorz = yellow_shade(pred) %>
+            <% elsif pred < 1 %>
+                <% bgcolorz = "lightgray" %>
+            <% end %>
+            <% if bgcolorz %>
+                <!-- <div style="background-color: #e0f7fa; padding: 10px;"> -->
+                <span style="background-color: <%= bgcolorz %>;">
+            <% end %>
+            <%= Util::format_num idx, 1, 2 %>:
+            <% if twt.sp? %>
+                ★大★
+            <% end %>
+            予測:<%= pred %>
+            【<%= twt.rating %>】
+            <%= twt.twtname %>
+            (@<%= twt.twtid %>)
+            [<%= link_to_ex("■TWT■", twt) %>]
+            A:<%= twt.last_access_datetime_disp %>
+            <% if bgcolorz %>
+                <!--</div>-->
+                </span>
+            <% else %>
+            <% end %>
+            <br />
+        <% end %>
     <% end %>
 <% end %>
