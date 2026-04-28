@@ -518,7 +518,7 @@ class Twitter < ApplicationRecord
             TWT_STATUS::STATUS_PATROL => false,#すでにしている
             TWT_STATUS::STATUS_NO_PATROL => false,#しない
             TWT_STATUS::STATUS_NO_PATROL_PXV_CHECK => false,#pxvでよい
-            TWT_STATUS::STATUS_DELETED => false,#存在しないのでチェック不能
+            TWT_STATUS::STATUS_DELETED => true,#1か月は復活できるらしいのでチェック
             TWT_STATUS::STATUS_NOT_EXIST => false,#存在しないのでチェック不能
 
             TWT_STATUS::STATUS_ANOTHER => true,#別アカウントで運用なので不要？
@@ -894,7 +894,7 @@ class Twitter < ApplicationRecord
         end
 
         if self.rating.presence
-            if self.sp? and (self.rating and self.rating >= Twt::RATING_THRESHOLD)
+            if self.sp? and self.rating >= Twt::RATING_THRESHOLD
                 "\tSP#{TWT_H_SEPARATOR}-"# + gkey_work
             elsif self.last_access_datetime_days_elapsed < 3
                 w = self.prediction
@@ -906,6 +906,8 @@ class Twitter < ApplicationRecord
                 else
                     "\t03.一昨日アクセス#{TWT_H_SEPARATOR}#{str}↑"
                 end
+            elsif self.rating < 80
+                "\t00.低ランク"
             else
                 gkey_work
             end
@@ -1354,10 +1356,13 @@ class Twitter < ApplicationRecord
     end
 
     C_VAL_TBL = [
+        #r    d   n
         [95, [ 14, 15]],
-        [90, [ 21, 30]],
-        [87, [ 30, 33]],
+        [90, [ 21, 22]],
+        [88, [ 25, 25]],
+        [87, [ 27, 33]],
         [85, [ 30, 44]],
+        [84, [ 35, 50]],
         [82, [ 40, 55]],
         [80, [ 60, 66]],
         [78, [120,100]],

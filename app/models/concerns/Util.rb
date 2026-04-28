@@ -7,6 +7,7 @@ module Util
 
     EXCEPTION_TXT_PATH = "public/exception.txt"
     REMOVE_WORDS_FILE_PATH = "public/remove_words.txt"
+    SP_CHK_FILE_PATH = "public/sp_chk.txt"
 
     def self.get_param_num(params, symbol, def_val=0)
 =begin
@@ -340,6 +341,10 @@ module Util
         get_word_list(REMOVE_WORDS_FILE_PATH)
     end
 
+    def self.checking_screen_names()
+        get_word_list(SP_CHK_FILE_PATH)
+    end
+
     def self.parent_dirname(path)
         # "a/b/c.txt" => "b"
         File.basename(File.dirname path)
@@ -381,10 +386,15 @@ module ArtistName
     sepa_char = "(.+?)" + "(" + sepa_char_list.join("|") + ")" + "(.*)"
     @@sepa_rgx = Regexp.new(sepa_char)
 
-    def self.remove_spec_str(name, remove_words)
+    def self.remove_words_rgx(remove_words)
         rmv_word_list = remove_words.map {|w| Regexp.escape(w)}
         rmv_str = "(" + rmv_word_list.join("|") + ")"
         rgx = Regexp.new(rmv_str)
+        rgx
+    end
+
+    def self.remove_spec_str(name, remove_words)
+        rgx = remove_words_rgx(remove_words)
         name.sub(rgx, "").strip
     end
 

@@ -42,7 +42,7 @@ textarea {
 =end %>
     -->
 
-    <% show_pic_num = 5 %>
+    <% show_pic_num = 6 %>
     <% if params[:picn] == "" %>
     <% elsif params[:picn] == "all" %>
         <% show_pic_num = @twt_pic_path_list.size %>
@@ -72,6 +72,7 @@ textarea {
 <%= idx %>:<%= elem[0] %>
         <% end %>
     </textarea>
+    <%= link_to("重複チェック", twitter_path(dup_chk: 't', refresh: "y"), class: 'button button_a') %>
     <br />
 
     <% search_tweet_id = params[:search_id]%>
@@ -95,11 +96,12 @@ textarea {
                 <%= link_to_ex(image_tag(path, width: d_ratio, height: d_ratio, :alt => path), path) %>
             <% end %>
         <% else %>
-            ファイルは見つかりませんでした。<br />
+            ファイルは見つかりませんでした。
             <% tweet = Tweet.find_by(tweet_id: s_tweet_id) %>
             <% if tweet %>
-                "<%= tweet.status %>"<br />
+                <h4>DBに登録あり→   "<%= tweet.status %>"</h4>
             <% else %>
+                <br />
                 DBにも登録無し
             <% end %>
         <% end %>
@@ -145,7 +147,6 @@ textarea {
     <% if twt_pic_list.size > show_pic_num %>
         <%= link_to "...全て表示", twitter_path(picn: 'all', pic_lf: '3', corr: '0', refresh: "y") %>
     <% end %>
-    <%= link_to("重複チェック", twitter_path(dup_chk: 't', refresh: "y"), class: 'button button_a') %>
     <br />
     <%#= link_to("url txtチェック", twitter_path(file_check: 't', picn: 'all', pic_lf: '', corr: '0'), class: 'button') %>
     <%= link_to("url txtチェック", twitter_path(file_check: 't', pic_lf: '', corr: '0'), class: 'button') %>

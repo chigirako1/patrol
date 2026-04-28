@@ -26,17 +26,26 @@ class Tweet < ApplicationRecord
         ]
     end
 
-    def self.create_record(screen_name, tweet_id, status=StatusEnum::SAVED, num=-1)
+    def self.create_record(screen_name, tweet_id, status=StatusEnum::SAVED, num=-1, remarks=nil)
         twt_params = {}
         twt_params[:screen_name] = screen_name
         twt_params[:tweet_id] = tweet_id
         twt_params[:status] = status
+
         if num != -1
             twt_params[:num] = num
         end
+
+        if remarks
+            twt_params[:remarks] = remarks
+        end
+
+        msg = %!更新:#{twt_params}!
+        Rails.logger.info(msg)
+
         twt = Tweet.new(twt_params)
         twt.save
-        #puts %!new. "#{twt}"!
+
         twt
     end
 
@@ -140,7 +149,7 @@ class Tweet < ApplicationRecord
 
     def self.build_twt_grp(twitters, spec_str)
         twt_grp = Hash.new { |h, k| h[k] = [] }
-        twitters.each do |twt|
+        twitters.sort.uniq.each do |twt|
             spec = spec_str
             key_header = twt.group_spec(spec)
             twt_grp[key_header] << twt

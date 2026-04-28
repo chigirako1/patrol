@@ -12,6 +12,8 @@
     <% end %>
 
     <div>
+        <%= form.label :tweet_id, style: "display: block" %>
+
         <% if tweet.tweet_id.presence %>
             <% tweet_id_val = tweet.tweet_id %>
         <% elsif params[:tweet_id].presence %>
@@ -19,7 +21,6 @@
         <% else %>
             <% tweet_id_val = "" %>
         <% end %>
-        <%= form.label :tweet_id, style: "display: block" %>
         <%= form.number_field :tweet_id, value: tweet_id_val %>
 
         <%= link_to_ex("▶x(#{tweet_id_val})", Twt::twt_tweet_url_i(tweet_id_val)) %>
@@ -28,11 +29,20 @@
             <% time = Twt::get_timestamp(tweet.tweet_id) %>
 
             <% twt = Twitter.find_by_twtid_ignore_case(tweet.screen_name) %>
-            <% if twt and twt.last_access_datetime > time %>
-                <h4>
-                最後のアクセスより前のツイート
-                [<%= smart_date time %>(<%= Util::get_date_info time %>)]
-                </h4>
+            <% if twt %>
+                <% if twt.oldest_tweet_id and twt.oldest_tweet_id > tweet.tweet_id %>
+                    <h4>
+                    [<%= smart_date time %>(<%= Util::get_date_info time %>)]
+                    最古のIDより古いツイート(新:<%= twt.oldest_tweet_id %> > 古:<%= tweet.tweet_id %>[これ])
+                    </h4>
+                <% elsif twt.last_access_datetime > time %>
+                    <h4>
+                    最後のアクセスより前のツイート
+                    [<%= smart_date time %>(<%= Util::get_date_info time %>)]
+                    </h4>
+                <% else %>
+                    <%= smart_date time %>[<%= Util::get_date_info time %>]
+                <% end %>
             <% else %>
                 <%= smart_date time %>[<%= Util::get_date_info time %>]
             <% end %>

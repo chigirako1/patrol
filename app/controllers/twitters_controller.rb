@@ -909,10 +909,23 @@ class TwittersController < ApplicationController
 
     # 優先
     def index_high_priority(twitters, twt_params, prio)
-      twitters = twitters.select {|x| x.rating == nil or x.rating >= twt_params.rating_gt }
+      #twitters = twitters.select {|x| x.rating == nil or x.rating >= twt_params.rating_gt }
       twitters = twitters.select {|x| x.drawing_method == twt_params.param_target}
+
       if twt_params.ex_sp
         twitters = twitters.select {|x| !x.sp?}
+      end
+
+      if twt_params.hide_within_days > 0
+        twitters = twitters.select {|x| !x.last_access_datetime_p(twt_params.hide_within_days)}
+      else
+        twitters = twitters.select {|x| !x.last_access_datetime_p(twt_params.hide_within_days)}
+      end
+
+      if twt_params.pred_cond_gt < 0
+        twitters = twitters.select {|x| x.prediction < -(twt_params.pred_cond_gt)}
+      else
+        twitters = twitters.select {|x| x.prediction >= twt_params.pred_cond_gt}
       end
 
       twitters_check = index_chk(twitters)
@@ -939,9 +952,18 @@ class TwittersController < ApplicationController
         twitters = twitters.select {|x| !x.last_access_datetime_p(twt_params.hide_within_days)}
       end
       
-      #STDERR.puts %!|zzz|#{twitters.size}|xxx!
+      STDERR.puts %!|zzz|#{twitters.size}|xxx!
       if prio
-        twitters_intvl = twitters.select {|x| x.interval_exceeded?}
+        if twt_params.rating_gt > 0
+          n = twt_params.rating_gt
+        else
+          n = 89
+        end
+        if n
+          twitters_intvl = twitters.select {|x| x.interval_exceeded?(x.rating >= n)}
+        else
+          twitters_intvl = twitters.select {|x| x.interval_exceeded?}
+        end
       else
         twitters_intvl = twitters.select {|x| x.min_interval_exceeded?}
       end
@@ -1069,9 +1091,9 @@ class TwittersController < ApplicationController
         group = {}
         group["未設定#{Twitter::TWT_H_SEPARATOR}最近登録(#{nday}d) 予測順"] = twitters_w
 
-        twitters_w = twitters_w.sort_by {|x| [-(x.filenum||0), x.last_access_datetime]}
-        group["未設定#{Twitter::TWT_H_SEPARATOR}最近登録(#{nday}d) ファイル数順+"] = twitters_w.select {|x| x.prediction >= 5}
-        group["未設定#{Twitter::TWT_H_SEPARATOR}最近登録(#{nday}d) ファイル数順"] = twitters_w
+        #twitters_w = twitters_w.sort_by {|x| [-(x.filenum||0), x.last_access_datetime]}
+        #group["未設定#{Twitter::TWT_H_SEPARATOR}最近登録(#{nday}d) ファイル数順+"] = twitters_w.select {|x| x.prediction >= 5}
+        #group["未設定#{Twitter::TWT_H_SEPARATOR}最近登録(#{nday}d) ファイル数順"] = twitters_w
       end
       group
     end
@@ -1203,8 +1225,7 @@ class TwittersController < ApplicationController
       when SORT_BY::PRED_ASC
         twitters = twitters.sort_by {|x| [x.prediction, x.last_access_datetime]}
       when SORT_BY::SORT_ACCESS_Z_R
-        #twitters = twitters.sort_by {|x| [-x.last_access_datetime_z, -(x.rating||0), -x.prediction]}
-        twitters = twitters.sort_by {|x| [-x.last_access_datetime_z, -(x.rating||0), x.prediction]}
+        twitters = twitters.sort_by {|x| [-x.last_access_datetime_z, -(x.rating||0), -x.prediction]}
       when SORT_BY::ACCESS
         #twitters = twitters.sort_by {|x| [x.last_access_datetime, (x.last_access_datetime)]}#.reverse
         #twitters = twitters.sort_by {|x| [x.last_access_datetime, -(x.rating||0), -x.prediction]}

@@ -56,6 +56,7 @@
 
       <% if @twitter.disp_tab_target == Twitter::DISP_TAB::DT_POST %>
         <% post_tab = true %>
+        <% pnum = 0 %>
       <% elsif @twitter.disp_tab_target == Twitter::DISP_TAB::DT_MEDIA %>
       <% else %>
         <% pnum = Twt::image_num_a_post(tweet_id_list) %>
@@ -67,6 +68,8 @@
 
       <% if post_tab %>
         (<%= link_to_ex(%!★★★!, Twt::twt_user_url(@twitter.twtid)) %>)複数(<%= pnum %>)枚投稿が多い
+      <% elsif @twitter.disp_tab_target == Twitter::DISP_TAB::DT_MEDIA %>
+        [メディアタブ指定]
       <% end %>
     </h3>
   <% end %>

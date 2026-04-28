@@ -65,7 +65,7 @@ module ApplicationHelper
         #return "#111100" if value <= 15
 
         base = 204#255#204
-        min = 15
+        min = 10
         max = 100
 
         # 15〜99 の間で B（青）の値を線形補間

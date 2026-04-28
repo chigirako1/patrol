@@ -276,6 +276,8 @@ module Twt
                     x.twt.last_access_datetime
                 elsif x.dirname.end_with?("マイナス")
                     Time.new(2001,1,2)
+                elsif x.dirname.end_with?("プラス")
+                    Time.new(2001,1,10)
                 elsif x.dirname.end_with?("更新なし")
                     Time.new(2001,1,6)
                 elsif x.dirname.end_with?("更新停止")
@@ -728,6 +730,7 @@ module Twt
             if screen_name_arg.presence
                 dirname = screen_name_arg
             else
+                # BUG:
                 dirname = File.basename(File.dirname path)
             end
 
@@ -738,14 +741,18 @@ module Twt
         dup_tweet_list
     end
 
-    def self.create_tweet_record(dup_tweet_list, db_update)
-        dup_tweet_list2 = dup_tweet_list.sort_by {|x| x[1]}[1..-1]
+    def self.create_dup_tweet_record(dup_tweet_list, db_update)
+        sorted_dup_tweet_list = dup_tweet_list.sort_by {|x| x[1]}
+        src_tweet = sorted_dup_tweet_list[0]
+        dup_tweet_list2 = sorted_dup_tweet_list[1..-1]
         dup_tweet_list2.each do |x|
             twt_screen_name, tweet_id, pic_no = x
             tweet_rcd = Tweet.find_by(tweet_id: tweet_id)
             if tweet_rcd == nil
                 if db_update
-                    Tweet::create_record(twt_screen_name, tweet_id, Tweet::StatusEnum::DUPLICATE, pic_no)
+
+                    remarks = %!重複元=#{src_tweet[1]}/#{src_tweet[2]}@#{src_tweet[0]}!
+                    Tweet::create_record(twt_screen_name, tweet_id, Tweet::StatusEnum::DUPLICATE, pic_no, remarks)
                 else
                     puts %!同一のファイルです:#{tweet_id}-#{pic_no}(@#{twt_screen_name})!
                 end
@@ -817,7 +824,7 @@ module Twt
                 Rails.logger.warn(msg)
             end
 
-            create_tweet_record(dup_tweet_list, db_update)
+            create_dup_tweet_record(dup_tweet_list, db_update)
         end
         dup_path_list.flatten
     end
@@ -1176,32 +1183,58 @@ module Twt
 
     LOW_PRIORITY_IGNORE_KEY = "X00.低頻度&優先度低(最近アクセス)"
 
-    def self.get_key_elem(twt, k, v, url_list)
-        postdate = twt.last_post_datetime.in_time_zone('Tokyo').strftime("%y/%m/%d %H:%M")
-        dayn = Util::get_date_delta(twt.last_post_datetime)
-        avg = v.avg / 1024
-        pred = twt.prediction
-        lad_n = twt.last_access_datetime_days_elapsed
+    def self.get_key_elem_sub(twt, dayn, pred, chk)
 
-        elem = []
-        elem << k
-        elem << %!"#{twt.twtname}"!
-        elem << twt.update_frequency
-        elem << postdate
-        elem << dayn
-        elem << twt.rating
-        elem << twt.r18
-        elem << avg
-        elem << v.cnt
-        elem << pred
-        if url_list
-            elem << url_list.todo_cnt
-            elem << url_list.url_cnt
-        else
-            elem << 0
-            elem << 0
+        if chk or Tweet.has_acquisition_schedule?(twt.twtid)
+            return "999.取得対象物件あり"
         end
 
+        if twt.last_access_datetime_days_elapsed < 1 or twt.low_priority_and_recently_accessed?
+            return LOW_PRIORITY_IGNORE_KEY
+        end
+
+        if twt.rating < 80
+            return "900.低優先度"
+        end
+
+        if twt.update_frequency >= 350
+            day_std = 3
+            if dayn < day_std
+                return "002.当日分:高頻度(#{day_std}日以内アクセス)"
+            else
+                return "001.当日分:高頻度(#{day_std}日以上アクセス)"
+            end
+        elsif twt.update_frequency >= 250
+            return "011.前日分"
+        end
+
+        if dayn >= 60
+            return "801.60日以上"
+        elsif dayn >= 30
+            return "801.30日以上"
+        elsif dayn >= 15
+            return "801.15日以上"
+        end
+
+        if twt.rating < 85 and twt.prediction < 15
+            return LOW_PRIORITY_IGNORE_KEY
+        end
+
+
+        t1 = 30
+        t2 = 20
+        if twt.prediction > t1
+            return "119.#{t1}↑"
+        elsif twt.prediction > t2
+            return "115.#{t2}↑"
+        elsif twt.prediction < 15
+            return "110.予測小"
+        else
+            return "111.0↑"
+        end
+    end
+
+    def self.get_key_elem_s(twt, dayn, pred)
         d_unit = 15
         elapse = dayn / d_unit
         unit = 10
@@ -1213,8 +1246,6 @@ module Twt
                 pr = 1
             end
         end
-
-        #key = "#{Util::format_num(twt.update_frequency, 100, 4)}|||更新頻度:#{Util::format_num(twt.update_frequency, 50, 4)}"
 
         r_h = 86
         r_x = 82
@@ -1284,7 +1315,44 @@ module Twt
         else
             dayn_s = "701.最近アクセス"
         end
-        key = "#{dayn_s}|||#{Util::format_num(twt.update_frequency, 100, 4)}|||更新頻度:#{Util::format_num(twt.update_frequency, 50, 4)}"
+
+        dayn_s
+    end
+
+    def self.get_key_elem(twt, k, v, url_list, chk)
+        postdate = twt.last_post_datetime.in_time_zone('Tokyo').strftime("%y/%m/%d %H:%M")
+        dayn = Util::get_date_delta(twt.last_post_datetime)
+        avg = v.avg / 1024
+        pred = twt.prediction
+        lad_n = twt.last_access_datetime_days_elapsed
+
+        elem = []
+        elem << k
+        elem << %!"#{twt.twtname}"!
+        elem << twt.update_frequency
+        elem << postdate
+        elem << dayn
+        elem << twt.rating
+        elem << twt.r18
+        elem << avg
+        elem << v.cnt
+        elem << pred
+        if url_list
+            elem << url_list.todo_cnt
+            elem << url_list.url_cnt
+        else
+            elem << 0
+            elem << 0
+        end
+
+        key1 = get_key_elem_sub(twt, dayn, pred, chk)
+
+        #key = "#{Util::format_num(twt.update_frequency, 100, 4)}|||更新頻度:#{Util::format_num(twt.update_frequency, 50, 4)}"
+        #key = "#{dayn_s}|||#{Util::format_num(twt.update_frequency, 100, 4)}|||更新頻度:#{Util::format_num(twt.update_frequency, 50, 4)}"
+
+        key2 = Util::format_num(twt.rating, 1)
+        key3 = Util::format_num(pred, 10)
+        key = "#{key1}|||#{key2}|||#{key3}"
 
         [key, elem]
     end
@@ -1298,6 +1366,10 @@ module Twt
         #url_list_summary_h = url_list_summary.map {|x| [x.screen_name, x]}.to_h
         url_list_summary_h = Tweet::url_list_summary_hash(known_twt_url_list)
         STDERR.puts %!build_pic_info_list xxx!
+
+        chk_screen_name_list = Util::checking_screen_names
+        h = {}
+        chk_screen_name_list.each  {|x| h[x] = true}
 
         list = Hash.new { |h, k| h[k] = [] }
         hash.each do |k,val|
@@ -1323,7 +1395,7 @@ module Twt
                 next
             end
 
-            key, elem = get_key_elem(twt, k, v, url_list_summary_h[k])
+            key, elem = get_key_elem(twt, k, v, url_list_summary_h[k], h[k])
 
             if key.start_with?(LOW_PRIORITY_IGNORE_KEY)
                 next
@@ -1337,8 +1409,8 @@ module Twt
 
     def self.output_csv(list)
         screen_names = []
-        #list2 = list.sort_by {|k,v| k}.reverse.to_h
-        list2 = list.sort_by {|k,v| k}.to_h
+        #list2 = list.sort_by {|k,v| k}.to_h
+        list2 = list.sort_by {|k,v| k}.reverse.to_h
         list2.each do |k, v|
             v.each do |line|
                 #puts line
@@ -1399,10 +1471,8 @@ module Twt
 
         if hash2
             hash3 = hash2.sort_by {|k, x|
-                #x[1]?(x[1].rating||0):0
                 sort_tmp(x)
-            #}.reverse.to_h
-            }.to_h
+            }.reverse.to_h
             list = build_pic_info_list(hash3)
 
             keys = output_csv(list)
