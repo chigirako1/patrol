@@ -152,8 +152,8 @@
                 <th>X</th>
             </tr>
             <% list = list.sort_by {|z|
-                x = z[0];
-                x.sort_cond(z[1].size)
+                    x = z[0];
+                    x.sort_cond(z[1].size)
                 }.reverse
             %>
             <!-- ,  -->
@@ -290,9 +290,11 @@
 <% if params[:grp_sort_spec].presence %>
     <% spec = params[:grp_sort_spec] %>
 <% else %>
+    <% spec = "{r3}|{p40}|{az}::評価{r}" %>
     <% spec = "{p30}件↑|{aw}週#{Twitter::TWT_H_SEPARATOR}予測{p20}～" %>
     <% spec = "{aw}週#{Twitter::TWT_H_SEPARATOR}{r}" %>
     <% spec = "評価{r}#{Twitter::TWT_H_SEPARATOR}{az}" %>
+    <% spec = "{p25}#{Twitter::TWT_H_SEPARATOR}{az}" %>
 <% end %>
 
 <% if @tweet_i_ids.presence and @tweet_i_ids.size > 0 %>
@@ -1058,8 +1060,14 @@
     <% end %>
 <% end %>
 
-<% if twt_grp2 %>
+<% if twt_grp2 and twt_grp2.size > 0 %>
     <h1>twt_grp2(<%= twt_grp2.size %>)</h1>
+
+    <h2><%= Twitter::TWT_KEYWORD_SP_S %></h2>
+    <% twt_grp2[Twitter::TWT_KEYWORD_SP_S].each do |twt| %>
+        <%= twt.twtid %><br />
+    <% end %>
+
     <% header_a_save = "" %>
     <% twt_grp2.sort_by {|k,v| k}.reverse.to_h.each do |key_header, value| %>
         <% header_a, header_b = key_header.split(Twitter::TWT_H_SEPARATOR) %>
@@ -1086,11 +1094,13 @@
                 <!-- <div style="background-color: #e0f7fa; padding: 10px;"> -->
                 <span style="background-color: <%= bgcolorz %>;">
             <% end %>
+
             <%= Util::format_num idx, 1, 2 %>:
             <% if twt.sp? %>
                 ★大★
             <% end %>
             予測:<%= pred %>
+            <%= %![#{dm_disp twt.drawing_method}]! if twt.drawing_method != Twitter::DRAWING_METHOD::DM_AI %>
             【<%= twt.rating %>】
             <%= twt.twtname %>
             (@<%= twt.twtid %>)

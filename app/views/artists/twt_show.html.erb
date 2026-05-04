@@ -1,7 +1,7 @@
 <% title = %!@#{@twtid}:画像一覧! %>
 <% provide(:title, title) %>
 
-<h3 id="twt_pic_list">twt pic (<%= link_to "@#{@twtid}", Twt::twt_user_media_url(@twtid), target: :_blank, rel: "noopener noreferrer" %>)</h3>
+<h3 id="twt_pic_list">Twt::twt_path_str(<%= link_to_ex "@#{@twtid}", Twt::twt_user_media_url(@twtid) %>)</h3>
 
 <% twt_acnt = Twitter.find_by_twtid_ignore_case(@twtid) %>
 <% if twt_acnt == nil %>
@@ -31,10 +31,10 @@
 <% end %>
 <hr />
 
-<% twt_pic_list = @twt_pic_path_list.map {|x| [Twt::twt_path_str(x), x]}.sort.reverse %>
+<% twt_img_list = TwtImageList::new(@twt_pic_path_list, true) %>
 
-<% freq = (Twt::calc_freq(twt_pic_list.map {|x| x[1]})).to_f %>
-更新頻度：<%= freq %>/<%= Twt::CALC_FREQ_UNIT %>日
+<% freq = twt_img_list.calc_freq %>
+更新頻度：<%= freq %>枚/<%= Twt::CALC_FREQ_UNIT %>日
 <% if twt_acnt != nil and twt_acnt.update_frequency != nil %>
     <% current_val_freq = twt_acnt.update_frequency %>
     <%= %!(現在値：#{current_val_freq})! %>
@@ -47,26 +47,51 @@
 <% if params[:picn] == "" %>
     <% show_pic_num = 15 %>
 <% elsif params[:picn] == "all" %>
-    <% show_pic_num = twt_pic_list.size %>
+    <% show_pic_num = twt_img_list.list.size %>
 <% elsif params[:picn] =~ /(\d+)/ %>
     <% show_pic_num = $1.to_i %>
 <% else %>
     <% show_pic_num = 15 %>
 <% end %>
-<%# pic_mag_twt_b = '10%' %>
 
-<% twt_pic_list.first(show_pic_num).each.with_index(1) do |elem, idx| %>
-    <% path = elem[1] %>
+<% if params[:sdate] %>
+    <% sdate = Util::parse_date_str(params[:sdate]) %>
+    <% show_pic_num = twt_img_list.list.size %>
+<% end %>
+
+<h4>twt_img_list(<%= twt_img_list.list.size %>)</h4>
+<% twt_img_list.list.first(show_pic_num).each.with_index(1) do |elem, idx| %>
+    <% path = elem.file_path %>
     <%= idx %>.
-    <%#= link_to image_tag(path, width: pic_mag_twt_b, height: pic_mag_twt_b, class: "fixed-height-img", :alt => path), path, target: :_blank, rel: "noopener noreferrer" %>
-    <%= link_to image_tag(path, class: "fixed-height-img", :alt => path), path, target: :_blank, rel: "noopener noreferrer" %>
+    <% if elem.pic_no == 0 %>
+        <% imgclass = "fixed-height-img" %>
+    <% else %>
+        <% imgclass = "fixed-height-mini-img" %>
+    <% end %>
+    <%= link_to_ex image_tag(path, class: imgclass, :alt => path), path %>
+
+    <% if sdate %>
+        <% postdate = elem.datetime %>
+        <% if postdate.to_date == sdate %>
+            <% smart_date sdate %>
+        <% end %>
+
+        <% if postdate.to_date < sdate %>
+            <% break %>
+        <% end %>
+    <% end %>
 <% end %>
 <br />
 
-<% twt_pic_list.first(show_pic_num).each.with_index(1) do |elem, idx| %>
-    <%= idx %>:<%= elem[0] %><br />
+<% twt_img_list.list.first(show_pic_num).each.with_index(1) do |elem, idx| %>
+    <%= idx %>:<%= Twt::twt_path_str elem.file_path %><br />
+    <% if sdate %>
+        <% postdate = elem.datetime %>
+        <% if postdate.to_date < sdate %>
+            <% break %>
+        <% end %>
+    <% end %>
 <% end %>
-総数:<%= twt_pic_list.size %>
 <br />
 
 <!-- ########################## --

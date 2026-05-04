@@ -91,8 +91,10 @@ class HomeController < ApplicationController
           num_of_disp: 10,
           #force_disp_day: 10,
           grp_sort_by: TwittersController::GRP_SORT::GRP_SORT_SPEC,
-          grp_sort_spec: "{az}::評価{r}",
-          sort_by: TwittersController::SORT_BY::ACCESS,#ACCESS_W_PRED_A
+          #grp_sort_spec: "{p40}|{az}::評価{r}",
+          grp_sort_spec: "{r3}|{p40}|{az}::評価{r}",
+          #sort_by: TwittersController::SORT_BY::ACCESS,#ACCESS_W_PRED_A
+          sort_by: TwittersController::SORT_BY::M_R_ACCESS_W_PRED_A,
           ex_sp: true,
           #step: -3,
           #num_of_times: 4,
@@ -806,7 +808,8 @@ class HomeController < ApplicationController
             #show_times: 2,
             pred: 5,
             target:"twt,twt既知,twt未知,known_pxv,unknown_pxv",
-            grp_sort_spec: "{az}#{Twitter::TWT_H_SEPARATOR}{r}",
+            #grp_sort_spec: "{p40}|{az}#{Twitter::TWT_H_SEPARATOR}{p10}",
+            grp_sort_spec: "{r4}|{p40}|{az}#{Twitter::TWT_H_SEPARATOR}{p10}",
           )
       },
       { :label => "今月ファイル ",

@@ -188,7 +188,6 @@
   <% end %>
   <br />
   
-  <% ratio = '15%' %>
   <% list.first(@number_of_display).each.with_index(1) do |(artwork_id, data), idx| %>
     <% path = data[0] %>
     <% title = data[1] %>
@@ -207,18 +206,17 @@
       (<%= fcnt %>枚)
     <% end %>
     .
-    <%= link_to_ex(image_tag(path, width: ratio, height: ratio), path) %>
+    <%= link_to_ex(image_tag(path, class: "fixed-height-img"), path) %>
   <% end %>
 
   <!-- 最初期のファイル -->
-  <% ratio = '15%' %>
   <% list.to_a.last(1).each.with_index(1) do |(artwork_id, data), idx| %>
     <% path = data[0] %>
     <% title = data[1] %>
     <% date = data[2] %>
     <% fcnt = data[3] %>
     <%= list.size %>.
-    <%= link_to_ex(image_tag(path, width: ratio, height: ratio), path) %>
+    <%= link_to_ex(image_tag(path, class: "fixed-height-img"), path) %>
   <% end %> 
   <br />
 </div>

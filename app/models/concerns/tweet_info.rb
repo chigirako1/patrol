@@ -44,6 +44,17 @@ module TweetInfo
         end
         [tweet_id, pic_no]
     end
+
+    def self.get_tweet_info_from_filepath(filepath)
+        fn = File.basename filepath
+        get_tweet_info(fn)
+    end
+
+    def self.get_tweet_id_from_filepath(filepath)
+        tweet_id, _ = get_tweet_info_from_filepath(filepath)
+        tweet_id
+    end
+
 end
 
 class TweetPicInfo

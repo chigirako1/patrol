@@ -24,11 +24,33 @@
     [<%= link_to_ex("tweets db", tweets_path(screen_name: tweet.screen_name)) %>]
     <br />
 
-    <% (@pic_list||[]).each do |path| %>
-        <% if path.include? tweet.tweet_id.to_s %>
-            <%= link_to_ex image_tag(path, width: '10%', height: '10%', :alt => path), path %>
-        <% else %>
+    <% if @pic_list %>
+        <%= @pic_list.size %>枚<br />
+
+        <% (@pic_list||[]).each do |path| %>
+            <% if path.include? tweet.tweet_id.to_s %>
+                <%= link_to_ex image_tag(path, width: '10%', height: '10%', :alt => path), path %>
+            <% else %>
+            <% end %>
+        <% end %>
+
+        <% if tweet.remarks.presence %>
+            <% (@pic_list||[]).each do |path| %>
+                <% if path.include? tweet.remarks %>
+                    <%= link_to_ex image_tag(path, width: '10%', height: '10%', :alt => path), path %>
+                <% else %>
+                <% end %>
+            <% end %>
+
+            <% filelist2 = Twt::get_sp_pic_filelist2_by_twtid(tweet.screen_name) %>
+            <% filelist2.each do |path| %>
+                <% if path.include? tweet.remarks %>
+                    <%= link_to_ex image_tag(path, width: '10%', height: '10%', :alt => path), path %>
+                <% else %>
+                <% end %>
+            <% end %>
         <% end %>
     <% end %>
+
     <%= link_to_ex("▶x", Twt::twt_tweet_url_i(tweet.tweet_id)) %><br />
 </div>

@@ -27,9 +27,9 @@
 
 <div class="view_form">
   <%= form_with(url: twitter_path, local: true, method: :get) do |f| %>
-    tweet id:<%= f.text_field :search_id, :value => params[:search_id] %>
+    検索tweet id/url/日付:<%= f.text_field :search_id, :value => params[:search_id] %>
     <%= f.submit("検索", name: nil, class: 'submit-btn') %>
-    <%= f.hidden_field :picn, value: 'all' %>
+    <%#= f.hidden_field :picn, value: 'all' %>
     <br />
 
   <% end %>

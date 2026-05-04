@@ -1,7 +1,9 @@
 
 module TwittersHelper
     DM_AI_ICON = ApplicationHelper::DM_AI_ICON#"🤖"
-    DM_HAND_ICON ="✍️"
+    DM_HAND_ICON = "✍️"
+    DM_THIEF_ICON = "😎"
+
     R18_ICON = "🔞"
     PXV_ICON = "🅿️"
     PRIVATE_ICON = "🔒️"
@@ -50,6 +52,13 @@ module TwittersHelper
                 tag += "※フォルダあり※"
             end
             tag += %![#{link_to_ex("☆twt☆:@#{twtid}", artist_twt_path(twtid))}]!
+
+            pxv = Artist.find_by(twtid: twtid)
+            if pxv
+                tag += "※pxvに登録あり→"
+                tag += %![#{link_to_ex("■pxv■(#{pxv.pxvname})", pxv)}]!
+            end
+
             tag.html_safe
         end
     end
@@ -87,6 +96,8 @@ module TwittersHelper
             icon = DM_AI_ICON
         when Twitter::DRAWING_METHOD::DM_HAND
             icon = DM_HAND_ICON
+        when Twitter::DRAWING_METHOD::DM_REPRINT
+            icon = DM_THIEF_ICON
         else
             icon = ""
         end

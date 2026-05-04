@@ -75,18 +75,25 @@ textarea {
     <%= link_to("重複チェック", twitter_path(dup_chk: 't', refresh: "y"), class: 'button button_a') %>
     <br />
 
-    <% search_tweet_id = params[:search_id]%>
-    <% if search_tweet_id.presence %>
-        <% s_tweet_id = Twt::get_tweet_id_from_url(search_tweet_id, true) %>
-        <% if s_tweet_id != search_tweet_id %>
-            <% header_str = %!"#{s_tweet_id}"(#{search_tweet_id})! %>
+    <% search_string = params[:search_id]%>
+    <% if search_string.presence %>
+        <% s_tweet_id = Twt::get_tweet_id_from_url(search_string, true) %>
+        <% if s_tweet_id != search_string %>
+            <% header_str = %!"#{s_tweet_id}"(#{search_string})! %>
         <% else %>
             <% header_str = %!"#{s_tweet_id}"! %>
         <% end %>
-        <h3>検索ID:<%= header_str %></h3>
-        <%= Util::datetime_disp(Twt::get_timestamp(s_tweet_id)) %><br />
 
-        <% paths = Twt::search_tweet(@twt_pic_path_list, s_tweet_id) %>
+        <h3>検索ID:<%= header_str %></h3>
+
+        <% if s_tweet_id %>
+            <%= Util::datetime_disp(Twt::get_timestamp(s_tweet_id)) %><br />
+            <% paths = Twt::search_tweet(@twt_pic_path_list, s_tweet_id) %>
+        <% else %>
+            <% date = Util::parse_date_str(search_string) %>
+            <% paths = Twt::search_tweet_by_date(@twt_pic_path_list, date) if date %>
+        <% end %>
+
         <% if paths and paths.size > 0 %>
             <%= paths.size %>件ヒット<br />
             <% d_ratio = '10%' %>
@@ -112,12 +119,11 @@ textarea {
     <!-- サムネイル -->
     <% if true #@twt_ids == nil %>
         <% twt_pic_list.first(show_pic_num).each.with_index(1) do |elem, idx| %>
-            <%= idx %>
             <% path = elem[1] %>
             <% if elem[2][1] != 0 %>
-                (<%= "複" %>)
                 <% class_str = "fixed-height-mini-img" %>
             <% else %>
+                <%= idx %>
                 <% class_str = "fixed-height-img" %>
             <% end %>
             .
@@ -297,7 +303,9 @@ textarea {
     計算結果"<%= avg %>"
     (<%= freq_90d %>/<%= freq_30d %>/<%= freq_15d %>
     <% if freq_90d > freq_30d and freq_30d > freq_15d %>
-        減少傾向
+        <b>減少傾向</b>
+    <% elsif freq_90d < freq_30d and freq_30d < freq_15d %>
+        <b>増加傾向</b>
     <% end %>
     )
     <% avg_wk = (avg + 10) / 10 * 10 %>

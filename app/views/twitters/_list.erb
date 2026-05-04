@@ -30,7 +30,10 @@
     <h3>最古(<%= elem.tweet_id %>)[<%= smart_date until_date %>]</h3>
     <b><%= Twt::twt_img_search_str(twitter.twtid, nil, until_date) %></b>
     <br />
-    <%= link_to_ex(image_tag(elem.file_path, class: class_str, :alt => elem.file_path), elem.file_path) %>
+    <% elem_list = date_group[date].select {|x| x.tweet_id == elem.tweet_id} %>
+    <% elem_list.each do |e| %>
+        <%= link_to_ex(image_tag(e.file_path, class: class_str, :alt => e.file_path), e.file_path) %>
+    <% end %>
     <br />
     <%= %!#{elem.tweet_id}##{elem.pic_no}"#{elem.file_path}"! %><br />
 
@@ -38,42 +41,67 @@
     <h3>途中</h3>
     <% if key_dates.size > 1 %>
         <% (key_dates.size - 1).times.reverse_each do |i| %>
-            <% elem = date_group[key_dates[i].last].last %>
-            <% since_date = Twt::get_timestamp(elem.tweet_id) %>
+            <% since = key_dates[i].last %>
+            <% elem_s = date_group[since].last %>
+            <% since_date = Twt::get_timestamp(elem_s.tweet_id) %>
 
-            <% elem2 = date_group[key_dates[i + 1].first].first %>
-            <% until_date = Twt::get_timestamp(elem2.tweet_id) %>
+            <% until_d = key_dates[i + 1].first %>
+            <% elem_u = date_group[until_d].first %>
+            <% until_date = Twt::get_timestamp(elem_u.tweet_id) %>
 
             <h4>
                 <%= (until_date.to_date - since_date.to_date).to_i %>日
-                (<%= smart_date Twt::get_timestamp(elem2.tweet_id) %>
-                ←<%= smart_date Twt::get_timestamp(elem.tweet_id) %>)
+                (<%= smart_date until_date %>
+                ←<%= smart_date since_date %>)
             </h4>
             <b><%= Twt::twt_img_search_str(twitter.twtid, since_date, until_date) %></b>
             <br />
 
-            新<%= link_to_ex(image_tag(elem2.file_path, class: class_str, :alt => elem2.file_path), elem2.file_path) %>
-            ←<%= link_to_ex(image_tag(elem.file_path, class: class_str, :alt => elem.file_path), elem.file_path) %>旧
+            新(<%= smart_date until_date %>)
+            <% elem_list = date_group[until_d].select {|x| x.tweet_id == elem_u.tweet_id} %>
+            <% elem_list.each do |e| %>
+                <%= link_to_ex(image_tag(e.file_path, class: class_str, :alt => e.file_path), e.file_path) %>
+            <% end %>
+            ←旧(<%= smart_date since_date %>)
+            <% elem_list = date_group[since].select {|x| x.tweet_id == elem_s.tweet_id} %>
+            <% elem_list.each do |e| %>
+                <%= link_to_ex(image_tag(e.file_path, class: class_str, :alt => e.file_path), e.file_path) %>
+            <% end %>
+
             <br />
 
-            <%= %!#{elem2.tweet_id}##{elem2.pic_no}"#{elem2.file_path}"! %><br />
-            <%= %!#{elem.tweet_id}##{elem.pic_no}"#{elem.file_path}"! %><br />
+            <%= %!#{elem_u.tweet_id}##{elem_u.pic_no}"#{elem_u.file_path}"! %><br />
+            <%= %!#{elem_s.tweet_id}##{elem_s.pic_no}"#{elem_s.file_path}"! %><br />
             <br />
             
         <% end %>
     <% end %>
 
-    
-    <h2><%= twt_pic_list.list.size %></h2>
-    <% {}.each.with_index(1) do |(k, v), idx| %>
-        <h3><%= k %>(<%= v.size %>)</h3>
-        <% v.each do |elem| %>
-            <%= %!#{elem.tweet_id}##{elem.pic_no}"#{elem.file_path}"! %><br />
+    <h2>date_group(<%= twt_pic_list.list.size %>)</h2>
+    <!-- 日付ごとの件数 -->
+    <%# date_group = {} %>
+    <% date_group.to_a.reverse.to_h.each do |k, v| %>
+        <% key_dates.each do |e| %>
+            <% if k == e.last.to_date %>
+                <b><%= k + 1 %>～ファイルなし</b>
+                <br />
+                <% elem_u = date_group[k].last %>
+                <%= %!#{elem_u.tweet_id}##{elem_u.pic_no}"#{elem_u.file_path}"! %>
+                <br />
+                <% break %>
+            <% end %>
         <% end %>
+
+        <%= %!#{k}:#{v.size}! %>枚
+        <% post_n = v.map {|x| x.tweet_id}.sort.uniq.size %>
+        <%= %!(#{post_n}post)! if post_n != v.size %>
+        <br />
+
     <% end %>
-    <% date_group = {} %>
-    <% date_group.each do |k, v| %>
-        <%= %!#{k}:#{v.size}! %><br />
+
+    <h2>key_dates(<%= key_dates.size %>)</h2>
+    <% key_dates.reverse.each do |e| %>
+        <%= e.first.to_date %> ～ <%= e.last.to_date %><br />
     <% end %>
     
 </div>

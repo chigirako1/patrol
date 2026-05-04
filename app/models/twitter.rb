@@ -6,6 +6,9 @@ class Twitter < ApplicationRecord
 
     TWT_H_SEPARATOR = "::"
 
+    TWT_KEYWORD_SP = "\tSP"
+    TWT_KEYWORD_SP_S = "#{TWT_KEYWORD_SP}#{TWT_H_SEPARATOR}-"# + gkey_work
+
     module TWT_STATUS
         STATUS_PATROL = "TWT巡回"
         STATUS_VID_PATROL = "動画チェック"
@@ -89,7 +92,8 @@ class Twitter < ApplicationRecord
 
         twitters = Twitter.all
         twitters = twitters.where(where_phrase)
-        twitters = twitters.select {|x| x.status == TWT_STATUS::STATUS_PATROL and !x.sp?}.sort_by {|x| [x.drawing_method||"", -(x.rating||0)]}
+        #twitters = twitters.select {|x| x.status == TWT_STATUS::STATUS_PATROL and !x.sp?}.sort_by {|x| [x.drawing_method||"", -(x.rating||0)]}
+        twitters = twitters.select {|x| x.search_target?}.sort_by {|x| [x.drawing_method||"", -(x.rating||0)]}
 
         if drawing_method
             twitters = twitters.select {|x| x.drawing_method == DRAWING_METHOD::DM_AI}
@@ -340,12 +344,16 @@ class Twitter < ApplicationRecord
             return false
         end
 
+        if self.status != Twitter::TWT_STATUS::STATUS_PATROL
+            return false
+        end
+
         #unless (twitter.rating and twitter.rating >= Twt::RATING_THRESHOLD)
         #    return false
         #end
         
         if Twt::filesize_v_huge?(self.filesize)
-            STDERR.puts %!sp?: #{self.filesize} bytes, #{self.update_frequency}/100 "#{self.twtname}[@#{self.twtid}]"!
+            #STDERR.puts %!sp?: #{self.filesize} bytes, #{self.update_frequency}/100 "#{self.twtname}[@#{self.twtid}]"!
             true
         elsif filesize_huge?
             #STDERR.puts %!sp?:#{1}!
@@ -360,12 +368,34 @@ class Twitter < ApplicationRecord
         end
     end
 
-    def low_priority_and_recently_accessed?
-        if (self.rating||0) < 85 and self.last_access_day_num < 3
+    def low_priority_and_recently_accessed?(r = 85, lad = 3)
+        if (self.rating||0) < r and self.last_access_day_num < lad
             true
         else
             false
         end
+    end
+
+    def no_disp?(dayn)
+        if self.low_priority_and_recently_accessed?(85, 3)
+            return true
+        end
+
+        if self.low_priority_and_recently_accessed?(87, 1)
+            return true
+        end
+
+        if self.rating < 85 and self.prediction < 15
+            return true
+        end
+
+        if self.rating < 85 and dayn < 10 or
+            self.rating < 83 and dayn < 20 or
+            self.rating < 80 and dayn < 30
+            return true
+        end
+        
+        false
     end
 
     def has_unaccessible_tweet?
@@ -504,7 +534,7 @@ class Twitter < ApplicationRecord
             status||"", 
             rating||0, 
             #last_access_datetime,
-            prediction,
+            -prediction,
             last_access_datetime,
             -(cnt),
             r18
@@ -574,6 +604,7 @@ class Twitter < ApplicationRecord
         [10, [100, 360, 90]],
         [0,  [200, 360, 100]],
     ]
+
     def select_cond_aio(pred_cond_gt)
         if self.rating == nil
             return true
@@ -616,6 +647,18 @@ class Twitter < ApplicationRecord
 
             end
         end
+        false
+    end
+
+    def search_target?
+        if self.status == TWT_STATUS::STATUS_PATROL
+            return true
+        end
+
+        if update_chk? and select_cond_post_date
+            return true
+        end
+
         false
     end
 
@@ -894,20 +937,27 @@ class Twitter < ApplicationRecord
         end
 
         if self.rating.presence
-            if self.sp? and self.rating >= Twt::RATING_THRESHOLD
-                "\tSP#{TWT_H_SEPARATOR}-"# + gkey_work
-            elsif self.last_access_datetime_days_elapsed < 3
+            if self.status != Twitter::TWT_STATUS::STATUS_PATROL
+                "\t#{self.status}#{TWT_H_SEPARATOR}-"
+            elsif self.sp? and self.rating >= Twt::RATING_THRESHOLD
+                TWT_KEYWORD_SP_S
+            elsif self.last_access_datetime_days_elapsed < 5
                 w = self.prediction
                 str = Util::format_num(w, 10, 3)
-                if self.last_access_datetime_days_elapsed < 1
+                case self.last_access_datetime_days_elapsed
+                when 0
                     "\t01.本日アクセス#{TWT_H_SEPARATOR}#{str}↑"
-                elsif self.last_access_datetime_days_elapsed < 2
+                when 1
                     "\t02.昨日アクセス#{TWT_H_SEPARATOR}#{str}↑"
-                else
+                when 2
                     "\t03.一昨日アクセス#{TWT_H_SEPARATOR}#{str}↑"
+                when 3
+                    "\t04.4日前アクセス#{TWT_H_SEPARATOR}#{str}↑"
+                else
+                    "\t05.5日前アクセス#{TWT_H_SEPARATOR}#{str}↑"
                 end
             elsif self.rating < 80
-                "\t00.低ランク"
+                "\t低ランク#{TWT_H_SEPARATOR}-"
             else
                 gkey_work
             end
@@ -1191,7 +1241,8 @@ class Twitter < ApplicationRecord
 
         case status
         when Twitter::TWT_STATUS::STATUS_PATROL
-            key = self.group_spec("{az}#{TWT_H_SEPARATOR}評価{r}")
+            #key = self.group_spec("{az}#{TWT_H_SEPARATOR}評価{r}")
+            key = self.group_spec("{az}#{TWT_H_SEPARATOR}{p50}")
             %![#{dm}]#{key}!
         else
             key = status unless key
@@ -1357,17 +1408,17 @@ class Twitter < ApplicationRecord
 
     C_VAL_TBL = [
         #r    d   n
-        [95, [ 14, 15]],
-        [90, [ 21, 22]],
-        [88, [ 25, 25]],
-        [87, [ 27, 33]],
-        [85, [ 30, 44]],
-        [84, [ 35, 50]],
-        [82, [ 40, 55]],
-        [80, [ 60, 66]],
-        [78, [120,100]],
-        [75, [180,200]],
-        [ 0, [  0,  0]],
+        [95, [ 14, 15, 0]],
+        [90, [ 21, 20, 0]],
+        [88, [ 25, 22, 0]],
+        [87, [ 27, 33, 0]],
+        [85, [ 30, 44, 0]],
+        [84, [ 35, 50, 5]],
+        [82, [ 40, 55,14]],
+        [80, [ 60, 66,21]],
+        [78, [120,100,30]],
+        [75, [180,200,40]],
+        [ 0, [  0,  0, 0]],
     ]
 
     def self.find_config_by_val(val)
@@ -1376,11 +1427,13 @@ class Twitter < ApplicationRecord
 
     def interval_exceeded?(flg = false)
         if self.max_interval
-            STDERR.puts %!#{self.last_access_day_num} <> #{self.max_interval} [#{self.twtname}(#{self.twtid})]!
+            #STDERR.puts %!#{self.last_access_day_num} <> #{self.max_interval} [#{self.twtname}(#{self.twtid})]!
             if self.last_access_day_num >= self.max_interval
                 return true
             end
-        elsif flg
+        end
+
+        if flg
             set = self.class.find_config_by_val(self.rating)
             daysn = set[1][0]
             if self.last_access_day_num >= daysn
@@ -1394,7 +1447,9 @@ class Twitter < ApplicationRecord
             if self.prediction >= self.fetch_pred_n
                 return true
             end
-        elsif flg
+        end
+        
+        if flg
             unless set
                 set = self.class.find_config_by_val(self.rating)
             end
@@ -1411,8 +1466,14 @@ class Twitter < ApplicationRecord
 
     def min_interval_exceeded?
         if self.min_interval
-            STDERR.puts %!#{self.last_access_day_num} <> #{self.min_interval} [#{self.twtname}(#{self.twtid})]!
+            #STDERR.puts %!#{self.last_access_day_num} <> #{self.min_interval} [#{self.twtname}(#{self.twtid})]!
             if self.last_access_day_num < self.min_interval
+                return false
+            end
+        else
+            set = self.class.find_config_by_val(self.rating)
+            daysn = set[1][2]
+            if self.last_access_day_num < daysn
                 return false
             end
         end

@@ -158,6 +158,17 @@ module Util
         end
     end
 
+    def self.parse_date_str(str)
+        begin
+            date = Date.parse(str)
+        rescue Date::Error => ex
+            date = nil
+            STDERR.puts ex
+            #Rails.logger.warn(ex)
+        end
+        date
+    end
+
     #============================================================
     # 文字列関連
     #============================================================
@@ -439,6 +450,11 @@ module ArtistName
             #puts %!対象外"#{name_orig}"()!
         else
             name_chg = del_unnecessary_part(name_orig)
+        end
+
+        if name_chg.size == 0
+            STDERR.puts %!sepa:すべての文字が削除されたので変更しない:"#{name_orig}"/"#{name_chg}"!
+            name_chg = name_orig
         end
 
         tmp = remove_emoji(name_chg)

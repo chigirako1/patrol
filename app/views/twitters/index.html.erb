@@ -413,7 +413,14 @@ button.horizontal {
 
     <%= f.label :target %>
     <%= f.text_field :target, :value => params[:target] %>
+    (AI/etc..)
     <br />
+
+    <%= f.label :status %>
+    <%= f.text_field :status, :value => params[:status] %>
+    (TWT巡回/etc..)
+    <br />
+    
     <%= f.label :評価lt %>
     <%= f.number_field :rating_lt, :value => params[:rating_lt] %>以下
     <br />

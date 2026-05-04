@@ -243,9 +243,10 @@
 
     <% if pxv.presence and twitter.pxvid == "" %>
       <%= %!pxvid="#{pxv.pxvid}"! %>
+      <%= feature_disp pxv.feature %>
       【<%= pxv.rating %>】
       [A:<%= pxv.last_access_datetime_disp %>
-      [<%= twitter_status_tag(pxv) %>|<%= pxv.feature %>|<%= pxv.pxvname %>|<%= pxv.r18_disp %>]
+      [<%= twitter_status_tag(pxv) %>|<%= pxv.pxvname %>|<%= pxv.r18_disp %>]
       [<%= link_to_ex("■pxv■", artist_path(pxv.id, access_dt_update: "yes")) %>]
       予測：<%= pxv.prediction_up_cnt(true) %>
       <br />
@@ -255,10 +256,10 @@
       <% pxv2 = Artist.find_by(pxvid: @twitter.pxvid) %>
       <% if pxv2.presence %>
         <br />
-        【<%= pxv2.rating %>】<%= pxv2.r18_disp %>|<%= pxv2.filenum %>
+        <%= feature_disp(pxv2.feature) %>【<%= pxv2.rating %>】<%= pxv2.r18_disp %>[<%= pxv2.filenum %>]
         <br />
         <%= pxv2.pxvname %>(@<%= pxv2.twtid %>)
-        [<%= twitter_status_tag(pxv2) %>|<%= pxv2.feature %>]
+        [<%= twitter_status_tag(pxv2) %>]
         <br />
         予測：<%= pxv2.prediction_up_cnt(true) %>
         [<%= link_to_ex("■pxv■", artist_path(pxv2.id, access_dt_update: "yes")) %>]
@@ -295,7 +296,7 @@
           <br />
           類似名あり：<br />
           <% pxv3.each do |pxv_n| %>
-            <%= pxv_n.feature %>【<%= pxv_n.pxvname %>(<%= pxv_n.pxvid %>)|<%= pxv_n.rating %>|<%= pxv_n.last_access_datetime_disp %>】
+            <%= feature_disp pxv_n.feature %>【<%= pxv_n.pxvname %>(<%= pxv_n.pxvid %>)|<%= pxv_n.rating %>|<%= pxv_n.last_access_datetime_disp %>】
             (@<%= pxv_n.twtid %>)
             <%= link_to_ex("■pxv■", artist_path(pxv_n.id, access_dt_update: "yes")) %>
             <% if pxv_n.twtid == @twitter.twtid %>

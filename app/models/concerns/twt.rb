@@ -496,12 +496,29 @@ module Twt
         paths = []
 
         twt_pic_path_list.each do |x|
-            tweet_id, _ = get_tweet_info_from_filepath(x)
+            tweet_id = TweetInfo::get_tweet_id_from_filepath(x)
             if tweet_id == search_tweet_id
                 paths << x
             end
         end
 
+        paths
+    end
+
+    #状況コード例備考標準的な比較date == datetime.to_date
+    #最も安全で確実スッキリ書きたいdate === datetime左側に Date を置く必要あり
+    #Rails環境datetime.to_date == dateタイムゾーンの扱いに注意
+
+    def self.search_tweet_by_date(twt_pic_path_list, date)
+        paths = []
+        twt_pic_path_list.each do |x|
+            tweet_id = TweetInfo::get_tweet_id_from_filepath(x)
+            ts = get_timestamp(tweet_id)
+
+            if ts.to_date == date
+                paths << x
+            end
+        end
         paths
     end
 
@@ -670,7 +687,7 @@ module Twt
             tweet_rcd = Tweet.find_by(tweet_id: tweet_id)
             if tweet_rcd
                 # DBに登録済み
-                STDERR.puts %!登録済み => #{tweet_id}\t##{pic_no}\t"#{path}"!
+                #遅くなるので出さない STDERR.puts %!登録済み => #{tweet_id}\t##{pic_no}\t"#{path}"!
             else
                 if tweet_list.tweet_id_exist? tweet_id
                     # DBに登録
@@ -864,7 +881,7 @@ module Twt
 
     def self.twt_path_str(path)
         fn = File.basename path
-        tweet_id, pic_no = get_tweet_info(fn)
+        tweet_id, pic_no = TweetInfo::get_tweet_info(fn)
 
         if tweet_id == 0
             if fn =~ TWT_SP_FILENAME_RGX
@@ -895,8 +912,8 @@ module Twt
             STDERR.puts %!"err:#{filepath}"! #nilがでるだけ...
             return nil
         end
-        filename = File.basename(filepath)
-        tweet_id, _  = get_tweet_info(filename)
+
+        tweet_id = TweetInfo::get_tweet_id_from_filepath(filepath)
         time = get_timestamp(tweet_id)
         if tweet_id == 0
             #STDERR.puts %!#{tweet_id}:#{time}\t"#{filepath}"!
@@ -1189,15 +1206,17 @@ module Twt
             return "999.取得対象物件あり"
         end
 
-        if twt.last_access_datetime_days_elapsed < 1 or twt.low_priority_and_recently_accessed?
+        if twt.no_disp?(dayn)
             return LOW_PRIORITY_IGNORE_KEY
         end
 
         if twt.rating < 80
-            return "900.低優先度"
+            return "700.低優先度"
         end
 
-        if twt.update_frequency >= 350
+        if twt.update_frequency >= 550
+            return "001.当日分:超高頻度"
+        elsif twt.update_frequency >= 350
             day_std = 3
             if dayn < day_std
                 return "002.当日分:高頻度(#{day_std}日以内アクセス)"
@@ -1208,115 +1227,8 @@ module Twt
             return "011.前日分"
         end
 
-        if dayn >= 60
-            return "801.60日以上"
-        elsif dayn >= 30
-            return "801.30日以上"
-        elsif dayn >= 15
-            return "801.15日以上"
-        end
-
-        if twt.rating < 85 and twt.prediction < 15
-            return LOW_PRIORITY_IGNORE_KEY
-        end
-
-
-        t1 = 30
-        t2 = 20
-        if twt.prediction > t1
-            return "119.#{t1}↑"
-        elsif twt.prediction > t2
-            return "115.#{t2}↑"
-        elsif twt.prediction < 15
-            return "110.予測小"
-        else
-            return "111.0↑"
-        end
-    end
-
-    def self.get_key_elem_s(twt, dayn, pred)
-        d_unit = 15
-        elapse = dayn / d_unit
-        unit = 10
-        if pred >= unit
-            pr = pred / unit * unit
-        else
-            pr = pred / 5 * 5
-            if pr == 0 and pred > 0
-                pr = 1
-            end
-        end
-
-        r_h = 86
-        r_x = 82
-        if Tweet.has_acquisition_schedule?(twt.twtid)
-            dayn_s = "001.取得対象物件あり"
-        elsif twt.low_priority_and_recently_accessed?
-            dayn_s = LOW_PRIORITY_IGNORE_KEY
-        elsif dayn >= 60
-            dayn_s = "009.(60日以上)"
-        elsif twt.rating < 80 and dayn < 30
-            dayn_s = LOW_PRIORITY_IGNORE_KEY
-        elsif twt.rating < 85 and twt.prediction < 15
-            if dayn >= 30
-                dayn_s = "003.予測少数"
-            else
-                dayn_s = LOW_PRIORITY_IGNORE_KEY
-            end
-        elsif lad_n < 1
-            dayn_s = "601.本日アクセス"
-        elsif dayn >= 30
-            dayn_s = "010.(30日以上)"
-        elsif dayn >= 21
-            dayn_s = "011.(21日以上)"
-        elsif dayn >= 14
-            if twt.rating > 87
-                dayn_s = "021.14日以上(#{87}以上)"
-            else
-                dayn_s = "025.14日以上"
-            end
-        elsif twt.update_frequency < 200
-            if dayn < 2
-                dayn_s = LOW_PRIORITY_IGNORE_KEY
-            elsif twt.rating < r_h
-                if dayn < 7 and twt.update_frequency < 150
-                    dayn_s = LOW_PRIORITY_IGNORE_KEY
-                elsif dayn < 14
-                    dayn_s = LOW_PRIORITY_IGNORE_KEY
-                else
-                    dayn_s = "600.低頻度&優先度低"
-                end
-            elsif twt.rating > r_h
-                dayn_s = "500.低頻度&高優先度"
-            elsif twt.rating > 83
-                dayn_s = "501.低頻度&中優先度"
-            else
-                dayn_s = "611.低頻度"
-            end
-        #elsif twt.rating <= r_x
-        #    dayn_s = "9(#{r_x}以下)"
-        elsif twt.update_frequency >= 600
-            dayn_s = "803.超高頻度"#当日
-        elsif twt.update_frequency >= 350
-            day_std = 3
-            if dayn < day_std
-                dayn_s = "801.高頻度(A至近#{day_std}日以内)"
-            else
-                dayn_s = "802.高頻度(Z#{day_std}日以上)"
-            end
-        elsif dayn >= 7
-            if twt.rating > r_h
-                dayn_s = "031.7日以上(#{87}以上)"
-            else
-                dayn_s = "035.7日以上"
-            end
-        elsif dayn < 3
-            dayn_s = "702.直近アクセス"
-        else
-            dayn_s = "701.最近アクセス"
-        end
-
-        dayn_s
+        r_s = Util::format_num(twt.rating, 3)
+        %!80#{dayn / 30}.#{r_s}↑!
     end
 
     def self.get_key_elem(twt, k, v, url_list, chk)
@@ -1346,13 +1258,14 @@ module Twt
         end
 
         key1 = get_key_elem_sub(twt, dayn, pred, chk)
+        #key2 = Util::format_num(twt.rating, 1)
+        #key3 = Util::format_num(pred, 10)
+        #key = "#{key1}|||#{key2}|||#{key3}"
 
-        #key = "#{Util::format_num(twt.update_frequency, 100, 4)}|||更新頻度:#{Util::format_num(twt.update_frequency, 50, 4)}"
-        #key = "#{dayn_s}|||#{Util::format_num(twt.update_frequency, 100, 4)}|||更新頻度:#{Util::format_num(twt.update_frequency, 50, 4)}"
-
-        key2 = Util::format_num(twt.rating, 1)
+        #key2 = Util::format_num(twt.last_access_datetime_days_elapsed / 7, 1)
+        key2 = Util::format_num(dayn / 7, 1)
         key3 = Util::format_num(pred, 10)
-        key = "#{key1}|||#{key2}|||#{key3}"
+        key = "#{key1}|||#{key2}週|||#{key3}件↑"
 
         [key, elem]
     end
@@ -1368,8 +1281,8 @@ module Twt
         STDERR.puts %!build_pic_info_list xxx!
 
         chk_screen_name_list = Util::checking_screen_names
-        h = {}
-        chk_screen_name_list.each  {|x| h[x] = true}
+        chk_hash = {}
+        chk_screen_name_list.each  {|x| chk_hash[x] = true}
 
         list = Hash.new { |h, k| h[k] = [] }
         hash.each do |k,val|
@@ -1387,15 +1300,15 @@ module Twt
                 next
             end
 
-            if (twt.rating||0) < RATING_THRESHOLD #80
+            if (twt.rating||0) < RATING_THRESHOLD
                 next
             end
 
-            if twt.ul_freq_low?
-                next
-            end
+            # if twt.ul_freq_low?
+            #     next
+            # end
 
-            key, elem = get_key_elem(twt, k, v, url_list_summary_h[k], h[k])
+            key, elem = get_key_elem(twt, k, v, url_list_summary_h[k], chk_hash[k])
 
             if key.start_with?(LOW_PRIORITY_IGNORE_KEY)
                 next
@@ -1425,16 +1338,6 @@ module Twt
         screen_names
     end
 
-    def self.sort_tmp(x)
-        twt = x[1]
-        if twt
-            #[twt.last_post_datetime, -(twt.rating||0)]
-            [twt.prediction2]
-        else
-            [0]
-        end
-    end
-
     def self.get_sp_ids()
         twts = Twitter.select {|x| x.sp?}
         twts = twts.sort_by {|twt| [twt.last_post_datetime, (twt.rating||0)]}.reverse
@@ -1461,6 +1364,17 @@ module Twt
         keys
     end
 
+    def self.sort_tmp(x)
+        twt = x[1]
+        if twt
+            #[twt.last_post_datetime, -(twt.rating||0)]
+            #[twt.prediction2]
+            [-(twt.rating||0), -twt.prediction2]
+        else
+            [0]
+        end
+    end
+
     def self.load_pic_info_tsv()
         hash = get_pic_infos_ex
 
@@ -1472,7 +1386,7 @@ module Twt
         if hash2
             hash3 = hash2.sort_by {|k, x|
                 sort_tmp(x)
-            }.reverse.to_h
+            }.to_h
             list = build_pic_info_list(hash3)
 
             keys = output_csv(list)

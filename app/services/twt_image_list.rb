@@ -35,14 +35,20 @@ end
 class TwtImageList
     attr_accessor :list
 
-    def initialize(img_path_list)
+    def initialize(img_path_list, new2old=false)
         @list = []
 
         img_path_list.each do |fpath|
             tweet_id, pic_no = Twt::get_tweet_info_from_filepath(fpath)
             @list << TwtImage.new(tweet_id, pic_no, fpath)
         end
-        @list.sort_by! {|x| [x.tweet_id, x.file_path]}
+        @list.sort_by! {|x| [x.tweet_id, -x.pic_no, x.file_path]}
+        @list.reverse! if new2old
+    end
+
+    def calc_freq
+        # 新しい順になっている必要がある
+        freq = (Twt::calc_freq(@list.map {|x| x.file_path})).to_f
     end
 
     def self.group_by_date(list)

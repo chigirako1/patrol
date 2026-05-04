@@ -103,6 +103,7 @@ class TwittersController < ApplicationController
       :prm_filenum,
       :prm_filesize,
       :pred_cond_gt,
+      :param_status,
       :param_target,
       :param_grp_sort_by,
       :param_grp_sort_spec,
@@ -115,6 +116,7 @@ class TwittersController < ApplicationController
       @mode = Util::get_param_str(params, :mode, "id")
       @sort_by = Util::get_param_str(params, :sort_by)
       @param_target = Util::get_param_str(params, :target)
+      @param_status = Util::get_param_str(params, :status)
       @param_grp_sort_by = Util::get_param_str(params, :grp_sort_by)
       @param_grp_sort_spec = Util::get_param_str(params, :grp_sort_spec)
       @filename = Util::get_param_str(params, :filename)
@@ -495,6 +497,21 @@ class TwittersController < ApplicationController
       return
     when ModeEnum::SEARCH
       #twitters = index_select(twitters, twt_params)
+
+      if twt_params.rating_gt > 0
+        twitters = twitters.select {|x| (x.rating||0) >= twt_params.rating_gt}
+      end
+
+      if twt_params.prm_filesize >= 0
+        twitters = twitters.select {|x| (x.filesize||0) >= twt_params.prm_filesize}
+      else
+        twitters = twitters.select {|x| (x.filesize||0) <= -twt_params.prm_filesize}
+      end
+      
+      if twt_params.param_status.presence
+        twitters = twitters.select {|x| x.status == twt_params.param_status}
+      end
+
       twitters = twitters.select {|x| x.drawing_method == twt_params.param_target} if twt_params.param_target != ""
       @twitters_group = twt_group_by(twitters, param_grp_sort_by, param_grp_sort_spec)
       @twitters_total_count = @twitters_group.sum {|k,v| v.count}
@@ -658,6 +675,11 @@ class TwittersController < ApplicationController
     end
 
     def index_select(twitters, twt_params)
+
+      if twt_params.param_status.presence
+        twitters = twitters.select {|x| x.status == twt_params.param_status}
+      end
+
       if twt_params.rating_gt == 0
         twitters = twitters.select {|x| !x.status.presence}
         twitters = twitters.select {|x| (x.rating||0) == twt_params.rating_gt}
@@ -957,7 +979,7 @@ class TwittersController < ApplicationController
         if twt_params.rating_gt > 0
           n = twt_params.rating_gt
         else
-          n = 89
+          n = 88#89
         end
         if n
           twitters_intvl = twitters.select {|x| x.interval_exceeded?(x.rating >= n)}
