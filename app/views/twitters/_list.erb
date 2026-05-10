@@ -21,7 +21,7 @@
         <%= link_to_ex(image_tag(e.file_path, class: class_str, :alt => e.file_path), e.file_path) %>
     <% end %>
     <br />
-    <%= %!#{elem.tweet_id}##{elem.pic_no}"#{elem.file_path}"! %><br />
+    <%= tweet_info_str(elem) %><br />
 
     <!-- ### ### -->
     <% date = key_dates.first.first %>
@@ -35,7 +35,7 @@
         <%= link_to_ex(image_tag(e.file_path, class: class_str, :alt => e.file_path), e.file_path) %>
     <% end %>
     <br />
-    <%= %!#{elem.tweet_id}##{elem.pic_no}"#{elem.file_path}"! %><br />
+    <%= tweet_info_str(elem) %><br />
 
     <!-- ### ### -->
     <h3>途中</h3>
@@ -70,10 +70,8 @@
 
             <br />
 
-            <%= %!#{elem_u.tweet_id}##{elem_u.pic_no}"#{elem_u.file_path}"! %><br />
-            <%= %!#{elem_s.tweet_id}##{elem_s.pic_no}"#{elem_s.file_path}"! %><br />
-            <br />
-            
+            <%= tweet_info_str(elem_u) %><br />
+            <%= tweet_info_str(elem_s) %><br />
         <% end %>
     <% end %>
 

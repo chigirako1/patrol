@@ -8,6 +8,7 @@ module Util
     EXCEPTION_TXT_PATH = "public/exception.txt"
     REMOVE_WORDS_FILE_PATH = "public/remove_words.txt"
     SP_CHK_FILE_PATH = "public/sp_chk.txt"
+    MOV_URL_FILE_PATH = "public/mov_url.txt"
 
     def self.get_param_num(params, symbol, def_val=0)
 =begin
@@ -46,6 +47,9 @@ module Util
         value
     end
 
+    #============================================================
+    # 時間関連
+    #============================================================
     def self.hours_from_now(target_datetime)
         # 引数が文字列の場合はTimeオブジェクトに変換
         target_time = target_datetime.is_a?(String) ? Time.parse(target_datetime) : target_datetime
@@ -178,8 +182,12 @@ module Util
     end
 
     #============================================================
-    # パス関連
+    # ファイル関連
     #============================================================
+    def self.real_path(v_path)
+        Rails.root.join(v_path).to_s
+    end
+
     def self.get_public_path(path)
         Rails.root.join("public" + path).to_s
     end
@@ -219,6 +227,44 @@ module Util
 
         # 2. 要素が2つ以上（重複している）ものだけを抽出
         size_map.select { |_size, paths| paths.size > 1 }
+    end
+
+    def self.parent_dirname(path)
+        # "a/b/c.txt" => "b"
+        File.basename(File.dirname path)
+
+        # path = "a/b/c.txt"
+        # pathname = Pathname.new(path)
+        # parent_directory = pathname.parent.basename.to_s
+    end
+
+    def self.file_hash(path)
+        Digest::SHA256.file(path).hexdigest
+    end
+
+    def self.formatFileSize(bytes)
+        unit = 1024
+        if bytes < unit
+            return %!#{bytes} Bi!
+        end
+    
+        bytes_log = Math.log(bytes)
+        unit_log = Math.log(unit)
+        exp = (bytes_log / unit_log).to_i
+        p = unit.pow(exp)
+        b = (bytes.to_f / p)
+        u = "KMGTPE"[exp - 1]
+
+        #%!#{b} #{u}B!
+        sprintf("%.2f %sB", b, u)
+    end
+
+    def self.formatFileSizeKB(bytes)
+        unit = 1024
+        if bytes < unit
+            return %!#{bytes} Bi!
+        end
+        %!#{bytes / 1024} KB!
     end
 
     #============================================================
@@ -290,8 +336,11 @@ module Util
         end
     end
 
-    def self.file_hash(path)
-        Digest::SHA256.file(path).hexdigest
+    #============================================================
+    # url/net
+    #============================================================
+    def self.google_search_url(phrase)
+        %!https://www.google.com/search?q=#{phrase}!
     end
 
     def self.get_host_name_from_uri(url)
@@ -299,41 +348,14 @@ module Util
         uri.host
     end
 
-    def self.formatFileSize(bytes)
-        unit = 1024
-        if bytes < unit
-            return %!#{bytes} Bi!
-        end
-    
-        bytes_log = Math.log(bytes)
-        unit_log = Math.log(unit)
-        exp = (bytes_log / unit_log).to_i
-        p = unit.pow(exp)
-        b = (bytes.to_f / p)
-        u = "KMGTPE"[exp - 1]
-
-        #%!#{b} #{u}B!
-        sprintf("%.2f %sB", b, u)
-    end
-
-    def self.formatFileSizeKB(bytes)
-        unit = 1024
-        if bytes < unit
-            return %!#{bytes} Bi!
-        end
-        %!#{bytes / 1024} KB!
-    end
-
-    def self.google_search_url(phrase)
-        %!https://www.google.com/search?q=#{phrase}!
-    end
-
-    #！！！よくわからないがArtistNameに定義するとコールできない。。。
-
+    #============================================================
+    # text file
+    #============================================================
     def self.get_word_list(filepath)
         STDERR.puts %![get_word_list]"#{filepath}"!
         list = []
-        txtpath = Rails.root.join(filepath).to_s
+        #txtpath = Rails.root.join(filepath).to_s
+        txtpath = real_path(filepath)
         File.open(txtpath) { |file|
             while line = file.gets
                 str = line.chomp
@@ -356,17 +378,36 @@ module Util
         get_word_list(SP_CHK_FILE_PATH)
     end
 
-    def self.parent_dirname(path)
-        # "a/b/c.txt" => "b"
-        File.basename(File.dirname path)
+    def self.load_mov_urls
+        load_txtfile(MOV_URL_FILE_PATH)
+    end
 
-        # path = "a/b/c.txt"
-        # pathname = Pathname.new(path)
-        # parent_directory = pathname.parent.basename.to_s
+    def self.load_txtfile(filepath)
+        txtpath = real_path(filepath)
+        STDERR.puts %![load_txtfile]"#{filepath}" => "#{txtpath}"!
+
+        txts = []
+        File.open(txtpath) { |file|
+            while line = file.gets
+                str = line.chomp
+                txts << str
+            end
+        }
+        txts
+    end
+
+    #============================================================
+    # 
+    #============================================================
+    def self.get_dup_elem(array, n=2)
+        chunks = array.chunk(&:itself)
+        chunks.select{|_, v| v.size > n - 1}.map(&:first)
     end
 end
 
-
+#============================================================
+# module
+#============================================================
 module ArtistName
     def self.normalize_font(str)
         mapping = {

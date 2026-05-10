@@ -21,6 +21,11 @@ module Twt
 
     TWT_RGX_URL_BASE = ""
     TWT_RGX_URL = %r!https?://(?:x|twitter)\.com/\w+/status/(\d+)!
+
+    TWT_POST_URL_RGX = %r!https?://(?:x|twitter)\.com/(\w+)/status/(\d+)!
+    TWT_POST_PHOTO_URL_RGX = %r!https?://(?:x|twitter)\.com/(\w+)/status/(\d+)/photo!
+    TWT_POST_VIDEO_URL_RGX = %r!https?://(?:x|twitter)\.com/(\w+)/status/(\d+)/video!
+
     TWT_URL_SCREEN_NAME_RGX = %r!(?:x|twitter)\.com/(\w+)!
     TWT_TOP_SCREEN_NAME_RGX = /^(\w+)\s?/
     #TWT_AT_SCREEN_NAME_RGX = /\(@(\w+)\)/
@@ -282,7 +287,7 @@ module Twt
                     Time.new(2001,1,6)
                 elsif x.dirname.end_with?("更新停止")
                     Time.new(2001,1,7)
-                elsif x.dirname.end_with?("なし")
+                elsif x.dirname.end_with?("なし") or x.dirname.end_with?("ない")
                     Time.new(2001,1,3)
                 elsif x.dirname.end_with?("少ない")
                     Time.new(2001,1,4)
@@ -290,6 +295,8 @@ module Twt
                     Time.new(2001,1,5)
                 elsif x.dirname.end_with?("凍結")
                     Time.new(2001,1,9)
+                elsif x.dirname.end_with?("鍵垢")
+                    Time.new(2001,1,1)
                 elsif use_fs_date and x.latest_date
                     x.latest_date
                 elsif x.twt and x.twt.last_access_datetime
@@ -641,8 +648,7 @@ module Twt
         end
 
         if twt_params.size > 0
-            msg = "更新内容 => #{twt_params}\t@#{key}(#{twt.twtname})"
-            #STDERR.puts msg
+            msg = %!更新内容 => #{twt_params} @#{key}(#{twt.twtname})!
             Rails.logger.info(msg)
 
             #twt.update(twt_params)
@@ -1140,7 +1146,7 @@ module Twt
     def self.map_pic_infos(hash, threshold_kb)
 
         hash2 = hash.select {|k, v|
-            v.size > 5#30
+            v.size > 0#5#30
         }.map {|k,v|
             tmp_v = v.last(FILESIZE_SAMPLE_N)
             [
@@ -1203,14 +1209,16 @@ module Twt
     def self.get_key_elem_sub(twt, dayn, pred, chk)
 
         if chk or Tweet.has_acquisition_schedule?(twt.twtid)
-            return "999.取得対象物件あり"
+            r_s = Util::format_num(twt.rating, 5)
+            return "999.取得対象物件あり[#{r_s}]"
         end
 
         if twt.no_disp?(dayn)
             return LOW_PRIORITY_IGNORE_KEY
         end
 
-        if twt.rating < 80
+        r_low = 80
+        if twt.rating < r_low
             return "700.低優先度"
         end
 
@@ -1223,12 +1231,19 @@ module Twt
             else
                 return "001.当日分:高頻度(#{day_std}日以上アクセス)"
             end
-        elsif twt.update_frequency >= 250
+        elsif twt.update_frequency >= 300
             return "011.前日分"
         end
+        
+        if dayn < 1
+            STDERR.puts %!@#{twt.twtid}(#{twt.twtname})\t#{dayn}!
+            return "600.当日取得"
+        end
 
-        r_s = Util::format_num(twt.rating, 3)
-        %!80#{dayn / 30}.#{r_s}↑!
+        p_s = Util::format_num(pred, 35)
+        month_n = Util::format_num(dayn / 30, 30)
+        r_s = Util::format_num(twt.rating, 1)
+        %!800.#{p_s}|#{month_n}月|#{r_s}↑!
     end
 
     def self.get_key_elem(twt, k, v, url_list, chk)
@@ -1340,7 +1355,8 @@ module Twt
 
     def self.get_sp_ids()
         twts = Twitter.select {|x| x.sp?}
-        twts = twts.sort_by {|twt| [twt.last_post_datetime, (twt.rating||0)]}.reverse
+        #twts = twts.sort_by {|twt| [twt.last_post_datetime, (twt.rating||0)]}.reverse
+        twts = twts.sort_by {|twt| [(twt.rating||0), twt.last_post_datetime]}.reverse
         STDERR.puts %!get_sp_ids:#{twts.size}!
 
         hash3 = twts.map {|x|
@@ -1364,14 +1380,17 @@ module Twt
         keys
     end
 
+=begin
     def self.sort_tmp(x)
         twt = x[1]
         if twt
+            STDERR.puts "#{twt.rating}"
             #[twt.last_post_datetime, -(twt.rating||0)]
             #[twt.prediction2]
-            [-(twt.rating||0), -twt.prediction2]
+            #[-(twt.rating||0), -twt.prediction2]
+            [twt.twtname,0]
         else
-            [0]
+            [0,0]
         end
     end
 
@@ -1384,15 +1403,23 @@ module Twt
         hash2 = map_pic_infos(hash, threshold_kb)
 
         if hash2
+            STDERR.puts "#{hash2.to_a.last}"
+
             hash3 = hash2.sort_by {|k, x|
                 sort_tmp(x)
             }.to_h
+
+            STDERR.puts "#{hash3.to_a.last}"
+
             list = build_pic_info_list(hash3)
 
             keys = output_csv(list)
+        else
+            STDERR.puts %!???#{hash2}hash2!
         end
         keys
     end
+=end
 
     def self.get_pic_filesize_list()
         hash = get_pic_infos_ex
@@ -1451,7 +1478,7 @@ module Twt
 
             if twt_params.size > 0
                 if filesize_huge?(avg)
-                    msg = %!更新内容 => #{twt_params}\t@#{k}(#{twt.twtname})!
+                    msg = %!更新内容 => #{twt_params} @#{k}(#{twt.twtname})!
                     Rails.logger.info(msg)
                 end
 
@@ -1476,6 +1503,36 @@ module Twt
         puts Time.now.strftime("%Y/%m/%d")
 
         twts.map {|x| x.twtid}
+    end
+
+    def self.mov_url_list
+        txts = Util::load_mov_urls()
+
+        mov_url_list = []
+        txts.each do |line|
+            case line
+            when /^$/
+                next
+            when TWT_POST_PHOTO_URL_RGX
+                # 無視する
+                next
+            when TWT_POST_URL_RGX
+                screen_name = $1
+                tweet_id = $2.to_i
+                p_no = 0
+                mov_url_list << [screen_name, tweet_id, p_no]
+            else
+                STDERR.puts %![warning]#{line}!
+                next
+            end
+        end
+
+        list = mov_url_list.uniq.sort_by {|x| x[1]}
+        dup = Util::get_dup_elem(list)
+        dup.each do |x|
+            STDERR.puts "重複:#{x}"
+        end
+        list
     end
 
     # =========================================================================

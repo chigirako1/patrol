@@ -325,17 +325,7 @@
     <%= form.label :主ID, style: "display: block" %>
     @<%= form.text_field :main_twtid %>
     <%= twitter_link_tag(@twitter.main_twtid) %>
-    
-    <% main_twt = Twitter.find_by_twtid_ignore_case(@twitter.main_twtid) %>
-    <% if main_twt.presence %>
-      <%= twitter_info_tag(main_twt) %>
-    <% elsif @twitter.main_twtid.presence %>
-      <% user_exist = Twt::user_exist?(@twitter.main_twtid) %>
-      <% if user_exist %>
-        ※フォルダあり
-      <% end %>
-      [<%= link_to_ex %!☆twt☆:@#{@twitter.main_twtid}!, artist_twt_path(@twitter.main_twtid) %>]
-    <% end %>
+    <%= twitter_info_tag_ex(@twitter.main_twtid) %>
   </div>
 
   <div>

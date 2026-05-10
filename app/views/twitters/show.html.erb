@@ -26,6 +26,7 @@
 <% end %>
 
 <div class="view_form">
+  <h2>検索</h2>
   <%= form_with(url: twitter_path, local: true, method: :get) do |f| %>
     検索tweet id/url/日付:<%= f.text_field :search_id, :value => params[:search_id] %>
     <%= f.submit("検索", name: nil, class: 'submit-btn') %>
@@ -36,9 +37,8 @@
 </div>
 
 <div>
-    <hr />
-    <%= link_to_ex("tweets", tweets_path(screen_name: @twitter.twtid)) %>
-    <hr />
-    <%= link_to "Back to twitters", twitters_path %>
-    <%= button_to "Destroy this twitter", @twitter, method: :delete %>
+  <hr />
+  <%= link_to_ex("tweets", tweets_path(screen_name: @twitter.twtid)) %>
+  <%#= link_to "Back to twitters", twitters_path %>
+  <%#= button_to "Destroy this twitter", @twitter, method: :delete %>
 </div>

@@ -1,6 +1,8 @@
 class TwittersController < ApplicationController
   before_action :set_twitter, only: %i[ show edit update destroy ]
 
+  TMP_RATING = 87
+
   module ModeEnum
     UNASSOCIATED_TWT_ACNT = '未紐づけTWTアカウント' #PXV DBにはTWT IDが登録されているがTWT DBにはPXV IDが登録されていない
     ALL_IN_ONE = 'all in one'
@@ -979,7 +981,7 @@ class TwittersController < ApplicationController
         if twt_params.rating_gt > 0
           n = twt_params.rating_gt
         else
-          n = 88#89
+          n = TMP_RATING
         end
         if n
           twitters_intvl = twitters.select {|x| x.interval_exceeded?(x.rating >= n)}

@@ -1,12 +1,12 @@
 
 module TwittersHelper
-    DM_AI_ICON = ApplicationHelper::DM_AI_ICON#"🤖"
+    DM_AI_ICON = ApplicationHelper::DM_AI_ICON
     DM_HAND_ICON = "✍️"
     DM_THIEF_ICON = "😎"
 
-    R18_ICON = "🔞"
-    PXV_ICON = "🅿️"
-    PRIVATE_ICON = "🔒️"
+    R18_ICON = ApplicationHelper::R18_ICON #"🔞"
+    PXV_ICON = ApplicationHelper::PXV_ICON #"🅿️"
+    PRIVATE_ICON = ApplicationHelper::PRIVATE_ICON #"🔒️"
 
     def twitter_status_tag(twt)
         tag = ""
@@ -66,12 +66,13 @@ module TwittersHelper
     def twitter_info_tag(twt)
         tag = ""
 
+        tag += %!#{dm_disp(twt.drawing_method)}!
         tag += %!"#{twt.twtname}"!
         tag += "【"
         tag += PRIVATE_ICON if twt.private_account == Twitter::TWT_VISIBILITY::TV_PRIVATE
-        tag += %!#{twt.rating}|#{twt.r18}#{R18_ICON if twt.r18 == Twitter::RESTRICT::R18}|#{dm_disp(twt.drawing_method)}|!
+        tag += %!#{twt.rating}|#{twt.r18}#{r_icon(twt.r18)}|!
         tag += %!#{twt.status}!
-        if twt.status == Twitter::TWT_STATUS::STATUS_SCREEN_NAME_CHANGED
+        if twt.status == Twitter::TWT_STATUS::STATUS_SCREEN_NAME_CHANGED or twt.status == Twitter::TWT_STATUS::STATUS_ANOTHER
             tag += %!(→#{twt.new_twtid})!
         end
         tag += "】"
@@ -100,6 +101,17 @@ module TwittersHelper
             icon = DM_THIEF_ICON
         else
             icon = ""
+        end
+    end
+
+    def r_icon(restr)
+        case restr
+        when Twitter::RESTRICT::R18
+            r_icon = R18_ICON
+        when Twitter::RESTRICT::R15
+            r_icon = ApplicationHelper::R15_ICON
+        else
+            r_icon = ""
         end
     end
 
@@ -147,10 +159,7 @@ module TwittersHelper
         if r18 and twitter.r18
             title += "|" + twitter.r18
         end
-
-        if twitter.r18 == Twitter::RESTRICT::R18
-            title += R18_ICON
-        end
+        title += r_icon(twitter.r18)
         if twitter.pxvid.presence
             title += PXV_ICON
         end

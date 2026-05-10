@@ -35,11 +35,13 @@ module TweetInfo
           #STDERR.puts %!"#{filename}" => #{date}, #{tweet_id}/!
           tweet_id
         elsif filename =~ /^[\w\-]{15}\./ #????なにこれ
+            STDERR.puts
             STDERR.puts %![dbg] #{filename}!
             #Rails.logger.warn(filename)
         elsif filename =~ /^(\d{18,}) \w+/ #18は適当
           tweet_id = $1.to_i
         else
+            STDERR.puts
             STDERR.puts %!regex no hit:#{filename}!
         end
         [tweet_id, pic_no]

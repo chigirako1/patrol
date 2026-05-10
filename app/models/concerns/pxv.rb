@@ -470,7 +470,7 @@ module Pxv
         pxv_params[:twt_checked_date] = ""
         pxv_params[:nje_checked_date] = ""
         pxv_params[:show_count] = 0#""
-        pxv_params[:reverse_status] = ""
+        pxv_params[:reverse_status] = Artist::ReverseEnum::REV_ON
         pxv_params[:latest_artwork_id] = pxv_artist.latest_artwork_id
         pxv_params[:oldest_artwork_id] = pxv_artist.oldest_artwork_id
         pxv_params[:zipped_at] = nil

@@ -294,7 +294,7 @@
     <% spec = "{p30}件↑|{aw}週#{Twitter::TWT_H_SEPARATOR}予測{p20}～" %>
     <% spec = "{aw}週#{Twitter::TWT_H_SEPARATOR}{r}" %>
     <% spec = "評価{r}#{Twitter::TWT_H_SEPARATOR}{az}" %>
-    <% spec = "{p25}#{Twitter::TWT_H_SEPARATOR}{az}" %>
+    <% spec = "{am}|{p20}#{Twitter::TWT_H_SEPARATOR}{az}" %>
 <% end %>
 
 <% if @tweet_i_ids.presence and @tweet_i_ids.size > 0 %>
@@ -976,6 +976,7 @@
             <% artwork_id = $1.to_i %>
             <%= link_to_ex url, url %>(<%= $1 %>)
             <% pa = PxvArtwork.find_by(artwork_id: artwork_id) %>
+            ■
             <% if pa %>
                 <!-- <%= pa.state %>/<%= pa.release_date %>/user_id:<%= pa.user_id %>/「<%= pa.title %>」 -->
                 <%= pa.info_txt %>
@@ -1061,7 +1062,7 @@
 <% end %>
 
 <% if twt_grp2 and twt_grp2.size > 0 %>
-    <h1>twt_grp2(<%= twt_grp2.size %>)</h1>
+    <h1>twt_grp2(<%= twt_grp2.size %>)[<%= spec %>]</h1>
 
     <h2><%= Twitter::TWT_KEYWORD_SP_S %></h2>
     <% twt_grp2[Twitter::TWT_KEYWORD_SP_S].each do |twt| %>
@@ -1113,5 +1114,19 @@
             <% end %>
             <br />
         <% end %>
+    <% end %>
+<% end %>
+
+
+<% if @mov_url_list and @mov_url_list.size > 0 %>
+    <h1>@mov_url_list(<%= @mov_url_list.size %>)[<%= "" %>]</h1>
+
+    <% @mov_url_list.each do |x| %>
+        <% url = Twt::twt_tweet_url(x[0], x[1]) %>
+        <%= link_to_ex(url, url) %>
+        (<%= smart_date Twt::get_timestamp(x[1]) %>)
+        「<%= link_to_ex("#{x[0]} #{x[1]} 0 ", url) %>」
+        (<%= x[1] %>)
+        <br />
     <% end %>
 <% end %>

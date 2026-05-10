@@ -92,7 +92,7 @@ class HomeController < ApplicationController
           #force_disp_day: 10,
           grp_sort_by: TwittersController::GRP_SORT::GRP_SORT_SPEC,
           #grp_sort_spec: "{p40}|{az}::評価{r}",
-          grp_sort_spec: "{r3}|{p40}|{az}::評価{r}",
+          grp_sort_spec: "{am}|{r}|{p40}::{az}",#"{r3}|{p40}|{az}::評価{r}",
           #sort_by: TwittersController::SORT_BY::ACCESS,#ACCESS_W_PRED_A
           sort_by: TwittersController::SORT_BY::M_R_ACCESS_W_PRED_A,
           ex_sp: true,
@@ -664,6 +664,16 @@ class HomeController < ApplicationController
             target: ArtistsController::FileTarget::TWT_I
           )
       },
+      { :label => " twt(i)今月",
+          :path => artists_twt_index_path(
+            filename: "thismonth",
+            #hide_day: 30,
+            #show_times: 2,
+            #url_cnt: 2,
+            grp_sort_spec: "{az}#{Twitter::TWT_H_SEPARATOR}{r}",
+            target: ArtistsController::FileTarget::TWT_I
+          )
+      },
       { :label => " twt(i) all",
           :path => artists_twt_index_path(
             filename: "all",
@@ -766,6 +776,7 @@ class HomeController < ApplicationController
       { :label => "#twtその他", :path => "" },
       { :label => "twt(dir-sp fsチェック)", :path => artists_twt_index_path(dir: ArtistsController::DIR_TYPE::SMARTPHONE) },
       { :label => "twt(dir-archive fsチェック)", :path => artists_twt_index_path(dir: ArtistsController::DIR_TYPE::ARCHIVE_CHECK) },
+      { :label => "twt(動画post)", :path => artists_twt_index_path(dir: ArtistsController::DIR_TYPE::DT_MOV_URL) },
       { :label => "-", :path => "" },
       { :label => "twt(dir-tweet)", :path => artists_twt_index_path(dir: ArtistsController::DIR_TYPE::DIR_TWEET) },
 
@@ -793,29 +804,25 @@ class HomeController < ApplicationController
       # ----------------------------
       { :label => "stats,そのた", :path => "" },
       { :label => "Artist::stats", :path => artists_stats_index_path },
-      
-      # ----------------------------
-      { :label => "-", :path => "" },
-      # ----------------------------
-      { :label => "-", :path => "" },
       # ----------------------------
       { :label => "url file", :path => "" },
       { :label => "最新ファイル 全",
           :path => artists_twt_index_path(
             filename: "latest",
-            hide_day: 90,
+            #hide_day: 90,
             rating: rating_std,
             #show_times: 2,
-            pred: 5,
+            #pred: 5,
             target:"twt,twt既知,twt未知,known_pxv,unknown_pxv",
             #grp_sort_spec: "{p40}|{az}#{Twitter::TWT_H_SEPARATOR}{p10}",
-            grp_sort_spec: "{r4}|{p40}|{az}#{Twitter::TWT_H_SEPARATOR}{p10}",
+            #grp_sort_spec: "{r2}|{p40}|{az}#{Twitter::TWT_H_SEPARATOR}{p10}",
+            grp_sort_spec: "{r10}|{p30}|{az}#{Twitter::TWT_H_SEPARATOR}{p10}",
           )
       },
       { :label => "今月ファイル ",
           :path => artists_twt_index_path(
             filename: "thismonth",
-            hide_day: 30,
+            #hide_day: 30,
             rating: rating_std,
             #show_times: 2,
             pred: 5,

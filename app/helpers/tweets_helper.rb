@@ -9,6 +9,12 @@ module TweetsHelper
         page_title
     end
 
+    def tweet_info_str(elem)
+        tag = ""
+        tag = %!<b>#{elem.tweet_id}</b>##{elem.pic_no}"#{elem.file_path}"!
+        tag.html_safe
+    end
+
     def url_list_sort_by(url_list_work, sort_type)
         case sort_type
         when TwittersController::SORT_BY::PRED

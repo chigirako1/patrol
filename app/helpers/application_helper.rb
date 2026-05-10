@@ -5,6 +5,7 @@ module ApplicationHelper
     DM_AI_ICON = "🤖"
     DM_HAND_ICON ="✍️"
     R18_ICON = "🔞"
+    R15_ICON = "💋"
     PXV_ICON = "🅿️"
     TWT_ICON = "🆃" #X
     PRIVATE_ICON = "🔒️"

@@ -159,7 +159,7 @@
             <%= prediction %><%= %!(#{pred})! if pred - prediction > 5  %>
             
             <% if twitter.filesize %>
-              <% if twitter.sp? %>
+              <% if twitter.sp? or twitter.filesize_huge? %>
                 <font color="red">
                   <%= twitter.filesize_kb %>
                   <% if twitter.ul_freq_low? %>

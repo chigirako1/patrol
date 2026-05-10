@@ -137,6 +137,8 @@ class Artist < ApplicationRecord
         UrlTxtReader::get_url_list(filepath)
     end
 
+=begin
+    # これなんだったっけ？
     def self.get_id_list()
         id_list = []
         txtpath = Rails.root.join("public/pxvids.txt").to_s
@@ -149,6 +151,7 @@ class Artist < ApplicationRecord
         }
         id_list
     end
+=end
 
     def self.get_id_list_tsv()
         tsvpath = Rails.root.join("public/pxv/mkPDF_call [pxiv, utf8, l3, spec-id] - orig.tsv").to_s

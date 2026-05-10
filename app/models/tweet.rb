@@ -212,7 +212,12 @@ class Tweet < ApplicationRecord
         ids = []
         tweet_id_list.each do |tweet_id|
             tweet_rcd = Tweet.find_by(tweet_id: tweet_id)
-            if tweet_rcd and (tweet_rcd.status == StatusEnum::SAVED or tweet_rcd.status == StatusEnum::UNACCESSIBLE)
+            if tweet_rcd
+                case tweet_rcd.status
+                when StatusEnum::SAVED, StatusEnum::UNACCESSIBLE, StatusEnum::DUPLICATE
+                else
+                    ids << tweet_id
+                end
             else
                 ids << tweet_id
             end

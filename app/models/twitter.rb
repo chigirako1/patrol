@@ -96,7 +96,7 @@ class Twitter < ApplicationRecord
         twitters = twitters.select {|x| x.search_target?}.sort_by {|x| [x.drawing_method||"", -(x.rating||0)]}
 
         if drawing_method
-            twitters = twitters.select {|x| x.drawing_method == DRAWING_METHOD::DM_AI}
+            twitters = twitters.select {|x| x.drawing_method == drawing_method}
         end
 
         twitters
@@ -381,7 +381,7 @@ class Twitter < ApplicationRecord
             return true
         end
 
-        if self.low_priority_and_recently_accessed?(87, 1)
+        if self.low_priority_and_recently_accessed?(86, 1)
             return true
         end
 
@@ -830,22 +830,15 @@ class Twitter < ApplicationRecord
                 number = self.last_access_datetime_days_elapsed / 7
                 gkey_work = group_sub(unit, number, gkey_work, x)
             when "az"
-                if self.last_access_datetime_days_elapsed < 3
-                    if self.last_access_datetime_days_elapsed < 1
-                        "\t01.本日アクセス#{TWT_H_SEPARATOR}"
-                    elsif self.last_access_datetime_days_elapsed < 2
-                        "\t02.昨日アクセス#{TWT_H_SEPARATOR}"
-                    else
-                        "\t03.一昨日アクセス#{TWT_H_SEPARATOR}"
-                    end
-                    unit = 1 unless unit
+                unit = 3 unless unit
+                if self.last_access_datetime_days_elapsed < unit
                     gkey_work = group_sub(unit, number, gkey_work, x)
                 elsif self.last_access_datetime_days_elapsed < 31
-                    unit = 1 unless unit
+                    unit = 1
                     number = self.last_access_datetime_days_elapsed / 7
                     gkey_work = group_sub(unit, number, gkey_work, x, append_pre: "", append:"週")
                 else
-                    unit = 1 unless unit
+                    unit = 1
                     number = self.last_access_datetime_days_elapsed / 30
                     gkey_work = group_sub(unit, number, gkey_work, x, append_pre: "z", append:"ヶ月")
                 end
@@ -937,25 +930,18 @@ class Twitter < ApplicationRecord
         end
 
         if self.rating.presence
+            lade = self.last_access_datetime_days_elapsed
+            lade_s = 4 unless lade_s
+
             if self.status != Twitter::TWT_STATUS::STATUS_PATROL
                 "\t#{self.status}#{TWT_H_SEPARATOR}-"
             elsif self.sp? and self.rating >= Twt::RATING_THRESHOLD
                 TWT_KEYWORD_SP_S
-            elsif self.last_access_datetime_days_elapsed < 5
+            elsif lade < lade_s
                 w = self.prediction
                 str = Util::format_num(w, 10, 3)
-                case self.last_access_datetime_days_elapsed
-                when 0
-                    "\t01.本日アクセス#{TWT_H_SEPARATOR}#{str}↑"
-                when 1
-                    "\t02.昨日アクセス#{TWT_H_SEPARATOR}#{str}↑"
-                when 2
-                    "\t03.一昨日アクセス#{TWT_H_SEPARATOR}#{str}↑"
-                when 3
-                    "\t04.4日前アクセス#{TWT_H_SEPARATOR}#{str}↑"
-                else
-                    "\t05.5日前アクセス#{TWT_H_SEPARATOR}#{str}↑"
-                end
+
+                "\t0#{lade}.#{lade}日前アクセス#{TWT_H_SEPARATOR}#{str}↑"
             elsif self.rating < 80
                 "\t低ランク#{TWT_H_SEPARATOR}-"
             else
@@ -1229,12 +1215,9 @@ class Twitter < ApplicationRecord
         when DRAWING_METHOD::DM_3D, DRAWING_METHOD::DM_REPRINT
             return %!905.その他#{TWT_H_SEPARATOR}#{drawing_method}!
         when "", nil
+            p = Util::format_num(self.prediction, 5)
             daysn = self.last_access_datetime_days_elapsed
-            if daysn > 90
-                dm = %!998.未設定(古め)!
-            else
-                dm = %!999.未設定(最近)!
-            end
+            return %![998.未設定]#{TWT_H_SEPARATOR}#{daysn/30}|#{p}|#{daysn/7}週!
         else
             dm = %!900.#{drawing_method}!
         end
@@ -1245,7 +1228,14 @@ class Twitter < ApplicationRecord
             key = self.group_spec("{az}#{TWT_H_SEPARATOR}{p50}")
             %![#{dm}]#{key}!
         else
-            key = status unless key
+            if key
+            else
+                if status.presence
+                    key = status
+                else
+                    key = ""
+                end
+            end
             %!#{dm}#{TWT_H_SEPARATOR}#{key}!
         end
     end
@@ -1410,11 +1400,11 @@ class Twitter < ApplicationRecord
         #r    d   n
         [95, [ 14, 15, 0]],
         [90, [ 21, 20, 0]],
-        [88, [ 25, 22, 0]],
-        [87, [ 27, 33, 0]],
-        [85, [ 30, 44, 0]],
-        [84, [ 35, 50, 5]],
-        [82, [ 40, 55,14]],
+        [88, [ 25, 22, 1]],
+        [87, [ 27, 33, 2]],
+        [85, [ 30, 44, 3]],
+        [84, [ 35, 55, 5]],
+        [82, [ 40, 60,14]],
         [80, [ 60, 66,21]],
         [78, [120,100,30]],
         [75, [180,200,40]],

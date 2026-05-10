@@ -1,3 +1,18 @@
+<style>
+.btn {
+  padding-left: 1em;
+  padding-right: 1em;
+  height: 2em;
+  width: 110px;
+}
+.btn2 {
+  padding-left: 1em;
+  padding-right: 1em;
+  height: 2em;
+  width: 200px;
+}
+</style>
+
 <%= form_with(model: tweet) do |form| %>
     <% if tweet.errors.any? %>
         <div style="color: red">
@@ -37,10 +52,10 @@
                     </h4>
                 <% elsif twt.last_access_datetime > time %>
                     <h4>
+                    [<%= link_to_ex %!☆twt☆:@#{smart_date time.to_date}!, artist_twt_path(tweet.screen_name, sdate: time.to_date) %>]
                     最後のアクセス(<%= smart_date twt.last_access_datetime %>)
                     より前のツイート(<%= smart_date time %>)
                     </h4>
-                    [<%= link_to_ex %!☆twt☆:@#{smart_date time.to_date}!, artist_twt_path(tweet.screen_name, sdate: time.to_date) %>]
                 <% else %>
                     <%= smart_date time %>[<%= Util::get_date_info time %>]
                 <% end %>
@@ -67,7 +82,8 @@
             include_blank: "選択して下さい"
         %>
         <br />
-        <input type="button" value="取得予定" onclick="set_status('<%= Tweet::StatusEnum::TO_BE_OBTAIN %>');" />
+        <input type="button" value="取得予定" onclick="set_status('<%= Tweet::StatusEnum::TO_BE_OBTAIN %>');" class="btn" />
+        <input type="button" value="<%= Tweet::StatusEnum::UNACCESSIBLE %>" onclick="set_status('<%= Tweet::StatusEnum::UNACCESSIBLE %>');" class="btn" />
     </div>
 
     <div>
@@ -97,21 +113,21 @@
         <% ids = Tweet::get_unregistered_tweet_ids(tweet_ids) %>
         <% if ids.size > 0 %>
             <h2>url txt</h2>
-        <% end %>
-        <% ids.each do |x| %>
-            <% url = Twt::twt_tweet_url(tweet.screen_name, x) %>
-            <%= link_to_ex(url, url) %>
-            [<%= Twt::timestamp_str(x) %>]
+            <% ids.each do |x| %>
+                <% url = Twt::twt_tweet_url(tweet.screen_name, x) %>
+                <%= link_to_ex(url, url) %>
+                [<%= Twt::timestamp_str(x) %>]
 
-            <% twt_pic_path_list = Twt::get_pic_filelist(tweet.screen_name) %>
-            <% paths = Twt::search_tweet(twt_pic_path_list, x) %>
-            <% if paths.size > 0 %>
-                ファイルあり
-            <% else %>
-                <% url2 = Twt::twt_tweet_url_dev(x) %>
-                <%= link_to_ex(url2, url2) %>
+                <% twt_pic_path_list = Twt::get_pic_filelist(tweet.screen_name) %>
+                <% paths = Twt::search_tweet(twt_pic_path_list, x) %>
+                <% if paths.size > 0 %>
+                    ファイルあり
+                <% else %>
+                    <% url2 = Twt::twt_tweet_url_dev(x) %>
+                    <%= link_to_ex(url2, url2) %>
+                <% end %>
+                <br>
             <% end %>
-            <br>
         <% end %>
     <% end %>
 <% end %>

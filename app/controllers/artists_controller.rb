@@ -339,6 +339,7 @@ class ArtistsController < ApplicationController
     SMARTPHONE = "SMARTPHONE"
     REG_FILESIZE = "ファイルサイズ登録"
     DIR_TWEET = "tweet"
+    DT_MOV_URL = "mov_url"
   end
 
   module ShowMode
@@ -882,7 +883,10 @@ class ArtistsController < ApplicationController
         #h = Tweet::screen_name_cnt_list()
         #@known_twt_url_list = Tweet.distinct.pluck(:screen_name).map {|x| [x, nil]}.to_h
         @known_twt_url_list = Tweet.where.not(screen_name: [nil, ""]).distinct.pluck(:screen_name).map {|x| [x, Twt::twt_user_url(x)]}.to_h
+      when DIR_TYPE::DT_MOV_URL
+        @mov_url_list = Twt::mov_url_list()
       else
+        STDERR.puts "!!ERR:unknown type='#{dir}'!!"
       end
     elsif filename == ""
       @url_file_list = UrlTxtReader::txt_file_list()

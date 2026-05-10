@@ -103,12 +103,16 @@ textarea {
                 <%= link_to_ex(image_tag(path, width: d_ratio, height: d_ratio, :alt => path), path) %>
             <% end %>
         <% else %>
-            ファイルは見つかりませんでした。
+            ファイルは見つかりませんでした。<br />
+            <% scrn_name = Twt::get_screen_name(search_string) %>
+            <% if scrn_name != twitter.twtid %>
+                スクリーンネームが異なります<br />
+            <% end %>
+
             <% tweet = Tweet.find_by(tweet_id: s_tweet_id) %>
             <% if tweet %>
                 <h4>DBに登録あり→   "<%= tweet.status %>"</h4>
             <% else %>
-                <br />
                 DBにも登録無し
             <% end %>
         <% end %>
