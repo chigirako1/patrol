@@ -301,6 +301,19 @@ class Twitter < ApplicationRecord
         }
     end
 
+    def r18to_i
+        case self.r18
+        when RESTRICT::R18
+            18
+        when RESTRICT::R15
+            15
+        when RESTRICT::R12
+            12
+        else
+            0
+        end
+    end
+
     def last_dl_datetime_disp
         get_date_info(last_dl_datetime)
     end
@@ -663,6 +676,10 @@ class Twitter < ApplicationRecord
     end
 
     def select_cond_post_date
+        if self.status == TWT_STATUS::STATUS_WAITING
+            return true
+        end
+
         if self.last_post_datetime
             num_of_days_elapased = get_date_delta(self.last_post_datetime)
             cond_day = num_of_days_elapased / 3
@@ -867,6 +884,9 @@ class Twitter < ApplicationRecord
                 yymm = self.created_at.strftime("%y/%m")
                 gkey_work.gsub!(x, yymm)
                 #STDERR.puts %!"#{x}"\t"#{yymm}"\t"#{gkey_work}"!
+            when "dm"
+                w = self.drawing_method||""
+                gkey_work.gsub!(x, w)
             when "f"
                 unit = 500 unless unit
                 number = self.filenum
@@ -943,7 +963,9 @@ class Twitter < ApplicationRecord
 
                 "\t0#{lade}.#{lade}日前アクセス#{TWT_H_SEPARATOR}#{str}↑"
             elsif self.rating < 80
-                "\t低ランク#{TWT_H_SEPARATOR}-"
+                number = self.last_access_datetime_days_elapsed / 7
+                w = Util::format_num(number, 1, 3)
+                "\t低ランク#{TWT_H_SEPARATOR}#{w}週"
             else
                 gkey_work
             end
@@ -1402,7 +1424,8 @@ class Twitter < ApplicationRecord
         [90, [ 21, 20, 0]],
         [88, [ 25, 22, 1]],
         [87, [ 27, 33, 2]],
-        [85, [ 30, 44, 3]],
+        [86, [ 30, 40, 3]],
+        [85, [ 30, 44, 4]],
         [84, [ 35, 55, 5]],
         [82, [ 40, 60,14]],
         [80, [ 60, 66,21]],
@@ -1416,6 +1439,13 @@ class Twitter < ApplicationRecord
     end
 
     def interval_exceeded?(flg = false)
+        if self.min_interval
+            if self.last_access_day_num < self.min_interval
+                STDERR.puts %!指定期間内のため非表示:#{self.last_access_day_num} < #{self.min_interval} [#{self.twtname}(@#{self.twtid})]!
+                return false
+            end
+        end
+
         if self.max_interval
             #STDERR.puts %!#{self.last_access_day_num} <> #{self.max_interval} [#{self.twtname}(#{self.twtid})]!
             if self.last_access_day_num >= self.max_interval

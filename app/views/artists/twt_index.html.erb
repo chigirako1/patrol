@@ -1102,7 +1102,7 @@
             <% end %>
             予測:<%= pred %>
             <%= %![#{dm_disp twt.drawing_method}]! if twt.drawing_method != Twitter::DRAWING_METHOD::DM_AI %>
-            【<%= twt.rating %>】
+            【<%= twt.rating %>|<%= twt.r18 %>】
             <%= twt.twtname %>
             (@<%= twt.twtid %>)
             [<%= link_to_ex("■TWT■", twt) %>]

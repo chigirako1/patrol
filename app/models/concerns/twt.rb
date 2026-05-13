@@ -495,6 +495,11 @@ module Twt
         ary.join(" ")
     end
 
+    def self.search_tweet_ex(screen_name, search_tweet_id)
+        twt_pic_path_list = Twt::get_pic_filelist(screen_name)
+        search_tweet(twt_pic_path_list, search_tweet_id)
+    end
+
     def self.search_tweet(twt_pic_path_list, search_tweet_id)
         if search_tweet_id == nil
             STDERR.puts %![search_tweet]:"#{search_tweet_id}"!
@@ -1222,6 +1227,7 @@ module Twt
             return "700.低優先度"
         end
 
+=begin
         if twt.update_frequency >= 550
             return "001.当日分:超高頻度"
         elsif twt.update_frequency >= 350
@@ -1234,16 +1240,30 @@ module Twt
         elsif twt.update_frequency >= 300
             return "011.前日分"
         end
+=end
+        if twt.update_frequency >= 300
+            r_s = Util::format_num(twt.rating, 4)
+            return "010.前日/当日分:#{r_s}"
+        end
         
         if dayn < 1
             STDERR.puts %!@#{twt.twtid}(#{twt.twtname})\t#{dayn}!
             return "600.当日取得"
         end
 
-        p_s = Util::format_num(pred, 35)
+        if dayn < 8 and pred < 15
+            cate_no = "850"
+        elsif pred < 10
+            cate_no = "810"
+        else
+            cate_no = "880"
+        end
+
+        pred_i = 25
+        p_s = Util::format_num(pred, pred_i)
         month_n = Util::format_num(dayn / 30, 30)
         r_s = Util::format_num(twt.rating, 1)
-        %!800.#{p_s}|#{month_n}月|#{r_s}↑!
+        %!#{cate_no}.P:#{p_s}|#{month_n}月|#{r_s}↑!
     end
 
     def self.get_key_elem(twt, k, v, url_list, chk)

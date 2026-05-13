@@ -1,13 +1,10 @@
 
 <div id="<%= dom_id twitter %>">
-
     <% twt_pic_list = TwtImageList.new(@twt_pic_path_list) %>
-    <% date_group = TwtImageList::group_by_date(twt_pic_list.list) %>
-
-    <% class_str = "fixed-height-img" %>
-    <h2>ファイル数(<%= twt_pic_list.list.size %>)</h2>
-
+    <% date_group = TwtImageList::group_by(twt_pic_list.list) %>
     <% key_dates = Util::group_consecutive_dates(date_group.keys) %>
+
+    <h2>ファイル数(<%= twt_pic_list.list.size %>)</h2>
 
     <!-- ### ### -->
     <% date = key_dates.last.last %>
@@ -18,7 +15,7 @@
     <br />
     <% elem_list = date_group[date].select {|x| x.tweet_id == elem.tweet_id} %>
     <% elem_list.each do |e| %>
-        <%= link_to_ex(image_tag(e.file_path, class: class_str, :alt => e.file_path), e.file_path) %>
+        <%= image_link(e.file_path, get_image_class(e.first_pic?)) %>
     <% end %>
     <br />
     <%= tweet_info_str(elem) %><br />
@@ -32,7 +29,7 @@
     <br />
     <% elem_list = date_group[date].select {|x| x.tweet_id == elem.tweet_id} %>
     <% elem_list.each do |e| %>
-        <%= link_to_ex(image_tag(e.file_path, class: class_str, :alt => e.file_path), e.file_path) %>
+        <%= image_link(e.file_path, get_image_class(e.first_pic?)) %>
     <% end %>
     <br />
     <%= tweet_info_str(elem) %><br />
@@ -60,12 +57,12 @@
             新(<%= smart_date until_date %>)
             <% elem_list = date_group[until_d].select {|x| x.tweet_id == elem_u.tweet_id} %>
             <% elem_list.each do |e| %>
-                <%= link_to_ex(image_tag(e.file_path, class: class_str, :alt => e.file_path), e.file_path) %>
+                <%= image_link(e.file_path, get_image_class(e.first_pic?)) %>
             <% end %>
             ←旧(<%= smart_date since_date %>)
             <% elem_list = date_group[since].select {|x| x.tweet_id == elem_s.tweet_id} %>
             <% elem_list.each do |e| %>
-                <%= link_to_ex(image_tag(e.file_path, class: class_str, :alt => e.file_path), e.file_path) %>
+                <%= image_link(e.file_path, get_image_class(e.first_pic?)) %>
             <% end %>
 
             <br />
@@ -101,5 +98,4 @@
     <% key_dates.reverse.each do |e| %>
         <%= e.first.to_date %> ～ <%= e.last.to_date %><br />
     <% end %>
-    
 </div>

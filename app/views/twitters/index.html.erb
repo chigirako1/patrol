@@ -312,6 +312,13 @@
 
 <hr />
 
+<% if @twt_pic_path_list and @twt_pic_path_list.size > 0 %>
+    <% @twt_pic_path_list.each do |filepath| %>
+      <%= image_link(filepath) %>
+    <% end %>
+  <hr />
+<% end %>
+
 <style>
 button.horizontal {
   padding-left: 1em;

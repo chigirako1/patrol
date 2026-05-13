@@ -1,0 +1,26 @@
+
+<div id="<%= dom_id twitter %>">
+    <% twt_pic_list = TwtImageList.new(@twt_pic_path_list) %>
+    <% group_hash = TwtImageList::group_by(twt_pic_list.list, :beginning_of_month) %>
+
+    <h2>list(<%= twt_pic_list.list.size %>)</h2>
+
+    <% k_bak = "" %>
+    <% group_hash.to_a.reverse.to_h.each do |k, v| %>
+        <% if k != k_bak %>
+            <% k_bak = k %>
+            <%= k.strftime("%Y/%m") %>(<%= v.size %>)<br />
+        <% end %>
+    <% end %>
+
+    <% k_bak = "" %>
+    <% group_hash.to_a.reverse.to_h.each do |k, v| %>
+        <% if k != k_bak %>
+            <% k_bak = k %>
+            <h3><%= k.strftime("%Y/%m") %>(<%= v.size %>)</h3>
+        <% end %>
+        <% v.sort.each do |e| %>
+            <%= image_link(e.file_path, get_image_class(e.first_pic?)) %>
+        <% end %>        
+    <% end %>
+</div>

@@ -11,6 +11,9 @@ class Tweet < ApplicationRecord
         UNACCESSIBLE_FREEZED = "URLアクセス不可(凍結されたアカウント)"
         UNACCESSIBLE_PRIVATE = "URLアクセス不可(非公開アカウント)"
         DUPLICATE = "重複"
+
+        VIDEO = "動画"
+        VIDEO_SAVED = "動画(保存済み)"
     end
 
     def self.status_enum_array()
@@ -23,6 +26,9 @@ class Tweet < ApplicationRecord
             [StatusEnum::UNACCESSIBLE_PRIVATE],
             [StatusEnum::DUPLICATE],
             [StatusEnum::TO_BE_OBTAIN],
+
+            [StatusEnum::VIDEO],
+            [StatusEnum::VIDEO_SAVED],
         ]
     end
 

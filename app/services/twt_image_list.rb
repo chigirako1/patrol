@@ -12,8 +12,17 @@ class TwtImage
         @file_path = file_path
     end
 
+    def <=>(other)
+        return nil unless other.is_a?(TwtImage)
+        [tweet_id, pic_no, file_path] <=> [other.tweet_id, other.pic_no, other.file_path]
+    end
+
     def datetime
         Twt::get_timestamp(self.tweet_id)
+    end
+
+    def first_pic?
+        self.pic_no == 0
     end
 end
 
@@ -51,19 +60,23 @@ class TwtImageList
         freq = (Twt::calc_freq(@list.map {|x| x.file_path})).to_f
     end
 
-    def self.group_by_date(list)
+    def self.group_by(list, key_method = :to_date)
         hash = Hash.new { |h, k| h[k] = [] }
 
         list.each do |twt_img|
             if twt_img.tweet_id == 0
+                # TODO:???
                 next
             end
             ts = Twt::get_timestamp(twt_img.tweet_id)
-            hash[ts.to_date] << twt_img
+            #hash[ts.to_date] << twt_img
+            #hash[ts.beginning_of_month] << twt_img
+            hash[ts.public_send(key_method)] << twt_img
         end
 
         hash
     end
+    #beginning_of_month
 
     def self.a_to_h(data)
         result = data.each_with_object(Hash.new { |h, k| h[k] = [] }) do |(key, value), hash|

@@ -27,6 +27,18 @@ module ApplicationHelper
         end
     end
 
+    def image_link(filepath, class_str = "fixed-height-img")
+        link_to_ex(image_tag(filepath, class: class_str), filepath)
+    end
+
+    def get_image_class(std)
+        if std
+            "fixed-height-img"
+        else
+            "fixed-height-mini-img"
+        end
+    end
+
     def get_val(orig_val, target_symbol)
         if orig_val.presence
             val = orig_val

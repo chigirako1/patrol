@@ -674,6 +674,13 @@ class HomeController < ApplicationController
             target: ArtistsController::FileTarget::TWT_I
           )
       },
+      { :label => " twt(i)先月",
+          :path => artists_twt_index_path(
+            filename: "lastmonth",
+            grp_sort_spec: "[{dm}]{r5}|{p25}|{az}#{Twitter::TWT_H_SEPARATOR}{r}",
+            target: ArtistsController::FileTarget::TWT_I
+          )
+      },
       { :label => " twt(i) all",
           :path => artists_twt_index_path(
             filename: "all",
@@ -816,7 +823,7 @@ class HomeController < ApplicationController
             target:"twt,twt既知,twt未知,known_pxv,unknown_pxv",
             #grp_sort_spec: "{p40}|{az}#{Twitter::TWT_H_SEPARATOR}{p10}",
             #grp_sort_spec: "{r2}|{p40}|{az}#{Twitter::TWT_H_SEPARATOR}{p10}",
-            grp_sort_spec: "{r10}|{p30}|{az}#{Twitter::TWT_H_SEPARATOR}{p10}",
+            grp_sort_spec: "{r5}|{p30}|{az}#{Twitter::TWT_H_SEPARATOR}{p10}",
           )
       },
       { :label => "今月ファイル ",
@@ -826,6 +833,16 @@ class HomeController < ApplicationController
             rating: rating_std,
             #show_times: 2,
             pred: 5,
+            target:"twt,twt既知,twt未知,known_pxv,unknown_pxv",
+          )
+      },
+      { :label => "先月ファイル ",
+          :path => artists_twt_index_path(
+            filename: "lastmonth",
+            #hide_day: 30,
+            rating: rating_std,
+            #show_times: 2,
+            #pred: 5,
             target:"twt,twt既知,twt未知,known_pxv,unknown_pxv",
           )
       },

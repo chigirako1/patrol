@@ -161,6 +161,7 @@ textarea {
     <%#= link_to("url txtチェック", twitter_path(file_check: 't', picn: 'all', pic_lf: '', corr: '0'), class: 'button') %>
     <%= link_to("url txtチェック", twitter_path(file_check: 't', pic_lf: '', corr: '0'), class: 'button') %>
     <%= link_to_ex(%!期間チェック!, twitter_path(twitter, refresh: "y", seq_chk: true)) if twitter.twtid %>
+    <%= link_to_ex(%!viewer!, twitter_path(twitter, refresh: "y", viewer: true)) if twitter.twtid %>
 
     <% if params[:seq_chk] == "true" %>
         <h2>期間チェック</h2>
@@ -305,13 +306,12 @@ textarea {
         ※値が設定されていません※
     <% end %>
     計算結果"<%= avg %>"
-    (<%= freq_90d %>/<%= freq_30d %>/<%= freq_15d %>
     <% if freq_90d > freq_30d and freq_30d > freq_15d %>
-        <b>減少傾向</b>
+        <% zougen = "減少傾向" %>
     <% elsif freq_90d < freq_30d and freq_30d < freq_15d %>
-        <b>増加傾向</b>
+        <% zougen = "増加傾向" %>
     <% end %>
-    )
+    (<%= freq_90d %>/<%= freq_30d %>/<%= freq_15d %> <%= zougen %>)
     <% avg_wk = (avg + 10) / 10 * 10 %>
     <input type="button" value="設定:<%= avg_wk %>" onclick="set_vl('update_frequency', <%= avg_wk %>);" />
     <script>

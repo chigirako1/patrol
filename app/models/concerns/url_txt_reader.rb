@@ -228,6 +228,9 @@ module UrlTxtReader
         when "thismonth"
             yymm = Date.today.strftime("%y%m")
             path = UrlTxtReader::txt_file_list(yymm + "\\d+")
+        when "lastmonth"
+            yymm = Date.today.months_ago(1).strftime("%y%m")
+            path = UrlTxtReader::txt_file_list(yymm + "\\d+")
         when /thisyear\s+(\d+)/
             opt = $1.to_i
 

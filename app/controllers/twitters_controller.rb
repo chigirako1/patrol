@@ -498,32 +498,22 @@ class TwittersController < ApplicationController
       index_mode_all(twitters, twt_params)
       return
     when ModeEnum::SEARCH
-      #twitters = index_select(twitters, twt_params)
-
-      if twt_params.rating_gt > 0
-        twitters = twitters.select {|x| (x.rating||0) >= twt_params.rating_gt}
-      end
-
-      if twt_params.prm_filesize >= 0
-        twitters = twitters.select {|x| (x.filesize||0) >= twt_params.prm_filesize}
-      else
-        twitters = twitters.select {|x| (x.filesize||0) <= -twt_params.prm_filesize}
-      end
-      
-      if twt_params.param_status.presence
-        twitters = twitters.select {|x| x.status == twt_params.param_status}
-      end
-
-      twitters = twitters.select {|x| x.drawing_method == twt_params.param_target} if twt_params.param_target != ""
+      twitters = index_select_search(twitters, twt_params)
       @twitters_group = twt_group_by(twitters, param_grp_sort_by, param_grp_sort_spec)
       @twitters_total_count = @twitters_group.sum {|k,v| v.count}
+
+      if params[:search_word] =~ Twt::TWT_POST_URL_RGX
+        screen_name = $1
+        tweet_id = $2.to_i
+        @twt_pic_path_list = Twt::search_tweet_ex(screen_name, tweet_id)
+      end
+
       return
     else
       #twitt  ers = twitters.select {|x| x.last_dl_datetime.year >= 2023}
       #twitters = twitters.select {|x| x.last_dl_datetime.month >= 11}
     end
 
-    #@twitters_group = twitters.group_by {|x| x.rating}
     @twitters_group = twt_group_by(twitters, param_grp_sort_by, param_grp_sort_spec)
     @twitters_group = @twitters_group.sort_by {|k, v| k || 0}.reverse.to_h
     @twitters_total_count = @twitters_group.sum {|k,v| v.count}
@@ -674,6 +664,25 @@ class TwittersController < ApplicationController
         :fetch_pred_n,
         :disp_tab_target
         )
+    end
+
+    def index_select_search(twitters, twt_params)
+      if twt_params.rating_gt > 0
+        twitters = twitters.select {|x| (x.rating||0) >= twt_params.rating_gt}
+      end
+
+      if twt_params.prm_filesize >= 0
+        twitters = twitters.select {|x| (x.filesize||0) >= twt_params.prm_filesize}
+      else
+        twitters = twitters.select {|x| (x.filesize||0) <= -twt_params.prm_filesize}
+      end
+      
+      if twt_params.param_status.presence
+        twitters = twitters.select {|x| x.status == twt_params.param_status}
+      end
+
+      twitters = twitters.select {|x| x.drawing_method == twt_params.param_target} if twt_params.param_target != ""
+      twitters
     end
 
     def index_select(twitters, twt_params)
@@ -1255,7 +1264,7 @@ class TwittersController < ApplicationController
         #twitters = twitters.sort_by {|x| [x.last_access_datetime, -(x.rating||0), -x.prediction]}
         twitters = twitters.sort_by {|x| [-x.last_access_datetime_days_elapsed, -(x.rating||0), -x.prediction]}
       when SORT_BY::M_R_ACCESS_W_PRED_A
-        twitters = twitters.sort_by {|x| [-(x.last_access_day_num / 30), -x.rating, -(x.last_access_day_num / 7), x.prediction]}
+        twitters = twitters.sort_by {|x| [-(x.last_access_day_num / 30), -x.rating, -x.r18to_i, -(x.last_access_day_num / 7), x.prediction]}
       when SORT_BY::R_ACCESS_W_PRED_A
         twitters = twitters.sort_by {|x| [-x.rating, -(x.last_access_day_num / 7), x.prediction]}
       when SORT_BY::R_ACCESS_W_PRED_D

@@ -903,7 +903,7 @@ class Artist < ApplicationRecord
     end
 
     def select_cond_post_date
-        num_of_days_elapased = get_date_delta(last_ul_datetime)
+        num_of_days_elapased = get_date_delta(self.last_ul_datetime)
         if num_of_days_elapased > 365
             cond_day = 365
         else

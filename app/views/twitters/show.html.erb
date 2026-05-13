@@ -17,6 +17,9 @@
 <% if params[:seq_chk] == "true" %>
   <%= render "list", twitter: @twitter %>
   <hr />
+<% elsif params[:viewer] == "true" %>
+  <%= render "viewer", twitter: @twitter %>
+  <hr />
 <% else %>
   <%= render "twt_pic_list", twitter: @twitter %>
   <hr />
