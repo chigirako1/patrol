@@ -75,3 +75,9 @@
 <% ids.each do |screen_name| %>
     <%= screen_name %><br />
 <% end %>
+
+
+<% list = Util::load_mov_urls %>
+<% list.each do |line| %>
+    <% STDERR.puts line %>
+<% end %>

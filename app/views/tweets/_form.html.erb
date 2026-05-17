@@ -1,18 +1,3 @@
-<style>
-.btn {
-  padding-left: 1em;
-  padding-right: 1em;
-  height: 2em;
-  width: 110px;
-}
-.btn2 {
-  padding-left: 1em;
-  padding-right: 1em;
-  height: 2em;
-  width: 200px;
-}
-</style>
-
 <%= form_with(model: tweet) do |form| %>
     <% if tweet.errors.any? %>
         <div style="color: red">
@@ -52,7 +37,7 @@
                     </h4>
                 <% elsif twt.last_access_datetime > time %>
                     <h4>
-                    [<%= link_to_ex %!☆twt☆:@#{smart_date time.to_date}!, artist_twt_path(tweet.screen_name, sdate: time.to_date) %>]
+                    [<%= link_to_ex(%!☆twt☆:@#{smart_date(time.to_date)}!, artist_twt_path(tweet.screen_name, sdate: time.to_date, nl: false)) %>]
                     最後のアクセス(<%= smart_date twt.last_access_datetime %>)
                     より前のツイート(<%= smart_date time %>)
                     </h4>
@@ -105,7 +90,7 @@
     </div>
 
     <div>
-            <%= form.submit %>
+            <%= form.submit("更新", class: 'submit-btn') %>
     </div>
 
     <% if tweet.screen_name.presence and tweet.screen_name != Twt::TWT_USER_I %>

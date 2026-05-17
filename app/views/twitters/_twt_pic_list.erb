@@ -1,31 +1,3 @@
-<style type="text/css">
-textarea {
-	width: 900px;
-	height: 80px;
-}
-
-.button {
-  display: inline-block;
-  padding: 8px 16px;
-  color: #fff;
-  background-color: #007bff;
-  border-radius: 5px;
-  text-decoration: none;
-  text-align: center;
-}
-
-.button_a {
-    background-color: #ff7b00;
-}
-
-.button_b {
-    background-color: gray;
-}
-
-.button:hover {
-  background-color: #0056b3;
-}
-</style>
 
 <div id="<%= dom_id twitter %>">
     <!-- PXV画像 
@@ -248,7 +220,8 @@ textarea {
             <% if twitter.latest_tweet_id %>
                 最新tweet id:
                 <b><%= Twt::tweet_id_with_comma(twitter.latest_tweet_id) %></b>
-                (公開日時：<%= Twt::date_info(twitter.latest_tweet_id) %>)
+                <% ts = Twt::get_timestamp(twitter.latest_tweet_id) %>
+                (公開日時：<%= l ts %>(<%= time_ago_in_words(ts) %>))
 
                 <%# tweet_id_c = Twt::sp_tweet_id_with_comma(@twitter.twtid) %>
                 <% if false#tweet_id_c %>
@@ -332,7 +305,8 @@ textarea {
         <%#= tweet_id.to_s.reverse.gsub(/\d{3}/, '\0,').reverse %>
         <%= Twt::tweet_id_with_comma(tweet_id) %>
         </b>
-        (公開日時：<%= Twt::date_info(tweet_id) %>)
+        <% ts = Twt::get_timestamp(tweet_id) %>
+        (公開日時：<%= twitter.datetime_disp ts %>)
 
         <% #if @twitter.status == Twitter::TWT_STATUS::STATUS_NOT_EXIST %>
             (id変わったとき用→)
@@ -356,7 +330,7 @@ textarea {
         <% latest_file = filelist.last %>
         <% sp_datetime = Twt::get_sp_datetime_from_filename(File.basename latest_file) %>
         <% sp_tweet_id = Twt::time2tweet_id(sp_datetime) %>
-        <b><%= Twt::tweet_id_with_comma(sp_tweet_id) %></b>(<= DL日時からの推測)(<%= time_ago_in_words(sp_datetime) %>) <%#= Twt::date_info(sp_tweet_id) %>
+        <b><%= Twt::tweet_id_with_comma(sp_tweet_id) %></b>(<= DL日時からの推測)(<%= time_ago_in_words(sp_datetime) %>)
         [<%= File::basename latest_file %>]
         <br />
         予測:<%= twitter.prediction_h(sp_datetime) %>

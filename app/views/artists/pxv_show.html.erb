@@ -2,7 +2,7 @@
 
 <h3 id="pxv_pic_list"><%= @pxvid %></h3>
 
- PXV:<%= link_to_ex "#{@pxvid}", Pxv::pxv_user_url(@pxvid) %><br />
+ PXV:<%= link_to_ex "▶#{@pxvid}", Pxv::pxv_user_url(@pxvid) %><br />
 
 <%= link_to_ex "New Artist", new_artist_path(pxvid: @pxvid) %>
 
@@ -14,12 +14,17 @@
 <% end %>
 <br />
 
-<% @pxv_pic_list.first(3).each do |path| %>
-    <%= link_to_ex(image_tag(path, width: '10%', height: '10%', :alt => path), path) %>
-    <%= path %>
-    <% artwork_id = Pxv::get_pxv_art_id(path) %>
-    <%= link_to_ex "#{artwork_id}", Pxv::pxv_artwork_url(artwork_id) %>
+<% artworks = PxvArtworkList.new(@pxv_pic_list) %>
+<% artworks.artwork_list.sort.reverse.each do |artwork| %>
+    (<%= link_to_ex "#{artwork.artwork_id}", artwork.pxv_artwork_url %>)
+    [<%= artwork.publication_date %>]
+    「<%= artwork.title %>」
     <br />
-<% end %>
-<hr />
+    <%= image_link(artwork.first_pic_path, get_image_class(true)) %>
 
+    <% artwork.path_list[1..3].each do |path| %>
+        <%= image_link(path, get_image_class(false)) %>
+    <% end %>
+    全<%= artwork.path_list.size %>枚
+    <hr />
+<% end %>

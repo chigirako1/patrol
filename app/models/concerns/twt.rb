@@ -887,7 +887,7 @@ module Twt
 
     def self.date_info(tweet_id)
         ts = get_timestamp(tweet_id)
-        Util::get_date_info(ts)
+        %!#{Util::get_date_info(ts)}[#{}]!
     end
 
     def self.twt_path_str(path)
@@ -1218,6 +1218,10 @@ module Twt
             return "999.取得対象物件あり[#{r_s}]"
         end
 
+        if Util::get_date_delta(twt.created_at) <= 30
+            return "955.最近登録"
+        end
+
         if twt.no_disp?(dayn)
             return LOW_PRIORITY_IGNORE_KEY
         end
@@ -1242,7 +1246,8 @@ module Twt
         end
 =end
         if twt.update_frequency >= 300
-            r_s = Util::format_num(twt.rating, 4)
+            r_u = 2
+            r_s = Util::format_num(twt.rating, r_u)
             return "010.前日/当日分:#{r_s}"
         end
         
@@ -1259,7 +1264,7 @@ module Twt
             cate_no = "880"
         end
 
-        pred_i = 25
+        pred_i = 20
         p_s = Util::format_num(pred, pred_i)
         month_n = Util::format_num(dayn / 30, 30)
         r_s = Util::format_num(twt.rating, 1)

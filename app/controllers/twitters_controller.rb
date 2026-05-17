@@ -40,6 +40,7 @@ class TwittersController < ApplicationController
     R_ACCESS_W_PRED_D = "評価/アクセス週順（旧→新）/予測▽降順"
     ACCESS_W_PRED_A = "アクセス週順（旧→新）/予測△昇順"
     
+    SORT_ACCESS_M_PRED_DESC = "アクセス順(月)（旧→新）/予測▽降順"
     SORT_ACCESS_Z_R = "アクセス順(月/週/日)（旧→新）/評価"
 
     RATING = "rating"
@@ -52,7 +53,7 @@ class TwittersController < ApplicationController
     SORT_REGISTERED_DESC = "登録日順(新→旧)"
     R_SORT_REGISTERED_DESC = "評価/登録日順(新→旧)"
 
-    SORT_FILESIZZE_DSC = "ファイルサイズ(降順)"
+    SORT_FILESIZZE_DSC = "ファイルサイズ(▽降順)"
 
     SORT_POINT = "ポイント"
 
@@ -1257,14 +1258,14 @@ class TwittersController < ApplicationController
         twitters = twitters.sort_by {|x| -x.point}
       when SORT_BY::PRED_ASC
         twitters = twitters.sort_by {|x| [x.prediction, x.last_access_datetime]}
+      when SORT_BY::SORT_ACCESS_M_PRED_DESC
+        twitters = twitters.sort_by {|x| [-(x.last_access_day_num / 30), -x.prediction]}
       when SORT_BY::SORT_ACCESS_Z_R
         twitters = twitters.sort_by {|x| [-x.last_access_datetime_z, -(x.rating||0), -x.prediction]}
       when SORT_BY::ACCESS
-        #twitters = twitters.sort_by {|x| [x.last_access_datetime, (x.last_access_datetime)]}#.reverse
-        #twitters = twitters.sort_by {|x| [x.last_access_datetime, -(x.rating||0), -x.prediction]}
         twitters = twitters.sort_by {|x| [-x.last_access_datetime_days_elapsed, -(x.rating||0), -x.prediction]}
       when SORT_BY::M_R_ACCESS_W_PRED_A
-        twitters = twitters.sort_by {|x| [-(x.last_access_day_num / 30), -x.rating, -x.r18to_i, -(x.last_access_day_num / 7), x.prediction]}
+        twitters = twitters.sort_by {|x| [-(x.last_access_day_num / 30), -x.rating_ex, -(x.last_access_day_num / 7), x.prediction]}
       when SORT_BY::R_ACCESS_W_PRED_A
         twitters = twitters.sort_by {|x| [-x.rating, -(x.last_access_day_num / 7), x.prediction]}
       when SORT_BY::R_ACCESS_W_PRED_D
@@ -1272,7 +1273,8 @@ class TwittersController < ApplicationController
       when SORT_BY::ACCESS_W
         twitters = twitters.sort_by {|x| [-(x.last_access_day_num / 7), -x.rating, -x.prediction]}
       when SORT_BY::ACCESS_W_PRED_A
-        twitters = twitters.sort_by {|x| [-(x.last_access_day_num / 7), -x.rating, x.prediction]}
+        #twitters = twitters.sort_by {|x| [-(x.last_access_day_num / 7), -x.rating, x.prediction]}
+        twitters = twitters.sort_by {|x| [-(x.last_access_day_num / 7), -x.rating_ex, x.prediction]}
       when SORT_BY::R_ACCESS
         twitters = twitters.sort_by {|x| [-x.rating, (x.last_access_datetime)]}
       when SORT_BY::FILENUM

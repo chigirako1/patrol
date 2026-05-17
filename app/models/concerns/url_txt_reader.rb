@@ -44,8 +44,16 @@ module UrlTxtReader
     end
 
     def last_access_datetime_z
-        days = get_date_delta(last_access_datetime)
-        round_days(days)
+=begin
+        unless self.last_access_datetime
+            STDERR.puts %!#{self.twtid}!
+            return 0
+        end
+=end
+        days = get_date_delta(self.last_access_datetime)
+        days2 = round_days(days)
+        #STDERR.puts %!#{days} => #{days2}!
+        days2
     end
     
     def last_access_datetime_p(day = 13)

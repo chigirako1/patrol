@@ -10,14 +10,34 @@ h6 { background-color: lightgray; color: black; padding: .3rem; }
 a { color: #339; }
 a:visited { color:purple;  }
 
-input { height: 1.2rem; width: 25rem; margin-bottom: .5rem; }
+input {
+    /*height: 1.2rem;*/
+    /*width: 25rem;*/
+    margin-bottom: .5rem;
+}
+
+input[type="text"],
+input[type="email"],
+input[type="password"],
+input[type="tel"] {
+    /*width: 100%; * 親要素の幅いっぱいに広げる場合 */
+    /*max-width: 400px; * 広がりすぎないように上限を設定 */
+    width: 25rem; /* お好みの幅（px、%、remなど） */
+    padding: 8px; /* 内側の余白 */
+    box-sizing: border-box; /* パディングを含めた幅にする設定（重要） */
+}
+
 textarea { height: 3rem; width: 25rem; }
 
-button, input[type=submit] { height: 1.4rem; width: 10rem; margin-bottom: .5rem; }
+button, input[type=submit] {
+    /*height: 1.4rem;*/
+    width: 10rem;
+    margin-bottom: .5rem;
+}
 
 .submit-btn {
-    width: 300px;
-    height: 50px;
+    /*width: 300px;*/
+    height: 30px;
     border: solid 1px;
     background: yellow;
 }
@@ -28,11 +48,95 @@ button, input[type=submit] { height: 1.4rem; width: 10rem; margin-bottom: .5rem;
 }
 
 .fixed-height-img {
-  height: 150px;  /* 固定したい高さ */
-  width: auto;    /* アスペクト比を維持して自動計算 */
+    height: 150px;  /* 固定したい高さ */
+    width: auto;    /* アスペクト比を維持して自動計算 */
 }
 
 .fixed-height-mini-img {
-  height: 100px;  /* 固定したい高さ */
-  width: auto;    /* アスペクト比を維持して自動計算 */
+    height: 100px;  /* 固定したい高さ */
+    width: auto;    /* アスペクト比を維持して自動計算 */
 }
+
+
+/* ar/form */
+.btn {
+    padding-left: 1em;
+    padding-right: 1em;
+    /*height: 2em;
+    width: 110px;*/
+}
+
+.btn2 {
+    padding-left: 1em;
+    padding-right: 1em;
+    /*height: 2em;
+    width: 200px;*/
+}
+
+
+/* twt/form */
+.btn_s {
+    padding-left: 1em;
+    padding-right: 1em;
+    height: 2em;
+    /*width: 50px;*/
+}
+
+.btn_s_plus {
+    background: lime;
+}
+
+.btn_s_minus {
+    background: yellow;
+}
+
+.btn_s_abs {
+    background: lightblue;
+}
+
+
+/* twt pic list */
+textarea {
+	width: 900px;
+	height: 80px;
+}
+
+.button {
+  display: inline-block;
+  padding: 8px 16px;
+  color: #fff;
+  background-color: #007bff;
+  border-radius: 5px;
+  text-decoration: none;
+  text-align: center;
+}
+
+.button_a {
+    background-color: #ff7b00;
+}
+
+.button_b {
+    background-color: gray;
+}
+
+.button:hover {
+  background-color: #0056b3;
+}
+
+
+
+/* twitts index */
+
+button.horizontal {
+  padding-left: 1em;
+  padding-right: 1em;
+  height: 3em;
+}
+
+/*.btn_s {
+    padding-left: 1em;
+    padding-right: 1em;
+    height: 2em;
+    width: 50px;
+}*/
+

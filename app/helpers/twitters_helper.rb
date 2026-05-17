@@ -41,6 +41,8 @@ module TwittersHelper
             #if twt.sp?
             if twt.sp? and (twt.rating and twt.rating >= Twt::RATING_THRESHOLD)
                 tag = %!<h3>SP対象？</h3>! + tag
+            elsif twt.filesize_huge?
+                tag = %!<b>ファイルサイズ大</b>! + tag
             elsif br
                 tag = "<br />" + tag
             end
@@ -67,10 +69,12 @@ module TwittersHelper
         tag = ""
 
         tag += %!#{dm_disp(twt.drawing_method)}!
+        tag += "【"
+        tag += %!#{twt.rating}|#{twt.r18}#{r_icon(twt.r18)}!
+        tag += "】"
         tag += %!"#{twt.twtname}"!
         tag += "【"
         tag += PRIVATE_ICON if twt.private_account == Twitter::TWT_VISIBILITY::TV_PRIVATE
-        tag += %!#{twt.rating}|#{twt.r18}#{r_icon(twt.r18)}|!
         tag += %!#{twt.status}!
         if twt.status == Twitter::TWT_STATUS::STATUS_SCREEN_NAME_CHANGED or twt.status == Twitter::TWT_STATUS::STATUS_ANOTHER
             tag += %!(→#{twt.new_twtid})!

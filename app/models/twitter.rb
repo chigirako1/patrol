@@ -301,6 +301,18 @@ class Twitter < ApplicationRecord
         }
     end
 
+    def rating_ex
+        point = (self.rating||0)
+        case self.r18
+        when RESTRICT::R18
+            point += 2
+        when RESTRICT::R15
+            point += 1
+        else
+        end
+        point
+    end
+
     def r18to_i
         case self.r18
         when RESTRICT::R18

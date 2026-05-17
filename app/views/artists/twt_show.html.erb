@@ -27,7 +27,7 @@
         <%= pxv_artist.status %>
     <br />
 <% else %>
-    xxx
+    pxvなし
 <% end %>
 <hr />
 
@@ -59,16 +59,20 @@
     <% show_pic_num = twt_img_list.list.size %>
 <% end %>
 
+<% if params[:nl] and params[:nl] == "true" %>
+    <% nl = true %>
+<% else %>
+    <% nl = false %>
+<% end %>
+
 <h4>twt_img_list(<%= twt_img_list.list.size %>)</h4>
 <% twt_img_list.list.first(show_pic_num).each.with_index(1) do |elem, idx| %>
+    <% if nl and elem.first_pic? %>
+        <hr />
+    <% end %>
     <% path = elem.file_path %>
     <%= idx %>.
-    <% if elem.pic_no == 0 %>
-        <% imgclass = "fixed-height-img" %>
-    <% else %>
-        <% imgclass = "fixed-height-mini-img" %>
-    <% end %>
-    <%= link_to_ex image_tag(path, class: imgclass, :alt => path), path %>
+    <%= image_link(path, get_image_class(elem.first_pic?)) %>
 
     <% if sdate %>
         <% postdate = elem.datetime %>
@@ -93,6 +97,10 @@
     <% end %>
 <% end %>
 <br />
+
+<%= link_to("...全て表示", artist_twt_path(@twtid, picn: 33, nl: true)) %>
+<br />
+
 
 <!-- ########################## --
  ! SP
