@@ -381,13 +381,13 @@ class Twitter < ApplicationRecord
             #STDERR.puts %!sp?: #{self.filesize} bytes, #{self.update_frequency}/100 "#{self.twtname}[@#{self.twtid}]"!
             true
         elsif filesize_huge?
-            #STDERR.puts %!sp?:#{1}!
             if ul_freq_low?
                 false
             else
-                #if rating >= RATING_THRESHOLD
                 true
             end
+        elsif Twt::filesize_big?(self.filesize) and (self.update_frequency||0) > 200
+            true
         else
             false
         end
@@ -402,11 +402,11 @@ class Twitter < ApplicationRecord
     end
 
     def no_disp?(dayn)
-        if self.low_priority_and_recently_accessed?(85, 3)
+        if self.low_priority_and_recently_accessed?(84, 3)
             return true
         end
 
-        if self.low_priority_and_recently_accessed?(86, 1)
+        if self.low_priority_and_recently_accessed?(85, 1)
             return true
         end
 
@@ -415,9 +415,17 @@ class Twitter < ApplicationRecord
         end
 
         if self.rating < 85 and dayn < 10 or
-            self.rating < 83 and dayn < 20 or
-            self.rating < 80 and dayn < 30
+            self.rating < 83 and dayn < 20
             return true
+        end
+
+        ra = 80
+        if self.rating < ra
+            d = ra - self.rating
+            ndays = 25 + d * 5
+            if dayn < ndays
+                return true
+            end
         end
         
         false
@@ -859,7 +867,11 @@ class Twitter < ApplicationRecord
                 number = self.last_access_datetime_days_elapsed / 7
                 gkey_work = group_sub(unit, number, gkey_work, x)
             when "az"
-                unit = 3 unless unit
+                if unit
+                    lade_s = unit
+                else
+                    unit = 3
+                end
                 if self.last_access_datetime_days_elapsed < unit
                     gkey_work = group_sub(unit, number, gkey_work, x)
                 elsif self.last_access_datetime_days_elapsed < 31
@@ -1240,7 +1252,7 @@ class Twitter < ApplicationRecord
         end
     end
 
-    def group_key_hoge()
+    def group_key_hoge(grp_spec)
         case self.drawing_method
         when DRAWING_METHOD::DM_AI
             dm = %!980.AI!
@@ -1259,7 +1271,7 @@ class Twitter < ApplicationRecord
         case status
         when Twitter::TWT_STATUS::STATUS_PATROL
             #key = self.group_spec("{az}#{TWT_H_SEPARATOR}評価{r}")
-            key = self.group_spec("{az}#{TWT_H_SEPARATOR}{p50}")
+            key = self.group_spec(grp_spec)
             %![#{dm}]#{key}!
         else
             if key

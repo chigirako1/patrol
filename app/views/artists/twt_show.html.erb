@@ -88,7 +88,13 @@
 <br />
 
 <% twt_img_list.list.first(show_pic_num).each.with_index(1) do |elem, idx| %>
-    <%= idx %>:<%= Twt::twt_path_str elem.file_path %><br />
+    <%= idx %>:<%= Twt::twt_path_str elem.file_path %>
+    <% url = Twt::twt_tweet_url(@twtid, elem.tweet_id) %>
+    <% if false %>
+        [<%= link_to_ex("▶", url) %>]
+    <% end %>
+    <br />
+
     <% if sdate %>
         <% postdate = elem.datetime %>
         <% if postdate.to_date < sdate %>

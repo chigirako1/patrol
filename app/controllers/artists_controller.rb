@@ -820,6 +820,22 @@ class ArtistsController < ApplicationController
       @stats[key].delete("")
       @stats[key].delete(0)
     end
+
+    @vid_ids = []
+    @vid_urls = []
+    @mov_url_list = []
+    @sp_ids = []
+    if params[:target] == "video"
+      @vid_ids = Twt::list_vid() if false
+      @vid_ids = []
+
+      #@vid_urls = Util::load_mov_urls
+
+      mov_url_list = Twt::mov_url_list().sort
+    else
+      @sp_ids = Twt::get_sp_ids()
+    end
+
     STDERR.puts "<-stats"
   end
 

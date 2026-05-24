@@ -219,6 +219,7 @@
     <% if artist.pxvid.presence %>
       <% records = Twitter.get_records_by_pxvid(artist.pxvid)%>
       <% if records.size > 1 %>
+        <hr />
         <% records.each do |r| %>
           ■"@<%= r.twtid %>"|<%= twitter_info_tag(r) %><br />
         <% end %>

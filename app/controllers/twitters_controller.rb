@@ -9,7 +9,7 @@ class TwittersController < ApplicationController
     ALL_IN_1 = 'all in 1'
     HIGH_PRIORITY = '優先'
     SPEC_NON_DISP = '非表示指定'
-    ALL = 'all'
+    MODE_ALL = 'all'
     FILE = 'file'
     URL_TXT = 'url txt'
     PATROL = 'patrol'
@@ -489,7 +489,7 @@ class TwittersController < ApplicationController
       end
       @twitters_total_count = @twitters_group.sum {|k,v| v.count}
       return
-    when ModeEnum::ALL
+    when ModeEnum::MODE_ALL
       if params[:filename] == "<tweet>"
         STDERR.puts %!1#{twitters.size}!
         tweet_ids = Tweet.where.not(screen_name: [nil, ""]).distinct.pluck(:screen_name)
@@ -943,7 +943,10 @@ class TwittersController < ApplicationController
 
     # 優先
     def index_high_priority(twitters, twt_params, prio)
-      #twitters = twitters.select {|x| x.rating == nil or x.rating >= twt_params.rating_gt }
+      if twt_params.rating_gt > 0
+        STDERR.puts %!#{twt_params.rating_gt}xyz!
+        twitters = twitters.select {|x| x.rating == nil or x.rating >= twt_params.rating_gt }
+      end
       twitters = twitters.select {|x| x.drawing_method == twt_params.param_target}
 
       if twt_params.ex_sp
@@ -994,7 +997,7 @@ class TwittersController < ApplicationController
           n = TMP_RATING
         end
         if n
-          twitters_intvl = twitters.select {|x| x.interval_exceeded?(x.rating >= n)}
+          twitters_intvl = twitters.select {|x| x.interval_exceeded?(x.rating||0 >= n)}
         else
           twitters_intvl = twitters.select {|x| x.interval_exceeded?}
         end

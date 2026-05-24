@@ -44,6 +44,17 @@
     <% pxv_disp_number = 6 %>
 <% end %>
 
+<% if params[:grp_sort_spec].presence %>
+    <% spec = params[:grp_sort_spec] %>
+<% else %>
+    <%# spec = "{r3}|{p40}|{az}::評価{r}" %>
+    <%# spec = "{p30}件↑|{aw}週#{Twitter::TWT_H_SEPARATOR}予測{p20}～" %>
+    <%# spec = "{aw}週#{Twitter::TWT_H_SEPARATOR}{r}" %>
+    <%# spec = "評価{r}#{Twitter::TWT_H_SEPARATOR}{az}" %>
+    <%# spec = "{am}|{p20}#{Twitter::TWT_H_SEPARATOR}{az}" %>
+    <% spec = "{az}#{Twitter::TWT_H_SEPARATOR}{p25}" %>
+<% end %>
+
 
 <!-- twt -->
 <% twt_group = Hash.new { |h, k| h[k] = [] } %>
@@ -80,7 +91,7 @@
             <%# next %>
         <% end %>
 
-        <% key_twt = twt_account.group_key_hoge() %>
+        <% key_twt = twt_account.group_key_hoge(spec) %>
         <% twt_group[key_twt] << [twt_account, url_list] %>
     <% end %>
 <% end %>
@@ -95,12 +106,9 @@
     <h2>登録済みtwt (<%= known_twt_url_list_size %>)</h2>
 <% end %>
 
-<%# filesize_list = Twt::get_pic_filesize_list %>
-<%# STDERR.puts %!filesize_list=#{filesize_list.size}! %>
-
 <% if twt_group.presence %>
     <% h_grp1_bak = "" %>
-    <% twt_group = twt_group.sort.reverse.to_h #twt_group = twt_group.sort.to_h %>
+    <% twt_group = twt_group.sort.reverse.to_h %>
     <% twt_group.each do |key, val| %>
         <% list = val %>
         <% unless list.presence %>
@@ -167,13 +175,13 @@
                     </td>
                     <td>
                         [<%= url_list.size %>]
-                        【<%= twt_account.rating %>】<%= twt_account.r18 %>
+                        【<%= twt_account.rating %>】<%= restr_disp(twt_account.r18) %>
                         <% if twt_account.newcomer? %>
                             <b>!NEW!</b>
                         <% end %>
                     </td>
                     <td>
-                        <% if twt_account.status == "TWT巡回" %>
+                        <% if twt_account.status == Twitter::TWT_STATUS::STATUS_PATROL %>
                             <%#= twt_account.status %>
                         <% else %>
                             <b><%= twt_account.status %></b>
@@ -287,15 +295,6 @@
     <% disp_twt_pxv = false %>
 <% end %>
 
-<% if params[:grp_sort_spec].presence %>
-    <% spec = params[:grp_sort_spec] %>
-<% else %>
-    <% spec = "{r3}|{p40}|{az}::評価{r}" %>
-    <% spec = "{p30}件↑|{aw}週#{Twitter::TWT_H_SEPARATOR}予測{p20}～" %>
-    <% spec = "{aw}週#{Twitter::TWT_H_SEPARATOR}{r}" %>
-    <% spec = "評価{r}#{Twitter::TWT_H_SEPARATOR}{az}" %>
-    <% spec = "{am}|{p20}#{Twitter::TWT_H_SEPARATOR}{az}" %>
-<% end %>
 
 <% if @tweet_i_ids.presence and @tweet_i_ids.size > 0 %>
     <h2>tweet_i_ids (<%= @tweet_i_ids.size %>)</h2>
@@ -933,8 +932,15 @@
     <% duplicates.each do |x| %>
         複数："<%= x %>"<br />
     <% end %>
+
+    <% hr_done = false %>
     <% @sp_dirs.each.with_index(1) do |elem, idx| %>
         <% if elem.twt %>
+            <% if elem.twt.last_access_datetime_days_elapsed < 1 and hr_done == false %>
+                <hr size="5" color="yellow" />
+                <% hr_done = true %>
+            <% end %>
+
             <%= idx %>.
             アクセス日：<%= elem.twt.last_access_datetime_disp %>
             [<%= elem.twt.update_frequency %>]
@@ -1102,7 +1108,7 @@
             <% end %>
             予測:<%= pred %>
             <%= %![#{dm_disp twt.drawing_method}]! if twt.drawing_method != Twitter::DRAWING_METHOD::DM_AI %>
-            【<%= twt.rating %>|<%= twt.r18 %>】
+            【<%= twt.rating %><%= restr_disp(twt.r18) %>】
             <%= twt.twtname %>
             (@<%= twt.twtid %>)
             [<%= link_to_ex("■TWT■", twt) %>]

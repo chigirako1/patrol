@@ -1,6 +1,6 @@
 
 <div id="<%= dom_id twitter %>">
-    <% twt_pic_list = TwtImageList.new(@twt_pic_path_list) %>
+    <% twt_pic_list = TwtImageList.new(@twt_pic_path_list, true) %>
     <% date_group = TwtImageList::group_by(twt_pic_list.list) %>
     <% key_dates = Util::group_consecutive_dates(date_group.keys) %>
 
@@ -73,9 +73,9 @@
     <% end %>
 
     <h2>date_group(<%= twt_pic_list.list.size %>)</h2>
+    <h3>date</h3>
     <!-- 日付ごとの件数 -->
-    <%# date_group = {} %>
-    <% date_group.to_a.reverse.to_h.each do |k, v| %>
+    <% date_group.to_a.to_h.each do |k, v| %>
         <% key_dates.each do |e| %>
             <% if k == e.last.to_date %>
                 <b><%= k + 1 %>～ファイルなし</b>
@@ -91,7 +91,13 @@
         <% post_n = v.map {|x| x.tweet_id}.sort.uniq.size %>
         <%= %!(#{post_n}post)! if post_n != v.size %>
         <br />
+    <% end %>
 
+    <h3>m</h3>
+    <% month_group = TwtImageList::group_by(twt_pic_list.list, :beginning_of_month) %>
+    <% month_group.to_a.reverse.to_h.each do |k, v| %>
+        <%= %!#{k.to_date}:#{v.size}! %>枚
+        <br />
     <% end %>
 
     <h2>key_dates(<%= key_dates.size %>)</h2>

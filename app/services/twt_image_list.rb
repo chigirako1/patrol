@@ -60,6 +60,7 @@ class TwtImageList
         freq = (Twt::calc_freq(@list.map {|x| x.file_path})).to_f
     end
 
+    #beginning_of_month/to_date
     def self.group_by(list, key_method = :to_date)
         hash = Hash.new { |h, k| h[k] = [] }
 
@@ -69,14 +70,14 @@ class TwtImageList
                 next
             end
             ts = Twt::get_timestamp(twt_img.tweet_id)
-            #hash[ts.to_date] << twt_img
-            #hash[ts.beginning_of_month] << twt_img
             hash[ts.public_send(key_method)] << twt_img
         end
 
         hash
     end
-    #beginning_of_month
+
+    def self.stat(date_group)
+    end
 
     def self.a_to_h(data)
         result = data.each_with_object(Hash.new { |h, k| h[k] = [] }) do |(key, value), hash|

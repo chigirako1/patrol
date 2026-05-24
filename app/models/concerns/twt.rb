@@ -49,7 +49,9 @@ module Twt
 
     FILENUM_T = 750
 
-    #FILESIZE_THRESHOLD_KB = 540#600
+    FILESIZE_B_THRESHOLD_KB = 450
+    FILESIZE_B_THRESHOLD = FILESIZE_B_THRESHOLD_KB * 1024
+
     FILESIZE_THRESHOLD_KB = 500
     FILESIZE_THRESHOLD = FILESIZE_THRESHOLD_KB * 1024
 
@@ -1213,9 +1215,16 @@ module Twt
 
     def self.get_key_elem_sub(twt, dayn, pred, chk)
 
-        if chk or Tweet.has_acquisition_schedule?(twt.twtid)
-            r_s = Util::format_num(twt.rating, 5)
-            return "999.取得対象物件あり[#{r_s}]"
+        freq_n = 300
+
+        if (chk or Tweet.has_acquisition_schedule?(twt.twtid)) and dayn > 0
+            if twt.update_frequency >= freq_n
+                r_s = Util::format_num(twt.rating, 5)
+                return "090.取得対象物件あり[#{r_s}](高頻度)"
+            else
+                r_s = Util::format_num(twt.rating, 5)
+                return "999.取得対象物件あり[#{r_s}]"
+            end
         end
 
         if Util::get_date_delta(twt.created_at) <= 30
@@ -1231,29 +1240,16 @@ module Twt
             return "700.低優先度"
         end
 
-=begin
-        if twt.update_frequency >= 550
-            return "001.当日分:超高頻度"
-        elsif twt.update_frequency >= 350
-            day_std = 3
-            if dayn < day_std
-                return "002.当日分:高頻度(#{day_std}日以内アクセス)"
-            else
-                return "001.当日分:高頻度(#{day_std}日以上アクセス)"
-            end
-        elsif twt.update_frequency >= 300
-            return "011.前日分"
-        end
-=end
-        if twt.update_frequency >= 300
+        if twt.update_frequency >= freq_n and twt.rating > 83
             r_u = 2
             r_s = Util::format_num(twt.rating, r_u)
-            return "010.前日/当日分:#{r_s}"
+            week_n = Util::format_num(dayn / 7, 1)
+            return "010.[#{week_n}w]前日/当日分:#{r_s}"
         end
         
         if dayn < 1
             STDERR.puts %!@#{twt.twtid}(#{twt.twtname})\t#{dayn}!
-            return "600.当日取得"
+            return "600.当日取得した分"
         end
 
         if dayn < 8 and pred < 15
@@ -1266,7 +1262,7 @@ module Twt
 
         pred_i = 20
         p_s = Util::format_num(pred, pred_i)
-        month_n = Util::format_num(dayn / 30, 30)
+        month_n = Util::format_num(dayn / 30, 1)
         r_s = Util::format_num(twt.rating, 1)
         %!#{cate_no}.P:#{p_s}|#{month_n}月|#{r_s}↑!
     end
@@ -1461,6 +1457,10 @@ module Twt
 
     def self.filesize_huge?(filesize)
         (filesize||0) > Twt::FILESIZE_THRESHOLD
+    end
+
+    def self.filesize_big?(filesize)
+        (filesize||0) > Twt::FILESIZE_B_THRESHOLD
     end
 
     def self.filesize_v_huge?(filesize)

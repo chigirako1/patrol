@@ -119,6 +119,14 @@ module TwittersHelper
         end
     end
 
+    def restr_disp(restr)
+        str = r_icon(restr)
+        if str == ""
+            str += "|" + (restr||"")
+        end
+        str
+    end
+
     def twitter_index_page_title(twitters_group, total_count, num_of_disp)
         cnt = twitters_group.sum {|k,v| v.count}
         if total_count.presence

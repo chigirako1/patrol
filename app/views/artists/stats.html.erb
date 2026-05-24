@@ -58,26 +58,26 @@
     </table>
 <% end %>
 
-<h1>stats</h1>
+<h1>xxx</h1>
 
-<% if params[:vid] %>
-<% else %>
-    <h2>huge</h2>
-    <% ids = Twt::get_sp_ids() %>
-    <% ids.each do |screen_name| %>
-        <%= screen_name %><br />
-    <% end %>
-<% end %>
-
-<h2>vid</h2>
-<%# ids = Twt::list_vid() %>
-<% ids = [] %>
-<% ids.each do |screen_name| %>
+<h2>huge</h2>
+<% @sp_ids.each do |screen_name| %>
     <%= screen_name %><br />
 <% end %>
 
+<h2>vid id</h2>
+<% @vid_ids.each do |screen_name| %>
+    <%= screen_name %><br />
+<% end %>
 
-<% list = Util::load_mov_urls %>
-<% list.each do |line| %>
-    <% STDERR.puts line %>
+<h2>vid url</h2>
+<% @vid_urls.each do |line| %>
+    <%= line %><br />
+<% end %>
+
+<h2>@mov_url_list</h2>
+<% @mov_url_list.each do |line| %>
+    <%= line %>
+    (<%= smart_date Twt::get_timestamp(line[1]) %>)
+    <br />
 <% end %>

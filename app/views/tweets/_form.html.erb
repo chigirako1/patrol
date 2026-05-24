@@ -53,9 +53,9 @@
     <div>
         <%= form.label :screen_name, style: "display: block" %>
         <%= form.text_field :screen_name, autofocus: true %>
-        <%= link_to_ex("▶@" + tweet.screen_name, Twt::twt_user_media_url(tweet.screen_name)) if tweet.screen_name.presence %>
-
         <%= twitter_info_tag_ex(tweet.screen_name, true) %>
+        <br />
+        <%= link_to_ex("▶@" + tweet.screen_name, Twt::twt_user_media_url(tweet.screen_name)) if tweet.screen_name.presence %>
     </div>
 
     <div>
@@ -119,7 +119,7 @@
 
 <script>
     function select_text(elem_id) {
-        let text_field = document.getElementById(elem_id);
+        const text_field = document.getElementById(elem_id);
         text_field.select();
         //document.execCommand("copy");
     }
@@ -127,7 +127,14 @@
     document.addEventListener("visibilitychange", function() {
         if (document.visibilityState === "visible")
         {
-            select_text("tweet_" + "screen_name");
+            const s_elem_id = "tweet_" + "screen_name";
+            const s_text_field = document.getElementById(s_elem_id);
+            if (s_text_field.value == "") {
+                select_text(s_elem_id);
+            } else {
+                const f_elem_id = "url_filepath";
+                select_text(f_elem_id);
+            }
         }
     });
 

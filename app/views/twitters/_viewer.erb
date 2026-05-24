@@ -1,6 +1,6 @@
 
 <div id="<%= dom_id twitter %>">
-    <% twt_pic_list = TwtImageList.new(@twt_pic_path_list) %>
+    <% twt_pic_list = TwtImageList.new(@twt_pic_path_list, true) %>
     <% group_hash = TwtImageList::group_by(twt_pic_list.list, :beginning_of_month) %>
 
     <h2>list(<%= twt_pic_list.list.size %>)</h2>
