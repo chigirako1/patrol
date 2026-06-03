@@ -41,6 +41,8 @@ module Twt
     TWT_SP_DIR_PATH      = TMP_DIR_PATH + "twitter_sp/"
     TWT_SP_DIR2_PATH      = TMP_DIR_PATH + "twitter_sp2/"
 
+    TWT_SP_VIDEO_DIR_PATH = TMP_DIR_PATH + "twt_mov/"
+
     TWT_ARCHIVE_DIR_PATH = "public/twt"
     TWT_DIRLIST_TXT_PATH = "#{TWT_ARCHIVE_DIR_PATH}/dirlist.txt"
 
@@ -252,9 +254,9 @@ module Twt
         end
     end
 
-    def self.parse_dirname(dirpath)
-        tmp_struct = Struct.new(:path, :dirname, :screen_name, :twt, :latest_date)
+    Sp_dir_struct = Struct.new(:path, :dirname, :screen_name, :twt, :latest_date, :sp_chk)
 
+    def self.parse_dirname(dirpath)
         dirname = File.basename dirpath
         if dirname =~ TWT_AT_SCREEN_NAME_RGX
             screen_name = $1
@@ -269,63 +271,49 @@ module Twt
         else
             screen_name = ""
         end
-        tmp_struct.new(dirpath, dirname, screen_name, twt, latest_date)
+        
+        Sp_dir_struct.new(dirpath, dirname, screen_name, twt, latest_date, false)
     end
 
     def self.sp_dirs()
         path_list = Util::glob("#{TWT_SP_DIR_PATH}")
-        #path_list.map {|path| parse_dirname path}.sort_by {|x| x.screen_name}
         tmp = path_list.map {|path| parse_dirname path}
-        if true
-            use_fs_date = false
-            tmp.sort_by {|x|
-                if x.twt and x.twt.last_access_datetime and x.twt.last_access_datetime_days_elapsed < 1
-                    x.twt.last_access_datetime
-                elsif x.dirname.end_with?("マイナス")
-                    Time.new(2001,1,2)
-                elsif x.dirname.end_with?("プラス")
-                    Time.new(2001,1,10)
-                elsif x.dirname.end_with?("更新なし")
-                    Time.new(2001,1,6)
-                elsif x.dirname.end_with?("更新停止")
-                    Time.new(2001,1,7)
-                elsif x.dirname.end_with?("なし") or x.dirname.end_with?("ない")
-                    Time.new(2001,1,3)
-                elsif x.dirname.end_with?("少ない")
-                    Time.new(2001,1,4)
-                elsif x.dirname.end_with?("多い")
-                    Time.new(2001,1,5)
-                elsif x.dirname.end_with?("凍結")
-                    Time.new(2001,1,9)
-                elsif x.dirname.end_with?("鍵垢")
-                    Time.new(2001,1,1)
-                elsif use_fs_date and x.latest_date
-                    x.latest_date
-                elsif x.twt and x.twt.last_access_datetime
-                    x.twt.last_access_datetime
-                else
-                    Time.new(2001,1,1)
-                end
-            }
-        elsif false
-            tmp.sort_by {|x|
-                if x.twt
-                    x.twt.last_access_datetime
-                else
-                    Time.new(2001,1,1)
-                end
-            }
-        else
-            tmp.sort_by {|x|
-                if x.twt and x.twt.last_access_datetime and x.twt.last_access_datetime_days_elapsed < 1
-                    x.twt.last_access_datetime
-                elsif x.latest_date
-                    x.latest_date
-                else
-                    Time.new(2001,1,1)
-                end
-            }
-        end
+
+        chk_screen_name_list = Util::checking_screen_names.sort.uniq
+        STDERR.puts chk_screen_name_list
+
+        tmp.map {|x| x.sp_chk = true if chk_screen_name_list.include? x.screen_name}
+
+        use_fs_date = false
+        tmp.sort_by {|x|
+            if x.twt and x.twt.last_access_datetime and x.twt.last_access_datetime_days_elapsed < 1
+                x.twt.last_access_datetime
+            elsif x.dirname.end_with?("マイナス")
+                Time.new(2001,1,2)
+            elsif x.dirname.end_with?("プラス")
+                Time.new(2001,1,10)
+            elsif x.dirname.end_with?("更新なし")
+                Time.new(2001,1,6)
+            elsif x.dirname.end_with?("更新停止")
+                Time.new(2001,1,7)
+            elsif x.dirname.end_with?("なし") or x.dirname.end_with?("ない")
+                Time.new(2001,1,3)
+            elsif x.dirname.end_with?("少ない")
+                Time.new(2001,1,4)
+            elsif x.dirname.end_with?("多い")
+                Time.new(2001,1,5)
+            elsif x.dirname.end_with?("凍結")
+                Time.new(2001,1,9)
+            elsif x.dirname.end_with?("鍵垢")
+                Time.new(2001,1,1)
+            elsif use_fs_date and x.latest_date
+                x.latest_date
+            elsif x.twt and x.twt.last_access_datetime
+                x.twt.last_access_datetime
+            else
+                Time.new(2001,1,1)
+            end
+        }
     end
 
     def self.get_sp_path(twtid)
@@ -1217,18 +1205,30 @@ module Twt
 
         freq_n = 300
 
+        unless twt.twtname.presence
+            if twt.update_frequency >= freq_n
+                return "099.名前未設定(高頻度)"
+            else
+                return "999.名前未設定"
+            end
+        end
+
         if (chk or Tweet.has_acquisition_schedule?(twt.twtid)) and dayn > 0
             if twt.update_frequency >= freq_n
                 r_s = Util::format_num(twt.rating, 5)
                 return "090.取得対象物件あり[#{r_s}](高頻度)"
             else
                 r_s = Util::format_num(twt.rating, 5)
-                return "999.取得対象物件あり[#{r_s}]"
+                return "990.取得対象物件あり[#{r_s}]"
             end
         end
 
         if Util::get_date_delta(twt.created_at) <= 30
-            return "955.最近登録"
+            if twt.update_frequency >= freq_n
+                return "055.最近登録(高頻度)"
+            else
+                return "955.最近登録"
+            end
         end
 
         if twt.no_disp?(dayn)
@@ -1237,7 +1237,7 @@ module Twt
 
         r_low = 80
         if twt.rating < r_low
-            return "700.低優先度"
+            return "700.低優先度(#{twt.rating})"
         end
 
         if twt.update_frequency >= freq_n and twt.rating > 83
@@ -1252,6 +1252,7 @@ module Twt
             return "600.当日取得した分"
         end
 
+=begin
         if dayn < 8 and pred < 15
             cate_no = "850"
         elsif pred < 10
@@ -1259,19 +1260,24 @@ module Twt
         else
             cate_no = "880"
         end
+=end
+        cate_no = "880"
 
         pred_i = 20
         p_s = Util::format_num(pred, pred_i)
         month_n = Util::format_num(dayn / 30, 1)
         r_s = Util::format_num(twt.rating, 1)
-        %!#{cate_no}.P:#{p_s}|#{month_n}月|#{r_s}↑!
+        #%!#{cate_no}.P:#{p_s}|#{month_n}月|#{r_s}↑!
+        #%!#{cate_no}.#{month_n}月|#{r_s}↑!
+        %!#{cate_no}.#{r_s}↑|#{month_n}月!
     end
 
     def self.get_key_elem(twt, k, v, url_list, chk)
         postdate = twt.last_post_datetime.in_time_zone('Tokyo').strftime("%y/%m/%d %H:%M")
         dayn = Util::get_date_delta(twt.last_post_datetime)
         avg = v.avg / 1024
-        pred = twt.prediction
+        #pred = twt.prediction
+        pred = twt.prediction_h_ex
         lad_n = twt.last_access_datetime_days_elapsed
 
         elem = []
@@ -1517,7 +1523,7 @@ module Twt
     def self.list_vid
         twts = Twitter.select {|x| (x.video_cnt||0) > 0}.sort_by {|x| x.video_cnt}.reverse
         twts.each do |twt|
-            if twt.private_account == Twitter::TWT_VISIBILITY::TV_PRIVATE
+            if twt.private?#_account == Twitter::TWT_VISIBILITY::TV_PRIVATE
                 next
             end
 
@@ -1547,7 +1553,7 @@ module Twt
                 p_no = 0
                 mov_url_list << [screen_name, tweet_id, p_no]
             else
-                STDERR.puts %![warning]#{line}!
+                STDERR.puts %![warning]\t#{line}!
                 next
             end
         end

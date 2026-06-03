@@ -949,6 +949,7 @@
             <b><%= elem.twt.twtname %></b>
             (@<%= elem.screen_name %>)
             「<%= elem.dirname %>｣
+
             <% if elem.twt.sp? %>
             <% else %>
                 <b>★対象外★</b>
@@ -968,9 +969,24 @@
             <%= idx %>."<%= elem.dirname %>"
             <% url = twitters_path(mode: TwittersController::ModeEnum::SEARCH, search_word: elem.dirname) %>
             [<%= link_to_ex("■検索■", url) %>]
+
+            <% result = Twitter.search_records(elem.dirname, Twitter::DRAWING_METHOD::DM_AI) %>
+            <% if result.size > 0 and result.size < 3 %>
+                <% result.each do |twt| %>
+                    <br />
+                    <%= "【#{dm_icon(twt.drawing_method)}#{twt.rating}】#{twt.twtname}(@#{twt.twtid})" %>
+                <% end %>
+            <% end %>
         <% end %>
 
         <hr />
+    <% end %>
+
+    <h3>sp_chk削除対象？</h3>
+    <% @sp_dirs.each do |elem| %>
+        <% if elem.sp_chk %>
+            <%= elem.screen_name %><br />
+        <% end %>
     <% end %>
 <% end %>
 
@@ -1123,7 +1139,6 @@
     <% end %>
 <% end %>
 
-
 <% if @mov_url_list and @mov_url_list.size > 0 %>
     <h1>@mov_url_list(<%= @mov_url_list.size %>)[<%= "" %>]</h1>
 
@@ -1133,6 +1148,43 @@
         (<%= smart_date Twt::get_timestamp(x[1]) %>)
         「<%= link_to_ex("#{x[0]} #{x[1]} 0 ", url) %>」
         (<%= x[1] %>)
+        <br />
+    <% end %>
+<% end %>
+
+<% if @twt_url_hash and @twt_url_hash.to_a.size > 0%>
+    <h1>@twt_url_hash(<%= @twt_url_hash.size %>)</h1>
+
+    <% @twt_url_hash.each do |k,v| %>
+        <% v.each do |x| %>
+            <% url = Twt::twt_tweet_url(x.screen_name, x.tweet_id) %>
+            <%= link_to_ex(url, url) %>
+            (<%= smart_date Twt::get_timestamp(x.tweet_id) %>)
+            「<%= link_to_ex("#{x.screen_name} #{x.tweet_id} 0 ", url) %>」
+            (<%= x.tweet_id %>)
+            <br />
+        <% end %>
+    <% end %>
+<% end %>
+
+
+<% if @twt_video_list %>
+    <h1>@twt_video_list(<%= @twt_video_list.size %>)</h1>
+    <% @twt_video_list.each do |x| %>
+
+
+        <% tweet = Tweet.find_by(tweet_id: x.tweet_id) %>
+        <% if tweet %>
+            <%= tweet.status %>
+            [<%= link_to_ex "■tweet■", tweet %>]
+        <% else %>
+            <% url = new_tweet_path(tweet_id: x.tweet_id, screen_name: x.screen_name, status: Tweet::StatusEnum::SAVED) %>
+            [<%= link_to_ex "■New tweet■", url %>]
+        <% end %>
+
+        <%= x %>
+        
+        <%= link_to_ex "video file", x.filepath %>
         <br />
     <% end %>
 <% end %>

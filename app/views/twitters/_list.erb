@@ -11,7 +11,7 @@
     <% elem = date_group[date].last %>
     <% since_date = elem.datetime %>
     <h3>最新(<%= elem.tweet_id %>)[<%= smart_date since_date %>]</h3>
-    <b><%= Twt::twt_img_search_str(twitter.twtid, since_date, nil) %></b>
+    <b><%= Twt::twt_img_search_str(twitter.twtid, since_date, Time.current) %></b>
     <br />
     <% elem_list = date_group[date].select {|x| x.tweet_id == elem.tweet_id} %>
     <% elem_list.each do |e| %>
@@ -39,11 +39,11 @@
     <% if key_dates.size > 1 %>
         <% (key_dates.size - 1).times.reverse_each do |i| %>
             <% since = key_dates[i].last %>
-            <% elem_s = date_group[since].last %>
+            <% elem_s = date_group[since].first %>
             <% since_date = Twt::get_timestamp(elem_s.tweet_id) %>
 
             <% until_d = key_dates[i + 1].first %>
-            <% elem_u = date_group[until_d].first %>
+            <% elem_u = date_group[until_d].last %>
             <% until_date = Twt::get_timestamp(elem_u.tweet_id) %>
 
             <h4>

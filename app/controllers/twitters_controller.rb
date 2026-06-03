@@ -42,6 +42,7 @@ class TwittersController < ApplicationController
     
     SORT_ACCESS_M_PRED_DESC = "アクセス順(月)（旧→新）/予測▽降順"
     SORT_ACCESS_Z_R = "アクセス順(月/週/日)（旧→新）/評価"
+    SORT_ACCESS_Z_R_PRED_A = "アクセス順(月/週/日)（旧→新）/評価/予測△昇順"
 
     RATING = "rating"
 
@@ -54,6 +55,7 @@ class TwittersController < ApplicationController
     R_SORT_REGISTERED_DESC = "評価/登録日順(新→旧)"
 
     SORT_FILESIZZE_DSC = "ファイルサイズ(▽降順)"
+    SORT_POST_DATE_O2N = "公開日順(旧→新)"
 
     SORT_POINT = "ポイント"
 
@@ -1265,6 +1267,8 @@ class TwittersController < ApplicationController
         twitters = twitters.sort_by {|x| [-(x.last_access_day_num / 30), -x.prediction]}
       when SORT_BY::SORT_ACCESS_Z_R
         twitters = twitters.sort_by {|x| [-x.last_access_datetime_z, -(x.rating||0), -x.prediction]}
+      when SORT_BY::SORT_ACCESS_Z_R_PRED_A
+        twitters = twitters.sort_by {|x| [-x.last_access_datetime_z, -(x.rating||0), x.prediction]}
       when SORT_BY::ACCESS
         twitters = twitters.sort_by {|x| [-x.last_access_datetime_days_elapsed, -(x.rating||0), -x.prediction]}
       when SORT_BY::M_R_ACCESS_W_PRED_A
@@ -1307,6 +1311,8 @@ class TwittersController < ApplicationController
         twitters = twitters.sort_by {|x| [-x.rating, x.created_at_day_num / 7]}
       when SORT_BY::SORT_FILESIZZE_DSC
         twitters = twitters.sort_by {|x| [-(x.filesize||0)]}
+      when SORT_BY::SORT_POST_DATE_O2N
+        twitters = twitters.sort_by {|x| [-(Util::get_date_delta(x.last_post_datetime) / 7), -x.prediction, (x.filenum||0) / 10]}
       when SORT_BY::RATING
         twitters = twitters.sort_by {|x| [-(x.rating||0), -x.prediction, x.last_access_datetime]}
       #when SORT_BY::TODO_CNT

@@ -52,10 +52,23 @@
 
     <div>
         <%= form.label :screen_name, style: "display: block" %>
-        <%= form.text_field :screen_name, autofocus: true %>
-        <%= twitter_info_tag_ex(tweet.screen_name, true) %>
-        <br />
-        <%= link_to_ex("▶@" + tweet.screen_name, Twt::twt_user_media_url(tweet.screen_name)) if tweet.screen_name.presence %>
+
+        <% if tweet.screen_name.presence %>
+            <% screen_name_val = tweet.screen_name %>
+        <% elsif params[:screen_name].presence %>
+            <% screen_name_val = params[:screen_name] %>
+        <% else %>
+            <% screen_name_val = "" %>
+        <% end %>
+
+        <%= form.text_field :screen_name, value: screen_name_val, autofocus: true %>
+
+        <%= twitter_info_tag_ex(tweet.screen_name, true, true) %>
+        <% if tweet.screen_name.presence %>
+            <h3>
+                <%= link_to_ex("▶@" + tweet.screen_name, Twt::twt_user_media_url(tweet.screen_name)) %>
+            </h3>
+        <% end %>
     </div>
 
     <div>
@@ -67,7 +80,7 @@
             include_blank: "選択して下さい"
         %>
         <br />
-        <input type="button" value="取得予定" onclick="set_status('<%= Tweet::StatusEnum::TO_BE_OBTAIN %>');" class="btn" />
+        <input type="button" value="<%= Tweet::StatusEnum::TO_BE_OBTAIN %>" onclick="set_status('<%= Tweet::StatusEnum::TO_BE_OBTAIN %>');" class="btn" />
         <input type="button" value="<%= Tweet::StatusEnum::UNACCESSIBLE %>" onclick="set_status('<%= Tweet::StatusEnum::UNACCESSIBLE %>');" class="btn" />
     </div>
 
@@ -90,7 +103,7 @@
     </div>
 
     <div>
-            <%= form.submit("更新", class: 'submit-btn') %>
+        <%= form.submit("更新", class: 'submit-btn') %>
     </div>
 
     <% if tweet.screen_name.presence and tweet.screen_name != Twt::TWT_USER_I %>

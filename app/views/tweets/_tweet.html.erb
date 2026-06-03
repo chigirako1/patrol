@@ -29,7 +29,7 @@
 
         <% (@pic_list||[]).each do |path| %>
             <% if path.include? tweet.tweet_id.to_s %>
-                <%= link_to_ex image_tag(path, width: '10%', height: '10%', :alt => path), path %>
+                <%= image_link(path) %>
             <% else %>
             <% end %>
         <% end %>
@@ -37,7 +37,7 @@
         <% if tweet.remarks.presence %>
             <% (@pic_list||[]).each do |path| %>
                 <% if path.include? tweet.remarks %>
-                    <%= link_to_ex image_tag(path, width: '10%', height: '10%', :alt => path), path %>
+                    <%= image_link(path) %>
                 <% else %>
                 <% end %>
             <% end %>
@@ -45,7 +45,7 @@
             <% filelist2 = Twt::get_sp_pic_filelist2_by_twtid(tweet.screen_name) %>
             <% filelist2.each do |path| %>
                 <% if path.include? tweet.remarks %>
-                    <%= link_to_ex image_tag(path, width: '10%', height: '10%', :alt => path), path %>
+                    <%= image_link(path) %>
                 <% else %>
                 <% end %>
             <% end %>

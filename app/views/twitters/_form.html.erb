@@ -102,12 +102,12 @@
   <div>
     <%= form.label "更新頻度(100日間での投稿数)", style: "display: block" %>
     <%= form.number_field :update_frequency %>
-    <input type="button" value="*2" onclick="multiple_val('update_frequency', 2);" class="btn_s btn_s_plus" />
-    <input type="button" value="/2" onclick="div_val('update_frequency', 2);" class="btn_s " />
-    <input type="button" value="+100" onclick="plus_rate('update_frequency', 100);" class="btn_s btn_s_plus" />
-    <input type="button" value="+10" onclick="plus_rate('update_frequency', 10);" class="btn_s btn_s_plus" />
-    <input type="button" value="-100" onclick="plus_rate('update_frequency', -100);" class="btn_s " />
-    <input type="button" value="-10" onclick="plus_rate('update_frequency', -10);" class="btn_s " />
+    <input type="button" value="*2↑" onclick="multiple_val('update_frequency', 2);" class="btn_s btn_s_plus" />
+    <input type="button" value="/2↓" onclick="div_val('update_frequency', 2);" class="btn_s " />
+    <input type="button" value="+100↑" onclick="plus_rate('update_frequency', 100);" class="btn_s btn_s_plus" />
+    <input type="button" value="+10↑" onclick="plus_rate('update_frequency', 10);" class="btn_s btn_s_plus" />
+    <input type="button" value="-100↓" onclick="plus_rate('update_frequency', -100);" class="btn_s " />
+    <input type="button" value="-10↓" onclick="plus_rate('update_frequency', -10);" class="btn_s " />
     <input type="button" value="0" onclick="set_rate('update_frequency', 0);" class="btn_s btn_s_abs" />
   </div>
 
@@ -240,7 +240,7 @@
       <% pxv2 = Artist.find_by(pxvid: @twitter.pxvid) %>
       <% if pxv2.presence %>
         <br />
-        <%= feature_disp(pxv2.feature) %>【<%= pxv2.rating %>】<%= pxv2.r18_disp %>[<%= pxv2.filenum %>]
+        <%= feature_disp(pxv2.feature) %>【<%= pxv2.rating %>】<%= pxv2.r18_disp %>[<%= pxv2.filenum %>枚]
         <br />
         <%= pxv2.pxvname %>(@<%= pxv2.twtid %>)
         [<%= twitter_status_tag(pxv2) %>]
@@ -526,13 +526,12 @@
 
   <div>
     <%= form.label :表示タブ, style: "display: block" %>
-    <%= form.select :disp_tab_target,
-      [
-        [Twitter::DISP_TAB::DT_POST],
-        #[Twitter::DISP_TAB::DT_REPLY],
-        [Twitter::DISP_TAB::DT_MEDIA],
-      ],
-      include_blank: "選択して下さい" %>
+    
+    <%= form.radio_button :disp_tab_target, Twitter::DISP_TAB::DT_POST %>
+    <%= form.label "private_account_#{Twitter::DISP_TAB::DT_POST}", Twitter::DISP_TAB::DT_POST %>
+
+    <%= form.radio_button :disp_tab_target, Twitter::DISP_TAB::DT_MEDIA %>
+    <%= form.label "private_account_#{Twitter::DISP_TAB::DT_MEDIA}", Twitter::DISP_TAB::DT_MEDIA %>
   </div>
 
   <hr />

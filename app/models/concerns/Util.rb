@@ -188,6 +188,10 @@ module Util
         Rails.root.join(v_path).to_s
     end
 
+    def self.public_path(path = "public")
+        Rails.root.join(path).to_s
+    end
+
     def self.get_public_path(path)
         Rails.root.join("public" + path).to_s
     end
@@ -265,6 +269,33 @@ module Util
             return %!#{bytes} Bi!
         end
         %!#{bytes / 1024} KB!
+    end
+
+    def self.video_path_list(tpath)
+        tmp_list = []
+
+        if tpath == ""
+            puts %![UrlTxtReader#get_path_list] tpath="#{tpath}"!
+            return tmp_list
+        end
+
+        unless Dir.exist?(tpath)
+            puts %!tpath="#{tpath}"!
+            return tmp_list
+        end
+
+        base_path = "public/"#public_path
+
+        #STDERR.puts %!"#{tpath}"\t"#{base_path}"!
+
+        Find.find(tpath) do |path|
+            if [".mp4"].include?(File.extname(path))
+                tmppath = Util::escape_path(path.gsub(base_path, ""))
+                #STDERR.puts %!"#{path}"\t"#{tmppath}"!
+                tmp_list << tmppath
+            end
+        end
+        tmp_list
     end
 
     #============================================================

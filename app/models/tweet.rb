@@ -158,6 +158,15 @@ class Tweet < ApplicationRecord
         twitters.sort.uniq.each do |twt|
             spec = spec_str
             key_header = twt.group_spec(spec)
+            
+            tmp = key_header.split(Twitter::TWT_H_SEPARATOR)[0]
+            #STDERR.puts %!#{key_header}/#{tmp}!
+            if tmp.strip =~ /^\d+$/
+                if twt.interval_exceeded? true
+                else
+                    key_header = "\t後回し:" + key_header
+                end
+            end
             twt_grp[key_header] << twt
         end
 

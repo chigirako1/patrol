@@ -24,6 +24,16 @@ class TwtImage
     def first_pic?
         self.pic_no == 0
     end
+
+    def self.tweet_image_to_hash(tweet_images)
+        hash = Hash.new {|h, k| h[k] = []}
+
+        tweet_images.each do |x|
+            hash[x.tweet_id] << x
+        end
+
+        hash
+    end
 end
 
 # =============================================================================
@@ -102,3 +112,4 @@ end
 # =============================================================================
 class TwtImageGroup
 end
+

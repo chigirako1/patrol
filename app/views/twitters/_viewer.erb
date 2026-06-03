@@ -1,26 +1,55 @@
 
 <div id="<%= dom_id twitter %>">
-    <% twt_pic_list = TwtImageList.new(@twt_pic_path_list, true) %>
-    <% group_hash = TwtImageList::group_by(twt_pic_list.list, :beginning_of_month) %>
-
-    <h2>list(<%= twt_pic_list.list.size %>)</h2>
-
-    <% k_bak = "" %>
-    <% group_hash.to_a.reverse.to_h.each do |k, v| %>
-        <% if k != k_bak %>
-            <% k_bak = k %>
-            <%= k.strftime("%Y/%m") %>(<%= v.size %>)<br />
-        <% end %>
+    <% if false %>
+        <% p_unit = :beginning_of_month %>
+    <% else %>
+        <% p_unit = :to_date %>
     <% end %>
 
-    <% k_bak = "" %>
-    <% group_hash.to_a.reverse.to_h.each do |k, v| %>
-        <% if k != k_bak %>
-            <% k_bak = k %>
-            <h3><%= k.strftime("%Y/%m") %>(<%= v.size %>)</h3>
+    <% twt_pic_list = TwtImageList.new(@twt_pic_path_list, true) %>
+    <% group_hash = TwtImageList::group_by(twt_pic_list.list, p_unit) %>
+
+    <h2>twt_pic_list(<%= twt_pic_list.list.size %>)</h2>
+
+    <% if p_unit == :beginning_of_month %>
+        <% time_fmt_str = "%Y/%m" %>
+    <% else %>
+        <% time_fmt_str = "%Y/%m/%d" %>
+    <% end %>
+
+    <% group_hash.each do |k, v| %>
+        <%= k.strftime(time_fmt_str) %>(<%= v.size %>)<br />
+    <% end %>
+
+    <% k_bak = group_hash.to_a[1][0] %>
+    <% tweet_id_bak = nil %>
+    <% group_hash.each do |k, v| %>
+        <% h = TwtImage::tweet_image_to_hash(v) %>
+
+        <% delta = (k_bak - k).to_i %>
+        <% if delta > 1 %>
+            <br />
+            <%= delta %>
+            
+            <% if tweet_id_bak %>
+                <% since_date = Twt::get_timestamp(h.keys.first) %>
+                <% until_date = Twt::get_timestamp(tweet_id_bak) %>
+                <br />
+                <h5><b><%= Twt::twt_img_search_str(twitter.twtid, since_date, until_date) %></b></h5>
+            <% end %>
+
         <% end %>
-        <% v.sort.each do |e| %>
-            <%= image_link(e.file_path, get_image_class(e.first_pic?)) %>
-        <% end %>        
+        <% k_bak = k %>
+
+        <h3><%= k.strftime(time_fmt_str) %>(<%= v.size %>)</h3>
+
+        <%= h.keys %><br />
+        <% h.each do |k, e| %>
+            <% e.sort.each do |e| %>
+                <%= image_link(e.file_path, get_image_class(e.first_pic?)) %>
+            <% end %>
+        <% end %>
+
+        <% tweet_id_bak = h.keys.last %>
     <% end %>
 </div>

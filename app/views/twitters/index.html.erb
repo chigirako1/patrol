@@ -135,7 +135,7 @@
               <% ele = @url_list_summary.find {|x| x.screen_name == twitter.twtid} %>
               [<%= ele.todo_cnt %>件]
             <% end %>
-            <%= TwittersHelper::PRIVATE_ICON if twitter.private_account == Twitter::TWT_VISIBILITY::TV_PRIVATE %>
+            <%= TwittersHelper::PRIVATE_ICON if twitter.private? %>
             <%= dm_disp(twitter.drawing_method) %>【<%= twitter.rating %>】<%= twitter.r18 %>
             <% if twitter.r18 == Twitter::RESTRICT::R18 %>
               <%= TwittersHelper::R18_ICON %>
@@ -474,6 +474,7 @@
           [TwittersController::SORT_BY::ACCESS_W_PRED_A],
           [TwittersController::SORT_BY::SORT_ACCESS_M_PRED_DESC],
           [TwittersController::SORT_BY::SORT_ACCESS_Z_R],
+          [TwittersController::SORT_BY::SORT_ACCESS_Z_R_PRED_A],
           
           [TwittersController::SORT_BY::R_ACCESS],
           [TwittersController::SORT_BY::ACCESS],
@@ -488,6 +489,7 @@
           [TwittersController::SORT_BY::R_FILENUM_ASC],
           [TwittersController::SORT_BY::SORT_POINT],
           [TwittersController::SORT_BY::SORT_FILESIZZE_DSC],
+          [TwittersController::SORT_BY::SORT_POST_DATE_O2N],
         ],
         selected: params[:sort_by] 
       )

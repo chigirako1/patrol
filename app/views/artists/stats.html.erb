@@ -76,8 +76,18 @@
 <% end %>
 
 <h2>@mov_url_list</h2>
-<% @mov_url_list.each do |line| %>
-    <%= line %>
-    (<%= smart_date Twt::get_timestamp(line[1]) %>)
-    <br />
+<% @mov_url_list.each do |x| %>
+    <%= x %><br />
+<% end %>
+
+<% @mov_url_hash.each do |k,v| %>
+    <hr />
+    <%= twitter_info_tag_ex(k) unless k == Twt::TWT_USER_I %>
+    <hr size="5" color="yellow" />
+    <% v.sort_by {|x| x.tweet_id}.each do |x| %>
+        <% url = Twt::twt_tweet_url(x.screen_name, x.tweet_id) %>
+        <%= link_to_ex("#{x.screen_name} #{x.tweet_id} 0 ", url) %>
+        (<%= smart_date Twt::get_timestamp(x.tweet_id) %>)
+        <br />
+    <% end %>
 <% end %>

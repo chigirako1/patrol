@@ -485,16 +485,20 @@ class Twitter < ApplicationRecord
         end
     end
 
-    def prediction2()
-        delta_d = get_date_delta(dt) + 1
-        pred = update_frequency * delta_d / 100
-        pred
-    end
+    # def prediction2()
+    #     delta_d = get_date_delta(dt) + 1
+    #     pred = update_frequency * delta_d / 100
+    #     pred
+    # end
 
     def prediction_h(dt)
         hours = Util::hours_from_now(dt)
         pred = (self.update_frequency / 24) * hours / 100
         pred
+    end
+
+    def prediction_h_ex()
+        prediction_h(self.last_post_datetime)
     end
 
     def point
@@ -567,7 +571,8 @@ class Twitter < ApplicationRecord
             status||"", 
             rating||0, 
             #last_access_datetime,
-            -prediction,
+            #-prediction,
+            prediction,
             last_access_datetime,
             -(cnt),
             r18
@@ -834,16 +839,12 @@ class Twitter < ApplicationRecord
     #
     # ""
     #
-    #def group_spec(grp_sort_spec_arg, total_cnt)
     def group_spec(grp_sort_spec_arg)
         unset_disp = true
         gkey_work = grp_sort_spec_arg.gsub(/#.*/, "")
 
-        #regexp_pattern = /\{\w+\d*\}/
         regexp_pattern = /\{[a-zA-Z_]+\d*\}/
         matches = grp_sort_spec_arg.scan(regexp_pattern)
-
-        #STDERR.puts %!"#{gkey_work}"!
 
         matches.each do |x|
             if x =~ /([a-zA-Z_]+)(\d*)/

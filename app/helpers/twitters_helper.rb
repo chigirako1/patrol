@@ -34,7 +34,7 @@ module TwittersHelper
         tag.html_safe
     end
 
-    def twitter_info_tag_ex(twtid, br=false)
+    def twitter_info_tag_ex(twtid, br=false, unregist=false)
         twt = Twitter.find_by_twtid_ignore_case(twtid)
         if twt
             tag = twitter_info_tag(twt)
@@ -54,6 +54,7 @@ module TwittersHelper
                 tag += "※フォルダあり※"
             end
             tag += %![#{link_to_ex("☆twt☆:@#{twtid}", artist_twt_path(twtid))}]!
+            tag += "<br />★★★DB未登録★★" if unregist
 
             pxv = Artist.find_by(twtid: twtid)
             if pxv
@@ -74,7 +75,7 @@ module TwittersHelper
         tag += "】"
         tag += %!"#{twt.twtname}"!
         tag += "【"
-        tag += PRIVATE_ICON if twt.private_account == Twitter::TWT_VISIBILITY::TV_PRIVATE
+        tag += PRIVATE_ICON if twt.private?
         tag += %!#{twt.status}!
         if twt.status == Twitter::TWT_STATUS::STATUS_SCREEN_NAME_CHANGED or twt.status == Twitter::TWT_STATUS::STATUS_ANOTHER
             tag += %!(→#{twt.new_twtid})!
@@ -161,7 +162,7 @@ module TwittersHelper
     def twitter_show_page_title(twitter, r18=false)
         title = ""
 
-        if twitter.private_account == Twitter::TWT_VISIBILITY::TV_PRIVATE
+        if twitter.private?#_account == Twitter::TWT_VISIBILITY::TV_PRIVATE
             title += PRIVATE_ICON
         end
 

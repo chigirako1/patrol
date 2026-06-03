@@ -337,6 +337,7 @@ class ArtistsController < ApplicationController
     NEW_LIST = "new-list"
     ARCHIVE_CHECK = "archive-check"
     SMARTPHONE = "SMARTPHONE"
+    SP_VID = "SP動画"
     REG_FILESIZE = "ファイルサイズ登録"
     DIR_TWEET = "tweet"
     DT_MOV_URL = "mov_url"
@@ -795,45 +796,74 @@ class ArtistsController < ApplicationController
   end
 
   def stats
-    STDERR.puts "stats->"
+    STDERR.puts %!stats-> t:"#{params[:target]}"!
     @stats = {}
-
-    col = [:rating, :r18, :status, :drawing_method, :warning]
-    col.each do |c|
-      key = "twt(ai):" + c.to_s
-      #@stats[key] = Twitter.select {|x| x.drawing_method == "AI"}.group(c).count
-      #t = Twitter.all
-      #t = Twitter.select {|x| x.drawing_method == "AI"}
-      t = Twitter.where(drawing_method: 'AI')
-      #@stats[key] = t.group(c).having("drawing_method = 'AI'").count
-      @stats[key] = t.group(c).count
-      @stats[key].delete(nil)
-      @stats[key].delete("")
-      @stats[key].delete(0)
-    end
-
-    col = [:rating, :r18, :status]
-    col.each do |c|
-      key = "pxv:" + c.to_s
-      @stats[key] = Artist.all.group(c).count
-      @stats[key].delete(nil)
-      @stats[key].delete("")
-      @stats[key].delete(0)
-    end
 
     @vid_ids = []
     @vid_urls = []
     @mov_url_list = []
+    @mov_url_hash = []
     @sp_ids = []
-    if params[:target] == "video"
+
+    case params[:target]
+    when "video"
       @vid_ids = Twt::list_vid() if false
-      @vid_ids = []
 
       #@vid_urls = Util::load_mov_urls
 
-      mov_url_list = Twt::mov_url_list().sort
-    else
+      mov_url_hash = TweetUrl::mov_url_list()
+      mov_url_hash.sort_by {|k,v| [v.size, k.downcase]}.to_h.each do |k,v|
+        head = ""
+        twt = Twitter.find_by_twtid_ignore_case(k)
+        if twt
+          if twt.private?
+            STDERR.puts %!非公開アカウントなので除外:@#{k}!
+            next
+          end
+          head = %!#{twt.twtname}(@#{twt.twtid})【#{twt.rating}|#{twt.r18}】!
+        else
+          head = %!@#{k}!
+          STDERR.puts %!動画未登録:#{head}!
+        end
+        @mov_url_list << %!動画#{head}!
+
+        v.sort_by {|x| x.tweet_id}.each do |x|
+          tweet = Tweet.find_by(tweet_id: x.tweet_id)
+          if tweet and tweet.status == Tweet::StatusEnum::SAVED
+            # TODO:これだと静止画保存済みで動画未保存も除外されてしまうので別ステータス追加する
+            STDERR.puts %!DB登録あり:#{x.tweet_id}\t"#{tweet.status}"\t@#{x.screen_name}!
+            next
+          end
+
+          url = Twt::twt_tweet_url(x.screen_name, x.tweet_id)
+          @mov_url_list << url
+        end
+      end
+    when "sp"
       @sp_ids = Twt::get_sp_ids()
+    else
+      col = [:rating, :r18, :status, :drawing_method, :warning]
+      col.each do |c|
+        key = "twt(ai):" + c.to_s
+        #@stats[key] = Twitter.select {|x| x.drawing_method == "AI"}.group(c).count
+        #t = Twitter.all
+        #t = Twitter.select {|x| x.drawing_method == "AI"}
+        t = Twitter.where(drawing_method: 'AI')
+        #@stats[key] = t.group(c).having("drawing_method = 'AI'").count
+        @stats[key] = t.group(c).count
+        @stats[key].delete(nil)
+        @stats[key].delete("")
+        @stats[key].delete(0)
+      end
+
+      col = [:rating, :r18, :status]
+      col.each do |c|
+        key = "pxv:" + c.to_s
+        @stats[key] = Artist.all.group(c).count
+        @stats[key].delete(nil)
+        @stats[key].delete("")
+        @stats[key].delete(0)
+      end
     end
 
     STDERR.puts "<-stats"
@@ -893,6 +923,8 @@ class ArtistsController < ApplicationController
         h.each do |k,v|
           puts %!xxxxx:::#{k}::#{v}! if v > 1
         end
+      when DIR_TYPE::SP_VID
+        @twt_video_list = TwtVideoList::new()
       when DIR_TYPE::REG_FILESIZE
         Twt::reg_filesize()
       when DIR_TYPE::DIR_TWEET
@@ -900,7 +932,8 @@ class ArtistsController < ApplicationController
         #@known_twt_url_list = Tweet.distinct.pluck(:screen_name).map {|x| [x, nil]}.to_h
         @known_twt_url_list = Tweet.where.not(screen_name: [nil, ""]).distinct.pluck(:screen_name).map {|x| [x, Twt::twt_user_url(x)]}.to_h
       when DIR_TYPE::DT_MOV_URL
-        @mov_url_list = Twt::mov_url_list()
+        #mov_url_list = Twt::mov_url_list()
+        @twt_url_hash = {}
       else
         STDERR.puts "!!ERR:unknown type='#{dir}'!!"
       end

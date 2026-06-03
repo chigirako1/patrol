@@ -286,7 +286,22 @@
   </div>
 
   <hr />
+
+  <div>
+    <%= form.label :特徴（AI、3D、etc…）, style: "display: block" %>
+    <%= form.select :feature,
+      [
+        ["AI", "AI"],
+        ["3D", "3D"],
+        ["小説", "小説"],
+      ], include_blank: "選択して下さい" %>
+    <input type="button" value="↑" onclick="options_up('artist_feature');" class="btn" />
+    <input type="button" value="↓" onclick="options_down('artist_feature');" class="btn" />
+    <input type="button" value="AI<%= ArtistsHelper::DM_AI_ICON %>" onclick="set_option('feature', 1);" class="btn" />
+  </div>
   
+  <h2>その他</h2>
+
   <div>
     <%= form.label "さかのぼり", style: "display: block" %>
     <%= form.select :reverse_status, [
@@ -300,8 +315,6 @@
     <input type="button" value="さかのぼり中" onclick="set_option('reverse_status', 1);" class="btn" />
     <input type="button" value="さかのぼり済✓" onclick="set_option('reverse_status', 2);" class="btn" />
   </div>
-
-  <h2>その他</h2>
 
   <div>
     最新投稿日(DB):<%= artist.get_datetime_string(artist.last_ul_datetime, true) %>
@@ -335,19 +348,6 @@
     <input type="button" value="(空白)" onclick="set_option('status', 0);" class="btn" />
   </div>
  
-  <div>
-    <%= form.label :特徴（AI、3D、etc…）, style: "display: block" %>
-    <%= form.select :feature,
-      [
-        ["AI", "AI"],
-        ["3D", "3D"],
-        ["小説", "小説"],
-      ], include_blank: "選択して下さい" %>
-    <input type="button" value="↑" onclick="options_up('artist_feature');" class="btn" />
-    <input type="button" value="↓" onclick="options_down('artist_feature');" class="btn" />
-    <input type="button" value="AI<%= ArtistsHelper::DM_AI_ICON %>" onclick="set_option('feature', 1);" class="btn" />
-  </div>
-  
   <div>
     <%= form.label :備考（なんでもメモ）, style: "display: block" %>
     <%= form.text_field :remarks %>
