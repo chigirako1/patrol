@@ -104,6 +104,11 @@
 <% end %>
 <br />
 
+<% if twt_img_list.list.presence %>
+    <b><%= Twt::twt_img_search_str(@twtid, twt_img_list.list.last.datetime, twt_img_list.list.first.datetime) %></b>
+    <br />
+<% end %>
+
 <%= link_to("...全て表示", artist_twt_path(@twtid, picn: 33, nl: true)) %>
 <br />
 

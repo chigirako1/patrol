@@ -695,8 +695,7 @@ class TwittersController < ApplicationController
       end
 
       if twt_params.rating_gt == 0
-        twitters = twitters.select {|x| !x.status.presence}
-        twitters = twitters.select {|x| (x.rating||0) == twt_params.rating_gt}
+        twitters = twitters.select {|x| x.unset?}
       else
         twitters = twitters.select {|x| x.status == Twitter::TWT_STATUS::STATUS_PATROL}
         twitters = twitters.select {|x| (x.rating||0) >= twt_params.rating_gt}
@@ -754,7 +753,7 @@ class TwittersController < ApplicationController
       twitters = index_select(twitters, twt_params)
 
       @stats = {}
-      @stats = twitters.group_by {|x| x.rating}.sort.reverse.to_h.map {|k,v| [k,v.size]}.to_h
+      @stats = twitters.group_by {|x| x.rating||0}.sort.reverse.to_h.map {|k,v| [k,v.size]}.to_h
 
       @twitters_total_count = twitters.size
       twitters = index_sort(twitters, twt_params)
@@ -997,6 +996,7 @@ class TwittersController < ApplicationController
           n = twt_params.rating_gt
         else
           n = TMP_RATING
+          n = nil
         end
         if n
           twitters_intvl = twitters.select {|x| x.interval_exceeded?(x.rating||0 >= n)}
@@ -1266,13 +1266,14 @@ class TwittersController < ApplicationController
       when SORT_BY::SORT_ACCESS_M_PRED_DESC
         twitters = twitters.sort_by {|x| [-(x.last_access_day_num / 30), -x.prediction]}
       when SORT_BY::SORT_ACCESS_Z_R
-        twitters = twitters.sort_by {|x| [-x.last_access_datetime_z, -(x.rating||0), -x.prediction]}
+        #twitters = twitters.sort_by {|x| [-x.last_access_datetime_z, -(x.rating||0), -x.prediction]}
+        twitters = twitters.sort_by {|x| [-x.last_access_datetime_z, -(x.rating||0), x.filenum||0, -x.prediction]}
       when SORT_BY::SORT_ACCESS_Z_R_PRED_A
         twitters = twitters.sort_by {|x| [-x.last_access_datetime_z, -(x.rating||0), x.prediction]}
       when SORT_BY::ACCESS
         twitters = twitters.sort_by {|x| [-x.last_access_datetime_days_elapsed, -(x.rating||0), -x.prediction]}
       when SORT_BY::M_R_ACCESS_W_PRED_A
-        twitters = twitters.sort_by {|x| [-(x.last_access_day_num / 30), -x.rating_ex, -(x.last_access_day_num / 7), x.prediction]}
+        twitters = twitters.sort_by {|x| [-(x.last_access_day_num / 30), -x.rating_ex, -(x.last_access_day_num / 7), x.filenum||0, x.prediction]}
       when SORT_BY::R_ACCESS_W_PRED_A
         twitters = twitters.sort_by {|x| [-x.rating, -(x.last_access_day_num / 7), x.prediction]}
       when SORT_BY::R_ACCESS_W_PRED_D

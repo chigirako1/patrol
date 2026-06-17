@@ -11,6 +11,8 @@ module ApplicationHelper
     PRIVATE_ICON = "🔒️"
     SEARCH_EMOJI = "🔍️"
 
+    EMJ_SP = "📲"
+
     def full_title(page_title)
         if page_title.blank?
             BASE_TITLE
@@ -29,6 +31,7 @@ module ApplicationHelper
 
     def image_link(filepath, class_str = "fixed-height-img")
         link_to_ex(image_tag(filepath, class: class_str), filepath)
+        #, :alt => path
     end
 
     def get_image_class(std)
@@ -42,8 +45,8 @@ module ApplicationHelper
     def get_val(orig_val, target_symbol)
         if orig_val.presence
             val = orig_val
-        elsif params[:target_symbol].presence
-            val = params[:target_symbol]
+        elsif params[target_symbol].presence
+            val = params[target_symbol]
         else
             val = ""
         end

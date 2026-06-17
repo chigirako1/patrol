@@ -40,7 +40,7 @@ module TwittersHelper
             tag = twitter_info_tag(twt)
             #if twt.sp?
             if twt.sp? and (twt.rating and twt.rating >= Twt::RATING_THRESHOLD)
-                tag = %!<h3>SP対象？</h3>! + tag
+                tag = %!<h3>SP#{ApplicationHelper::EMJ_SP}対象？</h3>! + tag
             elsif twt.filesize_huge?
                 tag = %!<b>ファイルサイズ大</b>! + tag
             elsif br

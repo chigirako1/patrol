@@ -39,7 +39,7 @@
 <% if params[:grp_sort_by].presence %>
   ・グループ："<%= params[:grp_sort_by] %>"
   <% if params[:grp_sort_by] == TwittersController::GRP_SORT::GRP_SORT_SPEC %>
-    /"<%= params[:grp_sort_spec] %>"<br />
+    => "<%= params[:grp_sort_spec] %>"<br />
   <% else %>
     <br />
   <% end %>
@@ -318,10 +318,13 @@
 <hr />
 
 <% if @twt_pic_path_list and @twt_pic_path_list.size > 0 %>
-    <% @twt_pic_path_list.each do |filepath| %>
-      <%= image_link(filepath) %>
-    <% end %>
+  <h2>ファイル検索結果</h2>
+  <% @twt_pic_path_list.each do |filepath| %>
+    <%= image_link(filepath) %>
+  <% end %>
   <hr />
+<% elsif params[:mode] == TwittersController::ModeEnum::SEARCH %>
+  ファイルヒットせず
 <% end %>
 
 <script>

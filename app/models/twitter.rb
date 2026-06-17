@@ -334,6 +334,22 @@ class Twitter < ApplicationRecord
         get_date_info(last_access_datetime)
     end
 
+    def unset?
+        if !self.status.presence and (self.rating||0) == 0
+            return true
+        end
+
+        if self.status == Twitter::TWT_STATUS::STATUS_WAITING
+            return true
+        end
+
+        if self.update_chk? and self.select_cond_post_date
+            return true
+        end
+
+        false
+    end
+
     def filesize_huge?
         if Twt::filesize_huge?(self.filesize)
             true
@@ -1445,10 +1461,11 @@ class Twitter < ApplicationRecord
 
     C_VAL_TBL = [
         #r    d   n
-        [95, [ 14, 15, 0]],
-        [90, [ 21, 20, 0]],
-        [88, [ 25, 22, 1]],
+        [95, [ 14, 22, 0]],
+        [90, [ 21, 23, 0]],
+        [88, [ 25, 24, 1]],
         [87, [ 27, 33, 2]],
+=begin
         [86, [ 30, 40, 3]],
         [85, [ 30, 44, 4]],
         [84, [ 35, 55, 5]],
@@ -1456,6 +1473,9 @@ class Twitter < ApplicationRecord
         [80, [ 60, 66,21]],
         [78, [120,100,30]],
         [75, [180,200,40]],
+=end
+        [86, [ 60, 66, 4]],
+        [85, [ 90, 88, 4]],
         [ 0, [  0,  0, 0]],
     ]
 
@@ -1463,7 +1483,7 @@ class Twitter < ApplicationRecord
         C_VAL_TBL.find { |row| val >= row[0] }
     end
 
-    def interval_exceeded?(flg = false)
+    def interval_exceeded?(use_cnst_tbl = false)
         if self.min_interval
             if self.last_access_day_num < self.min_interval
                 STDERR.puts %!指定期間内のため非表示:#{self.last_access_day_num} < #{self.min_interval} [#{self.twtname}(@#{self.twtid})]!
@@ -1478,10 +1498,10 @@ class Twitter < ApplicationRecord
             end
         end
 
-        if flg
+        if use_cnst_tbl
             set = self.class.find_config_by_val(self.rating)
             daysn = set[1][0]
-            if self.last_access_day_num >= daysn
+            if daysn > 0 and self.last_access_day_num >= daysn
                 return true
             else
                 #STDERR.puts %!#{self.last_access_day_num} <> #{daysn} [#{self.twtname}(#{self.twtid})]!
@@ -1494,13 +1514,13 @@ class Twitter < ApplicationRecord
             end
         end
         
-        if flg
+        if use_cnst_tbl
             unless set
                 set = self.class.find_config_by_val(self.rating)
             end
 
             predn = set[1][1]
-            if self.prediction >= predn
+            if predn > 0 and self.prediction >= predn
                 return true
             else
             end

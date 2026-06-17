@@ -254,6 +254,23 @@ module Twt
         end
     end
 
+    def self.search_new_screen_name_from_txt(unknown_twt_screen_name_list, dirname)
+        if dirname =~ /^(\w+)/
+            sname = $1
+        else
+            return []
+        end
+
+        results = []
+        unknown_twt_screen_name_list.each do |screen_name|
+            if screen_name.include? sname
+                results << sname
+            end
+        end
+
+        results
+    end
+
     Sp_dir_struct = Struct.new(:path, :dirname, :screen_name, :twt, :latest_date, :sp_chk)
 
     def self.parse_dirname(dirpath)
@@ -463,8 +480,13 @@ module Twt
         twt_tweet_url(TWT_USER_I, tweet_id)
     end
 
+    def self.time_str(time)
+        fmt = "%Y-%m-%d_%H:%M:%S_JST"
+        time.strftime(fmt)
+    end
+
     def self.twt_img_search_str(screen_name, date_since, date_until)
-        STDERR.puts %!@#{screen_name}\t#{date_since}\t#{date_until}!
+        #STDERR.puts %!@#{screen_name}\t#{date_since}\t#{date_until}!
         ary = []
 
         ary << "from:#{screen_name}"
@@ -473,12 +495,12 @@ module Twt
         ary << "filter:#{filter}"
 
         if date_since
-            since_s = (date_since - 10).strftime("%Y-%m-%d_%H:%M:%S_JST")
+            since_s = time_str(date_since - 10)
             ary << "since:#{since_s}"
         end
 
         if date_until
-            until_s = (date_until + 10).strftime("%Y-%m-%d_%H:%M:%S_JST")
+            until_s = time_str(date_until + 10)
             ary << "until:#{until_s}"
         end
 
@@ -1206,28 +1228,29 @@ module Twt
         freq_n = 300
 
         unless twt.twtname.presence
+            r_s = Util::format_num(twt.rating, 3)
             if twt.update_frequency >= freq_n
-                return "099.名前未設定(高頻度)"
+                return "099.名前未設定[#{r_s}](高頻度)"
             else
-                return "999.名前未設定"
+                return "999.名前未設定[#{r_s}]"
             end
         end
 
         if (chk or Tweet.has_acquisition_schedule?(twt.twtid)) and dayn > 0
+            r_s = Util::format_num(twt.rating, 3)
             if twt.update_frequency >= freq_n
-                r_s = Util::format_num(twt.rating, 5)
                 return "090.取得対象物件あり[#{r_s}](高頻度)"
             else
-                r_s = Util::format_num(twt.rating, 5)
                 return "990.取得対象物件あり[#{r_s}]"
             end
         end
 
         if Util::get_date_delta(twt.created_at) <= 30
+            r_s = Util::format_num(twt.rating, 1)
             if twt.update_frequency >= freq_n
-                return "055.最近登録(高頻度)"
+                return "055.最近登録[#{r_s}](高頻度)"
             else
-                return "955.最近登録"
+                return "955.最近登録[#{r_s}]"
             end
         end
 
@@ -1261,15 +1284,21 @@ module Twt
             cate_no = "880"
         end
 =end
-        cate_no = "880"
+        if twt.rating >= 87 and pred >= 50
+            cate_no = "890"
+        elsif twt.rating < 84
+            cate_no = "870"
+        else
+            cate_no = "880"
+        end
 
         pred_i = 20
         p_s = Util::format_num(pred, pred_i)
         month_n = Util::format_num(dayn / 30, 1)
         r_s = Util::format_num(twt.rating, 1)
         #%!#{cate_no}.P:#{p_s}|#{month_n}月|#{r_s}↑!
-        #%!#{cate_no}.#{month_n}月|#{r_s}↑!
-        %!#{cate_no}.#{r_s}↑|#{month_n}月!
+        %!#{cate_no}.#{month_n}月|#{r_s}↑!
+        #%!#{cate_no}.#{r_s}↑|#{month_n}月!
     end
 
     def self.get_key_elem(twt, k, v, url_list, chk)
@@ -1564,6 +1593,38 @@ module Twt
             STDERR.puts "重複:#{x}"
         end
         list
+    end
+
+    def self.mov_url_hash_to_list(mov_url_hash)
+        mov_url_list = []
+        mov_url_hash.sort_by {|k,v| [v.size, k.downcase]}.to_h.each do |k,v|
+            head = ""
+            twt = Twitter.find_by_twtid_ignore_case(k)
+            if twt
+                if twt.private?
+                    STDERR.puts %!非公開アカウントなので除外:@#{k}!
+                    next
+                end
+                head = %!#{twt.twtname}(@#{twt.twtid})【#{twt.rating}|#{twt.r18}】!
+            else
+                head = %!@#{k}!
+                STDERR.puts %!動画未登録:#{head}!
+            end
+            mov_url_list << %!動画#{head}!
+
+            v.sort_by {|x| x.tweet_id}.each do |x|
+                tweet = Tweet.find_by(tweet_id: x.tweet_id)
+                if tweet and tweet.status == Tweet::StatusEnum::SAVED
+                    # TODO:これだと静止画保存済みで動画未保存も除外されてしまうので別ステータス追加する
+                    STDERR.puts %!DB登録あり:#{x.tweet_id}\t"#{tweet.status}"\t@#{x.screen_name}!
+                    next
+                end
+
+                url = Twt::twt_tweet_url(x.screen_name, x.tweet_id)
+                mov_url_list << url
+            end
+        end
+        mov_url_list
     end
 
     # =========================================================================

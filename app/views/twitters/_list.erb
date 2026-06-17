@@ -34,10 +34,12 @@
     <br />
     <%= tweet_info_str(elem) %><br />
 
+    <% delta_threshold = 1 %>
     <!-- ### ### -->
     <h3>途中</h3>
     <% if key_dates.size > 1 %>
         <% (key_dates.size - 1).times.reverse_each do |i| %>
+
             <% since = key_dates[i].last %>
             <% elem_s = date_group[since].first %>
             <% since_date = Twt::get_timestamp(elem_s.tweet_id) %>
@@ -46,12 +48,20 @@
             <% elem_u = date_group[until_d].last %>
             <% until_date = Twt::get_timestamp(elem_u.tweet_id) %>
 
+            <% delta = (until_date.to_date - since_date.to_date).to_i %>
+            <% if delta < delta_threshold %>
+                <% next %>
+            <% end %>
+
             <h4>
-                <%= (until_date.to_date - since_date.to_date).to_i %>日
-                (<%= smart_date until_date %>
-                ←<%= smart_date since_date %>)
+                <%= delta %>日
             </h4>
+
             <b><%= Twt::twt_img_search_str(twitter.twtid, since_date, until_date) %></b>
+            <br />
+            
+            (<%= smart_date until_date %>
+            ←<%= smart_date since_date %>)
             <br />
 
             新(<%= smart_date until_date %>)

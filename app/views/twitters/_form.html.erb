@@ -50,6 +50,7 @@
         (<%= link_to_ex(%!★★★!, Twt::twt_user_url(@twitter.twtid)) %>)
         <% if pnum == 0 %>
           [ポストタブ指定]
+          (<%= twitter.datetime_disp @twitter.last_post_datetime %>)
         <% else %>
           複数(<%= pnum %>)枚投稿が多い
         <% end %>
@@ -80,6 +81,9 @@
     <% end %>
 
     <%= form.label :twtname, style: "display: block" %>
+    <% unless twtname.presence %>
+      <font color='red'>※未設定※</font>
+    <% end %>
     <%= form.text_field :twtname, value: twtname %>
   </div>
 
@@ -497,7 +501,10 @@
     <% if @twitter.filesize %>
       =>
       <%= Util::formatFileSizeKB(@twitter.filesize) %>
+      <br />
     <% end %>
+
+    <input type="button" value="+100k" onclick="plus_rate('filesize', 100*1024);" class="btn_s" />
   </div>
 
   <div>
@@ -528,10 +535,10 @@
     <%= form.label :表示タブ, style: "display: block" %>
     
     <%= form.radio_button :disp_tab_target, Twitter::DISP_TAB::DT_POST %>
-    <%= form.label "private_account_#{Twitter::DISP_TAB::DT_POST}", Twitter::DISP_TAB::DT_POST %>
+    <%= form.label "disp_tab_target_#{Twitter::DISP_TAB::DT_POST}", Twitter::DISP_TAB::DT_POST %>
 
     <%= form.radio_button :disp_tab_target, Twitter::DISP_TAB::DT_MEDIA %>
-    <%= form.label "private_account_#{Twitter::DISP_TAB::DT_MEDIA}", Twitter::DISP_TAB::DT_MEDIA %>
+    <%= form.label "disp_tab_target_#{Twitter::DISP_TAB::DT_MEDIA}", Twitter::DISP_TAB::DT_MEDIA %>
   </div>
 
   <hr />

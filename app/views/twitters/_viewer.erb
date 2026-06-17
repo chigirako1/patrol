@@ -52,4 +52,7 @@
 
         <% tweet_id_bak = h.keys.last %>
     <% end %>
+
+    <% until_date = Twt::get_timestamp(tweet_id_bak) %>
+    <h5><b><%= Twt::twt_img_search_str(twitter.twtid, nil, until_date) %></b></h5>
 </div>

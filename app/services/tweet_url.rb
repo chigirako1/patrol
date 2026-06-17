@@ -10,6 +10,15 @@ class TweetUrl
         @p_number = p_number
     end
 
+    def <=>(other)
+        return nil unless other.is_a?(TweetUrl)
+        [tweet_id, p_number] <=> [other.tweet_id, other.p_number]
+    end
+
+    def to_s
+        %!@#{@screen_name} #{@tweet_id}/#{p_number}!
+    end
+
     def self.mov_url_list
         tweet_id_list = []
 

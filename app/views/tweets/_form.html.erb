@@ -39,7 +39,7 @@
                     <h4>
                     [<%= link_to_ex(%!☆twt☆:@#{smart_date(time.to_date)}!, artist_twt_path(tweet.screen_name, sdate: time.to_date, nl: false)) %>]
                     最後のアクセス(<%= smart_date twt.last_access_datetime %>)
-                    より前のツイート(<%= smart_date time %>)
+                    より前(<%= smart_date time %>)のツイート
                     </h4>
                 <% else %>
                     <%= smart_date time %>[<%= Util::get_date_info time %>]
@@ -81,7 +81,7 @@
         %>
         <br />
         <input type="button" value="<%= Tweet::StatusEnum::TO_BE_OBTAIN %>" onclick="set_status('<%= Tweet::StatusEnum::TO_BE_OBTAIN %>');" class="btn" />
-        <input type="button" value="<%= Tweet::StatusEnum::UNACCESSIBLE %>" onclick="set_status('<%= Tweet::StatusEnum::UNACCESSIBLE %>');" class="btn" />
+        <input type="button" value="<%= Tweet::StatusEnum::UNACCESSIBLE %>❌️" onclick="set_status('<%= Tweet::StatusEnum::UNACCESSIBLE %>');" class="btn" />
     </div>
 
     <div>
@@ -126,6 +126,10 @@
                 <% end %>
                 <br>
             <% end %>
+        <% end %>
+
+        <% if tweet.status == Tweet::StatusEnum::VIDEO_SAVED %>
+            [<%#= link_to_ex "video file", x.filepath %>]
         <% end %>
     <% end %>
 <% end %>
