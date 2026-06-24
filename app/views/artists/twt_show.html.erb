@@ -105,7 +105,10 @@
 <br />
 
 <% if twt_img_list.list.presence %>
-    <b><%= Twt::twt_img_search_str(@twtid, twt_img_list.list.last.datetime, twt_img_list.list.first.datetime) %></b>
+    <% since_dt = twt_img_list.list.last.datetime %>
+    <%# until_dt = twt_img_list.list.first.datetime %>
+    <% until_dt = twt_img_list.list[-2].datetime %>
+    <b><%= Twt::twt_img_search_str(@twtid, since_dt, until_dt) %></b>
     <br />
 <% end %>
 

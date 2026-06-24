@@ -564,10 +564,6 @@ module UrlTxtReader
         [id_list, twt_urls, misc_urls]
     end
 
-    def self.get_tweet_id_list(path)
-        get_twt_i_ids(path)
-    end
-
     def self.get_unknown_twt_url_list(path)
         _, twt_infos, _ = get_url_txt_info(path, false, true, false)
         #puts %!pxv_id_list:#{pxv_id_list.size}!
@@ -625,6 +621,10 @@ module UrlTxtReader
         [pxv_id_list, twt_infos, misc_urls, pxv_artwork_id_list]
     end
 
+    def self.get_tweet_id_list(path)
+        get_twt_i_ids(path)
+    end
+
     def self.get_twt_i_ids(filepath)
         tweet_ids = []
         lines = get_url_txt_lines(filepath)
@@ -637,7 +637,7 @@ module UrlTxtReader
             else
             end
         end
-        tweet_ids.sort.uniq
+        tweet_ids#.sort.uniq
     end
 
     def self.append_page_title_query(url, label)

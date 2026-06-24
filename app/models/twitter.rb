@@ -437,8 +437,8 @@ class Twitter < ApplicationRecord
 
         ra = 80
         if self.rating < ra
-            d = ra - self.rating
-            ndays = 25 + d * 5
+            d = ra - self.rating - 1
+            ndays = 30 + (d * 30)
             if dayn < ndays
                 return true
             end
@@ -465,8 +465,12 @@ class Twitter < ApplicationRecord
         end
     end
 
+    def get_summary_str
+        Tweet::get_summary_str(self.twtid)
+    end
+
     def twt_user_url
-        Twt::twt_user_url(twtid)
+        Twt::twt_user_url(self.twtid)
     end
 
     def get_pic_filelist(force_read_all=true)
@@ -1465,22 +1469,22 @@ class Twitter < ApplicationRecord
         [90, [ 21, 23, 0]],
         [88, [ 25, 24, 1]],
         [87, [ 27, 33, 2]],
-=begin
         [86, [ 30, 40, 3]],
         [85, [ 30, 44, 4]],
         [84, [ 35, 55, 5]],
+=begin
         [82, [ 40, 60,14]],
         [80, [ 60, 66,21]],
         [78, [120,100,30]],
         [75, [180,200,40]],
-=end
         [86, [ 60, 66, 4]],
-        [85, [ 90, 88, 4]],
+        [84, [ 90, 88, 4]],
+=end
         [ 0, [  0,  0, 0]],
     ]
 
     def self.find_config_by_val(val)
-        C_VAL_TBL.find { |row| val >= row[0] }
+        C_VAL_TBL.find { |row| val||0 >= row[0] }
     end
 
     def interval_exceeded?(use_cnst_tbl = false)

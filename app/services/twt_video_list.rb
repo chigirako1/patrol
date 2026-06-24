@@ -11,7 +11,7 @@ class TwtVideoList
     def initialize
         #@video_path_list = Util::video_path_list(Twt::TWT_SP_VIDEO_DIR_PATH).map {|x| TwtVideo.new("/" + x)}
         video_path_list = Util::video_path_list(Twt::TWT_SP_VIDEO_DIR_PATH).map {|x| TwtVideo.new("/" + x)}
-        @video_path_list = video_path_list.group_by {|x| x.screen_name}
+        @video_path_list = video_path_list.group_by {|x| x.screen_name}.sort_by {|k,v| k.downcase}.to_h
     end
 
     def each(&block)
@@ -37,7 +37,7 @@ class TwtVideoList
         end
 
         def to_s
-            %!#{@screen_name} #{@tweet_id}!
+            %!#{@screen_name||"※未設定※"} #{@tweet_id||"※未設定※"}!
         end
 
         def self.get_info(path)
@@ -49,13 +49,7 @@ class TwtVideoList
             end
 
             filename = File.basename path
-            if filename =~ /^(\d+)/
-                tweet_id = $1
-            elsif filename =~ /^\w+\s+(\d+)/
-                tweet_id = $1
-            elsif filename =~ /[^\s]+\s+(\d+)/
-                tweet_id = $1
-            end
+            tweet_id, _ = Twt::mov_filename_ex(filename)
             [screen_name, tweet_id]
         end
 

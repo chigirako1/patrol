@@ -295,7 +295,7 @@ class ArtistsController < ApplicationController
   end
 
   module FileTarget
-    TWT_I = "twt_i"
+    FT_TWT_I = "twt_i"
     TWT_UNKNOWN_ONLY = "unknown_twt_only"
     PXV_UNKNOWN_ONLY = "unknown_pxv_only"
     TWT_KNOWN_ONLY = "twt,twt既知"
@@ -892,11 +892,6 @@ class ArtistsController < ApplicationController
         Twt::archive_check()
       when DIR_TYPE::SMARTPHONE
         @sp_dirs = Twt::sp_dirs()
-        h = @sp_dirs.map {|x| x.screen_name.downcase}.tally
-        #h.delete_if {|k,v| v == 1}
-        h.each do |k,v|
-          puts %!xxxxx:::#{k}::#{v}! if v > 1
-        end
 
         filename = "thisyear"
         path = UrlTxtReader::get_path(filename)
@@ -919,7 +914,8 @@ class ArtistsController < ApplicationController
           h[screen_name] = twt_url_hash[screen_name]
         end
 
-        @twt_url_hash = twt_url_hash.sort_by {|k,v| k.downcase}.to_h
+        #@twt_url_hash = twt_url_hash.sort_by {|k,v| k.downcase}.to_h
+        @twt_url_hash = twt_url_hash.sort_by {|k,v| v.size}.to_h
       else
         STDERR.puts "!!ERR:unknown type='#{dir}'!!"
       end
@@ -932,7 +928,7 @@ class ArtistsController < ApplicationController
       if @target.size == 1 and @target[0] != "known_pxv"#適当すぎる。。。
         pxvid_list2 = []
         case @target[0]
-        when ArtistsController::FileTarget::TWT_I
+        when ArtistsController::FileTarget::FT_TWT_I
           @tweet_i_ids = UrlTxtReader::get_tweet_id_list(path)
         when ArtistsController::FileTarget::PXV_UNKNOWN_ONLY
           @unknown_pxv_user_id_list = UrlTxtReader::get_unknown_pxv_id_list(path)

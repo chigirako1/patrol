@@ -13,20 +13,34 @@
     </div>
   <% end %>
 
-  <%= link_to(%!表示リフレッシュ!, twitter_path(@twitter, refresh: "y"), class: 'button button_b') if @twitter.twtid %>
-
+  <%
+=begin %>
   <% if pxv.presence %>
     PXV最終投稿日:<%= pxv.get_datetime_string(pxv.last_ul_datetime) %>
+    <br />
   <% end %>
 
   <% unaccessible_tw_cnt = @twitter.unaccessible_tweet_count %>
   <% if unaccessible_tw_cnt > 0 %>
     <h3>アクセス不可URLあり(<%= unaccessible_tw_cnt %>件)</h3>
   <% end %>
+    <%
+=end %>
+
+  <div>
+    <% summary_str = @twitter.get_summary_str() %>
+    <% if summary_str.presence %>
+      <%= summary_str %>
+      [<%= link_to_ex("tweets", tweets_path(screen_name: @twitter.twtid)) %>]
+      <hr />
+    <% end %>
+  </div>
 
   <% if @twt_pic_path_list %>
     <% twt_pic_list = @twt_pic_path_list.map {|x| [Twt::twt_path_str(x), x, Twt::get_tweet_info_from_filepath(x)]}.sort.reverse %>
   <% end %>
+
+  <%= link_to(%!表示リフレッシュ!, twitter_path(@twitter, refresh: "y"), class: 'button button_b') if @twitter.twtid %>
 
   <% if @twitter.twtid %>
     <% tweet_id_list = twt_pic_list.first(100).map {|x| x[2][0]} %>

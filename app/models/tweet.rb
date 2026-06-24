@@ -92,17 +92,24 @@ class Tweet < ApplicationRecord
         tweet = Tweet.find_by(tweet_id: tweet_id)
     end
 
+    def self.convert_number_to_char_by_code(num)
+        return nil if num < 1
+        return 'a' if num >= 26
+
+        # 'z' の文字コードから (num - 1) を引いて、再び文字に戻す
+        ('z'.ord - (num - 1)).chr
+    end
+
     C_YET = "01.未登録"
     C_TODAY = "10.本日登録"
     C_YESTERDAY = "90.昨日以前登録"
     C_TBO = "99.#{StatusEnum::TO_BE_OBTAIN}"
     
-    def self.tweet_group(tweet_i_ids, spec_str)
-        #work = tweet_i_ids.map {|x| [x, Tweet::get_tweet_record(x)]}.sort_by {|x| [x[1]&.tweet_id||Float::INFINITY, x[0]]}
+    def self.tweet_group(tweet_i_id_cnt_tbl, spec_str)
         tweets_grp = Hash.new { |h, k| h[k] = [] }
         screen_name_set = Set.new
 
-        work = tweet_i_ids.each do |x|
+        work = tweet_i_id_cnt_tbl.keys.sort.each do |x|
             r =  Tweet::get_tweet_record(x)
             if r
                 if Util::get_date_delta(r.created_at) == 0
@@ -119,7 +126,7 @@ class Tweet < ApplicationRecord
                     next
                 end
             else
-                key = C_YET
+                key = C_YET + %![#{convert_number_to_char_by_code tweet_i_id_cnt_tbl[x]}]!
             end
             tweets_grp[key] << [x, r]
         end

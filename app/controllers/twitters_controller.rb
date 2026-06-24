@@ -509,6 +509,11 @@ class TwittersController < ApplicationController
         screen_name = $1
         tweet_id = $2.to_i
         @twt_pic_path_list = Twt::search_tweet_ex(screen_name, tweet_id)
+
+        tweets = Tweet.where(tweet_id: tweet_id)
+        if tweets
+          @tweets = tweets
+        end
       end
 
       return
@@ -524,7 +529,8 @@ class TwittersController < ApplicationController
 
   # GET /twitters/1 or /twitters/1.json
   def show
-    if params[:file_check].presence
+    test_flg = false
+    if test_flg or params[:file_check].presence
 
       @twt_ids = Twt::get_twt_tweet_ids_from_txts(@twitter.twtid)
       STDERR.puts %!@twt_ids=#{@twt_ids.size}!

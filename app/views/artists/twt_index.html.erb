@@ -295,20 +295,27 @@
     <% disp_twt_pxv = false %>
 <% end %>
 
-
 <% if @tweet_i_ids.presence and @tweet_i_ids.size > 0 %>
-    <h2>tweet_i_ids (<%= @tweet_i_ids.size %>)</h2>
+    <% tweet_i_id_cnt_tbl = @tweet_i_ids.tally %>
+    <h2>@tweet_i_ids (<%= tweet_i_id_cnt_tbl.size %>)</h2>
 
-    <% tweets_grp, twt_grp2 = Tweet::tweet_group(@tweet_i_ids, spec) %>
+    <% tweets_grp, twt_grp2 = Tweet::tweet_group(tweet_i_id_cnt_tbl, spec) %>
     <% tweets_grp.each do |key, tweets| %>
         <h3><%= key %>(<%= tweets.size %>)</h3>
+
         <% date_bak = nil %>
+        <% if key.start_with?(Tweet::C_YET) and tweets.size > 30 %>
+            <% header_disp = true %>
+        <% else %>
+            <% header_disp = false %>
+        <% end %>
+
         <% tweets.each.with_index(1) do |x, idx| %>
             <% tweet_id = x[0] %>
             <% t = x[1] %>
             <% timestamp = Twt::get_timestamp(tweet_id) %>
             <% date_wk = timestamp.to_date %>
-            <% if key == "01.未登録" and tweets.size > 30 and date_bak != date_wk %>
+            <% if header_disp and date_bak != date_wk %>
                 <h4><%= date_wk.strftime("%Y/%m/%d") %>(<%= (Date.today - date_wk).to_i %>日前)</h4>
                 <% date_bak = date_wk %>
             <% end %>
@@ -928,8 +935,9 @@
 <% if @sp_dirs.presence %>
     <% to_be_obtain_list = Tweet.to_be_obtain_list %>
     <h2>sp_dir一覧(<%= @sp_dirs.size %>)</h2>
-    <% duplicates = @sp_dirs.map {|x| x.screen_name}.tally.select { |key, count| count > 1 }.keys %>
+    <% duplicates = Util::dup_list(@sp_dirs.map {|x| x.screen_name}) %>
     <% duplicates.each do |x| %>
+        <% next if x == "" %>
         複数："<%= x %>"<br />
     <% end %>
 
@@ -945,6 +953,8 @@
             アクセス日：<%= elem.twt.last_access_datetime_disp %>
             [<%= elem.twt.update_frequency %>]
             [<%= link_to_ex("■twt■", elem.twt) %>]
+            [<%= elem.twt.prediction %>]
+            
             【<%= elem.twt.rating %><%= r_icon(elem.twt.r18) %>】
             <b>
             <% if elem.twt.twtname.presence %>
@@ -953,10 +963,17 @@
                 ※未設定※
             <% end %>
             </b>
-            (@<%= elem.screen_name %>)
-            「<%= elem.dirname %>｣
+            (@<%= elem.twt.twtid %>)
+            「<%= elem.dirname %>(<%= elem.file_cnt %>)｣
+
+            <% if elem.twt.twtid != elem.screen_name %>
+                ※DIR名がスクリーン名と異なります※
+            <% end %>
 
             <% if elem.twt.sp? %>
+                <% if elem.file_cnt <= 3 %>
+                    <b>★ファイル数が少ない★</b>
+                <% end %>
             <% else %>
                 <b>★対象外★</b>
             <% end %>
@@ -1171,10 +1188,10 @@
     <h1>@twt_url_hash(<%= @twt_url_hash.size %>)</h1>
     
     <% @twt_url_hash.each do |k,v| %>
-        <h2><%= k %></h2>
+        <h2><%= k %>(<%= v.size %>)</h2>
         <%= twitter_info_tag_ex(k) %>
         <hr />
-        <% v.sort.reverse.each do |x| %>
+        <% v.sort.uniq.reverse.each do |x| %>
 
             <% tweet = Tweet.find_by(tweet_id: x.tweet_id) %>
             <% if tweet %>
@@ -1189,16 +1206,16 @@
                 <% url = Twt::twt_tweet_url(x.screen_name, x.tweet_id) %>
                 <%= link_to_ex(x.tweet_id, url) %>
                 (<%= smart_date Twt::get_timestamp(x.tweet_id) %>)
+
+                <% url = new_tweet_path(tweet_id: x.tweet_id, screen_name: x.screen_name, status: Tweet::StatusEnum::VIDEO_SAVED) %>
+                [<%= link_to_ex "■New tweet■", url %>]
+
                 <% link_txt = "#{x.screen_name} #{x.tweet_id} 0 " %>
                 <% if false %>
                     「<%= link_to_ex(link_txt, url) %>」
                 <% else %>
                     「<%= link_txt %>」
                 <% end %>
-
-                <% url = new_tweet_path(tweet_id: x.tweet_id, screen_name: x.screen_name, status: Tweet::StatusEnum::VIDEO_SAVED) %>
-                [<%= link_to_ex "■New tweet■", url %>]
-
             <% end %>
             <br />
         <% end %>
@@ -1211,11 +1228,12 @@
     <% @twt_video_list.each do |k,v| %>
         <h2><%= %!@#{k}(#{v.size})! %></h2>
         <% v.each do |x| %>
+            ■
             <% tweet = Tweet.find_by(tweet_id: x.tweet_id) %>
             <% if tweet %>
                 <%= tweet.status %>
                 [<%= link_to_ex "■tweet■", tweet %>]
-            <% else %>
+            <% elsif x.tweet_id.presence %>
                 <% url = new_tweet_path(tweet_id: x.tweet_id, screen_name: x.screen_name, status: Tweet::StatusEnum::VIDEO_SAVED) %>
                 [<%= link_to_ex "■New tweet■", url %>]
             <% end %>
@@ -1223,6 +1241,8 @@
             <%= x %>
             
             [<%= link_to_ex "video file", x.filepath %>]
+            <% _, rest = Twt::mov_filename_ex(File.basename(x.filepath)) %>
+            "<%= rest %>"
             <br />
         <% end %>
     <% end %>

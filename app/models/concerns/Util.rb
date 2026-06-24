@@ -217,7 +217,13 @@ module Util
 
     def self.get_filesize(path)
         phys_path = get_public_path(path)
-        FileTest.size(phys_path)
+        filesize = nil
+        begin
+            filesize = FileTest.size?(phys_path)
+        rescue ArgumentError => ex
+            Rails.logger.error(ex)
+        end
+        filesize
     end
 
     def self.find_duplicate_sizes(file_paths)
@@ -433,6 +439,10 @@ module Util
     def self.get_dup_elem(array, n=2)
         chunks = array.chunk(&:itself)
         chunks.select{|_, v| v.size > n - 1}.map(&:first)
+    end
+
+    def self.dup_list(list, n=2)
+        duplicates = list.tally.select { |key, count| count > (n-1) }.keys
     end
 end
 

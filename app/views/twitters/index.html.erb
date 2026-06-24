@@ -317,15 +317,25 @@
 
 <hr />
 
-<% if @twt_pic_path_list and @twt_pic_path_list.size > 0 %>
+<% if @twt_pic_path_list %>
   <h2>ファイル検索結果</h2>
-  <% @twt_pic_path_list.each do |filepath| %>
-    <%= image_link(filepath) %>
+  <% if @twt_pic_path_list.size > 0 %>
+    <% @twt_pic_path_list.each do |filepath| %>
+      <%= image_link(filepath) %>
+    <% end %>
+  <%# elsif params[:mode] == TwittersController::ModeEnum::SEARCH %>
+  <% else %>
+    ファイルヒットせず
+  <% end %>
+
+  <% if @tweets %>
+    <% @tweets.each do |tweet| %>
+      "<%= tweet.status %>"(@<%= tweet.screen_name %>)<br />
+    <% end %>
   <% end %>
   <hr />
-<% elsif params[:mode] == TwittersController::ModeEnum::SEARCH %>
-  ファイルヒットせず
 <% end %>
+
 
 <script>
     function select_text() {

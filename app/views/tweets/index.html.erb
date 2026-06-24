@@ -288,6 +288,7 @@
     <% if @tweets and @tweets.size > 0 %>
         <h2>@tweets</h2>
         <% @tweets.each do |tweet| %>
+            <h3><%= tweet.tweet_id %></h3>
             <%= render tweet %>
             <p>
                 <%= link_to_ex "Show this tweet", tweet %>

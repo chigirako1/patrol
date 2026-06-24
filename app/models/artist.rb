@@ -763,6 +763,10 @@ class Artist < ApplicationRecord
                 unit = 500 unless unit
                 number = self.filenum
                 gkey_work = group_sub(unit, number, gkey_work, x, 4)
+            when "p"
+                unit = 1 unless unit
+                number = self.prediction_up_cnt(true)
+                gkey_work = group_sub(unit, number, gkey_work, x)
             when "r"
                 unit = 1 unless unit
                 number = self.rating

@@ -38,6 +38,10 @@ class TweetUrl
             when Twt::TWT_POST_URL_RGX
                 screen_name = $1
                 tweet_id = $2.to_i
+                if tweet_id_list.include?(tweet_id)
+                    STDERR.puts "重複:#{tweet_id}(@#{screen_name})"
+                    next
+                end
                 tweet_id_list << tweet_id
                 p_no = 0
                 mov_url_hash[screen_name] << TweetUrl.new(screen_name, tweet_id, p_no)
@@ -49,11 +53,11 @@ class TweetUrl
 
         STDERR.puts mov_url_hash.to_a.size
         
+=begin
         dup = Util::get_dup_elem(tweet_id_list)
         dup.each do |x|
             STDERR.puts "重複:#{x}"
         end
-=begin
 =end
 
         mov_url_hash
