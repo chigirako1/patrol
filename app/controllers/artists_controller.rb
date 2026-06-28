@@ -908,6 +908,15 @@ class ArtistsController < ApplicationController
       when DIR_TYPE::DT_MOV_URL
         twt_url_hash = TweetUrl::mov_url_list()
 
+        if true
+          twt_url_hash.each do |k,v|
+            v.delete_if {|x| x.record and x.record.status == Tweet::StatusEnum::VIDEO_SAVED}
+          end
+
+          #twt_url_hash.compact! 長さ０の配列だと消えない模様
+          twt_url_hash.delete_if {|k,v| v.size == 0}
+        end
+
         screen_name = params[:from]
         if screen_name
           h = {}

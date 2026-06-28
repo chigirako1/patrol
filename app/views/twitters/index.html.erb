@@ -169,6 +169,8 @@
                   <%= twitter.filesize_kb %>
                   <% if twitter.ul_freq_low? %>
                     ただし低頻度
+                  <% elsif twitter.private? %>
+                    ただし🔒️
                   <% end %>
                 </font>
               <% end %>
@@ -325,12 +327,12 @@
     <% end %>
   <%# elsif params[:mode] == TwittersController::ModeEnum::SEARCH %>
   <% else %>
-    ファイルヒットせず
+    ファイルヒットせず<br />
   <% end %>
 
   <% if @tweets %>
     <% @tweets.each do |tweet| %>
-      "<%= tweet.status %>"(@<%= tweet.screen_name %>)<br />
+      <%= tweet.tweet_id %>="<%= tweet.status %>"(@<%= tweet.screen_name %>)<br />
     <% end %>
   <% end %>
   <hr />

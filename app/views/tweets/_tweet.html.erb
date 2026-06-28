@@ -1,7 +1,7 @@
 <div id="<%= dom_id tweet %>">
     <p>
         <% if tweet.status != Tweet::StatusEnum::SAVED %>
-            <h3><%= tweet.status %></h3>
+            <h4><%= tweet.status %></h4>
         <% end %>
         <strong>Tweet ID:</strong>
         <%= tweet.tweet_id %>

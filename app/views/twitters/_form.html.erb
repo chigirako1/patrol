@@ -52,6 +52,7 @@
         <% post_tab = true %>
         <% pnum = 0 %>
       <% elsif @twitter.disp_tab_target == Twitter::DISP_TAB::DT_MEDIA %>
+      <% elsif @twitter.sp? %>
       <% else %>
         <% pnum = Twt::image_num_a_post(tweet_id_list) %>
         <% pnum_n = 1 %>

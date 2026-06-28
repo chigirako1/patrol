@@ -2,12 +2,13 @@
 # 
 # =============================================================================
 class TweetUrl
-    attr_accessor :screen_name, :tweet_id, :p_number
+    attr_accessor :screen_name, :tweet_id, :p_number, :record
 
     def initialize(screen_name, tweet_id, p_number = -1)
         @screen_name = screen_name
         @tweet_id = tweet_id
         @p_number = p_number
+        @record = Tweet.find_by(tweet_id: tweet_id)
     end
 
     def <=>(other)
@@ -17,6 +18,10 @@ class TweetUrl
 
     def to_s
         %!@#{@screen_name} #{@tweet_id}/#{p_number}!
+    end
+
+    def gen_name
+        Twt::filename_str(self.screen_name, self.tweet_id)
     end
 
     def self.mov_url_list

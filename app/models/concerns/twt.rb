@@ -39,14 +39,17 @@ module Twt
     TWT_TMP_DIR_PATH     = TMP_DIR_PATH + "Twitter-/"
     TWT_TMP_DIR_PATH_A   = TMP_DIR_PATH + "Twitter-/a/"
     TWT_SP_DIR_PATH      = TMP_DIR_PATH + "twitter_sp/"
-    TWT_SP_DIR2_PATH      = TMP_DIR_PATH + "twitter_sp2/"
+    TWT_SP_DIR2_PATH     = TMP_DIR_PATH + "twitter_sp2/"
 
     TWT_SP_VIDEO_DIR_PATH = TMP_DIR_PATH + "twt_mov/twt_mov/"
+
+    TWT_VDH_DIR_PATH = TMP_DIR_PATH + "vdh/"
 
     TWT_ARCHIVE_DIR_PATH = "public/twt"
     TWT_DIRLIST_TXT_PATH = "#{TWT_ARCHIVE_DIR_PATH}/dirlist.txt"
 
-    UL_FREQUECNTY_THRESHOLD = 25#50#150
+    #UL_FREQUECNTY_THRESHOLD = 25
+    UL_FREQUECNTY_THRESHOLD = 50
     RATING_THRESHOLD = 78#80
 
     FILENUM_T = 750
@@ -272,7 +275,9 @@ module Twt
         results
     end
 
-    Sp_dir_struct = Struct.new(:path, :dirname, :screen_name, :twt, :latest_date, :sp_chk, :file_cnt)
+    def self.filename_str(screen_name, tweet_id, p_number=0)
+        "#{screen_name} #{tweet_id} #{p_number} "
+    end
 
     def self.parse_dirname(dirpath)
         dirname = File.basename dirpath
@@ -293,7 +298,11 @@ module Twt
             screen_name = ""
         end
         
-        Sp_dir_struct.new(dirpath, dirname, screen_name, twt, latest_date, false, file_cnt)
+        SpDir.new(dirpath, dirname, screen_name, twt, latest_date, false, file_cnt)
+    end
+
+    def self.sp_dirs_group(sp_dirs)
+        sp_dirs.group_by {|x| x.group_key}.sort_by {|k,v| k}.to_h
     end
 
     def self.sp_dirs()
@@ -301,56 +310,16 @@ module Twt
         tmp = path_list.map {|path| parse_dirname path}
 
         chk_screen_name_list = Util::checking_screen_names.sort.uniq
-        STDERR.puts chk_screen_name_list
+        #STDERR.puts chk_screen_name_list
 
         tmp.map {|x| x.sp_chk = true if chk_screen_name_list.include? x.screen_name}
+        STDERR.puts tmp.size
 
-        use_fs_date = false
         tmp.sort_by {|x|
-            if x.twt and x.twt.last_access_datetime and x.twt.last_access_datetime_days_elapsed < 1
-                # 本日アクセス分
-                if x.twt.sp?
-                    Time.now + 1 * 60 * 60
-                elsif x.twt.twtname.presence
-                    x.twt.last_access_datetime
-                else
-                    Time.now
-                end
-            elsif x.dirname.end_with?("マイナス")
-                Time.new(2001,10,2)
-            elsif x.dirname.end_with?("プラス")
-                Time.new(2001,10,10)
-            elsif x.dirname.end_with?("更新なし")
-                Time.new(2001,10,6)
-            elsif x.dirname.end_with?("更新停止")
-                Time.new(2001,10,7)
-            elsif x.dirname.end_with?("なし") or x.dirname.end_with?("ない")
-                Time.new(2001,10,3)
-            elsif x.dirname.end_with?("少ない")
-                Time.new(2001,10,4)
-            elsif x.dirname.end_with?("多い")
-                Time.new(2001,10,5)
-            elsif x.dirname.end_with?("凍結")
-                Time.new(2001,10,9)
-            elsif x.dirname.end_with?("鍵垢")
-                Time.new(2001,10,1)
-            elsif use_fs_date and x.latest_date
-                x.latest_date
-            elsif x.twt
-                if !(x.twt.sp?)
-                    Time.now - 1 * 60 * 60
-                elsif !(x.twt.twtname.presence)
-                    Time.new(2001,5,1)
-                elsif x.file_cnt <= 3
-                    #Time.now -  * 60 * 60
-                    Time.new(2001,1,1)
-                elsif x.twt.last_access_datetime
-                    x.twt.last_access_datetime
-                else
-                    Time.new(2001,4,1)
-                end
+            if x.twt
+                x.twt.last_access_datetime
             else
-                Time.new(2001,4,1)
+                Time.now
             end
         }
     end
@@ -1249,30 +1218,33 @@ module Twt
 
         freq_n = 300
 
-        unless twt.twtname.presence
-            r_s = Util::format_num(twt.rating, 1)
+        val = Util::format_num(pred, 15).to_s + "件"
+
+        if !(twt.twtname.presence)
+            #r_s = Util::format_num(twt.rating, 1)
             if twt.update_frequency >= freq_n
-                return "099.名前未設定[#{r_s}](高頻度)"
+                return "099.名前未設定[#{val}](高頻度)"
             else
-                return "900.名前未設定[#{r_s}]"
+                return "910.名前未設定[#{val}]"
             end
         end
 
+
         if (chk or Tweet.has_acquisition_schedule?(twt.twtid)) and dayn > 0
-            r_s = Util::format_num(twt.rating, 1)
+            #val = Util::format_num(twt.rating, 1)
             if twt.update_frequency >= freq_n
-                return "090.取得対象物件あり[#{r_s}](高頻度)"
+                return "090.取得対象物件あり[#{val}](高頻度)"
             else
-                return "990.取得対象物件あり[#{r_s}]"
+                return "990.取得対象物件あり[#{val}]"
             end
         end
 
         if Util::get_date_delta(twt.created_at) <= 30
-            r_s = Util::format_num(twt.rating, 1)
+            #r_s = Util::format_num(twt.rating, 1)
             if twt.update_frequency >= freq_n
-                return "055.最近登録[#{r_s}](高頻度)"
+                return "055.最近登録[#{val}](高頻度)"
             else
-                return "955.最近登録[#{r_s}]"
+                return "955.最近登録[#{val}]"
             end
         end
 
@@ -1306,21 +1278,31 @@ module Twt
             cate_no = "880"
         end
 =end
-        if twt.rating >= 87 and pred >= 50
-            cate_no = "866"
-        elsif twt.rating < 84
-            cate_no = "870"
-        else
-            cate_no = "880"
-        end
 
         pred_i = 20
         p_s = Util::format_num(pred, pred_i)
-        month_n = Util::format_num(dayn / 30, 1)
+        month_v = dayn / 30
+        month_n = Util::format_num(month_v, 1)
         r_s = Util::format_num(twt.rating, 1)
-        #%!#{cate_no}.P:#{p_s}|#{month_n}月|#{r_s}↑!
-        %!#{cate_no}.#{month_n}月|#{r_s}↑!
-        #%!#{cate_no}.#{r_s}↑|#{month_n}月!
+
+        if month_v > 1
+            cate_no = 899
+            %!#{cate_no}.#{month_n}月!
+        elsif month_v > 0 and twt.rating > 86
+            cate_no = 888
+            %!#{cate_no}.#{month_n}月!
+        else
+            if twt.rating >= 87 and pred >= 50
+                cate_no = "866"
+            elsif twt.rating < 84
+                cate_no = "870"
+            else
+                cate_no = "880"
+            end
+            #%!#{cate_no}.P:#{p_s}|#{month_n}月|#{r_s}↑!
+            %!#{cate_no}.#{month_n}月|#{r_s}↑!
+            #%!#{cate_no}.#{r_s}↑|#{month_n}月!
+        end
     end
 
     def self.get_key_elem(twt, k, v, url_list, chk)
@@ -1651,13 +1633,13 @@ module Twt
 
     def self.mov_filename_ex(filename)
         if filename =~ /^(\d+)(.*)/
-            tweet_id = $1
+            tweet_id = $1.to_i
             rest = $2
         elsif filename =~ /^\w+\s+(\d+)(.*)/
-            tweet_id = $1
+            tweet_id = $1.to_i
             rest = $2
         elsif filename =~ /[^\s]+\s+(\d+)(.*)/
-            tweet_id = $1
+            tweet_id = $1.to_i
             rest = $2
         end
         [tweet_id, rest]
@@ -1675,6 +1657,78 @@ module Twt
         def user_exist?(twtid)
             #STDERR.puts %![dbg y]#{twtid}!
             return @twt_user_list.include? twtid.downcase
+        end
+    end
+
+    # =========================================================================
+    # 
+    # =========================================================================
+    class SpDir
+        attr_accessor :path, :dirname, :screen_name, :twt, :latest_date, :sp_chk, :file_cnt
+
+        def initialize(dirpath, dirname, screen_name, twt, latest_date, sp_chk, file_cnt)
+            @dirpath = dirpath
+            @dirname = dirname
+            @screen_name = screen_name
+            @twt = twt
+            @latest_date = latest_date
+            @sp_chk = sp_chk
+            @file_cnt = file_cnt
+        end
+
+        WORD_LIST = ["マイナス",
+                    "プラス",
+                    "更新なし",
+                    "更新停止",
+                    "少ない",
+                    "多い",
+                    "凍結",
+                    "鍵垢",
+                    "なし",
+                    "ない",
+                ]
+
+        def group_key
+            if self.twt
+                if self.twt.last_access_datetime and self.twt.last_access_datetime_days_elapsed < 1
+                    today_s = "本日アクセス"
+                else
+                    today_s = ""
+                end
+
+                if self.twt.sp?
+                    target_s = ""
+                else
+                    target_s = "対象外"
+                end
+
+                if self.twt.twtname.presence
+                else
+                    name_s = "名前未設定"
+                end
+            else
+                today_s = ""
+            end
+
+            word = nil
+            WORD_LIST.each do |w|
+                if self.dirname.end_with?(w)
+                    word = w
+                    break
+                end
+            end
+
+            if word
+                hosoku = "補足あり'#{word}'"
+            else
+                hosoku = ""
+            end
+
+            if self.file_cnt <= 3
+                file_s = "ファイル少ない"
+            end
+
+            %!#{today_s}:#{target_s}:#{name_s}:#{file_s}:#{hosoku}!
         end
     end
 end

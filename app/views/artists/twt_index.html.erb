@@ -933,7 +933,6 @@
 <% end %>
 
 <% if @sp_dirs.presence %>
-    <% to_be_obtain_list = Tweet.to_be_obtain_list %>
     <h2>sp_dir一覧(<%= @sp_dirs.size %>)</h2>
     <% duplicates = Util::dup_list(@sp_dirs.map {|x| x.screen_name}) %>
     <% duplicates.each do |x| %>
@@ -941,80 +940,81 @@
         複数："<%= x %>"<br />
     <% end %>
 
-    <% hr_done = false %>
-    <% @sp_dirs.each.with_index(1) do |elem, idx| %>
-        <% if elem.twt %>
-            <% if elem.twt.last_access_datetime_days_elapsed < 1 and hr_done == false %>
-                <hr size="5" color="yellow" />
-                <% hr_done = true %>
-            <% end %>
+    <% to_be_obtain_list = Tweet.to_be_obtain_list %>
+    <% idx = 0 %>
 
-            <%= idx %>.
-            アクセス日：<%= elem.twt.last_access_datetime_disp %>
-            [<%= elem.twt.update_frequency %>]
-            [<%= link_to_ex("■twt■", elem.twt) %>]
-            [<%= elem.twt.prediction %>]
-            
-            【<%= elem.twt.rating %><%= r_icon(elem.twt.r18) %>】
-            <b>
-            <% if elem.twt.twtname.presence %>
-                <%= elem.twt.twtname %>
-            <% else %>
-                ※未設定※
-            <% end %>
-            </b>
-            (@<%= elem.twt.twtid %>)
-            「<%= elem.dirname %>(<%= elem.file_cnt %>)｣
+    <% sp_dirs_hash = Twt::sp_dirs_group @sp_dirs %>
+    <% sp_dirs_hash.each do |k,v| %>
+        <h3><%= %!#{k}(#{v.size})! %></h3>
+        <% v.each do |elem| %>
+            <% if elem.twt %>
+                <%= idx += 1 %>.
+                アクセス日：<%= elem.twt.last_access_datetime_disp %>
+                [<%= elem.twt.update_frequency %>]
+                [<%= link_to_ex("■twt■", elem.twt) %>]
+                [<%= elem.twt.prediction %>]
+                
+                【<%= elem.twt.rating %><%= r_icon(elem.twt.r18) %>】
+                <b>
+                <% if elem.twt.twtname.presence %>
+                    <%= elem.twt.twtname %>
+                <% else %>
+                    ※未設定※
+                <% end %>
+                </b>
+                (@<%= elem.twt.twtid %>)
+                「<%= elem.dirname %>(<%= elem.file_cnt %>)｣
 
-            <% if elem.twt.twtid != elem.screen_name %>
-                ※DIR名がスクリーン名と異なります※
-            <% end %>
+                <% if elem.twt.twtid != elem.screen_name %>
+                    ※DIR名がスクリーン名と異なります※
+                <% end %>
 
-            <% if elem.twt.sp? %>
-                <% if elem.file_cnt <= 3 %>
-                    <b>★ファイル数が少ない★</b>
+                <% if elem.twt.sp? %>
+                    <% if elem.file_cnt <= 3 %>
+                        <b>★ファイル数が少ない(<%= elem.file_cnt %>)★</b>
+                    <% end %>
+                <% else %>
+                    <b>★対象外★</b>
+                <% end %>
+
+                <% if to_be_obtain_list.has_key?(elem.screen_name) %>
+                    <b>★取得対象あり★</b>
+                <% end %>
+
+                <% if false %>
+                    <% plist = Twt::get_sp_pic_filelist_by_twtid(elem.screen_name) %>
+                    <% if plist.size == 0 %>
+                        <b>★ファイル0★</b>
+                    <% end %>
                 <% end %>
             <% else %>
-                <b>★対象外★</b>
-            <% end %>
+                <%= idx %>."<%= elem.dirname %>"
+                <% url = twitters_path(mode: TwittersController::ModeEnum::SEARCH, search_word: elem.dirname, group_by: TwittersController::GRP_SORT::GRP_SORT_RATE) %>
+                [<%= link_to_ex("■検索■", url) %>]
 
-            <% if to_be_obtain_list.has_key?(elem.screen_name) %>
-                <b>★取得対象あり★</b>
-            <% end %>
-
-            <% if false %>
-                <% plist = Twt::get_sp_pic_filelist_by_twtid(elem.screen_name) %>
-                <% if plist.size == 0 %>
-                    <b>★ファイル0★</b>
+                <% result = Twitter.search_records(elem.dirname, Twitter::DRAWING_METHOD::DM_AI) %>
+                <% if result.size > 0 and result.size < 3 %>
+                    <% result.each do |twt| %>
+                        <br />
+                        <%= "【#{dm_icon(twt.drawing_method)}#{twt.rating}】#{twt.twtname}(@#{twt.twtid} )" %>
+                    <% end %>
                 <% end %>
-            <% end %>
-        <% else %>
-            <%= idx %>."<%= elem.dirname %>"
-            <% url = twitters_path(mode: TwittersController::ModeEnum::SEARCH, search_word: elem.dirname, group_by: TwittersController::GRP_SORT::GRP_SORT_RATE) %>
-            [<%= link_to_ex("■検索■", url) %>]
 
-            <% result = Twitter.search_records(elem.dirname, Twitter::DRAWING_METHOD::DM_AI) %>
-            <% if result.size > 0 and result.size < 3 %>
-                <% result.each do |twt| %>
+                <% results = Twt::search_new_screen_name_from_txt(@unknown_twt_screen_name_list, elem.dirname) %>
+                <% if results.presence %>
                     <br />
-                    <%= "【#{dm_icon(twt.drawing_method)}#{twt.rating}】#{twt.twtname}(@#{twt.twtid})" %>
+                    <% results.each do |x| %>
+                        <%= link_to_ex("▶@" + x, Twt::twt_user_media_url(x)) %>
+                        <br />
+                    <% end %>
                 <% end %>
             <% end %>
 
-            <% results = Twt::search_new_screen_name_from_txt(@unknown_twt_screen_name_list, elem.dirname) %>
-            <% if results.presence %>
-                <br />
-                <% results.each do |x| %>
-                    <%= link_to_ex("▶@" + x, Twt::twt_user_media_url(x)) %>
-                    <br />
-                <% end %>
-            <% end %>
+            <hr />
         <% end %>
-
-        <hr />
     <% end %>
 
-    <h3>sp_chk削除対象？</h3>
+    <h2>sp_chk削除対象？</h2>
     <% @sp_dirs.each do |elem| %>
         <% if elem.screen_name.presence and elem.sp_chk %>
             <%= elem.screen_name %><br />
@@ -1193,7 +1193,8 @@
         <hr />
         <% v.sort.uniq.reverse.each do |x| %>
 
-            <% tweet = Tweet.find_by(tweet_id: x.tweet_id) %>
+            <%# tweet = Tweet.find_by(tweet_id: x.tweet_id) %>
+            <% tweet = x.record %>
             <% if tweet %>
                 ■<%= tweet.status %>
                 <%= x %>
@@ -1210,7 +1211,7 @@
                 <% url = new_tweet_path(tweet_id: x.tweet_id, screen_name: x.screen_name, status: Tweet::StatusEnum::VIDEO_SAVED) %>
                 [<%= link_to_ex "■New tweet■", url %>]
 
-                <% link_txt = "#{x.screen_name} #{x.tweet_id} 0 " %>
+                <% link_txt = x.gen_name %>
                 <% if false %>
                     「<%= link_to_ex(link_txt, url) %>」
                 <% else %>

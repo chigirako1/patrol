@@ -127,10 +127,29 @@
                 <br>
             <% end %>
         <% end %>
+    <% end %>
 
-        <% if tweet.status == Tweet::StatusEnum::VIDEO_SAVED %>
-            [<%#= link_to_ex "video file", x.filepath %>]
+    <% if @twt_video_list %>
+        <% screen_name = get_val(tweet.screen_name, :screen_name) %>
+        <% tweet_id = get_val(tweet.tweet_id, :tweet_id) %>
+        <% videopath = @twt_video_list.get_path(screen_name, tweet_id.to_i) %>
+
+        <% if videopath == nil %>
+            <% vlist = TwtVideoList::new(true) %>
+            <% videopath = vlist.get_path(screen_name, tweet_id.to_i) %>
         <% end %>
+
+        <% if videopath %>
+            <video controls width="640" height="360">
+                <source src="<%= videopath %>" type="video/mp4">
+                お使いのブラウザは動画再生に対応していません。
+            </video>
+            [<%= link_to_ex "video file", videopath %>]
+        <% else %>
+            <%= Twt::filename_str(screen_name, tweet_id) %><br />
+            not find.
+        <% end %>
+        <br />
     <% end %>
 <% end %>
 

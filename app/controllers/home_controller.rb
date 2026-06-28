@@ -252,12 +252,13 @@ class HomeController < ApplicationController
           grp_sort_by: TwittersController::GRP_SORT::GRP_SORT_SPEC,
           grp_sort_spec:  "評価{r1}～::{az}|予測{p10}～",
           rating: 85,
-          hide_within_days: 7,
+          cond_or: true,
+          hide_within_days: 22,
+          pred: 22,
           #pfilenum: -1500,
           select_max: 11,
           #num_of_disp: 3,
           ex_sp: true,
-          pred: 22,
           #created_at: 180,
           thumbnail: ""
         )
@@ -846,7 +847,7 @@ class HomeController < ApplicationController
       },
       # =====================================
       { :label => "#twt動画🎞️", :path => "" },
-      { :label => "twt(動画🎞️post)", :path => artists_twt_index_path(dir: ArtistsController::DIR_TYPE::DT_MOV_URL) },
+      { :label => "twt(動画🎞️URL)", :path => artists_twt_index_path(dir: ArtistsController::DIR_TYPE::DT_MOV_URL) },
       { :label => "twt(dir-sp📲 動画🎞️fsチェック)", :path => artists_twt_index_path(dir: ArtistsController::DIR_TYPE::SP_VID) },
       # =====================================
       { :label => "#twtその他", :path => "" },
@@ -2122,6 +2123,7 @@ class HomeController < ApplicationController
       # ----------------------------
       { :label => "Tweet", :path => "" },
       { :label => "Tweet", :path => tweets_path },
+      { :label => "Tweet status:#{Tweet::StatusEnum::VIDEO}", :path => tweets_path(status: Tweet::StatusEnum::VIDEO) },
       { :label => "Tweet url list",
           :path => tweets_path(
             #page_title: "Tweets",

@@ -8,6 +8,7 @@ class TweetsController < ApplicationController
     URL_LIST_ = 'urllist_summary'
     URL_UNACCESSIBLE =  'url_unaccessible'
     TO_BE_OBTAIN =  Tweet::StatusEnum::TO_BE_OBTAIN
+    ME_QEURY = 'query'
   end
 
   def get_param_num(symbol)
@@ -35,6 +36,7 @@ class TweetsController < ApplicationController
 
     mode = params[:mode].presence
     case mode
+    when ModeEnum::ME_QEURY
     when ModeEnum::SUMMARY
       @tweet_cnt_list, @tweet_sum_hash = Tweet.summary
     when ModeEnum::URL_LIST_SUMMARY
@@ -49,7 +51,10 @@ class TweetsController < ApplicationController
     when ModeEnum::URL_UNACCESSIBLE
       @unaccessible_tweet_summary = Tweet.unaccessible_tweet_summary
     else
-      if params[:screen_name].presence
+      if params[:status].presence
+        status = params[:status]
+        @tweets = Tweet.select {|x| x.status == status}
+      elsif params[:screen_name].presence
         scrn_name = params[:screen_name]
         @tweets = Tweet.select {|x| x.screen_name == scrn_name}
 
@@ -69,11 +74,21 @@ class TweetsController < ApplicationController
 
   # GET /tweets/1 or /tweets/1.json
   def show
-    @pic_list = Twt::get_pic_filelist(@tweet.screen_name)
+    #STDERR.puts %!#{@tweet.status}!
+    if @tweet.status == Tweet::StatusEnum::VIDEO or
+      @tweet.status == Tweet::StatusEnum::VIDEO_SAVED
+      @twt_video_list = TwtVideoList::new()
+    else
+      @pic_list = Twt::get_pic_filelist(@tweet.screen_name)
+    end
   end
 
   # GET /tweets/new
   def new
+    if params[:status] == Tweet::StatusEnum::VIDEO_SAVED
+      @twt_video_list = TwtVideoList::new()
+    end
+    
     @tweet = Tweet.new
   end
 
