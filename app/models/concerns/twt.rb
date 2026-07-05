@@ -301,8 +301,8 @@ module Twt
         SpDir.new(dirpath, dirname, screen_name, twt, latest_date, false, file_cnt)
     end
 
-    def self.sp_dirs_group(sp_dirs)
-        sp_dirs.group_by {|x| x.group_key}.sort_by {|k,v| k}.to_h
+    def self.sp_dirs_group(sp_dirs, to_be_obtain_list)
+        sp_dirs.group_by {|x| x.group_key(to_be_obtain_list)}.sort_by {|k,v| k}.to_h
     end
 
     def self.sp_dirs()
@@ -404,6 +404,12 @@ module Twt
         else
             nil
         end
+    end
+
+    def self.get_sp_pic_filelist_both_by_twtid(twtid)
+        l1 = get_sp_pic_filelist_by_twtid(twtid)
+        l2 = get_sp_pic_filelist2_by_twtid(twtid)
+        [l1, l2].flatten.compact
     end
 
     def self.get_sp_pic_filelist_by_twtid(twtid)
@@ -1217,7 +1223,7 @@ module Twt
     def self.get_key_elem_sub(twt, dayn, pred, chk)
 
         freq_n = 300
-
+        month_v = [dayn / 30, 9].min
         val = Util::format_num(pred, 15).to_s + "件"
 
         if !(twt.twtname.presence)
@@ -1233,9 +1239,9 @@ module Twt
         if (chk or Tweet.has_acquisition_schedule?(twt.twtid)) and dayn > 0
             #val = Util::format_num(twt.rating, 1)
             if twt.update_frequency >= freq_n
-                return "090.取得対象物件あり[#{val}](高頻度)"
+                return "020.取得対象物件あり[#{val}](高頻度)"
             else
-                return "990.取得対象物件あり[#{val}]"
+                return "99#{month_v}.取得対象物件あり[#{val}]"
             end
         end
 
@@ -1257,11 +1263,16 @@ module Twt
             return "700.低優先度(#{twt.rating})"
         end
 
-        if twt.update_frequency >= freq_n and twt.rating > 83
-            r_u = 2
-            r_s = Util::format_num(twt.rating, r_u)
-            week_n = Util::format_num(dayn / 7, 1)
-            return "010.[#{week_n}w]前日/当日分:#{r_s}"
+        if twt.update_frequency >= freq_n
+            if twt.rating >= 86
+                p_s = Util::format_num(pred, 25)
+                return "011.前日/当日分(#{p_s}件)"
+            elsif twt.rating >= 84
+                r_u = 1
+                r_s = Util::format_num(twt.rating, r_u)
+                week_n = Util::format_num(dayn / 7, 1)
+                return "010.[#{week_n}w]前日/当日分:#{r_s}"
+            end
         end
         
         if dayn < 1
@@ -1279,15 +1290,13 @@ module Twt
         end
 =end
 
-        pred_i = 20
-        p_s = Util::format_num(pred, pred_i)
-        month_v = dayn / 30
         month_n = Util::format_num(month_v, 1)
         r_s = Util::format_num(twt.rating, 1)
 
         if month_v > 1
             cate_no = 899
-            %!#{cate_no}.#{month_n}月!
+            p_s = Util::format_num(pred, 50)
+            %!#{cate_no}.#{month_n}月(#{r_s})|#{p_s}!
         elsif month_v > 0 and twt.rating > 86
             cate_no = 888
             %!#{cate_no}.#{month_n}月!
@@ -1299,6 +1308,9 @@ module Twt
             else
                 cate_no = "880"
             end
+
+            pred_i = 20
+            p_s = Util::format_num(pred, pred_i)
             #%!#{cate_no}.P:#{p_s}|#{month_n}月|#{r_s}↑!
             %!#{cate_no}.#{month_n}月|#{r_s}↑!
             #%!#{cate_no}.#{r_s}↑|#{month_n}月!
@@ -1593,9 +1605,10 @@ module Twt
 
         list = mov_url_list.uniq.sort_by {|x| x[1]}
         dup = Util::get_dup_elem(list)
-        dup.each do |x|
-            STDERR.puts "重複:#{x}"
-        end
+        # dup.each do |x|
+        #     STDERR.puts "重複:#{x}"
+        # end
+        STDERR.puts "重複:#{dup.size}"
         list
     end
 
@@ -1688,8 +1701,12 @@ module Twt
                     "ない",
                 ]
 
-        def group_key
+        def group_key(to_be_obtain_list)
             if self.twt
+                if to_be_obtain_list.has_key?(self.screen_name)
+                    todo_s = "!取得対象あり:"
+                end
+
                 if self.twt.last_access_datetime and self.twt.last_access_datetime_days_elapsed < 1
                     today_s = "本日アクセス"
                 else
@@ -1707,7 +1724,8 @@ module Twt
                     name_s = "名前未設定"
                 end
             else
-                today_s = ""
+                #today_s = ""
+                return "!"
             end
 
             word = nil
@@ -1719,16 +1737,16 @@ module Twt
             end
 
             if word
-                hosoku = "補足あり'#{word}'"
+                hosoku = "補足!あり'#{word}'"
             else
-                hosoku = ""
+                hosoku = "補足なし"
             end
 
-            if self.file_cnt <= 3
+            if (self.file_cnt||0) <= 3
                 file_s = "ファイル少ない"
             end
 
-            %!#{today_s}:#{target_s}:#{name_s}:#{file_s}:#{hosoku}!
+            %!#{todo_s}#{today_s}:#{target_s}:#{hosoku}:#{file_s}:#{name_s}!
         end
     end
 end

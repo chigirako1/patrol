@@ -24,6 +24,25 @@ class TweetUrl
         Twt::filename_str(self.screen_name, self.tweet_id)
     end
 
+    Cond_del_list = [
+        #Tweet::StatusEnum::SAVED,
+        Tweet::StatusEnum::DELETED,
+        Tweet::StatusEnum::UNACCESSIBLE,
+        Tweet::StatusEnum::UNACCESSIBLE_FREEZED,
+        Tweet::StatusEnum::UNACCESSIBLE_PRIVATE,
+        Tweet::StatusEnum::DUPLICATE,
+        Tweet::StatusEnum::VIDEO_SAVED,
+    ]
+    def cond_del
+        if self.record and self.record.status
+            if Cond_del_list.include?(self.record.status)
+                return true
+            end
+        else
+        end
+        false
+    end
+
     def self.mov_url_list
         tweet_id_list = []
 

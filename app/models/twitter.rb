@@ -393,7 +393,7 @@ class Twitter < ApplicationRecord
         #    return false
         #end
         
-        if Twt::filesize_v_huge?(self.filesize)
+        if Twt::filesize_v_huge?(self.filesize) and (self.update_frequency||0) > 25
             #STDERR.puts %!sp?: #{self.filesize} bytes, #{self.update_frequency}/100 "#{self.twtname}[@#{self.twtid}]"!
             true
         elsif filesize_huge?
@@ -513,12 +513,12 @@ class Twitter < ApplicationRecord
 
     def prediction_h(dt)
         hours = Util::hours_from_now(dt)
-        pred = (self.update_frequency / 24) * hours / 100
+        pred = ((self.update_frequency||0) / 24) * hours / 100
         pred
     end
 
     def prediction_h_ex()
-        prediction_h(self.last_post_datetime)
+        prediction_h(self.last_post_datetime||self.last_access_datetime)
     end
 
     def point
@@ -942,11 +942,13 @@ class Twitter < ApplicationRecord
                 gkey_work = group_sub_r(unit, number, gkey_work, x, digit:4)
             when "p"
                 unit = 10 unless unit
-                number = self.prediction
-                gkey_work = group_sub(unit, number, gkey_work, x)
+                #number = self.prediction
+                number = self.prediction_h_ex
+                gkey_work = group_sub(unit, number, gkey_work, x, digit:4)
             when "_p"
                 unit = 10 unless unit
-                number = self.prediction
+                #number = self.prediction
+                number = self.prediction_h_ex
                 if number >= unit
                     w = "#{unit}-"
                 else
@@ -979,10 +981,17 @@ class Twitter < ApplicationRecord
                 unit = 1 unless unit
                 number = self.rating
                 gkey_work = group_sub(unit, number, gkey_work, x)
-            when "method"
-                gkey_work.gsub!(x, self.drawing_method||"")
+            when "rr"
+                unit = 1 unless unit
+                number = self.rating
+                w = Util::format_num(number, unit, 3)
+                #gkey_work = group_sub(unit, number, gkey_work, x)
+                word = %!#{w}(#{self.r18||""})!
+                gkey_work.gsub!(x, word)
             when "restrict"
                 gkey_work.gsub!(x, self.r18||"")
+            when "method"
+                gkey_work.gsub!(x, self.drawing_method||"")
             when "unset"
                 unset_disp = false
                 gkey_work.gsub!(x, "")
@@ -1010,7 +1019,8 @@ class Twitter < ApplicationRecord
             elsif self.rating < 80
                 number = self.last_access_datetime_days_elapsed / 7
                 w = Util::format_num(number, 1, 3)
-                "\t低ランク#{TWT_H_SEPARATOR}#{w}週"
+                #"\t低ランク#{TWT_H_SEPARATOR}#{w}週"
+                "\t低ランク(#{self.rating})#{TWT_H_SEPARATOR}#{w}週"
             else
                 gkey_work
             end
@@ -1227,7 +1237,7 @@ class Twitter < ApplicationRecord
             case sort_by
             when TwittersController::SORT_BY::PRED
                 gkey = ""
-            when TwittersController::SORT_BY::ACCESS
+            when TwittersController::SORT_BY::SORT_ACCESS_O2N
                 gkey = ""
             when TwittersController::SORT_BY::TODO_CNT
                 if self.sp?

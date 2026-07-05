@@ -42,7 +42,7 @@
                 <% end %>
             <% end %>
 
-            <% filelist2 = Twt::get_sp_pic_filelist2_by_twtid(tweet.screen_name) %>
+            <% filelist2 = Twt::get_sp_pic_filelist_both_by_twtid(tweet.screen_name) %>
             <% filelist2.each do |path| %>
                 <% if path.include? tweet.remarks %>
                     <%= image_link(path) %>

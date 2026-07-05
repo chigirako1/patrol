@@ -77,8 +77,12 @@ module TwittersHelper
         tag += "【"
         tag += PRIVATE_ICON if twt.private?
         tag += %!#{twt.status}!
-        if twt.status == Twitter::TWT_STATUS::STATUS_SCREEN_NAME_CHANGED or twt.status == Twitter::TWT_STATUS::STATUS_ANOTHER
+        case twt.status
+        when Twitter::TWT_STATUS::STATUS_SCREEN_NAME_CHANGED, Twitter::TWT_STATUS::STATUS_ANOTHER
             tag += %!(→#{twt.new_twtid})!
+        when Twitter::TWT_STATUS::STATUS_PRIVATE
+            tag += %!「#{twt.comment}」!
+        else
         end
         tag += "】"
         tag += %![#{link_to_ex("■twt■", twt)}]!

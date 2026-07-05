@@ -31,8 +31,8 @@ class TwittersController < ApplicationController
     R_PRED_DESC = "評価/予測▽順"
 
     R_ACCESS = "評価/アクセス日順（旧→新）"
-    ACCESS = "アクセス日順（旧→新）" #"access"
-    SORT_ACCESS = ACCESS
+    SORT_ACCESS_O2N = "アクセス日順（旧→新）"
+    SORT_ACCESS_N2O = "アクセス日順（新→旧）"
 
     ACCESS_W = "アクセス日(週)順（旧→新）"
     M_R_ACCESS_W_PRED_A = "月/評価/アクセス週順（旧→新）/予測△昇順"
@@ -551,14 +551,28 @@ class TwittersController < ApplicationController
       force_read_all = false
     end
 
+    twt_params = {}
+
+    @twt_pic_path_list = @twitter.get_pic_filelist(force_read_all)
+
     dn = Util::get_date_delta(@twitter.last_access_datetime)
     if dn > 0 or @twitter.last_access_datetime == nil
-      @twitter.update(last_access_datetime: Time.now)
-    else
-      #STDERR.puts "更新不要:#{dn}"
+      twt_params[:last_access_datetime] = Time.now
+
+      if @twitter.filenum == nil or @twitter.filenum < @twt_pic_path_list.size
+        twt_params[:filenum] = @twt_pic_path_list.size
+      end
     end
-    
-    @twt_pic_path_list = @twitter.get_pic_filelist(force_read_all)
+
+    if twt_params.size > 0
+        if @twitter.update(twt_params)
+          msg = %!更新 => #{twt_params} @#{@twitter.twtid}(#{@twitter.twtname})!
+          Rails.logger.info(msg)
+        else
+          msg = %!更新失敗 => #{twt_params} @#{@twitter.twtid}(#{@twitter.twtname})!
+          Rails.logger.error(msg)
+        end
+    end
   end
 
   # GET /twitters/new
@@ -1270,14 +1284,17 @@ class TwittersController < ApplicationController
       when SORT_BY::PRED_ASC
         twitters = twitters.sort_by {|x| [x.prediction, x.last_access_datetime]}
       when SORT_BY::SORT_ACCESS_M_PRED_DESC
-        twitters = twitters.sort_by {|x| [-(x.last_access_day_num / 30), -x.prediction]}
+        #twitters = twitters.sort_by {|x| [-(x.last_access_day_num / 30), -x.prediction]}
+        twitters = twitters.sort_by {|x| [-(x.last_access_day_num / 30), -x.prediction_h_ex]}
       when SORT_BY::SORT_ACCESS_Z_R
         #twitters = twitters.sort_by {|x| [-x.last_access_datetime_z, -(x.rating||0), -x.prediction]}
         twitters = twitters.sort_by {|x| [-x.last_access_datetime_z, -(x.rating||0), x.filenum||0, -x.prediction]}
       when SORT_BY::SORT_ACCESS_Z_R_PRED_A
         twitters = twitters.sort_by {|x| [-x.last_access_datetime_z, -(x.rating||0), x.prediction]}
-      when SORT_BY::ACCESS
+      when SORT_BY::SORT_ACCESS_O2N
         twitters = twitters.sort_by {|x| [-x.last_access_datetime_days_elapsed, -(x.rating||0), -x.prediction]}
+      when SORT_BY::SORT_ACCESS_N2O
+        twitters = twitters.sort_by {|x| [-x.last_access_datetime.to_i]}
       when SORT_BY::M_R_ACCESS_W_PRED_A
         twitters = twitters.sort_by {|x| [-(x.last_access_day_num / 30), -x.rating_ex, -(x.last_access_day_num / 7), x.filenum||0, x.prediction]}
       when SORT_BY::R_ACCESS_W_PRED_A

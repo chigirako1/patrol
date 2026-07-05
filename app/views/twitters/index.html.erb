@@ -136,10 +136,7 @@
               [<%= ele.todo_cnt %>件]
             <% end %>
             <%= TwittersHelper::PRIVATE_ICON if twitter.private? %>
-            <%= dm_disp(twitter.drawing_method) %>【<%= twitter.rating %>】<%= twitter.r18 %>
-            <% if twitter.r18 == Twitter::RESTRICT::R18 %>
-              <%= TwittersHelper::R18_ICON %>
-            <% end %>
+            <%= dm_disp(twitter.drawing_method) %>【<%= twitter.rating %>】<%= restr_disp twitter.r18 %>
             <br />
             <b><%= twitter.twtname %></b>
             (@<%= twitter.twtid %>)
@@ -156,7 +153,7 @@
             <%= twitter.remarks %>
           </td>
 
-          <% prediction = twitter.prediction %>
+          <% prediction = twitter.prediction_h_ex %>
           <% pred_2 = (twitter.update_frequency||0) / 100 %>
           <% pred = prediction + pred_2 %>
           <% pred_bg_clr = pred_bg_color(pred) %>
@@ -492,7 +489,7 @@
           [TwittersController::SORT_BY::SORT_ACCESS_Z_R_PRED_A],
           
           [TwittersController::SORT_BY::R_ACCESS],
-          [TwittersController::SORT_BY::ACCESS],
+          [TwittersController::SORT_BY::SORT_ACCESS_O2N],
           [TwittersController::SORT_BY::ACCESS_W],
           
           [TwittersController::SORT_BY::RATING],

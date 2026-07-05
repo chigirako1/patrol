@@ -910,7 +910,8 @@ class ArtistsController < ApplicationController
 
         if true
           twt_url_hash.each do |k,v|
-            v.delete_if {|x| x.record and x.record.status == Tweet::StatusEnum::VIDEO_SAVED}
+            #v.delete_if {|x| x.record and x.record.status == Tweet::StatusEnum::VIDEO_SAVED}
+            v.delete_if {|x| x.cond_del}
           end
 
           #twt_url_hash.compact! 長さ０の配列だと消えない模様

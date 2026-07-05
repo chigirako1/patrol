@@ -19,7 +19,7 @@ module TweetsHelper
         case sort_type
         when TwittersController::SORT_BY::PRED
             url_list_work = url_list_sort_by_pred(url_list_work)
-        when TwittersController::SORT_BY::ACCESS
+        when TwittersController::SORT_BY::SORT_ACCESS_O2N
             url_list_work = url_list_sort_by_access(url_list_work)
         when TwittersController::SORT_BY::TODO_CNT
             url_list_work = url_list_sort_by_todo_cnt(url_list_work)

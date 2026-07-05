@@ -943,16 +943,26 @@
     <% to_be_obtain_list = Tweet.to_be_obtain_list %>
     <% idx = 0 %>
 
-    <% sp_dirs_hash = Twt::sp_dirs_group @sp_dirs %>
+    <% sp_dirs_hash = Twt::sp_dirs_group(@sp_dirs, to_be_obtain_list) %>
     <% sp_dirs_hash.each do |k,v| %>
         <h3><%= %!#{k}(#{v.size})! %></h3>
         <% v.each do |elem| %>
             <% if elem.twt %>
+                <% if elem.twt.sp? %>
+                    <% if elem.file_cnt == 0 %>
+                        <b>★ファイル数0★</b>
+                    <% elsif elem.file_cnt <= 3 %>
+                        <b>★ファイル数が少ない(<%= elem.file_cnt %>)★</b>
+                    <% end %>
+                <% else %>
+                    <b>★対象外★</b>
+                <% end %>
+                
                 <%= idx += 1 %>.
                 アクセス日：<%= elem.twt.last_access_datetime_disp %>
-                [<%= elem.twt.update_frequency %>]
+                [頻度:<%= elem.twt.update_frequency %>]
                 [<%= link_to_ex("■twt■", elem.twt) %>]
-                [<%= elem.twt.prediction %>]
+                [予測:<%= elem.twt.prediction %>/ファイル数:<%= elem.file_cnt %>]
                 
                 【<%= elem.twt.rating %><%= r_icon(elem.twt.r18) %>】
                 <b>
@@ -969,14 +979,6 @@
                     ※DIR名がスクリーン名と異なります※
                 <% end %>
 
-                <% if elem.twt.sp? %>
-                    <% if elem.file_cnt <= 3 %>
-                        <b>★ファイル数が少ない(<%= elem.file_cnt %>)★</b>
-                    <% end %>
-                <% else %>
-                    <b>★対象外★</b>
-                <% end %>
-
                 <% if to_be_obtain_list.has_key?(elem.screen_name) %>
                     <b>★取得対象あり★</b>
                 <% end %>
@@ -989,7 +991,7 @@
                 <% end %>
             <% else %>
                 <%= idx %>."<%= elem.dirname %>"
-                <% url = twitters_path(mode: TwittersController::ModeEnum::SEARCH, search_word: elem.dirname, group_by: TwittersController::GRP_SORT::GRP_SORT_RATE) %>
+                <% url = twitters_path(mode: TwittersController::ModeEnum::SEARCH, search_word: elem.dirname, grp_sort_by: TwittersController::GRP_SORT::GRP_SORT_SPEC, grp_sort_spec: "{dm}::{r}") %>
                 [<%= link_to_ex("■検索■", url) %>]
 
                 <% result = Twitter.search_records(elem.dirname, Twitter::DRAWING_METHOD::DM_AI) %>
@@ -1132,7 +1134,7 @@
         <% end %>
         <h3><%= header_b %>(<%= value.size %>)</h3>
         <% value.each.with_index(1) do |twt, idx| %>
-            <% pred = twt.prediction %>
+            <% pred = twt.prediction_h_ex %>
             <% if pred > 25 %>
                 <%# bgcolorz = "orange" %>
                 <% bgcolorz = yellow_shade(pred) %>
@@ -1204,12 +1206,15 @@
                 <% end %>
                 [<%= link_to_ex "■tweet■", tweet %>]
             <% else %>
-                <% url = Twt::twt_tweet_url(x.screen_name, x.tweet_id) %>
-                <%= link_to_ex(x.tweet_id, url) %>
-                (<%= smart_date Twt::get_timestamp(x.tweet_id) %>)
 
                 <% url = new_tweet_path(tweet_id: x.tweet_id, screen_name: x.screen_name, status: Tweet::StatusEnum::VIDEO_SAVED) %>
                 [<%= link_to_ex "■New tweet■", url %>]
+
+                <% url = Twt::twt_tweet_url(x.screen_name, x.tweet_id) %>
+                <%= link_to_ex(x.tweet_id, url) %>
+    <%
+=begin %>
+                (<%= smart_date Twt::get_timestamp(x.tweet_id) %>)
 
                 <% link_txt = x.gen_name %>
                 <% if false %>
@@ -1217,6 +1222,8 @@
                 <% else %>
                     「<%= link_txt %>」
                 <% end %>
+    <%
+=end %>
             <% end %>
             <br />
         <% end %>
