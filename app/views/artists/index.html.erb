@@ -1,6 +1,6 @@
 
 <% search_word = params[:search_word] %>
-<% if @artists_group.size == 0 and params[:file] == ArtistsController::MethodEnum::SEARCH %>
+<% if @artists_group.size == 0 and params[:file] == ArtistsController::MethodEnum::METHOD_SEARCH %>
   <% if search_word =~ Artist::PXV_USER_URL_REGEX %>
     <% pxv_user_id = $1 %>
   <% end %>
@@ -286,7 +286,7 @@
           [ArtistsController::MethodEnum::NAME_TEST],
           [ArtistsController::MethodEnum::ALL_IN_1],
           [ArtistsController::MethodEnum::ALL_IN_ONE],
-          [ArtistsController::MethodEnum::SEARCH],
+          [ArtistsController::MethodEnum::METHOD_SEARCH],
           ['urllist'], 
           ['urllist-pxv-only'], 
           ['urllist-pxv-only(latest)'], 
@@ -322,7 +322,7 @@
     ("latest", "yy", "yymm", "yymmdd", )
     <hr />
   
-    <% if params[:file] == ArtistsController::MethodEnum::SEARCH %>
+    <% if params[:file] == ArtistsController::MethodEnum::METHOD_SEARCH %>
       <% afocus = true %>
     <% else %>
       <% afocus = false %>

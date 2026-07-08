@@ -272,7 +272,7 @@ class ArtistsController < ApplicationController
     TWTID_CASE_DIFF = 'twt screen name大文字・小文字違い'
     TABLE_UPDATE_NEW_USER = 'PXV DB更新（ファイルシステム）'
     UPDATE_RECORD = 'pxvレコード更新(PXV id 指定)'
-    SEARCH = '検索'
+    METHOD_SEARCH = '検索'
     NAME_TEST = '名前テスト'
     DB_UNREGISTERED_USER = 'ファイル0件未登録'
     TWT_DB_UNREGISTERED_TWT_ID = 'twt未登録twt id' #PXV DBに登録されているがTWT DBに登録がないTWT ID
@@ -436,7 +436,7 @@ class ArtistsController < ApplicationController
       artists = Artist.all
       Pxv::name_test()
       #return
-    when ArtistsController::MethodEnum::SEARCH
+    when ArtistsController::MethodEnum::METHOD_SEARCH
       #TODO: SQLいんじぇくしょんたいさく？
       artists = Artist.looks(params[:target_col], params[:search_word], params[:match_method])
       @artists_group = index_group_by(artists, prms)
@@ -899,6 +899,12 @@ class ArtistsController < ApplicationController
 
       when DIR_TYPE::SP_VID
         @twt_video_list = TwtVideoList::new()
+
+        screen_name = params[:from]
+        if screen_name
+          h = {}
+          @twt_video_list.video_path_list = @twt_video_list.video_path_list.slice(screen_name)
+        end
       when DIR_TYPE::REG_FILESIZE
         Twt::reg_filesize()
       when DIR_TYPE::DIR_TWEET
@@ -920,8 +926,8 @@ class ArtistsController < ApplicationController
 
         screen_name = params[:from]
         if screen_name
-          h = {}
-          h[screen_name] = twt_url_hash[screen_name]
+          twt_url_hash = twt_url_hash.slice(screen_name)
+          #extract!
         end
 
         #@twt_url_hash = twt_url_hash.sort_by {|k,v| k.downcase}.to_h

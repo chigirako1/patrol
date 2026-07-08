@@ -14,18 +14,15 @@ class TwittersController < ApplicationController
     URL_TXT = 'url txt'
     PATROL = 'patrol'
     STATS = 'stats'
-    SEARCH = "search"
+    MODE_SEARCH = "search"
     FILESIZE = "filesize"
   end
 
   module SORT_BY
-    ID = "id"
+    SORT_ID = "id"
 
-    PRED = "pred"
-    SORT_PRED = PRED
-    SORT_PRED_DESC = PRED
-    
-    PRED_ASC = "pred_asc"#desc?
+    SORT_PRED_DESC = "予測▽順"
+    SORT_PRED_ASC = "予測△順"
 
     R_PRED_ASC = "評価/予測△順"
     R_PRED_DESC = "評価/予測▽順"
@@ -178,7 +175,7 @@ class TwittersController < ApplicationController
       sql_query = "LEFT OUTER JOIN artists ON UPPER(twitters.twtid) = UPPER(artists.twtid)"
     end
     
-    if mode == TwittersController::ModeEnum::SEARCH
+    if mode == TwittersController::ModeEnum::MODE_SEARCH
       target_col = params[:target_col]
       target_col = Twitter::SEARCH_TARGET::AUTO unless target_col
       match_method = params[:match_method]#Twitter::MATCH_METHOD::AUTO
@@ -500,7 +497,7 @@ class TwittersController < ApplicationController
       end
       index_mode_all(twitters, twt_params)
       return
-    when ModeEnum::SEARCH
+    when ModeEnum::MODE_SEARCH
       twitters = index_select_search(twitters, twt_params)
       @twitters_group = twt_group_by(twitters, param_grp_sort_by, param_grp_sort_spec)
       @twitters_total_count = @twitters_group.sum {|k,v| v.count}
@@ -711,7 +708,11 @@ class TwittersController < ApplicationController
     def index_select(twitters, twt_params)
 
       if twt_params.param_status.presence
-        twitters = twitters.select {|x| x.status == twt_params.param_status}
+        if twt_params.param_status == Twitter::TWT_STATUS::STATUS_CHECK
+          twitters = twitters.select {|x| x.update_chk?}
+        else
+          twitters = twitters.select {|x| x.status == twt_params.param_status}
+        end
       end
 
       if twt_params.rating_gt == 0
@@ -1105,7 +1106,7 @@ class TwittersController < ApplicationController
         twitters_wk = twitters_wk.select {|x| x.select_cond_aio(twt_params.pred_cond_gt)}
 
         #case twt_params.sort_by#params[:sort_by]
-        #when SORT_BY::PRED
+        #when SORT_BY::SORT_PRED_DESC
         #  twitters_wk = index_sort(twitters_wk, SORT_BY::RATING)
         #else
           twitters_wk = index_sort(twitters_wk, twt_params)
@@ -1277,11 +1278,11 @@ class TwittersController < ApplicationController
 
     def index_sort(twitters, twt_params)
       case twt_params.sort_by
-      when SORT_BY::ID
+      when SORT_BY::SORT_ID
         twitters = twitters.sort_by {|x| [-x.id]}
       when SORT_BY::SORT_POINT
         twitters = twitters.sort_by {|x| -x.point}
-      when SORT_BY::PRED_ASC
+      when SORT_BY::SORT_PRED_ASC
         twitters = twitters.sort_by {|x| [x.prediction, x.last_access_datetime]}
       when SORT_BY::SORT_ACCESS_M_PRED_DESC
         #twitters = twitters.sort_by {|x| [-(x.last_access_day_num / 30), -x.prediction]}
@@ -1307,7 +1308,7 @@ class TwittersController < ApplicationController
         #twitters = twitters.sort_by {|x| [-(x.last_access_day_num / 7), -x.rating, x.prediction]}
         twitters = twitters.sort_by {|x| [-(x.last_access_day_num / 7), -x.rating_ex, x.prediction]}
       when SORT_BY::R_ACCESS
-        twitters = twitters.sort_by {|x| [-x.rating, (x.last_access_datetime)]}
+        twitters = twitters.sort_by {|x| [-(x.rating||0), (x.last_access_datetime)]}
       when SORT_BY::FILENUM
         twitters = twitters.sort_by {|x| [-(x.filenum||0)]}
       when SORT_BY::FILENUM_ASC
@@ -1321,7 +1322,7 @@ class TwittersController < ApplicationController
 =end
       when SORT_BY::R_FILENUM_ASC
         twitters = twitters.sort_by {|x| [-x.rating, (x.filenum||0) / 25, -x.prediction]}
-      when SORT_BY::PRED
+      when SORT_BY::SORT_PRED_DESC
         twitters = twitters.sort_by {|x| [-x.prediction, x.last_access_datetime]}
       when SORT_BY::R_PRED_ASC
         twitters = twitters.sort_by {|x| [-x.rating, x.prediction]}

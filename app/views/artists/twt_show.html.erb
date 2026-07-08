@@ -1,23 +1,18 @@
+
 <% title = %!@#{@twtid}:画像一覧! %>
 <% provide(:title, title) %>
 
-<h3 id="twt_pic_list">Twt::twt_path_str(<%= link_to_ex "@#{@twtid}", Twt::twt_user_media_url(@twtid) %>)</h3>
+<h3 id="twt_pic_list">Twt::twt_path_str(<%= "@#{@twtid}" %>)</h3>
+
+<%= twitter_link_tag(@twtid) %>
+<%= twitter_info_tag_ex(@twtid) %>
+
+<br />
 
 <% twt_acnt = Twitter.find_by_twtid_ignore_case(@twtid) %>
 <% if twt_acnt == nil %>
     <%= link_to "New Twt", new_twitter_path(twtid: @twtid, status: "TWT巡回") %>
     <br />
-<% else %>
-    twt:<%= twt_acnt.twtname %>[<%= link_to "show", twt_acnt, target: :_blank, rel: "noopener noreferrer" %>]
-    <%#= twt_acnt.last_access_datetime_disp %>
-    <%= twt_acnt.status %>,<%= twt_acnt.drawing_method %>
-    <br />
-
-    <% pxv_acnt = Artist.find_by(pxvid: twt_acnt.pxvid) %>
-    <% if pxv_acnt != nil %>
-        pxv:<%= pxv_acnt.pxvname %> [<%= link_to "show", pxv_acnt, target: :_blank, rel: "noopener noreferrer" %>]
-        <br />
-    <% end %>
 <% end %>
 
 <% pxv_artist = Artist.find_by_twtid_ignore_case(@twtid) %>

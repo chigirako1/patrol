@@ -13,7 +13,7 @@
   検索ワード：「<b><%= search_word %></b>」<br />
 <% end %>
 
-<% if @twitters_group.size == 0 and params[:mode] == TwittersController::ModeEnum::SEARCH %>
+<% if @twitters_group.size == 0 and params[:mode] == TwittersController::ModeEnum::MODE_SEARCH %>
   <% scrn_name = Twt::get_screen_name(search_word) %>
   <% user_exist = Twt::user_exist?(scrn_name) %>
   <% if user_exist %>
@@ -322,7 +322,7 @@
     <% @twt_pic_path_list.each do |filepath| %>
       <%= image_link(filepath) %>
     <% end %>
-  <%# elsif params[:mode] == TwittersController::ModeEnum::SEARCH %>
+  <%# elsif params[:mode] == TwittersController::ModeEnum::MODE_SEARCH %>
   <% else %>
     ファイルヒットせず<br />
   <% end %>
@@ -371,7 +371,7 @@
   <%= form_with url: twitters_path, local: true, method: :get do |f| %>
    
     <%= f.submit("検索", name: nil, class: 'submit-btn') %>
-    <% if params[:mode] == TwittersController::ModeEnum::SEARCH %>
+    <% if params[:mode] == TwittersController::ModeEnum::MODE_SEARCH %>
       <% afocus = true %>
     <% else %>
       <% afocus = false %>
@@ -475,8 +475,8 @@
     <%= f.label :ソート %>
     <%= f.select :sort_by, options_for_select(
         [
-          ["予測降順(▽)", TwittersController::SORT_BY::PRED],
-          ["予測昇順(△)", TwittersController::SORT_BY::PRED_ASC],
+          ["予測降順(▽)", TwittersController::SORT_BY::SORT_PRED_DESC],
+          ["予測昇順(△)", TwittersController::SORT_BY::SORT_PRED_ASC],
           [TwittersController::SORT_BY::R_PRED_DESC],
           [TwittersController::SORT_BY::R_PRED_ASC],
 

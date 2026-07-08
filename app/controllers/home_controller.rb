@@ -191,7 +191,7 @@ class HomeController < ApplicationController
           #force_disp_day: 10,
           grp_sort_by: TwittersController::GRP_SORT::GRP_SORT_SPEC,
           #grp_sort_spec: "{az}::評価{rr}",
-          grp_sort_spec: "{rr}",
+          grp_sort_spec: "{rr}::{p25}",
           sort_by: TwittersController::SORT_BY::M_R_ACCESS_W_PRED_A,#R_ACCESS_W_PRED_D,
           ex_sp: true,
           #step: -3,
@@ -236,7 +236,7 @@ class HomeController < ApplicationController
           #force_disp_day: 10,
           grp_sort_by: TwittersController::GRP_SORT::GRP_SORT_SPEC,
           grp_sort_spec: "{az}::評価{r}",
-          sort_by: TwittersController::SORT_BY::PRED,
+          sort_by: TwittersController::SORT_BY::SORT_PRED_DESC,
           ex_sp: true,
           #step: -3,
           #num_of_times: 4,
@@ -694,25 +694,45 @@ class HomeController < ApplicationController
       },
       { :label => "-", :path => "" },
       { :label => "Tweet url list summary(ai) 今年",
-          :path => tweets_path(
-            #page_title: "Tweets",
-            mode: TweetsController::ModeEnum::URL_LIST_SUMMARY,
-            sort_by: TwittersController::SORT_BY::TODO_CNT,#PRED,
-            #filename: "thismonth",
-            filename: "thisyear 1",
-            #hide_within_days: 15,
-            #created_at: 30,
-            pred: 30,
-            rating: rating_std,
-            todo_cnt: 1,#1,
-            target: Twitter::DRAWING_METHOD::DM_AI,
-          )
+        :path => tweets_path(
+          #page_title: "Tweets",
+          mode: TweetsController::ModeEnum::URL_LIST_SUMMARY,
+          sort_by: TwittersController::SORT_BY::TODO_CNT,#SORT_PRED_DESC,
+          #filename: "thismonth",
+          filename: "thisyear 1",
+          #hide_within_days: 15,
+          #created_at: 30,
+          pred: 30,
+          rating: rating_std,
+          todo_cnt: 1,#1,
+          target: Twitter::DRAWING_METHOD::DM_AI,
+        )
+      },
+      { :label => "#twt状況チェック", :path => "" },
+      { :label => "twt 状況チェック",
+        :path => twitters_path(
+          mode: TwittersController::ModeEnum::MODE_ALL,
+          sort_by: TwittersController::SORT_BY::R_ACCESS,
+          status: Twitter::TWT_STATUS::STATUS_CHECK,
+          target: Twitter::DRAWING_METHOD::DM_AI,
+          grp_sort_by: TwittersController::GRP_SORT::GRP_SORT_SPEC,
+          grp_sort_spec: "{unset}{r}",
+          #no_pxv: true,
+          #rating: 0,
+          #pfilesize: Twt::FILESIZE_THRESHOLD_KB,
+          #hide_within_days: 1,
+          #created_at: 45,
+          select_max: 11,
+          #num_of_disp: 3, #NUM_OF_DISP,
+          #pred: 0,
+          #thumbnail: "t"
+        )
       },
       { :label => "#twt未設定", :path => "" },
       { :label => "twt 未設定 ファイルサイズ大",
         :path => twitters_path(
           mode: TwittersController::ModeEnum::MODE_ALL,
-          sort_by: TwittersController::SORT_BY::PRED,
+          sort_by: TwittersController::SORT_BY::SORT_PRED_DESC,
           grp_sort_by: TwittersController::GRP_SORT::GRP_SORT_SPEC,
           grp_sort_spec: "{unset}{am}月::予測{p5}～|{unset}{aw}週～",
           #no_pxv: true,
@@ -751,7 +771,7 @@ class HomeController < ApplicationController
           mode: TwittersController::ModeEnum::MODE_ALL,
           sort_by: TwittersController::SORT_BY::SORT_POST_DATE_O2N,
           grp_sort_by: TwittersController::GRP_SORT::GRP_SORT_SPEC,
-          grp_sort_spec: "{unset}予測{p5}～|{unset}{aw}週～::全{f20}↑ファイル",
+          grp_sort_spec: "{unset}{aw}週～::予測{p5}～",
           #no_pxv: true,
           rating: 0,
           hide_within_days: 1,
@@ -806,7 +826,7 @@ class HomeController < ApplicationController
       },
       # =====================================
       { :label => "#twt動画🎞️", :path => "" },
-      { :label => "twt(動画🎞️URL)", :path => artists_twt_index_path(dir: ArtistsController::DIR_TYPE::DT_MOV_URL) },
+      { :label => "twt(動画🎞️URLリスト)", :path => artists_twt_index_path(dir: ArtistsController::DIR_TYPE::DT_MOV_URL) },
       { :label => "twt(dir-sp📲 動画🎞️fsチェック)", :path => artists_twt_index_path(dir: ArtistsController::DIR_TYPE::SP_VID) },
       # =====================================
       { :label => "#twtその他", :path => "" },
@@ -1155,7 +1175,7 @@ class HomeController < ApplicationController
           #force_disp_day: 10,
           mode: TwittersController::ModeEnum::ALL_IN_1,
           grp_sort_by: TwittersController::GRP_SORT::GRP_SORT_AUTO,
-          sort_by: TwittersController::SORT_BY::PRED,
+          sort_by: TwittersController::SORT_BY::SORT_PRED_DESC,
           #aio: TwittersController::GRP_SORT::GRP_SORT_ACCESS + "|" + TwittersController::GRP_SORT::GRP_SORT_PRED,
           #step: -3,
           #num_of_times: 4,
@@ -1721,7 +1741,7 @@ class HomeController < ApplicationController
           mode: "patrol",
           group_by: TwittersController::GRP_SORT::GRP_SORT_SPEC,#GRP_SORT_AUTO,
           grp_sort_spec: "{r5}|{w4}週|予測{p25}～::{w}週|評価{r1}",
-          sort_by: TwittersController::SORT_BY::PRED,
+          sort_by: TwittersController::SORT_BY::SORT_PRED_DESC,
           thumbnail: ""
         )
       },
@@ -1760,7 +1780,7 @@ class HomeController < ApplicationController
           num_of_disp: 4,
           pred: 5,
           mode: "hand", 
-          sort_by: TwittersController::SORT_BY::SORT_ACCESS_O2N,#"access",
+          sort_by: TwittersController::SORT_BY::SORT_ACCESS_O2N,
           thumbnail: "t"
         )
       },
@@ -1769,7 +1789,7 @@ class HomeController < ApplicationController
         :path => twitters_path(
           page_title: "未設定 id",
           mode: "id",
-          sort_by: TwittersController::SORT_BY::ID,#"id",
+          sort_by: TwittersController::SORT_BY::SORT_ID,
           no_pxv: true,
           rating: 0,
           hide_within_days: 60,#30,
@@ -1806,7 +1826,7 @@ class HomeController < ApplicationController
           thumbnail: "t"
         )
       },
-      { :label => "Twitter[検索]", :path => twitters_path(page_title: "🔍️検索", mode: TwittersController::ModeEnum::SEARCH, search_word: "", thumbnail: "") },
+      { :label => "Twitter[検索]", :path => twitters_path(page_title: "🔍️検索", mode: TwittersController::ModeEnum::MODE_SEARCH, search_word: "", thumbnail: "") },
       { :label => "-", :path => "" },
       { :label => "Twitter pxv更新なし",
         :path => twitters_path(

@@ -63,7 +63,7 @@ class TweetUrl
                 screen_name = $1
                 tweet_id = $2.to_i
                 if tweet_id_list.include?(tweet_id)
-                    STDERR.puts "重複:#{tweet_id}(@#{screen_name})"
+                    #STDERR.puts "重複:#{tweet_id}(@#{screen_name})"
                     next
                 end
                 tweet_id_list << tweet_id

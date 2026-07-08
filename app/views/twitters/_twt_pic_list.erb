@@ -132,8 +132,9 @@
     <br />
     <%#= link_to("url txtチェック", twitter_path(file_check: 't', picn: 'all', pic_lf: '', corr: '0'), class: 'button') %>
     <%= link_to("url txtチェック", twitter_path(file_check: 't', pic_lf: '', corr: '0'), class: 'button') %>
-    <%= link_to_ex(%!期間チェック!, twitter_path(twitter, refresh: "y", seq_chk: true)) if twitter.twtid %>
+    <%= link_to_ex(%!期間チェック!, twitter_path(twitter, refresh: "y", seq_chk: true)) if twitter.twtid %>|
     <%= link_to_ex(%!viewer!, twitter_path(twitter, refresh: "y", viewer: true)) if twitter.twtid %>
+    [<%= link_to_ex("動画URLリスト", artists_twt_index_path(dir: ArtistsController::DIR_TYPE::DT_MOV_URL, from: @twitter.twtid)) %>]
 
     <% if params[:seq_chk] == "true" %>
         <h2>期間チェック</h2>

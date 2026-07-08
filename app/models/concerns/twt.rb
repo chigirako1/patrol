@@ -279,8 +279,13 @@ module Twt
         "#{screen_name} #{tweet_id} #{p_number} "
     end
 
+    def self.sp_dirs_group(sp_dirs, to_be_obtain_list)
+        sp_dirs.group_by {|x| x.group_key(to_be_obtain_list)}.sort_by {|k,v| k}.to_h
+    end
+
     def self.parse_dirname(dirpath)
-        dirname = File.basename dirpath
+        #dirname = File.basename(dirpath).gsub(/ +/, "_")
+        dirname = File.basename(dirpath)
         if dirname =~ TWT_AT_SCREEN_NAME_RGX
             screen_name = $1
             twt = Twitter.find_by_twtid_ignore_case(screen_name)
@@ -301,10 +306,6 @@ module Twt
         SpDir.new(dirpath, dirname, screen_name, twt, latest_date, false, file_cnt)
     end
 
-    def self.sp_dirs_group(sp_dirs, to_be_obtain_list)
-        sp_dirs.group_by {|x| x.group_key(to_be_obtain_list)}.sort_by {|k,v| k}.to_h
-    end
-
     def self.sp_dirs()
         path_list = Util::glob("#{TWT_SP_DIR_PATH}")
         tmp = path_list.map {|path| parse_dirname path}
@@ -313,7 +314,7 @@ module Twt
         #STDERR.puts chk_screen_name_list
 
         tmp.map {|x| x.sp_chk = true if chk_screen_name_list.include? x.screen_name}
-        STDERR.puts tmp.size
+        STDERR.puts %!sp_dirs:#{tmp.size}!
 
         tmp.sort_by {|x|
             if x.twt
@@ -1224,14 +1225,13 @@ module Twt
 
         freq_n = 300
         month_v = [dayn / 30, 9].min
-        val = Util::format_num(pred, 15).to_s + "件"
+        pred_val = Util::format_num(pred, 15).to_s + "件"
 
-        if !(twt.twtname.presence)
-            #r_s = Util::format_num(twt.rating, 1)
+        if !(twt.twtname.presence) and (twt.rating||0) >= 84
             if twt.update_frequency >= freq_n
-                return "099.名前未設定[#{val}](高頻度)"
+                return "099.名前未設定[#{pred_val}](高頻度)"
             else
-                return "910.名前未設定[#{val}]"
+                return "910.名前未設定[#{pred_val}]"
             end
         end
 
@@ -1239,18 +1239,21 @@ module Twt
         if (chk or Tweet.has_acquisition_schedule?(twt.twtid)) and dayn > 0
             #val = Util::format_num(twt.rating, 1)
             if twt.update_frequency >= freq_n
-                return "020.取得対象物件あり[#{val}](高頻度)"
+                return "020.取得対象物件あり[#{pred_val}](高頻度)"
             else
-                return "99#{month_v}.取得対象物件あり[#{val}]"
+                return "99#{month_v}.取得対象物件あり[#{pred_val}]"
             end
         end
 
         if Util::get_date_delta(twt.created_at) <= 30
             #r_s = Util::format_num(twt.rating, 1)
             if twt.update_frequency >= freq_n
-                return "055.最近登録[#{val}](高頻度)"
+                return "055.最近登録[#{pred_val}](高頻度)"
             else
-                return "955.最近登録[#{val}]"
+                if dayn < 7 and pred < 10
+                else
+                    return "755.最近登録[#{pred_val}]"
+                end
             end
         end
 
@@ -1263,13 +1266,17 @@ module Twt
             return "700.低優先度(#{twt.rating})"
         end
 
+        r_u = 1
+        r_s = Util::format_num(twt.rating, r_u)
         if twt.update_frequency >= freq_n
             if twt.rating >= 86
                 p_s = Util::format_num(pred, 25)
-                return "011.前日/当日分(#{p_s}件)"
+                if pred < 25
+                    return "011.前日/当日分[#{r_s}]"
+                else
+                    return "011.前日/当日分(#{p_s}件)"
+                end
             elsif twt.rating >= 84
-                r_u = 1
-                r_s = Util::format_num(twt.rating, r_u)
                 week_n = Util::format_num(dayn / 7, 1)
                 return "010.[#{week_n}w]前日/当日分:#{r_s}"
             end
@@ -1294,12 +1301,12 @@ module Twt
         r_s = Util::format_num(twt.rating, 1)
 
         if month_v > 1
-            cate_no = 899
+            cate_no = 890
             p_s = Util::format_num(pred, 50)
-            %!#{cate_no}.#{month_n}月(#{r_s})|#{p_s}!
+            %!#{cate_no}.#{month_n}ヵ月(#{r_s})|#{p_s}!
         elsif month_v > 0 and twt.rating > 86
             cate_no = 888
-            %!#{cate_no}.#{month_n}月!
+            %!#{cate_no}.#{month_n}ヵ月!
         else
             if twt.rating >= 87 and pred >= 50
                 cate_no = "866"
@@ -1312,7 +1319,7 @@ module Twt
             pred_i = 20
             p_s = Util::format_num(pred, pred_i)
             #%!#{cate_no}.P:#{p_s}|#{month_n}月|#{r_s}↑!
-            %!#{cate_no}.#{month_n}月|#{r_s}↑!
+            %!#{cate_no}.#{month_n}ヵ月|#{r_s}↑!
             #%!#{cate_no}.#{r_s}↑|#{month_n}月!
         end
     end
@@ -1743,7 +1750,11 @@ module Twt
             end
 
             if (self.file_cnt||0) <= 3
-                file_s = "ファイル少ない"
+                if target_s == ""
+                    file_s = "★注意★対象なのにファイル少ない"
+                else
+                    file_s = "ファイル少ない"
+                end
             end
 
             %!#{todo_s}#{today_s}:#{target_s}:#{hosoku}:#{file_s}:#{name_s}!

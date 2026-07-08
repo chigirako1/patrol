@@ -991,10 +991,10 @@
                 <% end %>
             <% else %>
                 <%= idx %>."<%= elem.dirname %>"
-                <% url = twitters_path(mode: TwittersController::ModeEnum::SEARCH, search_word: elem.dirname, grp_sort_by: TwittersController::GRP_SORT::GRP_SORT_SPEC, grp_sort_spec: "{dm}::{r}") %>
+                <% url = twitters_path(mode: TwittersController::ModeEnum::MODE_SEARCH, search_word: elem.dirname, grp_sort_by: TwittersController::GRP_SORT::GRP_SORT_SPEC, grp_sort_spec: "{dm}::{r}") %>
                 [<%= link_to_ex("■検索■", url) %>]
 
-                <% result = Twitter.search_records(elem.dirname, Twitter::DRAWING_METHOD::DM_AI) %>
+                <% result = Twitter.search_records(elem.dirname.gsub(/ +/, "_"), Twitter::DRAWING_METHOD::DM_AI) %>
                 <% if result.size > 0 and result.size < 3 %>
                     <% result.each do |twt| %>
                         <br />
@@ -1111,7 +1111,7 @@
 
     <h2>s</h2>
     <% find_word_list.each do |word| %>
-        <% s_url = twitters_path(mode: TwittersController::ModeEnum::SEARCH, search_word: word, grp_sort_by: TwittersController::GRP_SORT::GRP_SORT_SPEC, grp_sort_spec: "{status}::評価{r}") %>
+        <% s_url = twitters_path(mode: TwittersController::ModeEnum::MODE_SEARCH, search_word: word, grp_sort_by: TwittersController::GRP_SORT::GRP_SORT_SPEC, grp_sort_spec: "{status}::評価{r}") %>
         →[<%= link_to_ex("■検索■", s_url) %>]<%= word %>
         <br />
     <% end %>
@@ -1186,32 +1186,6 @@
     <% end %>
 <% end %>
 
-<% if @twt_url_hash and @twt_url_hash.to_a.size > 0 %>
-    <h1>@twt_url_hash(<%= @twt_url_hash.size %>)</h1>
-    
-    <% @twt_url_hash.each do |k,v| %>
-        <h2><%= k %>(<%= v.size %>)</h2>
-        <%= twitter_info_tag_ex(k) %>
-        <hr />
-        <% v.sort.uniq.reverse.each do |x| %>
-
-            <%# tweet = Tweet.find_by(tweet_id: x.tweet_id) %>
-            <% tweet = x.record %>
-            <% if tweet %>
-                ■<%= tweet.status %>
-                <%= x %>
-                <% if x.screen_name == Twt::TWT_USER_I %>
-                    <%= tweet.screen_name %>
-                <% else %>
-                <% end %>
-                [<%= link_to_ex "■tweet■", tweet %>]
-            <% else %>
-
-                <% url = new_tweet_path(tweet_id: x.tweet_id, screen_name: x.screen_name, status: Tweet::StatusEnum::VIDEO_SAVED) %>
-                [<%= link_to_ex "■New tweet■", url %>]
-
-                <% url = Twt::twt_tweet_url(x.screen_name, x.tweet_id) %>
-                <%= link_to_ex(x.tweet_id, url) %>
     <%
 =begin %>
                 (<%= smart_date Twt::get_timestamp(x.tweet_id) %>)
@@ -1224,8 +1198,52 @@
                 <% end %>
     <%
 =end %>
+
+<% if @twt_url_hash and @twt_url_hash.to_a.size > 0 %>
+    <% if params[:list].presence and params[:list] == "open" %>
+        <% list_open = true %>
+    <% else %>
+        <% list_open = false %>
+    <% end %>
+
+    <h1>@twt_url_hash(<%= @twt_url_hash.size %>)</h1>
+    
+    <% if list_open %>
+        <% @twt_url_hash.each do |k,v| %>
+            <h2><%= k %>(<%= v.size %>)</h2>
+            <%= twitter_info_tag_ex(k) %>
+            <hr />
+            <% v.sort.uniq.reverse.each do |x| %>
+
+                <%# tweet = Tweet.find_by(tweet_id: x.tweet_id) %>
+                <% tweet = x.record %>
+                <% if tweet %>
+                    ■<%= tweet.status %>
+                    <%= x %>
+                    <% if x.screen_name == Twt::TWT_USER_I %>
+                        <%= tweet.screen_name %>
+                    <% else %>
+                    <% end %>
+                    [<%= link_to_ex "■tweet■", tweet %>]
+                <% else %>
+
+                    <% url = new_tweet_path(tweet_id: x.tweet_id, screen_name: x.screen_name, status: Tweet::StatusEnum::VIDEO_SAVED) %>
+                    [<%= link_to_ex "■New tweet■", url %>]
+
+                    <% url = Twt::twt_tweet_url(x.screen_name, x.tweet_id) %>
+                    <%= link_to_ex(x.tweet_id, url) %>
+                <% end %>
+                <br />
             <% end %>
+        <% end %>
+    <% else %>
+        <!-- ユーザーリストのみ -->
+        <% @twt_url_hash.each do |k,v| %>
+            <h2><%= k %>(<%= v.size %>)</h2>
+            <%= twitter_info_tag_ex(k) %>
             <br />
+            [<%= link_to_ex("動画URLリスト", artists_twt_index_path(dir: ArtistsController::DIR_TYPE::DT_MOV_URL, from: k, list: "open")) %>]
+            [<%= link_to_ex("動画ファイルリスト", artists_twt_index_path(dir: ArtistsController::DIR_TYPE::SP_VID, from: k)) %>]
         <% end %>
     <% end %>
 <% end %>

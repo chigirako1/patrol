@@ -23,6 +23,8 @@ class Twitter < ApplicationRecord
         STATUS_WAITING = "フォロー許可待ち"#承認？
         STATUS_ANOTHER = "別アカウントに移行"
         STATUS_SCREEN_NAME_CHANGED = "アカウントID変更"
+
+        STATUS_CHECK = "状況チェック"
     end
 
     module TWT_VISIBILITY
@@ -619,7 +621,7 @@ class Twitter < ApplicationRecord
             TWT_STATUS::STATUS_SCREEN_NAME_CHANGED => false,
         }
 
-        if pat[status]
+        if pat[self.status]
             true
         else
             false
@@ -1235,7 +1237,7 @@ class Twitter < ApplicationRecord
         case self.status
         when Twitter::TWT_STATUS::STATUS_PATROL
             case sort_by
-            when TwittersController::SORT_BY::PRED
+            when TwittersController::SORT_BY::SORT_PRED_DESC
                 gkey = ""
             when TwittersController::SORT_BY::SORT_ACCESS_O2N
                 gkey = ""

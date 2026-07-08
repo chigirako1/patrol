@@ -150,7 +150,7 @@ module TwittersHelper
         end
 
         prm_page_title = params[:page_title]
-        if params[:mode] == TwittersController::ModeEnum::SEARCH
+        if params[:mode] == TwittersController::ModeEnum::MODE_SEARCH
             page_title = "#{prm_page_title}「#{params[:search_word]}」(#{cnt}件)"
         elsif twitters_total_count < 0
             page_title = "#{prm_page_title}"
