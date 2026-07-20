@@ -319,7 +319,7 @@
 <% if @twt_pic_path_list %>
   <h2>ファイル検索結果</h2>
   <% if @twt_pic_path_list.size > 0 %>
-    <% @twt_pic_path_list.each do |filepath| %>
+    <% @twt_pic_path_list.reverse.each do |filepath| %>
       <%= image_link(filepath) %>
     <% end %>
   <%# elsif params[:mode] == TwittersController::ModeEnum::MODE_SEARCH %>
@@ -496,7 +496,7 @@
           [TwittersController::SORT_BY::SORT_CREATE],
           [TwittersController::SORT_BY::SORT_REGISTERED_DESC],
           [TwittersController::SORT_BY::R_SORT_REGISTERED_DESC],
-          [TwittersController::SORT_BY::FILENUM],
+          [TwittersController::SORT_BY::FILENUM_DSC],
           [TwittersController::SORT_BY::FILENUM_ASC],
           [TwittersController::SORT_BY::R_FILENUM_ASC],
           [TwittersController::SORT_BY::SORT_POINT],

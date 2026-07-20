@@ -19,7 +19,7 @@ class HomeController < ApplicationController
       },
       { :label => "pxv AI 優先",
         :path => artists_path(
-            #file: ArtistsController::MethodEnum::ALL_IN_1,
+            #file: ArtistsController::MethodEnum::MODE_ALL_IN_1,
             #page_title: "",
             exclude_ai: "",
             ai: true,
@@ -38,7 +38,7 @@ class HomeController < ApplicationController
       },
       { :label => "pxv AI アクセス日順",
         :path => artists_path(
-            #file: ArtistsController::MethodEnum::ALL_IN_1,
+            #file: ArtistsController::MethodEnum::MODE_ALL_IN_1,
             #page_title: "",
             exclude_ai: "",
             ai: true,
@@ -61,7 +61,7 @@ class HomeController < ApplicationController
             page_title: "pxv 未設定 更新数[多]予測", 
             #sort_by: "id",
             sort_by: "予測▽",
-            group_by: ArtistsController::GROUP_TYPE::GROUP_SPEC,#FILENUM,
+            group_by: ArtistsController::GROUP_TYPE::GROUP_SPEC,
             group_spec: "{am}ヶ月({aw}週)||ファイル{f10}",
             #exclude_ai: "true",
             #status: "「長期更新なし」を除外",
@@ -81,7 +81,7 @@ class HomeController < ApplicationController
       { :label => "#twt", :path => "" },
       { :label => "#{ApplicationHelper::DM_AI_ICON}優先(アクセス日順)",
         :path => twitters_path(
-          mode: TwittersController::ModeEnum::HIGH_PRIORITY,
+          mode: TwittersController::ModeEnum::MODE_HIGH_PRIORITY,
           #target: "AI",
           target: Twitter::DRAWING_METHOD::DM_AI,
           rating: 88,
@@ -103,7 +103,7 @@ class HomeController < ApplicationController
       },
       { :label => "#{ApplicationHelper::DM_AI_ICON}優先(アクセス日順)all",
         :path => twitters_path(
-          mode: TwittersController::ModeEnum::HIGH_PRIORITY,
+          mode: TwittersController::ModeEnum::MODE_HIGH_PRIORITY,
           #target: "AI",
           target: Twitter::DRAWING_METHOD::DM_AI,
           rating: 86,
@@ -126,7 +126,7 @@ class HomeController < ApplicationController
       },
       { :label => "#{ApplicationHelper::DM_AI_ICON}優先(評価・予測順)",
         :path => twitters_path(
-          mode: TwittersController::ModeEnum::HIGH_PRIORITY,
+          mode: TwittersController::ModeEnum::MODE_HIGH_PRIORITY,
           target: Twitter::DRAWING_METHOD::DM_AI,
           #rating: 85,
           select_max: 22,
@@ -143,7 +143,7 @@ class HomeController < ApplicationController
       },
       { :label => "#{ApplicationHelper::DM_AI_ICON}優先(評価・アクセス日順)",
         :path => twitters_path(
-          mode: TwittersController::ModeEnum::HIGH_PRIORITY,
+          mode: TwittersController::ModeEnum::MODE_HIGH_PRIORITY,
           target: Twitter::DRAWING_METHOD::DM_AI,
           select_max: 11,
           num_of_disp: 10,
@@ -157,7 +157,7 @@ class HomeController < ApplicationController
       },
       { :label => "#{ApplicationHelper::DM_AI_ICON}優先tmp",
         :path => twitters_path(
-          mode: TwittersController::ModeEnum::HIGH_PRIORITY,
+          mode: TwittersController::ModeEnum::MODE_HIGH_PRIORITY,
           #target: "AI",
           target: Twitter::DRAWING_METHOD::DM_AI,
           rating: 88,
@@ -179,7 +179,7 @@ class HomeController < ApplicationController
       { :label => "-", :path => "" },#------------------
       { :label => "#{ApplicationHelper::DM_AI_ICON}優先|アクセス日順(非表示日数指定)87",
         :path => twitters_path(
-          mode: TwittersController::ModeEnum::SPEC_NON_DISP,
+          mode: TwittersController::ModeEnum::MODE_SPEC_NON_DISP,
           #target: "AI",
           target: Twitter::DRAWING_METHOD::DM_AI,
           rating: 87,
@@ -202,7 +202,7 @@ class HomeController < ApplicationController
       },
       { :label => "#{ApplicationHelper::DM_AI_ICON}優先|アクセス日順(非表示日数指定)85",
         :path => twitters_path(
-          mode: TwittersController::ModeEnum::SPEC_NON_DISP,
+          mode: TwittersController::ModeEnum::MODE_SPEC_NON_DISP,
           #target: "AI",
           target: Twitter::DRAWING_METHOD::DM_AI,
           rating: 85,
@@ -224,7 +224,7 @@ class HomeController < ApplicationController
       },
       { :label => "#{ApplicationHelper::DM_AI_ICON}優先/予測順(非表示日数指定)",
         :path => twitters_path(
-          mode: TwittersController::ModeEnum::SPEC_NON_DISP,
+          mode: TwittersController::ModeEnum::MODE_SPEC_NON_DISP,
           #target: "AI",
           target: Twitter::DRAWING_METHOD::DM_AI,
           rating: 85,
@@ -249,6 +249,7 @@ class HomeController < ApplicationController
         :path => twitters_path(
           #page_title: "all",
           mode: TwittersController::ModeEnum::MODE_ALL,
+          status: Twitter::TWT_STATUS::STATUS_PATROL,
           target: Twitter::DRAWING_METHOD::DM_AI,
           sort_by: TwittersController::SORT_BY::FILENUM_ASC,
           grp_sort_by: TwittersController::GRP_SORT::GRP_SORT_SPEC,
@@ -269,6 +270,7 @@ class HomeController < ApplicationController
         :path => twitters_path(
           #page_title: "all",
           mode: TwittersController::ModeEnum::MODE_ALL,
+          status: Twitter::TWT_STATUS::STATUS_PATROL,
           target: Twitter::DRAWING_METHOD::DM_AI,
           sort_by: TwittersController::SORT_BY::FILENUM_ASC,
           grp_sort_by: TwittersController::GRP_SORT::GRP_SORT_SPEC,
@@ -286,6 +288,7 @@ class HomeController < ApplicationController
         :path => twitters_path(
           #page_title: "all",
           mode: TwittersController::ModeEnum::MODE_ALL,
+          status: Twitter::TWT_STATUS::STATUS_PATROL,
           target: Twitter::DRAWING_METHOD::DM_AI,
           sort_by: TwittersController::SORT_BY::R_FILENUM_ASC,
           grp_sort_by: TwittersController::GRP_SORT::GRP_SORT_SPEC,
@@ -319,36 +322,19 @@ class HomeController < ApplicationController
           thumbnail: ""
         )
       },
-      { :label => "#{ApplicationHelper::DM_AI_ICON}評価/予測順(newcomer)",
+      { :label => "#{ApplicationHelper::DM_AI_ICON}評価/予測数▽順(新)",
         :path => twitters_path(
           #page_title: "all",
           mode: TwittersController::ModeEnum::MODE_ALL,
           target: Twitter::DRAWING_METHOD::DM_AI,
           sort_by: TwittersController::SORT_BY::R_PRED_DESC,
           grp_sort_by: TwittersController::GRP_SORT::GRP_SORT_SPEC,
-          grp_sort_spec: "{qq450}評価{r1}::予測{p10}～|{m}ヶ月({w}週)～",
+          #grp_sort_spec: "{qq450}評価{r}::予測{p10}～|{m}ヶ月({w}週)～",
+          grp_sort_spec: "評価{r}::予測{p10}～|{m}ヶ月({w}週)～",
           created_at: 60,
           rating: 84,
-          hide_within_days: 3,
-          pred: 22,
-          select_max: 11,
-          #num_of_disp: 3,
-          #ul_freq: -500,
-          ex_sp: true,
-          thumbnail: ""
-        )
-      },
-      { :label => "#{ApplicationHelper::DM_AI_ICON}評価/登録日順(新参)",
-        :path => twitters_path(
-          #page_title: "all",
-          mode: TwittersController::ModeEnum::MODE_ALL,
-          target: Twitter::DRAWING_METHOD::DM_AI,
-          sort_by: TwittersController::SORT_BY::SORT_REGISTERED_DESC,#SORT_CREATE,
-          grp_sort_by: TwittersController::GRP_SORT::GRP_SORT_SPEC,
-          grp_sort_spec: "{r1}({cw})::予測{p10}～|{m}ヶ月({w}週)～",
-          created_at: 60,
-          rating: 84,
-          #hide_within_days: 7,
+          cond_or: true,
+          hide_within_days: 14,
           pred: 22,
           select_max: 11,
           #num_of_disp: 3,
@@ -593,7 +579,7 @@ class HomeController < ApplicationController
         :path => twitters_path(
           #page_title: "all",
           mode: TwittersController::ModeEnum::MODE_ALL,
-          filename: "<tweet>",
+          filename: TwittersController::FileEnum::FILE_TWEET, #"<tweet>",
           target: Twitter::DRAWING_METHOD::DM_AI,
           sort_by: TwittersController::SORT_BY::SORT_ACCESS_O2N,
           grp_sort_by: TwittersController::GRP_SORT::GRP_SORT_SPEC,
@@ -771,7 +757,7 @@ class HomeController < ApplicationController
           mode: TwittersController::ModeEnum::MODE_ALL,
           sort_by: TwittersController::SORT_BY::SORT_POST_DATE_O2N,
           grp_sort_by: TwittersController::GRP_SORT::GRP_SORT_SPEC,
-          grp_sort_spec: "{unset}{aw}週～::予測{p5}～",
+          grp_sort_spec: "{unset}{pw}週～::予測{p5}～",
           #no_pxv: true,
           rating: 0,
           hide_within_days: 1,
@@ -779,6 +765,24 @@ class HomeController < ApplicationController
           select_max: 9,
           #num_of_disp: 3, #NUM_OF_DISP,
           #pred: 0,
+          target: "",
+          thumbnail: "t"
+        )
+      },
+      { :label => "twt 未設定 ファイル数△昇順",
+        :path => twitters_path(
+          #page_title: "未設定 id",
+          mode: TwittersController::ModeEnum::MODE_ALL,#"id",
+          sort_by: TwittersController::SORT_BY::FILENUM_ASC,
+          grp_sort_by: TwittersController::GRP_SORT::GRP_SORT_SPEC,
+          grp_sort_spec: "({w}週)～|{p5}件～",
+          #no_pxv: true,
+          rating: 0,
+          pfilenum: -6,
+          hide_within_days: 1,
+          created_at: 90,
+          num_of_disp: NUM_OF_DISP,
+          select_max: 9,
           target: "",
           thumbnail: "t"
         )
@@ -808,8 +812,7 @@ class HomeController < ApplicationController
         :path => twitters_path(
           #page_title: "未設定 id",
           mode: TwittersController::ModeEnum::MODE_ALL,#"id",
-          sort_by: TwittersController::SORT_BY::FILENUM,
-          #grp_sort_by: TwittersController::GRP_SORT::GRP_SORT_PRED_DESC,
+          sort_by: TwittersController::SORT_BY::FILENUM_ASC,
           grp_sort_by: TwittersController::GRP_SORT::GRP_SORT_SPEC,
           grp_sort_spec: "({w}週)～|{p5}件～",
           #no_pxv: true,
@@ -825,16 +828,59 @@ class HomeController < ApplicationController
         )
       },
       # =====================================
-      { :label => "#twt動画🎞️", :path => "" },
-      { :label => "twt(動画🎞️URLリスト)", :path => artists_twt_index_path(dir: ArtistsController::DIR_TYPE::DT_MOV_URL) },
-      { :label => "twt(dir-sp📲 動画🎞️fsチェック)", :path => artists_twt_index_path(dir: ArtistsController::DIR_TYPE::SP_VID) },
       # =====================================
       { :label => "#twtその他", :path => "" },
       { :label => "twt(dir-sp📲 fsチェック)", :path => artists_twt_index_path(dir: ArtistsController::DIR_TYPE::SMARTPHONE) },
       { :label => "twt(dir-archive fsチェック)", :path => artists_twt_index_path(dir: ArtistsController::DIR_TYPE::ARCHIVE_CHECK) },
       { :label => "-", :path => "" },
       { :label => "twt(dir-tweet)", :path => artists_twt_index_path(dir: ArtistsController::DIR_TYPE::DIR_TWEET) },
+      { :label => "-", :path => "" },
+      { :label => "twt AI sp_chk",
+        :path => twitters_path(
+          #page_title: "all",
+          mode: TwittersController::ModeEnum::MODE_ALL,
+          filename: TwittersController::FileEnum::FILE_SP_CHK,
+          target: Twitter::DRAWING_METHOD::DM_AI,
+          sort_by: TwittersController::SORT_BY::SORT_ACCESS_O2N,
+          grp_sort_by: TwittersController::GRP_SORT::GRP_SORT_SPEC,
+          grp_sort_spec: "{r}",
+          #rating: 86,
+          #hide_within_days: 7,
+          select_max: 50,
+          #num_of_disp: 3,
+          #ex_sp: true,
+          #pred: 0,
+          thumbnail: ""
+        )
+      },
+      { :label => "twt AI vid_chk",
+        :path => twitters_path(
+          #page_title: "all",
+          mode: TwittersController::ModeEnum::MODE_ALL,
+          filename: TwittersController::FileEnum::FILE_VID_CHK,
+          target: Twitter::DRAWING_METHOD::DM_AI,
+          sort_by: TwittersController::SORT_BY::SORT_ACCESS_O2N,
+          grp_sort_by: TwittersController::GRP_SORT::GRP_SORT_SPEC,
+          grp_sort_spec: "{rr}",
+          rating: 55,
+          #hide_within_days: 7,
+          #select_max: 50,
+          #num_of_disp: 3,
+          #ex_sp: true,
+          #pred: 0,
+          thumbnail: ""
+        )
+      },
 
+      # =====================================
+      # 
+      # =====================================
+      # =====================================
+      { :label => "twt動画🎞️", :path => "" },
+      # ----------------------------
+      { :label => "#twt動画🎞️", :path => "" },
+      { :label => "twt(動画🎞️URLリスト)", :path => artists_twt_index_path(dir: ArtistsController::DIR_TYPE::DT_MOV_URL) },
+      { :label => "twt(dir-sp📲 動画🎞️fsチェック)", :path => artists_twt_index_path(dir: ArtistsController::DIR_TYPE::SP_VID) },
       # =====================================
       # 
       # =====================================
@@ -864,7 +910,7 @@ class HomeController < ApplicationController
       { :label => "Artist::stats 📲 動画🎞️", :path => artists_stats_index_path(target: "video") },
       # ----------------------------
       { :label => "url file", :path => "" },
-      { :label => "最新ファイル 全",
+      { :label => "最新ファイル 全1(アクセス日順)",
           :path => artists_twt_index_path(
             filename: "latest",
             #hide_day: 90,
@@ -872,10 +918,7 @@ class HomeController < ApplicationController
             #show_times: 2,
             #pred: 5,
             target:"twt,twt既知,twt未知,known_pxv,unknown_pxv",
-            #grp_sort_spec: "{p40}|{az}#{Twitter::TWT_H_SEPARATOR}{p10}",
-            #grp_sort_spec: "{r2}|{p40}|{az}#{Twitter::TWT_H_SEPARATOR}{p10}",
-            #grp_sort_spec: "{r5}|{p30}|{az}#{Twitter::TWT_H_SEPARATOR}{p10}",
-            grp_sort_spec: "{az}|{r}#{Twitter::TWT_H_SEPARATOR}{p15}",
+            grp_sort_spec: "{az}|{p15}#{Twitter::TWT_H_SEPARATOR}{r}",
           )
       },
       { :label => "最新ファイル 全2(予測数順)",
@@ -887,6 +930,17 @@ class HomeController < ApplicationController
             #pred: 5,
             target:"twt,twt既知,twt未知,known_pxv,unknown_pxv",
             grp_sort_spec: "{p15}↑|{az}#{Twitter::TWT_H_SEPARATOR}{r}",
+          )
+      },
+      { :label => "最新ファイル 全3(優先度順)",
+          :path => artists_twt_index_path(
+            filename: "latest",
+            #hide_day: 90,
+            rating: rating_std,
+            #show_times: 2,
+            #pred: 5,
+            target:"twt,twt既知,twt未知,known_pxv,unknown_pxv",
+            grp_sort_spec: "{p30}|{r}#{Twitter::TWT_H_SEPARATOR}{az}|{p15}",
           )
       },
       { :label => "今月ファイル ",
@@ -1151,7 +1205,7 @@ class HomeController < ApplicationController
           hide_within_days: 5,
           num_of_disp: 5,
           #force_disp_day: 10,
-          mode: TwittersController::ModeEnum::ALL_IN_1,
+          mode: TwittersController::ModeEnum::MODE_ALL_IN_1,
           grp_sort_by: TwittersController::GRP_SORT::GRP_SORT_SPEC,
           grp_sort_spec: "{f}～|{w4}週～|予測{p25}～::{w}週|評価{r1}",#{r5}|{w4}週|予測{p25}～::{w}週|評価{r1}",#"予測{p25}::{w}週|評価{r1}",#{w}週|評価{r1}::予測{p50}",#"評価{r1}::{w}週|予測{p50}",#登録{c3}ヶ月|予測{p50}～::評価{r10}～|{w}週～
           sort_by: TwittersController::SORT_BY::SORT_ACCESS_O2N, #TwittersController::SORT_BY::RATING,
@@ -1173,7 +1227,7 @@ class HomeController < ApplicationController
           num_of_disp: 5,
           pred: 55,
           #force_disp_day: 10,
-          mode: TwittersController::ModeEnum::ALL_IN_1,
+          mode: TwittersController::ModeEnum::MODE_ALL_IN_1,
           grp_sort_by: TwittersController::GRP_SORT::GRP_SORT_AUTO,
           sort_by: TwittersController::SORT_BY::SORT_PRED_DESC,
           #aio: TwittersController::GRP_SORT::GRP_SORT_ACCESS + "|" + TwittersController::GRP_SORT::GRP_SORT_PRED,
@@ -1195,7 +1249,7 @@ class HomeController < ApplicationController
           created_at: 180,
           #pred: 5,
           #force_disp_day: 10,
-          mode: TwittersController::ModeEnum::ALL_IN_1,
+          mode: TwittersController::ModeEnum::MODE_ALL_IN_1,
           sort_by: TwittersController::SORT_BY::SORT_ACCESS_O2N,
           grp_sort_by: TwittersController::GRP_SORT::GRP_SORT_REGISTERED,
           #aio: TwittersController::GRP_SORT::GRP_SORT_ACCESS + "|" + TwittersController::GRP_SORT::GRP_SORT_PRED,
@@ -1217,7 +1271,7 @@ class HomeController < ApplicationController
           num_of_disp: 5,
           pred: 5,
           #force_disp_day: 10,
-          mode: TwittersController::ModeEnum::ALL_IN_1,
+          mode: TwittersController::ModeEnum::MODE_ALL_IN_1,
           #aio: TwittersController::GRP_SORT::GRP_SORT_ACCESS + "|" + TwittersController::GRP_SORT::GRP_SORT_PRED,
           #step: -3,
           #num_of_times: 4,
@@ -1231,7 +1285,7 @@ class HomeController < ApplicationController
       { :label => "-", :path => "" },
       { :label => "🅿️AI/all in 1 95",
           :path => artists_path(
-            file: ArtistsController::MethodEnum::ALL_IN_1,
+            file: ArtistsController::MethodEnum::MODE_ALL_IN_1,
             #page_title: "",
             exclude_ai: "",
             ai: true,
@@ -1250,7 +1304,7 @@ class HomeController < ApplicationController
       },
       { :label => "🅿️AI/all in 1 80",
           :path => artists_path(
-            file: ArtistsController::MethodEnum::ALL_IN_1,
+            file: ArtistsController::MethodEnum::MODE_ALL_IN_1,
             #page_title: "",
             exclude_ai: "",
             ai: true,
@@ -1270,7 +1324,7 @@ class HomeController < ApplicationController
       { :label => "-", :path => "" },
       { :label => "🅿️手/all in 1 85",
           :path => artists_path(
-            file: ArtistsController::MethodEnum::ALL_IN_1,
+            file: ArtistsController::MethodEnum::MODE_ALL_IN_1,
             #page_title: "",
             exclude_ai: "true",
             #ai: true,
@@ -1290,7 +1344,7 @@ class HomeController < ApplicationController
       { :label => "Twitter url list",
           :path => twitters_path(
             #page_title: "url list 80",
-            mode: TwittersController::ModeEnum::FILE,
+            mode: TwittersController::ModeEnum::MODE_FILE,
             todo_cnt: 0,
             filename: "all",
             rating: 85,
@@ -1304,8 +1358,8 @@ class HomeController < ApplicationController
       { :label => "Twitter url list [AI]",
           :path => twitters_path(
             #page_title: "url list 80",
-            mode: TwittersController::ModeEnum::FILE,
-            todo_cnt: 1,#0,
+            mode: TwittersController::ModeEnum::MODE_FILE,
+            #todo_cnt: 1,#0,
             #target: "AI",
             target: Twitter::DRAWING_METHOD::DM_AI,
             filename: "thismonth",
@@ -1370,7 +1424,7 @@ class HomeController < ApplicationController
           num_of_disp: 5,
           #pred: 5,
           #force_disp_day: 10,
-          mode: TwittersController::ModeEnum::ALL_IN_ONE,
+          mode: TwittersController::ModeEnum::MODE_ALL_IN_ONE,
           step: 1,
           num_of_times: 1,
           ex_pxv: false,
@@ -1387,7 +1441,7 @@ class HomeController < ApplicationController
           num_of_disp: 3,
           #pred: 5,
           #force_disp_day: 10,
-          mode: TwittersController::ModeEnum::ALL_IN_ONE,
+          mode: TwittersController::ModeEnum::MODE_ALL_IN_ONE,
           aio: TwittersController::GRP_SORT::GRP_SORT_ACCESS + "|" + TwittersController::GRP_SORT::GRP_SORT_PRED,
           step: -3,
           num_of_times: 4,
@@ -1405,7 +1459,7 @@ class HomeController < ApplicationController
           num_of_disp: 5,
           #pred: 5,
           #force_disp_day: 10,
-          mode: TwittersController::ModeEnum::ALL_IN_ONE,
+          mode: TwittersController::ModeEnum::MODE_ALL_IN_ONE,
           step: -5,
           num_of_times: 2,
           ex_pxv: false,
@@ -1422,7 +1476,7 @@ class HomeController < ApplicationController
           num_of_disp: 6,
           #pred: 5,
           #force_disp_day: 10,
-          mode: TwittersController::ModeEnum::ALL_IN_ONE,
+          mode: TwittersController::ModeEnum::MODE_ALL_IN_ONE,
           step: 1,
           num_of_times: 1,
           ex_pxv: false,
@@ -1439,7 +1493,7 @@ class HomeController < ApplicationController
           num_of_disp: 2,
           #pred: 5,
           #force_disp_day: 10,
-          mode: TwittersController::ModeEnum::ALL_IN_ONE,
+          mode: TwittersController::ModeEnum::MODE_ALL_IN_ONE,
           aio: TwittersController::GRP_SORT::GRP_SORT_ACCESS + "|" + TwittersController::GRP_SORT::GRP_SORT_PRED,
           step: -1,
           num_of_times: 5,
@@ -1457,7 +1511,7 @@ class HomeController < ApplicationController
           num_of_disp: 3,
           #pred: 5,
           #force_disp_day: 10,
-          mode: TwittersController::ModeEnum::ALL_IN_ONE,
+          mode: TwittersController::ModeEnum::MODE_ALL_IN_ONE,
           aio: TwittersController::GRP_SORT::GRP_SORT_ACCESS, #+ "|" + TwittersController::GRP_SORT::GRP_SORT_PRED,
           step: -1,
           num_of_times: 3,
@@ -1477,7 +1531,7 @@ class HomeController < ApplicationController
           num_of_disp: 3,
           #pred: 5,
           #force_disp_day: 10,
-          mode: TwittersController::ModeEnum::ALL_IN_ONE,
+          mode: TwittersController::ModeEnum::MODE_ALL_IN_ONE,
           aio: TwittersController::GRP_SORT::GRP_SORT_ACCESS + "|" + TwittersController::GRP_SORT::GRP_SORT_PRED,
           step: -1,
           num_of_times: 3,
@@ -1494,7 +1548,7 @@ class HomeController < ApplicationController
           #hide_within_days: 0, 
           #pred: 5,
           #force_disp_day: 10,
-          mode: TwittersController::ModeEnum::ALL_IN_ONE,
+          mode: TwittersController::ModeEnum::MODE_ALL_IN_ONE,
           aio: TwittersController::GRP_SORT::GRP_SORT_ACCESS, #+ "|" + TwittersController::GRP_SORT::GRP_SORT_PRED,
           step: -1,
           num_of_times: 5,
@@ -1514,7 +1568,7 @@ class HomeController < ApplicationController
           num_of_disp: 5,
           #pred: 5,
           #force_disp_day: 10,
-          mode: TwittersController::ModeEnum::ALL_IN_ONE,
+          mode: TwittersController::ModeEnum::MODE_ALL_IN_ONE,
           step: 5,
           num_of_times: 1,
           ex_pxv: true,#false,
@@ -1530,7 +1584,7 @@ class HomeController < ApplicationController
           num_of_disp: 5,
           #pred: 5,
           #force_disp_day: 10,
-          mode: TwittersController::ModeEnum::ALL_IN_ONE,
+          mode: TwittersController::ModeEnum::MODE_ALL_IN_ONE,
           step: 5,
           num_of_times: 2,
           ex_pxv: true,#false,
@@ -1546,7 +1600,7 @@ class HomeController < ApplicationController
           num_of_disp: 3,
           #pred: 5,
           #force_disp_day: 10,
-          mode: TwittersController::ModeEnum::ALL_IN_ONE,
+          mode: TwittersController::ModeEnum::MODE_ALL_IN_ONE,
           step: 1,
           num_of_times: 10,
           ex_pxv: true,#false,
@@ -1563,7 +1617,7 @@ class HomeController < ApplicationController
           num_of_disp: 3,
           pred: 10,
           #force_disp_day: 10,
-          mode: TwittersController::ModeEnum::ALL_IN_ONE,
+          mode: TwittersController::ModeEnum::MODE_ALL_IN_ONE,
           step: 3,
           num_of_times: 3,
           ex_pxv: true,#false,
@@ -1576,7 +1630,7 @@ class HomeController < ApplicationController
       { :label => "unified p [ai]", :path => "" },
       { :label => "🅿️ [AI] 90 (-1ずつ5回)[2個]アクセス順のみ",
           :path => artists_path(
-            file: ArtistsController::MethodEnum::ALL_IN_ONE,
+            file: ArtistsController::MethodEnum::MODE_ALL_IN_ONE,
             #page_title: "pxv [AI] all in one 85",
             exclude_ai: "",
             ai: true,
@@ -1592,7 +1646,7 @@ class HomeController < ApplicationController
       },
       { :label => "🅿️ [AI] 95 (-5ずつ * 3回)[2つ]アクセス順のみ",
           :path => artists_path(
-            file: ArtistsController::MethodEnum::ALL_IN_ONE,
+            file: ArtistsController::MethodEnum::MODE_ALL_IN_ONE,
             #page_title: "pxv [AI] all in one ",
             exclude_ai: "",
             ai: true,
@@ -1609,7 +1663,7 @@ class HomeController < ApplicationController
       { :label => "-", :path => "" },
       { :label => "pxv [AI] 99 (-1 * 4)[3]",
           :path => artists_path(
-            file: ArtistsController::MethodEnum::ALL_IN_ONE,
+            file: ArtistsController::MethodEnum::MODE_ALL_IN_ONE,
             page_title: "pxv [AI] 99 (-1 * 4)[3]",
             exclude_ai: "",
             ai: true,
@@ -1625,7 +1679,7 @@ class HomeController < ApplicationController
       },
       { :label => "pxv [AI] 90 (0 * 1)[5]",
           :path => artists_path(
-            file: ArtistsController::MethodEnum::ALL_IN_ONE,
+            file: ArtistsController::MethodEnum::MODE_ALL_IN_ONE,
             page_title: "pxv [AI] 90 (0 * 1)",
             exclude_ai: "",
             ai: true,
@@ -1641,7 +1695,7 @@ class HomeController < ApplicationController
       },
       { :label => "pxv [AI] 95 (-5 * 3)[5]",
           :path => artists_path(
-            file: ArtistsController::MethodEnum::ALL_IN_ONE,
+            file: ArtistsController::MethodEnum::MODE_ALL_IN_ONE,
             page_title: "pxv [AI] all in one 95",
             exclude_ai: "",
             ai: true,
@@ -1658,7 +1712,7 @@ class HomeController < ApplicationController
       { :label => "-", :path => "" },
       { :label => "pxv [手描き] 95 (-5 * 2)[5]",
           :path => artists_path(
-            file: ArtistsController::MethodEnum::ALL_IN_ONE,
+            file: ArtistsController::MethodEnum::MODE_ALL_IN_ONE,
             page_title: "pxv all in one 95 手描き",
             exclude_ai: "true",
             ai: false,
@@ -1674,7 +1728,7 @@ class HomeController < ApplicationController
       },
       { :label => "pxv [手描き] 89 (-1ずつ * 4回)[4つ]",
           :path => artists_path(
-            file: ArtistsController::MethodEnum::ALL_IN_ONE,
+            file: ArtistsController::MethodEnum::MODE_ALL_IN_ONE,
             page_title: "pxv [手描き] 85 (-1 * 3)",
             exclude_ai: "true",
             ai: false,
@@ -1785,31 +1839,6 @@ class HomeController < ApplicationController
         )
       },
       { :label => "-", :path => "" },
-      { :label => "Twitter 未設定 id",
-        :path => twitters_path(
-          page_title: "未設定 id",
-          mode: "id",
-          sort_by: TwittersController::SORT_BY::SORT_ID,
-          no_pxv: true,
-          rating: 0,
-          hide_within_days: 60,#30,
-          num_of_disp: 10,
-          pred: 0,
-          target: "",
-          thumbnail: "t"
-        )
-      },
-      { :label => "Twitter 未設定",
-        :path => twitters_path(
-          page_title: "未設定", 
-          mode: "未設定", 
-          rating: 0, 
-          hide_within_days: 60,#30, 
-          num_of_disp: NUM_OF_DISP,
-          pred: 0, 
-          thumbnail: "t"
-        )
-      },
       { :label => "Twitter 同一",
         :path => twitters_path(
           page_title: "同一", 
@@ -1822,11 +1851,10 @@ class HomeController < ApplicationController
         :path => twitters_path(
           page_title: "xx", 
           num_of_disp: NUM_OF_DISP,
-          mode: TwittersController::ModeEnum::UNASSOCIATED_TWT_ACNT,
+          mode: TwittersController::ModeEnum::MODE_UNASSOCIATED_TWT_ACNT,
           thumbnail: "t"
         )
       },
-      { :label => "Twitter[検索]", :path => twitters_path(page_title: "🔍️検索", mode: TwittersController::ModeEnum::MODE_SEARCH, search_word: "", thumbnail: "") },
       { :label => "-", :path => "" },
       { :label => "Twitter pxv更新なし",
         :path => twitters_path(
@@ -2133,6 +2161,43 @@ class HomeController < ApplicationController
           )
       },
       
+      # ----------------------------
+      { :label => "検索", :path => "" },
+      { :label => "pxv 検索",
+        :path => artists_path(
+            file: ArtistsController::MethodEnum::METHOD_SEARCH,
+            search_word: " 1234 ",
+            target_col: Artist::C_ARTIST_TARGET_AUTO,
+            match_method: Artist::C_ARTIST_MATCH_AUTO,
+            #file: ArtistsController::MethodEnum::MODE_ALL_IN_1,
+            #page_title: "",
+            #exclude_ai: "",
+            #ai: true,
+            #status: ArtistsController::Status::EXCLD_NO_UPDATES_AND_DONE,
+            group_by: ArtistsController::GROUP_TYPE::GROUP_SPEC,
+            group_spec: "{status}{r}||{am}ヶ月({aw}週)|{p10}",
+            sort_by: ArtistsController::SORT_TYPE::SORT_RATING_O2N,#SORT_ACCESS_OLD_TO_NEW,
+            #aio: TwittersController::GRP_SORT::GRP_SORT_ACCESS, #+ "|" + TwittersController::GRP_SORT::GRP_SORT_PRED,
+            #rating: 90,
+            #step: 1,
+            #num_of_times: 5,
+            display_number: 11,
+            #last_access_datetime: 7,#3,
+            thumbnail: false,
+          )
+      },
+      { :label => "Twitter[検索]",
+        :path => twitters_path(
+          page_title: "🔍️", 
+          mode: TwittersController::ModeEnum::MODE_SEARCH, 
+          select_max: 22,
+          grp_sort_by: TwittersController::GRP_SORT::GRP_SORT_SPEC,
+          grp_sort_spec: "{dm}::{r}",
+          search_word: "test", 
+          thumbnail: ""
+        )
+      },
+
       # ----------------------------
       { :label => "", :path => "" },
       { :label => "User", :path => users_path },

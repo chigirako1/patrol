@@ -765,7 +765,7 @@ class Twitter < ApplicationRecord
         val = value
 
         unless dir == "a"
-            val = -val
+            val = -(val||0)
         end
 
         if val and opt and opt =~ /^\d+$/
@@ -990,6 +990,10 @@ class Twitter < ApplicationRecord
                 #gkey_work = group_sub(unit, number, gkey_work, x)
                 word = %!#{w}(#{self.r18||""})!
                 gkey_work.gsub!(x, word)
+            when "pw"
+                unit = 1 unless unit
+                number = Util::get_date_delta(self.last_post_datetime) / 7
+                gkey_work = group_sub(unit, number, gkey_work, x)
             when "restrict"
                 gkey_work.gsub!(x, self.r18||"")
             when "method"
@@ -1479,11 +1483,11 @@ class Twitter < ApplicationRecord
         #r    d   n
         [95, [ 14, 22, 0]],
         [90, [ 21, 23, 0]],
-        [88, [ 25, 24, 1]],
-        [87, [ 27, 33, 2]],
-        [86, [ 30, 40, 3]],
-        [85, [ 30, 44, 4]],
-        [84, [ 35, 55, 5]],
+        [88, [ 25, 33, 1]],
+        [87, [ 26, 40, 2]],
+        [86, [ 27, 45, 3]],
+        [85, [ 30, 50, 4]],
+        [84, [ 35, 75, 5]],
 =begin
         [82, [ 40, 60,14]],
         [80, [ 60, 66,21]],

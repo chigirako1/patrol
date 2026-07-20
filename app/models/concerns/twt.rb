@@ -50,7 +50,7 @@ module Twt
 
     #UL_FREQUECNTY_THRESHOLD = 25
     UL_FREQUECNTY_THRESHOLD = 50
-    RATING_THRESHOLD = 78#80
+    RATING_THRESHOLD = 83#78#80
 
     FILENUM_T = 750
 
@@ -1269,7 +1269,7 @@ module Twt
         r_u = 1
         r_s = Util::format_num(twt.rating, r_u)
         if twt.update_frequency >= freq_n
-            if twt.rating >= 86
+            if twt.rating >= 86 and dayn > 6
                 p_s = Util::format_num(pred, 25)
                 if pred < 25
                     return "011.前日/当日分[#{r_s}]"
@@ -1299,14 +1299,16 @@ module Twt
 
         month_n = Util::format_num(month_v, 1)
         r_s = Util::format_num(twt.rating, 1)
-
+        p_s = Util::format_num(pred, 50)
+=begin
         if month_v > 1
             cate_no = 890
-            p_s = Util::format_num(pred, 50)
-            %!#{cate_no}.#{month_n}ヵ月(#{r_s})|#{p_s}!
+            #%!#{cate_no}.#{month_n}ヵ月(#{r_s})|#{p_s}!
+            %!#{cate_no}.#{p_s}|#{month_n}ヵ月(#{r_s})!
         elsif month_v > 0 and twt.rating > 86
             cate_no = 888
-            %!#{cate_no}.#{month_n}ヵ月!
+            #%!#{cate_no}.#{month_n}ヵ月!
+            %!#{cate_no}.#{p_s}|#{month_n}ヵ月!
         else
             if twt.rating >= 87 and pred >= 50
                 cate_no = "866"
@@ -1319,8 +1321,18 @@ module Twt
             pred_i = 20
             p_s = Util::format_num(pred, pred_i)
             #%!#{cate_no}.P:#{p_s}|#{month_n}月|#{r_s}↑!
-            %!#{cate_no}.#{month_n}ヵ月|#{r_s}↑!
+            #%!#{cate_no}.#{month_n}ヵ月|#{r_s}↑!
             #%!#{cate_no}.#{r_s}↑|#{month_n}月!
+            %!#{cate_no}.#{p_s}|#{month_n}ヵ月|#{r_s}↑!
+        end
+=end
+        if month_v > 0
+            cate_no = 890
+            %!#{cate_no}.#{month_n}ヵ月|#{r_s}!
+        else
+            cate_no = 810
+            week_n = Util::format_num(dayn / 7, 2)
+            %!#{cate_no}.#{p_s}件↑|#{week_n}週|#{r_s}!
         end
     end
 
@@ -1714,7 +1726,8 @@ module Twt
                     todo_s = "!取得対象あり:"
                 end
 
-                if self.twt.last_access_datetime and self.twt.last_access_datetime_days_elapsed < 1
+                dayn = 2
+                if self.twt.last_access_datetime and self.twt.last_access_datetime_days_elapsed < dayn
                     today_s = "本日アクセス"
                 else
                     today_s = ""
@@ -1749,7 +1762,9 @@ module Twt
                 hosoku = "補足なし"
             end
 
-            if (self.file_cnt||0) <= 3
+            if (self.file_cnt||0) == 0
+                file_s = "ファイルなし"
+            elsif (self.file_cnt||0) <= 3
                 if target_s == ""
                     file_s = "★注意★対象なのにファイル少ない"
                 else
@@ -1757,7 +1772,11 @@ module Twt
                 end
             end
 
-            %!#{todo_s}#{today_s}:#{target_s}:#{hosoku}:#{file_s}:#{name_s}!
+            if target_s == ""
+                %!#{todo_s}#{today_s}:#{target_s}:#{hosoku}:#{file_s}:#{name_s}!
+            else
+                %!#{todo_s}#{today_s}:#{target_s}:#{name_s}!
+            end
         end
     end
 end

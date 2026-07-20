@@ -5,10 +5,10 @@ class TweetUrl
     attr_accessor :screen_name, :tweet_id, :p_number, :record
 
     def initialize(screen_name, tweet_id, p_number = -1)
+        @record = Tweet.find_by(tweet_id: tweet_id)
         @screen_name = screen_name
         @tweet_id = tweet_id
         @p_number = p_number
-        @record = Tweet.find_by(tweet_id: tweet_id)
     end
 
     def <=>(other)
@@ -22,6 +22,10 @@ class TweetUrl
 
     def gen_name
         Twt::filename_str(self.screen_name, self.tweet_id)
+    end
+
+    def timestamp
+        Twt::get_timestamp(self.tweet_id)
     end
 
     Cond_del_list = [
@@ -43,7 +47,7 @@ class TweetUrl
         false
     end
 
-    def self.mov_url_list
+    def self.mov_tweet_group
         tweet_id_list = []
 
         STDERR.puts "xxzzxx"
@@ -68,7 +72,13 @@ class TweetUrl
                 end
                 tweet_id_list << tweet_id
                 p_no = 0
-                mov_url_hash[screen_name] << TweetUrl.new(screen_name, tweet_id, p_no)
+                tweet_url = TweetUrl.new(screen_name, tweet_id, p_no)
+                key = screen_name
+                if key == Twt::TWT_USER_I and tweet_url.record and tweet_url.record.screen_name != screen_name
+                    #STDERR.puts %|#{@record.screen_name} != #{screen_name}|
+                    key = tweet_url.record.screen_name
+                end
+                mov_url_hash[key] << tweet_url
             else
                 STDERR.puts %![warning]\t#{line}!
                 next

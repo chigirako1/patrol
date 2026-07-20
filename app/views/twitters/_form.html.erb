@@ -523,7 +523,7 @@
   </div>
 
   <div>
-    <%= form.label :動画評価, style: "display: block" %>
+    <%= form.label %!動画🎞️評価!, style: "display: block" %>
     <%= form.number_field :video_cnt %>
   </div>
 
@@ -640,6 +640,7 @@
       console.log(regex);
 
       //TODO: IDの最後に"."がついていたら警告する
+      //"https://pixiv.me/xxx"警告
 
       const match = text.match(regex);
       //if (regex.test(text)) {

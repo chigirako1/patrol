@@ -27,7 +27,7 @@
                         <% end %>
                     <% elsif key.include?("twt") %>
 
-                        <% url = twitters_path(page_title: "xxx", mode: TwittersController::ModeEnum::STATS, rating: k, rating_lt: k, target: "AI") %>
+                        <% url = twitters_path(page_title: "xxx", mode: TwittersController::ModeEnum::MODE_STATS, rating: k, rating_lt: k, target: "AI") %>
                     <% else %>
                     <% end %>
                     <%= link_to_ex("#{k}", url) %>

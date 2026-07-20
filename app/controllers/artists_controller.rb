@@ -279,10 +279,10 @@ class ArtistsController < ApplicationController
     TWT_DB_UNREGISTERED_PXV_USER_ID = '未登録pxv user id' # TWTテーブルに登録されているがPXVテーブルに登録されていないPXV ID
     TWT_DB_UNREGISTERED_PXV_USER_ID_LOCAL_DIR = 'DB未登録pxv user id local dir'
     UNASSOCIATED_PXV_USER = '未紐づけPXVユーザー' #TWT ID未設定PXV（TWT DBにはPXV ID登録済み）
-    UNASSOCIATED_TWT_ACNT = '未紐づけTWTアカウント' #PXV DBにはTWT IDが登録されているがTWT DBにはPXV IDが登録されていない
+    MODE_UNASSOCIATED_TWT_ACNT = '未紐づけTWTアカウント' #PXV DBにはTWT IDが登録されているがTWT DBにはPXV IDが登録されていない
     TWT_DUP_TWTID = 'same_twtid'
-    ALL_IN_ONE = 'all in one'
-    ALL_IN_1 = 'all in 1'
+    MODE_ALL_IN_ONE = 'all in one'
+    MODE_ALL_IN_1 = 'all in 1'
     URL_LIST = 'urllist'
     URL_LIST_PXV_ONLY_LATEST = "urllist-pxv-only(latest)"
     DUP_USER_ID_CHK = '重複ユーザーIDチェック'
@@ -364,7 +364,7 @@ class ArtistsController < ApplicationController
   end
 
   module GROUP_TYPE
-    FILENUM = "filenum"
+    GROUP_FILENUM = "filenum"
     GROUP_ACCESS_OLD_TO_NEW = "ACCESS旧→新"
     GROUP_FEAT_STAT_RAT = "feature/status/rating"
     GROUP_STAT = "status"
@@ -441,7 +441,7 @@ class ArtistsController < ApplicationController
       artists = Artist.looks(params[:target_col], params[:search_word], params[:match_method])
       @artists_group = index_group_by(artists, prms)
       return
-    when MethodEnum::ALL_IN_1
+    when MethodEnum::MODE_ALL_IN_1
       artists = Artist.all
       artists = index_select(artists, prms, true)
       artists = artists.select {|x| x.select_cond_aio}
@@ -451,7 +451,7 @@ class ArtistsController < ApplicationController
       @artists_group = index_group_by(artists, prms)
       @artists_total_count = @artists_group.sum {|k,v| v.count}
       return
-    when MethodEnum::ALL_IN_ONE
+    when MethodEnum::MODE_ALL_IN_ONE
       if params[:aio].presence
         keys = params[:aio].split("|")
 
@@ -711,7 +711,7 @@ class ArtistsController < ApplicationController
     elsif prms.param_file == ArtistsController::MethodEnum::UNASSOCIATED_PXV_USER
       unassociated_pxv_uids = Twitter::unassociated_pxv_uids()
       artists = artists.select {|x| unassociated_pxv_uids.include?(x[:pxvid])}
-    elsif prms.param_file == ArtistsController::MethodEnum::UNASSOCIATED_TWT_ACNT
+    elsif prms.param_file == ArtistsController::MethodEnum::MODE_UNASSOCIATED_TWT_ACNT
       unassociated_twt_screen_names = Twitter::unassociated_twt_screen_names()
       artists = artists.select {|x| unassociated_twt_screen_names.include?(x.twtid)}
       #@unassociated_twt_screen_names = unassociated_twt_screen_names
@@ -811,7 +811,7 @@ class ArtistsController < ApplicationController
 
       #@vid_urls = Util::load_mov_urls
 
-      mov_url_hash = TweetUrl::mov_url_list()
+      mov_url_hash = TweetUrl::mov_tweet_group()
       @mov_url_list = Twt::mov_url_hash_to_list(mov_url_hash)
     when "sp"
       @sp_ids = Twt::get_sp_ids()
@@ -912,16 +912,19 @@ class ArtistsController < ApplicationController
         #@known_twt_url_list = Tweet.distinct.pluck(:screen_name).map {|x| [x, nil]}.to_h
         @known_twt_url_list = Tweet.where.not(screen_name: [nil, ""]).distinct.pluck(:screen_name).map {|x| [x, Twt::twt_user_url(x)]}.to_h
       when DIR_TYPE::DT_MOV_URL
-        twt_url_hash = TweetUrl::mov_url_list()
+        twt_url_hash = TweetUrl::mov_tweet_group()
 
         if true
           twt_url_hash.each do |k,v|
-            #v.delete_if {|x| x.record and x.record.status == Tweet::StatusEnum::VIDEO_SAVED}
+            save = v.size
             v.delete_if {|x| x.cond_del}
+            STDERR.puts %!@#{k}:#{save} => #{v.size}! if save != v.size
           end
 
+          STDERR.puts %!y:#{twt_url_hash.size}!
           #twt_url_hash.compact! 長さ０の配列だと消えない模様
           twt_url_hash.delete_if {|k,v| v.size == 0}
+          STDERR.puts %!z:#{twt_url_hash.size}!
         end
 
         screen_name = params[:from]
@@ -931,7 +934,7 @@ class ArtistsController < ApplicationController
         end
 
         #@twt_url_hash = twt_url_hash.sort_by {|k,v| k.downcase}.to_h
-        @twt_url_hash = twt_url_hash.sort_by {|k,v| v.size}.to_h
+        @twt_url_hash = twt_url_hash.sort_by {|k,v| -v.size}.to_h
       else
         STDERR.puts "!!ERR:unknown type='#{dir}'!!"
       end
@@ -1430,7 +1433,7 @@ class ArtistsController < ApplicationController
         artists_group = artists.group_by {|x| x[:last_ul_datetime].strftime("%Y-%m")}.sort.to_h
       when "last_ul_datetime_y"
         artists_group = artists.group_by {|x| x[:last_ul_datetime].strftime("%Y")}.sort.reverse.to_h
-      when GROUP_TYPE::FILENUM
+      when GROUP_TYPE::GROUP_FILENUM
         artists_group = artists.group_by {|x| filenum_g(x.filenum)}.sort.reverse.to_h
       when "recent_filenum"
         artists_group = artists.group_by {|x| (x.recent_filenum / 10 * 10)}.sort.reverse.to_h

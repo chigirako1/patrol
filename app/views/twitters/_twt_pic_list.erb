@@ -134,7 +134,8 @@
     <%= link_to("url txtチェック", twitter_path(file_check: 't', pic_lf: '', corr: '0'), class: 'button') %>
     <%= link_to_ex(%!期間チェック!, twitter_path(twitter, refresh: "y", seq_chk: true)) if twitter.twtid %>|
     <%= link_to_ex(%!viewer!, twitter_path(twitter, refresh: "y", viewer: true)) if twitter.twtid %>
-    [<%= link_to_ex("動画URLリスト", artists_twt_index_path(dir: ArtistsController::DIR_TYPE::DT_MOV_URL, from: @twitter.twtid)) %>]
+    [<%= link_to_ex("動画URLリスト", artists_twt_index_path(dir: ArtistsController::DIR_TYPE::DT_MOV_URL, from: @twitter.twtid, list: "open")) %>]
+    [<%= link_to_ex("動画ファイルリスト", artists_twt_index_path(dir: ArtistsController::DIR_TYPE::SP_VID, from: @twitter.twtid)) %>]
 
     <% if params[:seq_chk] == "true" %>
         <h2>期間チェック</h2>
@@ -313,6 +314,7 @@
         <% tweet_id = twitter.latest_tweet_id %>
     <% end %>
 
+    <% show_pic_num_sp = 12 %>
     <% if tweet_id %>
         <b>
         <%= Twt::tweet_id_with_comma(tweet_id) %>
@@ -329,7 +331,6 @@
         <% if params[:picn_sp] =~ /(\d+)/ %>
             <% show_pic_num_sp = $1.to_i %>
         <% else %>
-            <% show_pic_num_sp = 12 %>
         <% end %>
     <% end %>
     
@@ -350,8 +351,12 @@
             <%= link_to_ex(image_tag(fpath, class: "fixed-height-img"), fpath) %>
             <% fsize_list << Util::get_filesize(fpath) %>
         <% end %>
-        平均ファイルサイズ：<%= Util::formatFileSize fsize_list.sum / fsize_list.size %>
-
+        <% filesize = fsize_list.sum / fsize_list.size %>
+        平均ファイルサイズ：<%= Util::formatFileSize filesize %>
+        <% if Twt::filesize_huge? filesize %>
+        <% else %>
+            ファイルサイズnot大？？？
+        <% end %>
     <% else %>
     <% end %>
     

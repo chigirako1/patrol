@@ -947,6 +947,8 @@
     <% sp_dirs_hash.each do |k,v| %>
         <h3><%= %!#{k}(#{v.size})! %></h3>
         <% v.each do |elem| %>
+            <%= idx += 1 %>.
+            
             <% if elem.twt %>
                 <% if elem.twt.sp? %>
                     <% if elem.file_cnt == 0 %>
@@ -958,12 +960,9 @@
                     <b>★対象外★</b>
                 <% end %>
                 
-                <%= idx += 1 %>.
                 アクセス日：<%= elem.twt.last_access_datetime_disp %>
                 [頻度:<%= elem.twt.update_frequency %>]
-                [<%= link_to_ex("■twt■", elem.twt) %>]
-                [予測:<%= elem.twt.prediction %>/ファイル数:<%= elem.file_cnt %>]
-                
+
                 【<%= elem.twt.rating %><%= r_icon(elem.twt.r18) %>】
                 <b>
                 <% if elem.twt.twtname.presence %>
@@ -972,11 +971,14 @@
                     ※未設定※
                 <% end %>
                 </b>
+                [<%= link_to_ex("■twt■", elem.twt) %>]
+                [予測:<%= elem.twt.prediction %>=>ファイル:<%= elem.file_cnt %>]
+                
                 (@<%= elem.twt.twtid %>)
-                「<%= elem.dirname %>(<%= elem.file_cnt %>)｣
+                「<%= elem.dirname %>｣
 
                 <% if elem.twt.twtid != elem.screen_name %>
-                    ※DIR名がスクリーン名と異なります※
+                    <font color="red">※DIR名がスクリーン名と異なります※</font>
                 <% end %>
 
                 <% if to_be_obtain_list.has_key?(elem.screen_name) %>
@@ -995,10 +997,14 @@
                 [<%= link_to_ex("■検索■", url) %>]
 
                 <% result = Twitter.search_records(elem.dirname.gsub(/ +/, "_"), Twitter::DRAWING_METHOD::DM_AI) %>
+                <%= %!(#{result.size})! if result.size > 0 %>
+
                 <% if result.size > 0 and result.size < 3 %>
                     <% result.each do |twt| %>
                         <br />
                         <%= "【#{dm_icon(twt.drawing_method)}#{twt.rating}】#{twt.twtname}(@#{twt.twtid} )" %>
+                        <br />
+                        <%= twitter_info_tag_ex(twt.twtid) %>
                     <% end %>
                 <% end %>
 
@@ -1209,13 +1215,11 @@
     <h1>@twt_url_hash(<%= @twt_url_hash.size %>)</h1>
     
     <% if list_open %>
-        <% @twt_url_hash.each do |k,v| %>
-            <h2><%= k %>(<%= v.size %>)</h2>
+        <% @twt_url_hash.each.with_index(1) do |(k,v), idx| %>
+            <h2><%= idx %>.<%= k %></h2>
             <%= twitter_info_tag_ex(k) %>
             <hr />
             <% v.sort.uniq.reverse.each do |x| %>
-
-                <%# tweet = Tweet.find_by(tweet_id: x.tweet_id) %>
                 <% tweet = x.record %>
                 <% if tweet %>
                     ■<%= tweet.status %>
@@ -1232,17 +1236,18 @@
 
                     <% url = Twt::twt_tweet_url(x.screen_name, x.tweet_id) %>
                     <%= link_to_ex(x.tweet_id, url) %>
+                    (<%= smart_date x.timestamp %>)
                 <% end %>
                 <br />
             <% end %>
         <% end %>
     <% else %>
         <!-- ユーザーリストのみ -->
-        <% @twt_url_hash.each do |k,v| %>
-            <h2><%= k %>(<%= v.size %>)</h2>
+        <% @twt_url_hash.each.with_index(1) do |(k,v) ,idx| %>
+            <h2><%= idx %>.【<%= 0 %>】@<%= k %></h2>
             <%= twitter_info_tag_ex(k) %>
             <br />
-            [<%= link_to_ex("動画URLリスト", artists_twt_index_path(dir: ArtistsController::DIR_TYPE::DT_MOV_URL, from: k, list: "open")) %>]
+            [<%= link_to_ex("動画URLリスト(#{v.size})", artists_twt_index_path(dir: ArtistsController::DIR_TYPE::DT_MOV_URL, from: k, list: "open")) %>]
             [<%= link_to_ex("動画ファイルリスト", artists_twt_index_path(dir: ArtistsController::DIR_TYPE::SP_VID, from: k)) %>]
         <% end %>
     <% end %>
@@ -1253,22 +1258,25 @@
     <h1>@twt_video_list(<%= @twt_video_list.size %>)</h1>
     <% @twt_video_list.each do |k,v| %>
         <h2><%= %!@#{k}(#{v.size})! %></h2>
+        <%= twitter_info_tag_ex(k) %>
+        [<%= link_to_ex("動画URLリスト", artists_twt_index_path(dir: ArtistsController::DIR_TYPE::DT_MOV_URL, from: k, list: "open")) %>]
+        <hr />
         <% v.each do |x| %>
             ■
             <% tweet = Tweet.find_by(tweet_id: x.tweet_id) %>
             <% if tweet %>
-                <%= tweet.status %>
+                【<%= tweet.status %>】
+                (<%= smart_date tweet.timestamp %>)
                 [<%= link_to_ex "■tweet■", tweet %>]
             <% elsif x.tweet_id.presence %>
                 <% url = new_tweet_path(tweet_id: x.tweet_id, screen_name: x.screen_name, status: Tweet::StatusEnum::VIDEO_SAVED) %>
                 [<%= link_to_ex "■New tweet■", url %>]
             <% end %>
 
-            <%= x %>
+            <%#= x %>
             
-            [<%= link_to_ex "video file", x.filepath %>]
             <% _, rest = Twt::mov_filename_ex(File.basename(x.filepath)) %>
-            "<%= rest %>"
+            [<%= link_to_ex rest, x.filepath %>]
             <br />
         <% end %>
     <% end %>

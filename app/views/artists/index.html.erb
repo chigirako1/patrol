@@ -222,7 +222,7 @@
 <% end %>
 
 <% if @unknown_id_list.size > 0 %>
-  <h2>TWT DBに登録されているがPXV DBにないPXV IDの一覧</h2>
+  <h2>TWT DBに登録されているがPXV DBにないPXV ID(<%= @unknown_id_list.size %>)</h2>
   <% @unknown_id_list.sort.each do |pxv_uid| %>
     <% url = Pxv::pxv_user_url(pxv_uid) %>
     <% host_name = Util::get_host_name_from_uri(url) %>
@@ -284,8 +284,8 @@
           [ArtistsController::MethodEnum::UPDATE_RECORD],
           [ArtistsController::MethodEnum::DUP_USER_ID_CHK],
           [ArtistsController::MethodEnum::NAME_TEST],
-          [ArtistsController::MethodEnum::ALL_IN_1],
-          [ArtistsController::MethodEnum::ALL_IN_ONE],
+          [ArtistsController::MethodEnum::MODE_ALL_IN_1],
+          [ArtistsController::MethodEnum::MODE_ALL_IN_ONE],
           [ArtistsController::MethodEnum::METHOD_SEARCH],
           ['urllist'], 
           ['urllist-pxv-only'], 
@@ -307,7 +307,7 @@
           [ArtistsController::MethodEnum::TWT_DB_UNREGISTERED_PXV_USER_ID],#['未登録pxv user id'],#in TWT table
           [ArtistsController::MethodEnum::TWT_DB_UNREGISTERED_PXV_USER_ID_LOCAL_DIR],#['DB未登録pxv user id local dir'],
           [ArtistsController::MethodEnum::UNASSOCIATED_PXV_USER],
-          [ArtistsController::MethodEnum::UNASSOCIATED_TWT_ACNT],
+          [ArtistsController::MethodEnum::MODE_UNASSOCIATED_TWT_ACNT],
           [ArtistsController::MethodEnum::REGIST_UL_DIFF],
           [ArtistsController::MethodEnum::ACCESS_UL_DIFF_FAR],
           [ArtistsController::MethodEnum::SAME_FILENUM],
@@ -441,7 +441,7 @@
       options_for_select(
         [
           ['none'],
-          [ArtistsController::GROUP_TYPE::FILENUM],
+          [ArtistsController::GROUP_TYPE::GROUP_FILENUM],
           ['last_ul_datetime'], 
           ['last_ul_datetime_X_filenum'], 
           ['last_ul_datetime_ym'],

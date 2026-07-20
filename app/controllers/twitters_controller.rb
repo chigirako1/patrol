@@ -4,18 +4,24 @@ class TwittersController < ApplicationController
   TMP_RATING = 87
 
   module ModeEnum
-    UNASSOCIATED_TWT_ACNT = '未紐づけTWTアカウント' #PXV DBにはTWT IDが登録されているがTWT DBにはPXV IDが登録されていない
-    ALL_IN_ONE = 'all in one'
-    ALL_IN_1 = 'all in 1'
-    HIGH_PRIORITY = '優先'
-    SPEC_NON_DISP = '非表示指定'
+    MODE_UNASSOCIATED_TWT_ACNT = '未紐づけTWTアカウント' #PXV DBにはTWT IDが登録されているがTWT DBにはPXV IDが登録されていない
+    MODE_ALL_IN_ONE = 'all in one'
+    MODE_ALL_IN_1 = 'all in 1'
+    MODE_HIGH_PRIORITY = '優先'
+    MODE_SPEC_NON_DISP = '非表示指定'
     MODE_ALL = 'all'
-    FILE = 'file'
-    URL_TXT = 'url txt'
-    PATROL = 'patrol'
-    STATS = 'stats'
+    MODE_FILE = 'file'
+    MODE_URL_TXT = 'url txt'
+    MODE_PATROL = 'patrol'
+    MODE_STATS = 'stats'
     MODE_SEARCH = "search"
-    FILESIZE = "filesize"
+    MODE_FILESIZE = "filesize"
+  end
+
+  module FileEnum
+    FILE_TWEET = "<tweet>"
+    FILE_SP_CHK = "<sp_chk>"
+    FILE_VID_CHK = "<vid_chk>"
   end
 
   module SORT_BY
@@ -43,7 +49,7 @@ class TwittersController < ApplicationController
 
     RATING = "rating"
 
-    FILENUM = "ファイル数順"#"filenum"
+    FILENUM_DSC = "ファイル数▽降順"
     FILENUM_ASC = "ファイル数△昇順"
     R_FILENUM_ASC = "評価/ファイル数△順"
 
@@ -237,27 +243,27 @@ class TwittersController < ApplicationController
 
     STDERR.puts mode
     case mode
-    when TwittersController::ModeEnum::FILESIZE
+    when TwittersController::ModeEnum::MODE_FILESIZE
       twitters = index_mode_filesize(twitters, twt_params)
       @twitters_group = twt_group_by(twitters, twt_params.param_grp_sort_by, twt_params.param_grp_sort_spec)
       @twitters_total_count = @twitters_group.sum {|k,v| v.count}
       return
-    when TwittersController::ModeEnum::UNASSOCIATED_TWT_ACNT
+    when TwittersController::ModeEnum::MODE_UNASSOCIATED_TWT_ACNT
       unassociated_twt_screen_names = Twitter::unassociated_twt_screen_names()
       twitters = twitters.select {|x| unassociated_twt_screen_names.include?(x.twtid)}
       @twitters_group = {}
       @twitters_group[mode] = twitters
       return
-    when TwittersController::ModeEnum::HIGH_PRIORITY, TwittersController::ModeEnum::SPEC_NON_DISP
+    when TwittersController::ModeEnum::MODE_HIGH_PRIORITY, TwittersController::ModeEnum::MODE_SPEC_NON_DISP
       group_list = []
       tmp = twitters
-      group = index_high_priority(tmp, twt_params, mode == TwittersController::ModeEnum::HIGH_PRIORITY)
+      group = index_high_priority(tmp, twt_params, mode == TwittersController::ModeEnum::MODE_HIGH_PRIORITY)
       group_list << group
 
       @twitters_group = group_list[0].merge(*group_list)
       #@twitters_total_count = @twitters_group.sum {|k,v| v.count}
       return
-    when TwittersController::ModeEnum::ALL_IN_1
+    when TwittersController::ModeEnum::MODE_ALL_IN_1
       group_list = []
       tmp = twitters
       group = index_all_in_1(tmp, params, twt_params)
@@ -279,7 +285,7 @@ class TwittersController < ApplicationController
         end
       end
       return
-    when TwittersController::ModeEnum::ALL_IN_ONE
+    when TwittersController::ModeEnum::MODE_ALL_IN_ONE
       @twitters_group, @twitters_total_count = index_all_in_one_m(twitters, params)
       return
     when "同一"
@@ -346,15 +352,15 @@ class TwittersController < ApplicationController
       @twitters_group = twitters.group_by {|x| x.rating}
     when "dl_nil"
       twitters = twitters.select {|x| x.last_dl_datetime == nil}
-    when TwittersController::ModeEnum::PATROL, TwittersController::ModeEnum::STATS
+    when TwittersController::ModeEnum::MODE_PATROL, TwittersController::ModeEnum::MODE_STATS
       if twt_params.ex_sp
         twitters = twitters.select {|x| !x.sp?}
       end
 
       twitters = twitters.select {|x| x.drawing_method != nil}
-      if mode == TwittersController::ModeEnum::PATROL
+      if mode == TwittersController::ModeEnum::MODE_PATROL
         twitters = twitters.select {|x| x.status == Twitter::TWT_STATUS::STATUS_PATROL}
-      elsif mode == TwittersController::ModeEnum::STATS
+      elsif mode == TwittersController::ModeEnum::MODE_STATS
       else
         twitters = twitters.select {|x|
           x.status == "長期更新なし" or
@@ -447,8 +453,8 @@ class TwittersController < ApplicationController
       twitters = twitters.sort_by {|x| [-(x.artist_pxvid || 0), x.last_access_datetime, (x.last_ul_datetime || "2000-01-01")]}.reverse
       @twitters_group = twitters.group_by {|x| x.status}
       return
-    #when TwittersController::ModeEnum::URL_TXT #"file"と一緒？
-    when TwittersController::ModeEnum::FILE
+    #when TwittersController::ModeEnum::MODE_URL_TXT #"file"と一緒？
+    when TwittersController::ModeEnum::MODE_FILE
       if param_target
         target_list = param_target.split("|")
         #twitters = twitters.select {|x| x.drawing_method == params[:target] || x.drawing_method == nil}
@@ -464,7 +470,7 @@ class TwittersController < ApplicationController
       #pxv_id_list, twt_urls, misc_urls = UrlTxtReader::get_url_list([], false)
       #known_ids = twt_urls.keys
 
-      filename = twt_params.filename#params[:filename]
+      filename = twt_params.filename
       known_twt_url_list, _ = Twitter::url_list(filename)
       @url_list_summary = Tweet::url_list_summary(known_twt_url_list)
 
@@ -489,12 +495,26 @@ class TwittersController < ApplicationController
       @twitters_total_count = @twitters_group.sum {|k,v| v.count}
       return
     when ModeEnum::MODE_ALL
-      if params[:filename] == "<tweet>"
-        STDERR.puts %!1#{twitters.size}!
+      case twt_params.filename
+      when FileEnum::FILE_TWEET
+        #???なんの機能？
+        STDERR.puts %!1:#{twitters.size}!
         tweet_ids = Tweet.where.not(screen_name: [nil, ""]).distinct.pluck(:screen_name)
-        twitters = twitters.select {|x| tweet_ids.include?(x.twtid) }
-        STDERR.puts %!2#{twitters.size}!
+        twitters = twitters.select {|x| tweet_ids.include?(x.twtid)}
+        STDERR.puts %!2:#{twitters.size}!
+      when FileEnum::FILE_SP_CHK
+        STDERR.puts %!1:#{twitters.size}!
+        chk_screen_name_list = Util::checking_screen_names.sort.uniq.reject {|str| str.empty?}
+        p chk_screen_name_list
+        twitters = twitters.select {|x| chk_screen_name_list.include?(x.twtid)}
+        STDERR.puts %!2:#{twitters.size}!
+      when FileEnum::FILE_VID_CHK
+        twt_url_hash = TweetUrl::mov_tweet_group()
+        tweet_ids = twt_url_hash.keys
+        twitters = twitters.select {|x| tweet_ids.include?(x.twtid)}
+      else
       end
+
       index_mode_all(twitters, twt_params)
       return
     when ModeEnum::MODE_SEARCH
@@ -706,6 +726,7 @@ class TwittersController < ApplicationController
     end
 
     def index_select(twitters, twt_params)
+      STDERR.puts %!index_select()0:#{twitters.size}!
 
       if twt_params.param_status.presence
         if twt_params.param_status == Twitter::TWT_STATUS::STATUS_CHECK
@@ -714,13 +735,15 @@ class TwittersController < ApplicationController
           twitters = twitters.select {|x| x.status == twt_params.param_status}
         end
       end
+      STDERR.puts %!index_select()sts:#{twitters.size}!
 
       if twt_params.rating_gt == 0
         twitters = twitters.select {|x| x.unset?}
       else
-        twitters = twitters.select {|x| x.status == Twitter::TWT_STATUS::STATUS_PATROL}
+        #twitters = twitters.select {|x| x.status == Twitter::TWT_STATUS::STATUS_PATROL}
         twitters = twitters.select {|x| (x.rating||0) >= twt_params.rating_gt}
       end
+      STDERR.puts %!index_select()r:#{twitters.size}!
 
       if twt_params.prm_filenum >= 0
         twitters = twitters.select {|x| (x.filenum||0) >= twt_params.prm_filenum}
@@ -772,9 +795,12 @@ class TwittersController < ApplicationController
 
     def index_mode_all(twitters, twt_params)
       twitters = index_select(twitters, twt_params)
+      STDERR.puts %!index_mode_all():select:#{twitters.size}!
 
-      @stats = {}
-      @stats = twitters.group_by {|x| x.rating||0}.sort.reverse.to_h.map {|k,v| [k,v.size]}.to_h
+      if false
+        @stats = {}
+        @stats = twitters.group_by {|x| x.rating||0}.sort.reverse.to_h.map {|k,v| [k,v.size]}.to_h
+      end
 
       @twitters_total_count = twitters.size
       twitters = index_sort(twitters, twt_params)
@@ -1063,7 +1089,7 @@ class TwittersController < ApplicationController
 
     def index_all_in_1(twitters, params, twt_params)
       
-      filename = twt_params.filename#params[:filename]
+      filename = twt_params.filename
       STDERR.puts %!index_all_in_1:"#{filename}"(#{twitters.size})!
       if filename == "アクセス不可"
         grp = Tweet::get_unaccessible_twt_account_list
@@ -1309,7 +1335,7 @@ class TwittersController < ApplicationController
         twitters = twitters.sort_by {|x| [-(x.last_access_day_num / 7), -x.rating_ex, x.prediction]}
       when SORT_BY::R_ACCESS
         twitters = twitters.sort_by {|x| [-(x.rating||0), (x.last_access_datetime)]}
-      when SORT_BY::FILENUM
+      when SORT_BY::FILENUM_DSC
         twitters = twitters.sort_by {|x| [-(x.filenum||0)]}
       when SORT_BY::FILENUM_ASC
         #twitters = twitters.sort_by {|x| [(x.filenum||0) / 25, -x.rating, -x.prediction]}

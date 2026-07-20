@@ -34,6 +34,9 @@ module TwittersHelper
         tag.html_safe
     end
 
+    def twitter_info_tag_vid(twt)
+    end
+
     def twitter_info_tag_ex(twtid, br=false, unregist=false)
         twt = Twitter.find_by_twtid_ignore_case(twtid)
         if twt
@@ -72,6 +75,9 @@ module TwittersHelper
         tag += %!#{dm_disp(twt.drawing_method)}!
         tag += "【"
         tag += %!#{twt.rating}|#{twt.r18}#{r_icon(twt.r18)}!
+        if twt.video_cnt.presence
+            tag += %!|動画:#{twt.video_cnt}!
+        end
         tag += "】"
         tag += %!"#{twt.twtname}"!
         tag += "【"

@@ -168,7 +168,7 @@ class Tweet < ApplicationRecord
             
             tmp = key_header.split(Twitter::TWT_H_SEPARATOR)[0]
             #STDERR.puts %!#{key_header}/#{tmp}!
-            if tmp.strip =~ /^\d+$/
+            if tmp.strip =~ /^(\d|\|\s)+$/ #？？？
                 if twt.interval_exceeded? true
                 else
                     key_header = "\t後回し:" + key_header
@@ -345,5 +345,9 @@ class Tweet < ApplicationRecord
         #twitters = twitters.sort_by {|x| -x.rating}
         twitters = twitters.sort_by {|x| x.last_access_datetime}
         twitters
+    end
+
+    def timestamp
+        Twt::get_timestamp(self.tweet_id)
     end
 end
