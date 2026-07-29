@@ -337,7 +337,8 @@ class Twitter < ApplicationRecord
     end
 
     def unset?
-        if !self.status.presence and (self.rating||0) == 0
+        #if !self.status.presence and (self.rating||0) == 0
+        if (self.rating||0) == 0
             return true
         end
 
@@ -395,7 +396,7 @@ class Twitter < ApplicationRecord
         #    return false
         #end
         
-        if Twt::filesize_v_huge?(self.filesize) and (self.update_frequency||0) > 25
+        if Twt::filesize_v_huge?(self.filesize) and (self.update_frequency||0) > Twt::UPLOAD_FREQ_THRE_V
             #STDERR.puts %!sp?: #{self.filesize} bytes, #{self.update_frequency}/100 "#{self.twtname}[@#{self.twtid}]"!
             true
         elsif filesize_huge?
@@ -404,7 +405,7 @@ class Twitter < ApplicationRecord
             else
                 true
             end
-        elsif Twt::filesize_big?(self.filesize) and (self.update_frequency||0) > 200
+        elsif Twt::filesize_big?(self.filesize) and (self.update_frequency||0) > Twt::UPLOAD_FREQ_THRE_N
             true
         else
             false
@@ -447,6 +448,14 @@ class Twitter < ApplicationRecord
         end
         
         false
+    end
+
+    def calc_n_days
+        if self.fetch_pred_n and self.update_frequency and self.update_frequency != 0
+            self.fetch_pred_n * 100 / self.update_frequency
+        else
+            nil
+        end
     end
 
     def has_unaccessible_tweet?
@@ -521,6 +530,27 @@ class Twitter < ApplicationRecord
 
     def prediction_h_ex()
         prediction_h(self.last_post_datetime||self.last_access_datetime)
+    end
+
+    def sort_priority
+        # [
+        #     self.max_interval || Float::INFINITY,
+        #     self.fetch_pred_n || Float::INFINITY,
+        # ]
+        if self.max_interval
+            n = self.max_interval
+        elsif self.fetch_pred_n
+            #n = self.fetch_pred_n * 100 / (self.update_frequency||0)
+            n = self.fetch_pred_n
+        else
+            n = Float::INFINITY
+        end
+
+        [
+            n,
+            -(self.rating||0),
+            self.r18||"",
+        ]
     end
 
     def point
@@ -868,6 +898,8 @@ class Twitter < ApplicationRecord
         regexp_pattern = /\{[a-zA-Z_]+\d*\}/
         matches = grp_sort_spec_arg.scan(regexp_pattern)
 
+        lade_s = nil
+
         matches.each do |x|
             if x =~ /([a-zA-Z_]+)(\d*)/
                 start_str = $1
@@ -892,6 +924,7 @@ class Twitter < ApplicationRecord
             when "az"
                 if unit
                     lade_s = unit
+                    #STDERR.puts %!###-- #{lade_s} ###---!
                 else
                     unit = 3
                 end
@@ -928,6 +961,10 @@ class Twitter < ApplicationRecord
                 number = self.created_at_day_num / 30
                 gkey_work = group_sub(unit, number, gkey_work, x)
             when "cyymm"
+                if unit
+                    lade_s = unit
+                    #STDERR.puts %!### #{lade_s} ###!
+                end
                 yymm = self.created_at.strftime("%y/%m")
                 gkey_work.gsub!(x, yymm)
                 #STDERR.puts %!"#{x}"\t"#{yymm}"\t"#{gkey_work}"!
@@ -996,6 +1033,15 @@ class Twitter < ApplicationRecord
                 gkey_work = group_sub(unit, number, gkey_work, x)
             when "restrict"
                 gkey_work.gsub!(x, self.r18||"")
+            when "interval"
+                if self.interval_exceeded? true
+                    gkey_work.gsub!(x, "")
+                else
+                    number = self.last_access_datetime_days_elapsed / 30
+                    r_s = Util::format_num(self.rating, 1)
+                    gkey_work = "後回し:#{number}ヶ月" + TWT_H_SEPARATOR + %!#{r_s}!
+                    break
+                end
             when "method"
                 gkey_work.gsub!(x, self.drawing_method||"")
             when "unset"
@@ -1010,22 +1056,25 @@ class Twitter < ApplicationRecord
         end
 
         if self.rating.presence
+            #STDERR.puts %!###xxx #{lade_s} xxx###!
             lade = self.last_access_datetime_days_elapsed
             lade_s = 4 unless lade_s
+
+            low_rating_t = 80
 
             if self.status != Twitter::TWT_STATUS::STATUS_PATROL
                 "\t#{self.status}#{TWT_H_SEPARATOR}-"
             elsif self.sp? and self.rating >= Twt::RATING_THRESHOLD
                 TWT_KEYWORD_SP_S
             elsif lade < lade_s
+
                 w = self.prediction
                 str = Util::format_num(w, 10, 3)
 
                 "\t0#{lade}.#{lade}日前アクセス#{TWT_H_SEPARATOR}#{str}↑"
-            elsif self.rating < 80
+            elsif low_rating_t and self.rating < low_rating_t
                 number = self.last_access_datetime_days_elapsed / 7
                 w = Util::format_num(number, 1, 3)
-                #"\t低ランク#{TWT_H_SEPARATOR}#{w}週"
                 "\t低ランク(#{self.rating})#{TWT_H_SEPARATOR}#{w}週"
             else
                 gkey_work
@@ -1181,6 +1230,7 @@ class Twitter < ApplicationRecord
                 gkey = "ファイルサイズ大&更新頻度高め#{Twitter::TWT_H_SEPARATOR}更新頻度#{uf}"
             end
         else
+            #prediction_h_ex
             case grp_sort_by
             when TwittersController::GRP_SORT::GRP_SORT_PRED
                 p = Util::format_num(self.prediction, 10)

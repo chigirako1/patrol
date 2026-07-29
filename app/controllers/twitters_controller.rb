@@ -27,6 +27,8 @@ class TwittersController < ApplicationController
   module SORT_BY
     SORT_ID = "id"
 
+    SORT_PRIORITY_DES = "優先"
+
     SORT_PRED_DESC = "予測▽順"
     SORT_PRED_ASC = "予測△順"
 
@@ -93,6 +95,10 @@ class TwittersController < ApplicationController
     #
     GRP_SPLIT_STR = "|"
   end
+
+  GRP_SPC_T_DM = "[{dm}]"
+  GRP_SPC_T_RR_S_AZ = "{rr}#{Twitter::TWT_H_SEPARATOR}{az}"
+
 
   class TwtParams
     attr_accessor :mode,
@@ -743,6 +749,9 @@ class TwittersController < ApplicationController
         #twitters = twitters.select {|x| x.status == Twitter::TWT_STATUS::STATUS_PATROL}
         twitters = twitters.select {|x| (x.rating||0) >= twt_params.rating_gt}
       end
+      if twt_params.rating_lt != 0
+        twitters = twitters.select {|x| (x.rating||0) <= twt_params.rating_lt}
+      end
       STDERR.puts %!index_select()r:#{twitters.size}!
 
       if twt_params.prm_filenum >= 0
@@ -1023,6 +1032,12 @@ class TwittersController < ApplicationController
         twitters = twitters.select {|x| (x.update_frequency||0) <= -(ul_freq)}
       else
         twitters = twitters.select {|x| (x.update_frequency||0) >= (ul_freq)}
+      end
+
+      if twt_params.prm_filesize >= 0
+        twitters = twitters.select {|x| (x.filesize||0) >= twt_params.prm_filesize}
+      else
+        twitters = twitters.select {|x| (x.filesize||0) <= -twt_params.prm_filesize}
       end
 
       prm_filenum = twt_params.prm_filenum
@@ -1306,6 +1321,8 @@ class TwittersController < ApplicationController
       case twt_params.sort_by
       when SORT_BY::SORT_ID
         twitters = twitters.sort_by {|x| [-x.id]}
+      when SORT_BY::SORT_PRIORITY_DES
+        twitters = twitters.sort_by {|x| x.sort_priority}
       when SORT_BY::SORT_POINT
         twitters = twitters.sort_by {|x| -x.point}
       when SORT_BY::SORT_PRED_ASC
@@ -1349,7 +1366,8 @@ class TwittersController < ApplicationController
       when SORT_BY::R_FILENUM_ASC
         twitters = twitters.sort_by {|x| [-x.rating, (x.filenum||0) / 25, -x.prediction]}
       when SORT_BY::SORT_PRED_DESC
-        twitters = twitters.sort_by {|x| [-x.prediction, x.last_access_datetime]}
+        #twitters = twitters.sort_by {|x| [-x.prediction, x.last_access_datetime]}
+        twitters = twitters.sort_by {|x| [-x.prediction_h_ex, x.last_access_datetime]}
       when SORT_BY::R_PRED_ASC
         twitters = twitters.sort_by {|x| [-x.rating, x.prediction]}
       when SORT_BY::R_PRED_DESC

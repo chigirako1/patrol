@@ -30,7 +30,15 @@
             <strong>別:</strong>
             @<%= twitter.alt_twtid %>
         <% end %>
+        】
 
+        <strong>登録日:</strong>
+        <%= twitter.datetime_disp(twitter.created_at) %>
+
+        <strong>アクセス日:</strong>
+        <%= twitter.datetime_disp(twitter.last_access_datetime) %>
+
+        【
         <% if twitter.new_twtid.presence %>
             <strong>新:</strong>
             @<%= twitter.new_twtid %>
@@ -42,10 +50,5 @@
         <% end %>
         】
 
-        <strong>登録日:</strong>
-        <%= twitter.datetime_disp(twitter.created_at) %>
-
-        <strong>アクセス日:</strong>
-        <%= twitter.datetime_disp(twitter.last_access_datetime) %>
     </p>
 </div>

@@ -179,6 +179,8 @@
             <%= twitter.get_date_info(twitter.last_access_datetime) if twitter.last_access_datetime.presence %>
             <br />
             [頻度：<%= twitter.update_frequency %>]
+            <br />
+            <%= twitter.max_interval %>|<%= twitter.fetch_pred_n %>
           </td>
 
           <% if twitter.last_post_datetime %>
@@ -475,8 +477,10 @@
     <%= f.label :ソート %>
     <%= f.select :sort_by, options_for_select(
         [
-          ["予測降順(▽)", TwittersController::SORT_BY::SORT_PRED_DESC],
-          ["予測昇順(△)", TwittersController::SORT_BY::SORT_PRED_ASC],
+          [TwittersController::SORT_BY::SORT_PRIORITY_DES],
+
+          [TwittersController::SORT_BY::SORT_PRED_DESC],
+          [TwittersController::SORT_BY::SORT_PRED_ASC],
           [TwittersController::SORT_BY::R_PRED_DESC],
           [TwittersController::SORT_BY::R_PRED_ASC],
 
@@ -490,6 +494,7 @@
           
           [TwittersController::SORT_BY::R_ACCESS],
           [TwittersController::SORT_BY::SORT_ACCESS_O2N],
+          [TwittersController::SORT_BY::SORT_ACCESS_N2O],
           [TwittersController::SORT_BY::ACCESS_W],
           
           [TwittersController::SORT_BY::RATING],

@@ -571,6 +571,10 @@
   <div>
     <%= form.label "取得候補表示基準値", style: "display: block" %>
     <%= form.number_field :fetch_pred_n %>
+    <% ndays = @twitter.calc_n_days %>
+    <% if ndays %>
+      <%= ndays %>日 = <%= @twitter.fetch_pred_n %> * 100 / <%= @twitter.update_frequency %>
+    <% end %>
   </div>
 <% end %>
 

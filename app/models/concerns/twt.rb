@@ -54,16 +54,21 @@ module Twt
 
     FILENUM_T = 750
 
-    #FILESIZE_B_THRESHOLD_KB = 450
-    FILESIZE_B_THRESHOLD_KB = 480
+    ### ###
+    FILESIZE_B_THRESHOLD_KB = 750
     FILESIZE_B_THRESHOLD = FILESIZE_B_THRESHOLD_KB * 1024
 
-    FILESIZE_THRESHOLD_KB = 500
+    FILESIZE_THRESHOLD_KB = FILESIZE_B_THRESHOLD_KB + 50
     FILESIZE_THRESHOLD = FILESIZE_THRESHOLD_KB * 1024
 
     FILESIZE_V_HUGE_KB = 1500
     FILESIZE_V_HUGE = FILESIZE_V_HUGE_KB * 1024
 
+    ### ###
+    UPLOAD_FREQ_THRE_V = 25
+    UPLOAD_FREQ_THRE_N = 200
+
+    ### ###
     FILESIZE_SAMPLE_N = 100
 
     def self.get_twt_tweet_ids_from_txts(twtid)
@@ -261,7 +266,9 @@ module Twt
     def self.search_new_screen_name_from_txt(unknown_twt_screen_name_list, dirname)
         if dirname =~ /^(\w+)/
             sname = $1
-        else
+        end
+
+        if sname == nil or sname.size == 1
             return []
         end
 
@@ -325,6 +332,11 @@ module Twt
         }
     end
 
+    def self.result_sp_chk(done_list)
+        chk_screen_name_list = Util::checking_screen_names.sort.uniq
+         chk_screen_name_list.delete_if {|x| done_list.include? x}
+    end
+
     def self.get_sp_path(twtid)
         paths = get_sp_paths(twtid)
         if paths.size > 0
@@ -362,6 +374,15 @@ module Twt
 
     def self.sp_datetime_str_to_datetime(datetime_str)
         Util::string_to_datetime(datetime_str).in_time_zone('Tokyo')
+    end
+
+    def self.get_sp_datetime_from_filepath(filepath)
+        datetime = get_sp_datetime_from_filename File.basename filepath
+        unless datetime
+            datetime = Util::mtime filepath
+            STDERR.puts %!"#{filepath}" => #{datetime}!
+        end
+        datetime
     end
 
     def self.get_sp_datetime_from_filename(filename)
@@ -417,6 +438,10 @@ module Twt
         dirpath = Twt::get_sp_path(twtid)
         if dirpath
             path_list = UrlTxtReader::get_path_list(dirpath)
+        end
+
+        if path_list.presence
+            path_list.sort_by {|path| Twt::get_sp_datetime_from_filepath(path)}
         else
             nil
         end
@@ -1237,7 +1262,6 @@ module Twt
 
 
         if (chk or Tweet.has_acquisition_schedule?(twt.twtid)) and dayn > 0
-            #val = Util::format_num(twt.rating, 1)
             if twt.update_frequency >= freq_n
                 return "020.取得対象物件あり[#{pred_val}](高頻度)"
             else
@@ -1246,7 +1270,6 @@ module Twt
         end
 
         if Util::get_date_delta(twt.created_at) <= 30
-            #r_s = Util::format_num(twt.rating, 1)
             if twt.update_frequency >= freq_n
                 return "055.最近登録[#{pred_val}](高頻度)"
             else
@@ -1287,51 +1310,15 @@ module Twt
             return "600.当日取得した分"
         end
 
-=begin
-        if dayn < 8 and pred < 15
-            cate_no = "850"
-        elsif pred < 10
-            cate_no = "810"
-        else
-            cate_no = "880"
-        end
-=end
-
         month_n = Util::format_num(month_v, 1)
         r_s = Util::format_num(twt.rating, 1)
-        p_s = Util::format_num(pred, 50)
-=begin
-        if month_v > 1
-            cate_no = 890
-            #%!#{cate_no}.#{month_n}ヵ月(#{r_s})|#{p_s}!
-            %!#{cate_no}.#{p_s}|#{month_n}ヵ月(#{r_s})!
-        elsif month_v > 0 and twt.rating > 86
-            cate_no = 888
-            #%!#{cate_no}.#{month_n}ヵ月!
-            %!#{cate_no}.#{p_s}|#{month_n}ヵ月!
-        else
-            if twt.rating >= 87 and pred >= 50
-                cate_no = "866"
-            elsif twt.rating < 84
-                cate_no = "870"
-            else
-                cate_no = "880"
-            end
-
-            pred_i = 20
-            p_s = Util::format_num(pred, pred_i)
-            #%!#{cate_no}.P:#{p_s}|#{month_n}月|#{r_s}↑!
-            #%!#{cate_no}.#{month_n}ヵ月|#{r_s}↑!
-            #%!#{cate_no}.#{r_s}↑|#{month_n}月!
-            %!#{cate_no}.#{p_s}|#{month_n}ヵ月|#{r_s}↑!
-        end
-=end
+        p_s = Util::format_num(pred, 25)
         if month_v > 0
             cate_no = 890
-            %!#{cate_no}.#{month_n}ヵ月|#{r_s}!
+            %!#{cate_no}.#{month_n}ヵ月|#{r_s}|#{p_s}件!
         else
             cate_no = 810
-            week_n = Util::format_num(dayn / 7, 2)
+            week_n = Util::format_num(dayn / 7, 1)
             %!#{cate_no}.#{p_s}件↑|#{week_n}週|#{r_s}!
         end
     end
@@ -1719,6 +1706,10 @@ module Twt
                     "なし",
                     "ない",
                 ]
+
+        def search_word
+            self.dirname.gsub(/ /, "_")
+        end
 
         def group_key(to_be_obtain_list)
             if self.twt

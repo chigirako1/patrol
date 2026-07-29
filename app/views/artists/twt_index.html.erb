@@ -992,23 +992,25 @@
                     <% end %>
                 <% end %>
             <% else %>
-                <%= idx %>."<%= elem.dirname %>"
-                <% url = twitters_path(mode: TwittersController::ModeEnum::MODE_SEARCH, search_word: elem.dirname, grp_sort_by: TwittersController::GRP_SORT::GRP_SORT_SPEC, grp_sort_spec: "{dm}::{r}") %>
+                "<%= elem.dirname %>"
+                <% search_word = elem.search_word %>
+                <% url = twitters_path(mode: TwittersController::ModeEnum::MODE_SEARCH, search_word: search_word, grp_sort_by: TwittersController::GRP_SORT::GRP_SORT_SPEC, grp_sort_spec: "{dm}::{r}") %>
                 [<%= link_to_ex("■検索■", url) %>]
 
-                <% result = Twitter.search_records(elem.dirname.gsub(/ +/, "_"), Twitter::DRAWING_METHOD::DM_AI) %>
-                <%= %!(#{result.size})! if result.size > 0 %>
+                <% result = Twitter.search_records(search_word, Twitter::DRAWING_METHOD::DM_AI) %>
+                <% hhh = 3 %>
+                <%= %!(#{result.size})! if result.size > hhh %>
 
-                <% if result.size > 0 and result.size < 3 %>
+                <% if result.size > 0 and result.size <= hhh %>
                     <% result.each do |twt| %>
                         <br />
-                        <%= "【#{dm_icon(twt.drawing_method)}#{twt.rating}】#{twt.twtname}(@#{twt.twtid} )" %>
+                        ■<%= "【#{dm_icon(twt.drawing_method)}#{twt.rating}】#{twt.twtname}(@#{twt.twtid} )" %>
                         <br />
                         <%= twitter_info_tag_ex(twt.twtid) %>
                     <% end %>
                 <% end %>
 
-                <% results = Twt::search_new_screen_name_from_txt(@unknown_twt_screen_name_list, elem.dirname) %>
+                <% results = Twt::search_new_screen_name_from_txt(@unknown_twt_screen_name_list, search_word) %>
                 <% if results.presence %>
                     <br />
                     <% results.each do |x| %>
@@ -1023,10 +1025,17 @@
     <% end %>
 
     <h2>sp_chk削除対象？</h2>
+    <% done_list = [] %>
     <% @sp_dirs.each do |elem| %>
         <% if elem.screen_name.presence and elem.sp_chk %>
             <%= elem.screen_name %><br />
+            <% done_list << elem.screen_name %>
         <% end %>
+    <% end %>
+
+    <h2>sp_chk削除後リスト</h2>
+    <% Twt::result_sp_chk(done_list).each do |x| %>
+        <%= x %><br />
     <% end %>
 <% end %>
 
@@ -1072,10 +1081,12 @@
 
     <% twitters = [] %>
     <% words = s_words.join("、") %>
-    <% words.split(/、/).sort.uniq.each do |word| %>
+    <% words.split(/[、,]/).map {|w| w.strip}.sort.uniq.each do |word| %>
+    <%# words.split(/[、,]/).sort.uniq.each do |word| %>
         <% unless word.presence %>
             <% next %>
         <% end %>
+        <% word.gsub!(/\s+/, "_") %>
         <% result = Twitter.search_records(word, Twitter::DRAWING_METHOD::DM_AI) %>
         <% if result.size > 0 and result.size < 10 %>
             <!-- <h4>■<%= word %></h4> -->

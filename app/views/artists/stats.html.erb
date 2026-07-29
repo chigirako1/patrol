@@ -27,7 +27,20 @@
                         <% end %>
                     <% elsif key.include?("twt") %>
 
-                        <% url = twitters_path(page_title: "xxx", mode: TwittersController::ModeEnum::MODE_STATS, rating: k, rating_lt: k, target: "AI") %>
+                        <% url = twitters_path(page_title: "xxx",
+                            mode: TwittersController::ModeEnum::MODE_ALL,
+                            rating: k,
+                            rating_lt: k,
+                            sort_by: TwittersController::SORT_BY::M_R_ACCESS_W_PRED_A,
+                            grp_sort_by: TwittersController::GRP_SORT::GRP_SORT_ACCESS_W,
+                            target: Twitter::DRAWING_METHOD::DM_AI,
+                            ex_sp: true,
+                            select_max: 66,
+                            num_of_disp: 3,
+                            cond_or: true,
+                            pred: 22,
+                            hide_within_days: 22,
+                            status: Twitter::TWT_STATUS::STATUS_PATROL) %>
                     <% else %>
                     <% end %>
                     <%= link_to_ex("#{k}", url) %>

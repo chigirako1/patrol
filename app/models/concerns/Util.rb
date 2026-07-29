@@ -226,6 +226,11 @@ module Util
         filesize
     end
 
+    def self.mtime(filepath)
+        rpath = Util::get_public_path(filepath)
+        File.mtime rpath
+    end
+
     def self.find_duplicate_sizes(file_paths)
         # 1. パスが存在するか確認し、サイズをキーにしたハッシュを作成
         size_map = file_paths.each_with_object(Hash.new { |h, k| h[k] = [] }) do |path, hash|

@@ -172,17 +172,12 @@
             <% fsize_avg = fsize_list.sum / fsize_list.size %>
             ファイルサイズ平均：
             <% fcolor = "red" %>
-            <% if fsize_avg > 2 * 1024 * 1024 %>
+            <% if Twt::filesize_v_huge? fsize_avg %>
                 <% cmnt = "かなり大" %>
-            <% elsif fsize_avg > 1024 * 1024 %>
-                <% cmnt = "大" %>
-            <% elsif fsize_avg > 750 * 1024 %>
+            <% elsif Twt::filesize_huge? fsize_avg %>
                 <% cmnt = "大きめ" %>
-            <% elsif fsize_avg > 500 * 1024 %>
+            <% elsif Twt::filesize_big? fsize_avg %>
                 <% cmnt = "少し大きめ" %>
-            <% elsif false #fsize_avg > 400 * 1024 %>
-                <% cmnt = "中" %>
-                <% fcolor = "orange" %>
             <% else %>
                 <% cmnt = nil %>
                 <% fcolor = "black" %>
@@ -339,7 +334,7 @@
         <h4>SP(<%= File.dirname filelist.first %>)[<%= filelist.size %>ファイル]</h4>
 
         <% latest_file = filelist.last %>
-        <% sp_datetime = Twt::get_sp_datetime_from_filename(File.basename latest_file) %>
+        <% sp_datetime = Twt::get_sp_datetime_from_filepath(latest_file) %>
         <% sp_tweet_id = Twt::time2tweet_id(sp_datetime) %>
         <b><%= Twt::tweet_id_with_comma(sp_tweet_id) %></b>(<= DL日時からの推測)(<%= time_ago_in_words(sp_datetime) %>)
         [<%= File::basename latest_file %>]

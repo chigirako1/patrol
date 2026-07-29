@@ -819,11 +819,9 @@ class ArtistsController < ApplicationController
       col = [:rating, :r18, :status, :drawing_method, :warning]
       col.each do |c|
         key = "twt(ai):" + c.to_s
-        #@stats[key] = Twitter.select {|x| x.drawing_method == "AI"}.group(c).count
-        #t = Twitter.all
-        #t = Twitter.select {|x| x.drawing_method == "AI"}
-        t = Twitter.where(drawing_method: 'AI')
-        #@stats[key] = t.group(c).having("drawing_method = 'AI'").count
+        #t = Twitter.where(drawing_method: 'AI')
+        #Post.where("(id = ?) OR (user_id = ?)", 5, 6)
+        t = Twitter.where("(drawing_method = ?) AND (status = ?)", Twitter::DRAWING_METHOD::DM_AI, Twitter::TWT_STATUS::STATUS_PATROL)
         @stats[key] = t.group(c).count
         @stats[key].delete(nil)
         @stats[key].delete("")
@@ -893,7 +891,7 @@ class ArtistsController < ApplicationController
       when DIR_TYPE::SMARTPHONE
         @sp_dirs = Twt::sp_dirs()
 
-        filename = "thisyear"
+        filename = "thisyear 2"
         path = UrlTxtReader::get_path(filename)
         @unknown_twt_screen_name_list = UrlTxtReader::get_unknown_twt_url_list(path)
 
