@@ -36,6 +36,7 @@ class TwittersController < ApplicationController
     R_PRED_DESC = "評価/予測▽順"
 
     R_ACCESS = "評価/アクセス日順（旧→新）"
+    
     SORT_ACCESS_O2N = "アクセス日順（旧→新）"
     SORT_ACCESS_N2O = "アクセス日順（新→旧）"
 
@@ -97,7 +98,7 @@ class TwittersController < ApplicationController
   end
 
   GRP_SPC_T_DM = "[{dm}]"
-  GRP_SPC_T_RR_S_AZ = "{rr}#{Twitter::TWT_H_SEPARATOR}{az}"
+  GRP_SPC_T_RR_S_AZ = "{interval}{rr}#{Twitter::TWT_H_SEPARATOR}{az}"
 
 
   class TwtParams
@@ -1351,7 +1352,7 @@ class TwittersController < ApplicationController
         #twitters = twitters.sort_by {|x| [-(x.last_access_day_num / 7), -x.rating, x.prediction]}
         twitters = twitters.sort_by {|x| [-(x.last_access_day_num / 7), -x.rating_ex, x.prediction]}
       when SORT_BY::R_ACCESS
-        twitters = twitters.sort_by {|x| [-(x.rating||0), (x.last_access_datetime)]}
+        twitters = twitters.sort_by {|x| [-(x.rating||0), -x.r18to_i, (x.last_access_datetime)]}
       when SORT_BY::FILENUM_DSC
         twitters = twitters.sort_by {|x| [-(x.filenum||0)]}
       when SORT_BY::FILENUM_ASC

@@ -204,6 +204,7 @@
   <% else %>
     <h3>pxv:"<%= pxv_user_id %>" not found</h3>
     <%= link_to_ex "New Artist(#{pxv_user_id})", new_artist_path(pxvid: pxv_user_id) %>
+    PXV:<%= link_to_ex "▶#{pxv_user_id}", Pxv::pxv_user_url(pxv_user_id) %><br />
   <% end %>
 <% end %>
 

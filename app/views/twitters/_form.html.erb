@@ -566,6 +566,9 @@
   <div>
     <%= form.label "最大アクセス間隔(日)", style: "display: block" %>
     <%= form.number_field :max_interval %>
+    <% if @twitter.max_interval %>
+       <%= @twitter.max_interval %> * <%= @twitter.update_frequency %> / 100 => <%= @twitter.max_interval * @twitter.update_frequency / 100 %>件
+    <% end %>
   </div>
 
   <div>
@@ -573,7 +576,7 @@
     <%= form.number_field :fetch_pred_n %>
     <% ndays = @twitter.calc_n_days %>
     <% if ndays %>
-      <%= ndays %>日 = <%= @twitter.fetch_pred_n %> * 100 / <%= @twitter.update_frequency %>
+       <%= @twitter.fetch_pred_n %> * 100 / <%= @twitter.update_frequency %> => <%= ndays %>日
     <% end %>
   </div>
 <% end %>

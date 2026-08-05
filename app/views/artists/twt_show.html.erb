@@ -154,8 +154,14 @@
     <% if paths.size > 0 %>
         ファイルあり
     <% else %>
-        <% url2 = Twt::twt_tweet_url_dev(x) %>
-        <%= link_to_ex(url2, url2) %>
+        <% tweet = Tweet.find_by(tweet_id: x) %>
+        <% if tweet %>
+            DBに登録あり→   "<%= tweet.status %>"@<%= tweet.screen_name %>
+        <% else %>
+            DBにも登録無し
+            <% url2 = Twt::twt_tweet_url_dev(x) %>
+            <%= link_to_ex(url2, url2) %>
+        <% end %>
     <% end %>
     <br>
 <% end %>

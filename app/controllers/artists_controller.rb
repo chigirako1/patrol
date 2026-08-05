@@ -893,7 +893,7 @@ class ArtistsController < ApplicationController
 
         filename = "thisyear 2"
         path = UrlTxtReader::get_path(filename)
-        @unknown_twt_screen_name_list = UrlTxtReader::get_unknown_twt_url_list(path)
+        @unknown_twt_screen_name_list = UrlTxtReader::get_unknown_twt_url_list(path).keys
 
       when DIR_TYPE::SP_VID
         @twt_video_list = TwtVideoList::new()

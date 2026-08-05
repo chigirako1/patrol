@@ -395,6 +395,11 @@ class Twitter < ApplicationRecord
         #unless (twitter.rating and twitter.rating >= Twt::RATING_THRESHOLD)
         #    return false
         #end
+
+        #if self.disp_tab_target == Twitter::DISP_TAB::DT_POST and (self.filesize||0) > Twt::FILESIZE_A_THRESHOLD
+        if self.disp_tab_target == Twitter::DISP_TAB::DT_MEDIA and (self.update_frequency||0) > 200 and (self.rating||0) >= 84
+            return true
+        end
         
         if Twt::filesize_v_huge?(self.filesize) and (self.update_frequency||0) > Twt::UPLOAD_FREQ_THRE_V
             #STDERR.puts %!sp?: #{self.filesize} bytes, #{self.update_frequency}/100 "#{self.twtname}[@#{self.twtid}]"!
@@ -429,8 +434,11 @@ class Twitter < ApplicationRecord
             return true
         end
 
-        if self.rating < 85 and self.prediction < 15
-            return true
+        if self.rating < 85
+            if dayn > 30
+            elsif self.prediction < 15
+                return true
+            end
         end
 
         if self.rating < 85 and dayn < 10 or
@@ -538,17 +546,33 @@ class Twitter < ApplicationRecord
         #     self.fetch_pred_n || Float::INFINITY,
         # ]
         if self.max_interval
-            n = self.max_interval
-        elsif self.fetch_pred_n
-            #n = self.fetch_pred_n * 100 / (self.update_frequency||0)
-            n = self.fetch_pred_n
+            max_interval = self.max_interval
         else
-            n = Float::INFINITY
+            max_interval = Float::INFINITY
         end
 
+        if self.fetch_pred_n
+            #fetch_pred_n = self.fetch_pred_n * 100 / (self.update_frequency||0)
+            #fetch_pred_n = self.fetch_pred_n
+            fetch_pred_n = Float::INFINITY
+        else
+            fetch_pred_n = Float::INFINITY
+        end
+
+        pred = self.prediction_h_ex
+        lad = self.last_access_day_num
+
         [
-            n,
+            max_interval,
+            fetch_pred_n,
+            -(self.rating||0 / 5),
+            -(lad / 90),
             -(self.rating||0),
+            -(pred / 100),
+            -(lad / 30),
+            -(pred / 50),
+            (self.filenum / 100),
+            -(pred / 10),
             self.r18||"",
         ]
     end
@@ -1034,12 +1058,16 @@ class Twitter < ApplicationRecord
             when "restrict"
                 gkey_work.gsub!(x, self.r18||"")
             when "interval"
+                if unit
+                    lade_s = unit
+                end
+
                 if self.interval_exceeded? true
                     gkey_work.gsub!(x, "")
                 else
                     number = self.last_access_datetime_days_elapsed / 30
                     r_s = Util::format_num(self.rating, 1)
-                    gkey_work = "後回し:#{number}ヶ月" + TWT_H_SEPARATOR + %!#{r_s}!
+                    gkey_work = "\t後回し:#{number}ヶ月" + TWT_H_SEPARATOR + %!#{r_s}!
                     break
                 end
             when "method"
@@ -1531,13 +1559,15 @@ class Twitter < ApplicationRecord
 
     C_VAL_TBL = [
         #r    d   n
-        [95, [ 14, 22, 0]],
-        [90, [ 21, 23, 0]],
-        [88, [ 25, 33, 1]],
-        [87, [ 26, 40, 2]],
-        [86, [ 27, 45, 3]],
-        [85, [ 30, 50, 4]],
-        [84, [ 35, 75, 5]],
+        [95, [  7, 22,  0]],
+        [90, [ 22, 25,  0]],
+        [89, [ 23, 30,  1]],
+        [88, [ 26, 33,  1]],
+        [87, [ 27, 40,  2]],
+        [86, [ 28, 45,  3]],
+        [85, [ 35, 50,  7]],
+        [84, [ 40, 75, 15]],
+        [83, [ 60, 99, 30]],
 =begin
         [82, [ 40, 60,14]],
         [80, [ 60, 66,21]],

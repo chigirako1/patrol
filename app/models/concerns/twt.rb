@@ -55,13 +55,16 @@ module Twt
     FILENUM_T = 750
 
     ### ###
-    FILESIZE_B_THRESHOLD_KB = 750
+    FILESIZE_A_THRESHOLD_KB = 300
+    FILESIZE_A_THRESHOLD = FILESIZE_A_THRESHOLD_KB * 1024
+
+    FILESIZE_B_THRESHOLD_KB = 650#750
     FILESIZE_B_THRESHOLD = FILESIZE_B_THRESHOLD_KB * 1024
 
     FILESIZE_THRESHOLD_KB = FILESIZE_B_THRESHOLD_KB + 50
     FILESIZE_THRESHOLD = FILESIZE_THRESHOLD_KB * 1024
 
-    FILESIZE_V_HUGE_KB = 1500
+    FILESIZE_V_HUGE_KB = 1300#1500
     FILESIZE_V_HUGE = FILESIZE_V_HUGE_KB * 1024
 
     ### ###
@@ -265,7 +268,7 @@ module Twt
 
     def self.search_new_screen_name_from_txt(unknown_twt_screen_name_list, dirname)
         if dirname =~ /^(\w+)/
-            sname = $1
+            sname = $1.downcase
         end
 
         if sname == nil or sname.size == 1
@@ -274,8 +277,8 @@ module Twt
 
         results = []
         unknown_twt_screen_name_list.each do |screen_name|
-            if screen_name.include? sname
-                results << sname
+            if screen_name.downcase.include? sname
+                results << screen_name
             end
         end
 
@@ -496,7 +499,8 @@ module Twt
     end
 
     def self.twt_tweet_url_dev(tweet_id)
-        twt_tweet_url(TWT_USER_DEV, tweet_id)
+        #twt_tweet_url(TWT_USER_DEV, tweet_id)
+        twt_tweet_url_i(tweet_id)
     end
 
     def self.twt_tweet_url_i(tweet_id)
@@ -1280,6 +1284,17 @@ module Twt
             end
         end
 
+        if twt.filenum < 200
+            if twt.update_frequency >= freq_n
+                return "054.ファイル数少[#{pred_val}](高頻度)"
+            else
+                if dayn < 7 and pred < 10
+                else
+                    return "754.ファイル数少[#{pred_val}]"
+                end
+            end
+        end
+
         if twt.no_disp?(dayn)
             return LOW_PRIORITY_IGNORE_KEY
         end
@@ -1297,7 +1312,7 @@ module Twt
                 if pred < 25
                     return "011.前日/当日分[#{r_s}]"
                 else
-                    return "011.前日/当日分(#{p_s}件)"
+                    return "012.前日/当日分(#{p_s}件)"
                 end
             elsif twt.rating >= 84
                 week_n = Util::format_num(dayn / 7, 1)
@@ -1312,12 +1327,16 @@ module Twt
 
         month_n = Util::format_num(month_v, 1)
         r_s = Util::format_num(twt.rating, 1)
-        p_s = Util::format_num(pred, 25)
+        p_s = Util::format_num(pred, 15)
         if month_v > 0
             cate_no = 890
             %!#{cate_no}.#{month_n}ヵ月|#{r_s}|#{p_s}件!
         else
-            cate_no = 810
+            if twt.rating > 85
+                cate_no = 850
+            else
+                cate_no = 810
+            end
             week_n = Util::format_num(dayn / 7, 1)
             %!#{cate_no}.#{p_s}件↑|#{week_n}週|#{r_s}!
         end
@@ -1708,7 +1727,15 @@ module Twt
                 ]
 
         def search_word
-            self.dirname.gsub(/ /, "_")
+            self.dirname.strip.gsub(/ /, "_")
+        end
+
+        def search_word2
+            if self.dirname =~ /^(\w+)/
+                $1
+            else
+                search_word
+            end
         end
 
         def group_key(to_be_obtain_list)
@@ -1717,7 +1744,7 @@ module Twt
                     todo_s = "!取得対象あり:"
                 end
 
-                dayn = 2
+                dayn = 1
                 if self.twt.last_access_datetime and self.twt.last_access_datetime_days_elapsed < dayn
                     today_s = "本日アクセス"
                 else

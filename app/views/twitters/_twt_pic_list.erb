@@ -298,7 +298,7 @@
 
     <!-- tweet id -->
     <% twt_pic_list.first(1).each do |elem| %>
-        <% tweet_id = elem[2][0] %>
+        <% tweet_id = elem[2][0] %><!-- TODO:SPのファイルの場合は使用しないようにする -->
     <% end %>
 
     <% if tweet_id and twitter.latest_tweet_id %>
@@ -408,7 +408,7 @@
                 <%= link_to_ex(tweet_id, Twt::twt_tweet_url(@twitter.twtid, tweet_id)) %>
                 <% if tweet.presence %>
                     <% if true %>
-                        "<b><%= tweet.status %></b>"
+                        "<b><%= tweet.status %><%= "@#{tweet.screen_name}" if tweet.screen_name != twitter.twtid %></b>"
                         <% if tweet.status != Tweet::StatusEnum::DUPLICATE %>
                             (id変わったとき用→)
                             <%= link_to_ex(tweet_id, Twt::twt_tweet_url_dev(tweet_id)) %>

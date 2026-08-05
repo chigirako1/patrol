@@ -194,7 +194,7 @@
                         (@<%= twt_account.twtid %>)
                         [<%= twt_account.update_frequency %>]
                     </td>
-                    <% pred = twt_account.prediction %>
+                    <% pred = twt_account.prediction_h_ex %>
                     <% bgcolor = pred_bg_color(pred) #pre_bgcolor_ex(pred) %>
                     <td align="right" bgcolor="<%= bgcolor %>">
                         <%= pred %>
@@ -607,7 +607,7 @@
 
                     <% twt = Twitter.find_by_twtid_ignore_case(p.twtid) %>
                     <% if twt %>
-                        <% twt_pred = twt.prediction %>
+                        <% twt_pred = twt.prediction_h_ex %>
                         <td>
                             <%= %!#{twt.drawing_method}! if twt.drawing_method.presence %>
                             <%= %!【#{twt.rating}】! if twt.rating.presence %>
@@ -732,7 +732,7 @@
                         </td>
 
                         <!-- 予測 -->
-                        <% pred = twt.prediction %>
+                        <% pred = twt.prediction_h_ex %>
                         <% bgcolor = pred_bg_color(pred) %>
                         <td align="right" bgcolor="<%= bgcolor %>">
                             <%= pred %>
@@ -886,6 +886,8 @@
         <% url_p_k = artists_twt_index_path(filename: file, hide_day: hide_day, pred: 5, rating: rating_thre, target:"known_pxv", force_disp_day: 90) %>
         <% url_t_e = artists_twt_index_path(filename: file, hide_day: hide_day, pred: 5, target: ArtistsController::FileTarget::TWT_EXPERIMENT, force_disp_day: 90) %>
         <% url_p_e = artists_twt_index_path(filename: file, hide_day: hide_day, pred: 5, target: ArtistsController::FileTarget::PXV_EXPERIMENT, force_disp_day: 90) %>
+        <% url_i   = artists_twt_index_path(filename: file, grp_sort_spec: TwittersController::GRP_SPC_T_DM + TwittersController::GRP_SPC_T_RR_S_AZ, target: ArtistsController::FileTarget::FT_TWT_I) %> 
+
         <%= file %>
         | <%= link_to_ex("all", url_all) %>
         |■
@@ -895,6 +897,7 @@
         | <%= link_to_ex("登録済みpxv", url_p_k) %>
         | <%= link_to_ex("実験twt", url_t_e) %>
         | <%= link_to_ex("実験pxv", url_p_e) %>
+        | <%= link_to_ex("[[i]]", url_i) %>
         <br />
     <% end %>
 
@@ -972,7 +975,7 @@
                 <% end %>
                 </b>
                 [<%= link_to_ex("■twt■", elem.twt) %>]
-                [予測:<%= elem.twt.prediction %>=>ファイル:<%= elem.file_cnt %>]
+                [予測:<%= elem.twt.prediction_h_ex %>=>ファイル:<%= elem.file_cnt %>]
                 
                 (@<%= elem.twt.twtid %>)
                 「<%= elem.dirname %>｣
@@ -1010,11 +1013,13 @@
                     <% end %>
                 <% end %>
 
-                <% results = Twt::search_new_screen_name_from_txt(@unknown_twt_screen_name_list, search_word) %>
+                <% results = Twt::search_new_screen_name_from_txt(@unknown_twt_screen_name_list, elem.search_word2) %>
                 <% if results.presence %>
                     <br />
                     <% results.each do |x| %>
+                        "<%= x %> "
                         <%= link_to_ex("▶@" + x, Twt::twt_user_media_url(x)) %>
+                        <%= link_to_ex(%!☆twt☆!, artist_twt_path(x)) %>
                         <br />
                     <% end %>
                 <% end %>
@@ -1098,7 +1103,7 @@
                     ✔
                 <% else %>
                     ・
-                    <% pred = twt.prediction %>
+                    <% pred = twt.prediction_h_ex %>
                     <% if pred > 20 %>
                         <% bgcolorz = yellow_shade(pred) %>
                     <% end %>
@@ -1110,7 +1115,7 @@
 
                 <%= "【#{dm_icon(twt.drawing_method)}#{twt.rating}】#{twt.twtname}(@#{twt.twtid})" %>
                 |A:<%= twt.last_access_datetime_disp %>
-                (P:<%= twt.prediction %>)
+                (P:<%= twt.prediction_h_ex %>)
                 [<%= link_to_ex("■twt■", twt) %>]
                 <% if bgcolorz %>
                     </span>
