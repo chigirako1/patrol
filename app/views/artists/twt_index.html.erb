@@ -897,7 +897,7 @@
         | <%= link_to_ex("登録済みpxv", url_p_k) %>
         | <%= link_to_ex("実験twt", url_t_e) %>
         | <%= link_to_ex("実験pxv", url_p_e) %>
-        | <%= link_to_ex("[[i]]", url_i) %>
+        | <%= link_to_ex(file + "[i]", url_i) %>
         <br />
     <% end %>
 
@@ -977,7 +977,7 @@
                 [<%= link_to_ex("■twt■", elem.twt) %>]
                 [予測:<%= elem.twt.prediction_h_ex %>=>ファイル:<%= elem.file_cnt %>]
                 
-                (@<%= elem.twt.twtid %>)
+                (@<%= elem.twt.twtid %> )
                 「<%= elem.dirname %>｣
 
                 <% if elem.twt.twtid != elem.screen_name %>
@@ -999,6 +999,7 @@
                 <% search_word = elem.search_word %>
                 <% url = twitters_path(mode: TwittersController::ModeEnum::MODE_SEARCH, search_word: search_word, grp_sort_by: TwittersController::GRP_SORT::GRP_SORT_SPEC, grp_sort_spec: "{dm}::{r}") %>
                 [<%= link_to_ex("■検索■", url) %>]
+                <%= link_to_ex(%!☆twt☆!, artist_twt_path(elem.dirname)) %>
 
                 <% result = Twitter.search_records(search_word, Twitter::DRAWING_METHOD::DM_AI) %>
                 <% hhh = 3 %>
@@ -1007,20 +1008,19 @@
                 <% if result.size > 0 and result.size <= hhh %>
                     <% result.each do |twt| %>
                         <br />
-                        ■<%= "【#{dm_icon(twt.drawing_method)}#{twt.rating}】#{twt.twtname}(@#{twt.twtid} )" %>
+                        ■<%= "【#{dm_icon(twt.drawing_method)}#{twt.rating}】#{twt.twtname}" %><b><%= "(@#{twt.twtid} )" %></b>
                         <br />
                         <%= twitter_info_tag_ex(twt.twtid) %>
                     <% end %>
-                <% end %>
-
-                <% results = Twt::search_new_screen_name_from_txt(@unknown_twt_screen_name_list, elem.search_word2) %>
-                <% if results.presence %>
-                    <br />
-                    <% results.each do |x| %>
-                        "<%= x %> "
-                        <%= link_to_ex("▶@" + x, Twt::twt_user_media_url(x)) %>
-                        <%= link_to_ex(%!☆twt☆!, artist_twt_path(x)) %>
+                <% else %>
+                    <% results = Twt::search_new_screen_name_from_txt(@unknown_twt_screen_name_list, elem.search_word2) %>
+                    <% if results.presence %>
                         <br />
+                        <% results.each do |x| %>
+                            "<%= x %> "
+                            <%= link_to_ex("▶@" + x, Twt::twt_user_media_url(x)) %>
+                            <br />
+                        <% end %>
                     <% end %>
                 <% end %>
             <% end %>
@@ -1260,7 +1260,7 @@
     <% else %>
         <!-- ユーザーリストのみ -->
         <% @twt_url_hash.each.with_index(1) do |(k,v) ,idx| %>
-            <h2><%= idx %>.【<%= 0 %>】@<%= k %></h2>
+            <h2><%= idx %>.【<%= 0 %>】@<%= k %>(<%= link_to_ex("x", Twt::twt_user_media_url(k)) %>)</h2>
             <%= twitter_info_tag_ex(k) %>
             <br />
             [<%= link_to_ex("動画URLリスト(#{v.size})", artists_twt_index_path(dir: ArtistsController::DIR_TYPE::DT_MOV_URL, from: k, list: "open")) %>]

@@ -14,6 +14,8 @@
 =end %>
     -->
 
+    <% img_class_str = "fixed-height-img" %>
+
     <% show_pic_num = 6 %>
     <% if params[:picn] == "" %>
     <% elsif params[:picn] == "all" %>
@@ -100,7 +102,7 @@
                 <% class_str = "fixed-height-mini-img" %>
             <% else %>
                 <%= idx %>
-                <% class_str = "fixed-height-img" %>
+                <% class_str = img_class_str %>
             <% end %>
             .
 
@@ -130,7 +132,6 @@
         <%= link_to "...全て表示", twitter_path(picn: 'all', pic_lf: '3', corr: '0', refresh: "y") %>
     <% end %>
     <br />
-    <%#= link_to("url txtチェック", twitter_path(file_check: 't', picn: 'all', pic_lf: '', corr: '0'), class: 'button') %>
     <%= link_to("url txtチェック", twitter_path(file_check: 't', pic_lf: '', corr: '0'), class: 'button') %>
     <%= link_to_ex(%!期間チェック!, twitter_path(twitter, refresh: "y", seq_chk: true)) if twitter.twtid %>|
     <%= link_to_ex(%!viewer!, twitter_path(twitter, refresh: "y", viewer: true)) if twitter.twtid %>
@@ -147,7 +148,7 @@
         <% url = Twt::twt_tweet_url(twitter.twtid, tweet_id) %>
         <%= %!"#{path}"! %>
         <br />
-        <%= link_to_ex(image_tag(path, class: "fixed-height-img"), path) %>
+        <%= link_to_ex(image_tag(path, class: img_class_str), path) %>
         <br />
 
         <%= %!#{tweet_id}! %>
@@ -339,13 +340,21 @@
         <b><%= Twt::tweet_id_with_comma(sp_tweet_id) %></b>(<= DL日時からの推測)(<%= time_ago_in_words(sp_datetime) %>)
         [<%= File::basename latest_file %>]
         <br />
-        予測:<%= twitter.prediction_h(sp_datetime) %>
-        <br />
+
         <% fsize_list = [] %>
-        <% filelist.reverse.first(show_pic_num_sp).each do |fpath| %>
-            <%= link_to_ex(image_tag(fpath, class: "fixed-height-img"), fpath) %>
+        <% filelist.reverse.first(show_pic_num_sp).each.with_index(1) do |fpath, idx| %>
+            <%= idx %>.<%= link_to_ex(image_tag(fpath, class: img_class_str), fpath) %>
             <% fsize_list << Util::get_filesize(fpath) %>
         <% end %>
+
+        <% if filelist.size > show_pic_num_sp %>
+            <% filelist.first(1).each do |fpath| %>
+                最後.<%= link_to_ex(image_tag(fpath, class: img_class_str), fpath) %>
+            <% end %>
+        <% end %>
+
+        <br />
+        予測:<%= twitter.prediction_h(sp_datetime) %>
         <% filesize = fsize_list.sum / fsize_list.size %>
         平均ファイルサイズ：<%= Util::formatFileSize filesize %>
         <% if Twt::filesize_huge? filesize %>
@@ -360,7 +369,7 @@
         <h4>SP2(<%= File.dirname filelist2.first %>)[<%= filelist2.size %>ファイル]</h4>
 
         <% filelist2.reverse.first(show_pic_num_sp).each.with_index(1) do |fpath, idx| %>
-            <%= idx %>.<%= link_to_ex(image_tag(fpath, class: "fixed-height-img"), fpath) %>
+            <%= idx %>.<%= link_to_ex(image_tag(fpath, class: img_class_str), fpath) %>
         <% end %>
     <% end %>
 

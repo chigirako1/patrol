@@ -65,6 +65,7 @@ class Twitter < ApplicationRecord
         DT_POST = "ポスト"
         DT_REPLY = "返信"
         DT_MEDIA = "メディア"
+        DT_NO_SPEC = "()"
     end
         
     def self.find_by_twtid_ignore_case(twtid, ignore=true)
@@ -1063,7 +1064,36 @@ class Twitter < ApplicationRecord
                 end
 
                 if self.interval_exceeded? true
-                    gkey_work.gsub!(x, "")
+                    if (self.rating||0) >= 84 and
+                        (self.created_at_day_num <= 30 or self.filenum < 100) and
+                        self.last_access_datetime_days_elapsed < 30 and
+                        !(self.last_access_datetime_days_elapsed < 14 and self.prediction_h_ex < 15)
+
+                        if true
+                            prd = self.prediction_h_ex
+                            prd_s = Util::format_num(prd, 50, 3)
+
+                            r_s = Util::format_num(self.rating, 1)
+
+                            weekn = self.last_access_datetime_days_elapsed / 7
+                            w_s = Util::format_num(weekn, 1, 3)
+
+                            gkey_work = "最近登録/少数:#{w_s}週" + TWT_H_SEPARATOR + "#{r_s}"
+                        elsif true
+                            r_s = Util::format_num(self.rating, 1)
+                            gkey_work = "最近登録/少数" + TWT_H_SEPARATOR + "#{r_s}"
+                        else
+                            prd = self.prediction_h_ex
+                            prd_s = Util::format_num(prd, 50, 3)
+
+                            weekn = self.last_access_datetime_days_elapsed / 7
+                            w_s = Util::format_num(weekn, 1, 3)
+                            gkey_work = "最近登録/少数:#{prd_s}件~" + TWT_H_SEPARATOR + "#{w_s}w"
+                        end
+                        break
+                    else
+                        gkey_work.gsub!(x, "")
+                    end
                 else
                     number = self.last_access_datetime_days_elapsed / 30
                     r_s = Util::format_num(self.rating, 1)
@@ -1141,7 +1171,7 @@ class Twitter < ApplicationRecord
     end
 
     def newcomer?
-        if created_at_day_num <= 30
+        if self.created_at_day_num <= 30
             true
         else
             false

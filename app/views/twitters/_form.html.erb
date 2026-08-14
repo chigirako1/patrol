@@ -47,18 +47,24 @@
     <h3>
       TWTを開く→
       <%= link_to_ex(%!@#{@twitter.twtid}!, Twt::twt_user_media_url(@twitter.twtid)) %>
+      (<%= @twitter.datetime_disp @twitter.last_post_datetime %>)
 
-      <% if @twitter.disp_tab_target == Twitter::DISP_TAB::DT_POST %>
-        <% post_tab = true %>
-        <% pnum = 0 %>
-      <% elsif @twitter.disp_tab_target == Twitter::DISP_TAB::DT_MEDIA %>
-      <% elsif @twitter.sp? %>
-      <% else %>
-        <% pnum = Twt::image_num_a_post(tweet_id_list) %>
-        <% pnum_n = 1 %>
-        <% if pnum > pnum_n %>
+      <!-- 26/8/14 PCブラウザ版でもメディアタブが画像と動画に分かれたので一律画像タブにする -->
+      <% media_tab = false %>
+      <% if media_tab %>
+        <% if @twitter.disp_tab_target == Twitter::DISP_TAB::DT_POST %>
           <% post_tab = true %>
+          <% pnum = 0 %>
+        <% elsif @twitter.disp_tab_target == Twitter::DISP_TAB::DT_MEDIA %>
+        <% elsif @twitter.sp? %>
+        <% else %>
+          <% pnum = Twt::image_num_a_post(tweet_id_list) %>
+          <% pnum_n = 1 %>
+          <% if pnum > pnum_n %>
+            <% post_tab = true %>
+          <% end %>
         <% end %>
+      <% else %>
       <% end %>
 
       <% if post_tab %>
@@ -69,8 +75,9 @@
         <% else %>
           複数(<%= pnum %>)枚投稿が多い
         <% end %>
-      <% elsif @twitter.disp_tab_target == Twitter::DISP_TAB::DT_MEDIA %>
-        [メディアタブ指定]
+      <% else %>
+        <% if @twitter.disp_tab_target == Twitter::DISP_TAB::DT_MEDIA %>
+        <% end %>
       <% end %>
     </h3>
   <% end %>
@@ -437,8 +444,8 @@
 
   <div>
     <% tweet_id = twitter.oldest_tweet_id %>
-    <% if oldest_tweet_id %>
-      <% if tweet_id == nil %>
+    <% if oldest_tweet_id and oldest_tweet_id != 0 %>
+      <% if tweet_id == nil or tweet_id == 0 %>
         <% tweet_id = oldest_tweet_id %>
       <% elsif oldest_tweet_id < tweet_id %>
         <% tweet_id = oldest_tweet_id %>
@@ -554,15 +561,13 @@
 
     <%= form.radio_button :disp_tab_target, Twitter::DISP_TAB::DT_MEDIA %>
     <%= form.label "disp_tab_target_#{Twitter::DISP_TAB::DT_MEDIA}", Twitter::DISP_TAB::DT_MEDIA %>
+
+    <%= form.radio_button :disp_tab_target, Twitter::DISP_TAB::DT_NO_SPEC %>
+    <%= form.label "disp_tab_target_#{Twitter::DISP_TAB::DT_NO_SPEC}", Twitter::DISP_TAB::DT_NO_SPEC %>
   </div>
 
   <hr />
   
-  <div>
-    <%= form.label "最小アクセス間隔(日) - 表示を抑制したいとき", style: "display: block" %>
-    <%= form.number_field :min_interval %>
-  </div>
-
   <div>
     <%= form.label "最大アクセス間隔(日)", style: "display: block" %>
     <%= form.number_field :max_interval %>
@@ -579,6 +584,12 @@
        <%= @twitter.fetch_pred_n %> * 100 / <%= @twitter.update_frequency %> => <%= ndays %>日
     <% end %>
   </div>
+
+  <div>
+    <%= form.label "最小アクセス間隔(日) - 表示を抑制したいとき", style: "display: block" %>
+    <%= form.number_field :min_interval %>
+  </div>
+
 <% end %>
 
 

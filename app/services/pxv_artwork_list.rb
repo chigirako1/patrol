@@ -54,7 +54,7 @@ class PxvArtworkList
             end
 
             if artwork_id == 0
-                STDERR.puts %!regex no hit:"#{path}"!
+                #STDERR.puts %!regex no hit:"#{path}"!
                 next
             end
 

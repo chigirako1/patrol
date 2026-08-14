@@ -491,7 +491,7 @@ module Twt
     end
 
     def self.twt_user_media_url(screen_name)
-        %!#{TWT_HTTP_URL}/#{screen_name}/media!
+        %!#{TWT_HTTP_URL}/#{screen_name}/media?filter=photo!
     end
 
     def self.twt_tweet_url(screen_name, tweet_id)
@@ -940,10 +940,12 @@ module Twt
                 tweet_id2 = time2tweet_id(datetime)
                 twt_id_str = tweet_id_with_comma(tweet_id2)
             else
-                fullpath = Rails.root.join("public/" + path)
+                #fullpath = Rails.root.join("public/" + path)
+                fullpath = Util::get_public_path(path)
                 mtime = File::mtime(fullpath)
                 date_str = %![#{mtime.strftime("%Y-%m-%d")}]!
-                twt_id_str = tweet_id_with_comma(tweet_id)
+                tweet_id2 = time2tweet_id(mtime)
+                twt_id_str = tweet_id_with_comma(tweet_id2)
             end
         else
             twt_id_str = tweet_id_with_comma(tweet_id)
@@ -1290,13 +1292,18 @@ module Twt
             else
                 if dayn < 7 and pred < 10
                 else
-                    return "754.ファイル数少[#{pred_val}]"
+                    return "754.ファイル数少[#{month_v}ヶ月|#{pred_val}]"
                 end
             end
         end
 
         if twt.no_disp?(dayn)
             return LOW_PRIORITY_IGNORE_KEY
+        end
+
+        if dayn < 1
+            STDERR.puts %!@#{twt.twtid}(#{twt.twtname})\t#{dayn}!
+            return "600.当日取得した分"
         end
 
         r_low = 80
@@ -1312,25 +1319,20 @@ module Twt
                 if pred < 25
                     return "011.前日/当日分[#{r_s}]"
                 else
-                    return "012.前日/当日分(#{p_s}件)"
+                    return "012.前日/当日分(#{p_s})"
                 end
             elsif twt.rating >= 84
                 week_n = Util::format_num(dayn / 7, 1)
-                return "010.[#{week_n}w]前日/当日分:#{r_s}"
+                return "013.[#{week_n}w]前日/当日分:#{r_s}"
             end
         end
         
-        if dayn < 1
-            STDERR.puts %!@#{twt.twtid}(#{twt.twtname})\t#{dayn}!
-            return "600.当日取得した分"
-        end
-
         month_n = Util::format_num(month_v, 1)
         r_s = Util::format_num(twt.rating, 1)
         p_s = Util::format_num(pred, 15)
         if month_v > 0
             cate_no = 890
-            %!#{cate_no}.#{month_n}ヵ月|#{r_s}|#{p_s}件!
+            %!#{cate_no}.#{month_n}ヵ月|#{r_s}|#{p_s}!
         else
             if twt.rating > 85
                 cate_no = 850
@@ -1338,7 +1340,8 @@ module Twt
                 cate_no = 810
             end
             week_n = Util::format_num(dayn / 7, 1)
-            %!#{cate_no}.#{p_s}件↑|#{week_n}週|#{r_s}!
+            #%!#{cate_no}.#{p_s}件↑|#{week_n}週|#{r_s}!
+            %!#{cate_no}.#{p_s}件↑|#{r_s}|#{week_n}週!
         end
     end
 
@@ -1751,7 +1754,7 @@ module Twt
                     today_s = ""
                 end
 
-                if self.twt.sp?
+                if self.twt.sp? and (twt.rating and twt.rating >= Twt::RATING_THRESHOLD)
                     target_s = ""
                 else
                     target_s = "対象外"

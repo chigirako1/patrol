@@ -32,9 +32,6 @@
         <% end %>
         】
 
-        <strong>登録日:</strong>
-        <%= twitter.datetime_disp(twitter.created_at) %>
-
         <strong>アクセス日:</strong>
         <%= twitter.datetime_disp(twitter.last_access_datetime) %>
 
@@ -49,6 +46,9 @@
             @<%= twitter.old_twtid %>
         <% end %>
         】
+
+        <strong>登録日:</strong>
+        <%= twitter.datetime_disp(twitter.created_at) %>
 
     </p>
 </div>

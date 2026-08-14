@@ -294,7 +294,7 @@ module Pxv
             date_str = $1
             artwork_title = $2
         else
-            STDERR.puts %!regex no hit:"#{artwork_str}"\t"#{path}"!
+            #STDERR.puts %!regex no hit:"#{artwork_str}"\t"#{path}"!
             date_str = ""
         end
 
