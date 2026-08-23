@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_04_14_220516) do
+ActiveRecord::Schema[8.1].define(version: 2026_08_19_042315) do
   create_table "artists", force: :cascade do |t|
     t.string "altname"
     t.string "append_info"
@@ -97,6 +97,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_04_14_220516) do
 
   create_table "tweets", force: :cascade do |t|
     t.datetime "created_at", null: false
+    t.integer "duplicate_src_id"
     t.integer "num"
     t.integer "rating"
     t.string "remarks"
@@ -109,6 +110,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_04_14_220516) do
 
   create_table "twitters", id: :integer, default: nil, force: :cascade do |t|
     t.string "alt_twtid"
+    t.string "ban_status"
     t.string "change_history"
     t.string "comment"
     t.datetime "created_at", null: false
@@ -116,8 +118,10 @@ ActiveRecord::Schema[8.1].define(version: 2026_04_14_220516) do
     t.string "drawing_method"
     t.datetime "earliest_dl_datetime"
     t.integer "fetch_pred_n"
+    t.integer "fetch_priority"
     t.integer "filenum"
     t.integer "filesize"
+    t.integer "hit_rate"
     t.datetime "last_access_datetime"
     t.datetime "last_dl_datetime"
     t.datetime "last_post_datetime"
@@ -134,7 +138,9 @@ ActiveRecord::Schema[8.1].define(version: 2026_04_14_220516) do
     t.integer "rating"
     t.integer "recent_filenum"
     t.string "remarks"
+    t.integer "resolution"
     t.string "reverse_status"
+    t.integer "sense_point"
     t.string "sensitive"
     t.string "status"
     t.string "sub_twtid"

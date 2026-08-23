@@ -21,6 +21,10 @@ class TwtImage
         Twt::get_timestamp(self.tweet_id)
     end
 
+    def file_path_str
+        Twt::twt_path_str self.file_path
+    end
+
     def first_pic?
         self.pic_no == 0
     end
@@ -58,7 +62,8 @@ class TwtImageList
         @list = []
 
         img_path_list.each do |fpath|
-            tweet_id, pic_no = Twt::get_tweet_info_from_filepath(fpath)
+            #tweet_id, pic_no = Twt::get_tweet_info_from_filepath(fpath)
+            tweet_id, pic_no = TweetInfo::get_tweet_info_from_filepath(fpath)
             @list << TwtImage.new(tweet_id, pic_no, fpath)
         end
         @list.sort_by! {|x| [x.tweet_id, -x.pic_no, x.file_path]}
@@ -68,6 +73,34 @@ class TwtImageList
     def calc_freq
         # 新しい順になっている必要がある
         freq = (Twt::calc_freq(@list.map {|x| x.file_path})).to_f
+    end
+
+    def latest_tweet_id()
+        list.first.tweet_id
+    end
+
+    def sub_list_by_date(target_date)
+        hash = TwtImageList.group_by(@list)
+        TwtImageList.filter_hash_by_date_range(hash, target_date)
+    end
+
+    def self.filter_hash_by_date_range(hash, target_date)
+        result = {}
+
+        # 3. 指定された日付より後のキーから最小のもの（直近の未来）を特定して追加
+        next_key = hash.keys.select { |date| date > target_date }.min
+        result[next_key] = hash[next_key] if next_key
+
+        # 1. 指定された日付と完全に一致するキーが存在するかチェック
+        if hash.key?(target_date)
+            result[target_date] = hash[target_date]
+        end
+
+        # 2. 指定された日付より前のキーから最大のもの（直近の過去）を特定して追加
+        prev_key = hash.keys.select { |date| date < target_date }.max
+        result[prev_key] = hash[prev_key] if prev_key
+
+        result
     end
 
     #beginning_of_month/to_date

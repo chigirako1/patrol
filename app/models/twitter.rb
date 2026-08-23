@@ -25,6 +25,7 @@ class Twitter < ApplicationRecord
         STATUS_SCREEN_NAME_CHANGED = "アカウントID変更"
 
         STATUS_CHECK = "状況チェック"
+        STATUS_UNSET = "(未設定)"
     end
 
     module TWT_VISIBILITY
@@ -443,7 +444,8 @@ class Twitter < ApplicationRecord
         end
 
         if self.rating < 85 and dayn < 10 or
-            self.rating < 83 and dayn < 20
+            self.rating < 84 and dayn < 20
+            self.rating < 83 and dayn < 30
             return true
         end
 
@@ -924,6 +926,7 @@ class Twitter < ApplicationRecord
         matches = grp_sort_spec_arg.scan(regexp_pattern)
 
         lade_s = nil
+        low_rating_t = nil
 
         matches.each do |x|
             if x =~ /([a-zA-Z_]+)(\d*)/
@@ -1065,20 +1068,21 @@ class Twitter < ApplicationRecord
 
                 if self.interval_exceeded? true
                     if (self.rating||0) >= 84 and
-                        (self.created_at_day_num <= 30 or self.filenum < 100) and
+                        (self.created_at_day_num <= 21 or (self.filenum||0) < 50) and
                         self.last_access_datetime_days_elapsed < 30 and
                         !(self.last_access_datetime_days_elapsed < 14 and self.prediction_h_ex < 15)
 
                         if true
                             prd = self.prediction_h_ex
-                            prd_s = Util::format_num(prd, 50, 3)
+                            prd_s = Util::format_num(prd, 15, 3)
 
                             r_s = Util::format_num(self.rating, 1)
 
                             weekn = self.last_access_datetime_days_elapsed / 7
                             w_s = Util::format_num(weekn, 1, 3)
 
-                            gkey_work = "最近登録/少数:#{w_s}週" + TWT_H_SEPARATOR + "#{r_s}"
+                            #gkey_work = "最近登録/少数:#{w_s}週|#{prd_s}件~" + TWT_H_SEPARATOR + "#{r_s}"
+                            gkey_work = "最近登録/少数:#{w_s}週|【#{r_s}】" + TWT_H_SEPARATOR + "#{prd_s}件~"
                         elsif true
                             r_s = Util::format_num(self.rating, 1)
                             gkey_work = "最近登録/少数" + TWT_H_SEPARATOR + "#{r_s}"
@@ -1102,6 +1106,10 @@ class Twitter < ApplicationRecord
                 end
             when "method"
                 gkey_work.gsub!(x, self.drawing_method||"")
+            when "lowrate"
+                unit = 80 unless unit
+                low_rating_t = unit
+                gkey_work.gsub!(x, "")
             when "unset"
                 unset_disp = false
                 gkey_work.gsub!(x, "")
@@ -1118,7 +1126,7 @@ class Twitter < ApplicationRecord
             lade = self.last_access_datetime_days_elapsed
             lade_s = 4 unless lade_s
 
-            low_rating_t = 80
+            #low_rating_t = 80
 
             if self.status != Twitter::TWT_STATUS::STATUS_PATROL
                 "\t#{self.status}#{TWT_H_SEPARATOR}-"
@@ -1126,14 +1134,20 @@ class Twitter < ApplicationRecord
                 TWT_KEYWORD_SP_S
             elsif lade < lade_s
 
-                w = self.prediction
-                str = Util::format_num(w, 10, 3)
+                if false
+                    w = self.prediction
+                    str = Util::format_num(w, 10, 3)
 
-                "\t0#{lade}.#{lade}日前アクセス#{TWT_H_SEPARATOR}#{str}↑"
+                    #"\t0#{lade}.#{lade}日前アクセス#{TWT_H_SEPARATOR}#{str}↑"
+                    "\t00.【#{self.rating}】#{lade}日前アクセス#{TWT_H_SEPARATOR}#{str}↑"
+                else
+                    "\t00.#{lade}日前アクセス#{TWT_H_SEPARATOR}【#{self.rating}】"
+                end
             elsif low_rating_t and self.rating < low_rating_t
                 number = self.last_access_datetime_days_elapsed / 7
                 w = Util::format_num(number, 1, 3)
-                "\t低ランク(#{self.rating})#{TWT_H_SEPARATOR}#{w}週"
+                #"\t低ランク(#{self.rating})#{TWT_H_SEPARATOR}#{w}週"
+                "\t低ランク:#{w}週#{TWT_H_SEPARATOR}【#{self.rating}】"
             else
                 gkey_work
             end
@@ -1406,9 +1420,14 @@ class Twitter < ApplicationRecord
         when DRAWING_METHOD::DM_3D, DRAWING_METHOD::DM_REPRINT
             return %!905.その他#{TWT_H_SEPARATOR}#{drawing_method}!
         when "", nil
-            p = Util::format_num(self.prediction, 5)
+            p = Util::format_num(self.prediction, 15)
             daysn = self.last_access_datetime_days_elapsed
-            return %![998.未設定]#{TWT_H_SEPARATOR}#{daysn/30}|#{p}|#{daysn/7}週!
+            #return %![998.未設定]#{TWT_H_SEPARATOR}#{daysn/30}ヶ月|#{p}件|#{daysn/7}週!
+            if (self.filenum||0) < 10
+                return %![998.未設定] ファイル少ない#{TWT_H_SEPARATOR}#{daysn/7}週|#{p}件~!
+            else
+                return %![998.未設定] #{daysn/30}ヶ月#{TWT_H_SEPARATOR}#{daysn/7}週|#{p}件~!
+            end
         else
             dm = %!900.#{drawing_method}!
         end

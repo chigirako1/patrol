@@ -233,6 +233,14 @@
       <%= twt.twtname %>(@<%= twt.twtid %>)
       [<%= link_to_ex(%!■twt■!, twt) %>]
     <% end %>
+
+    <% user_name = Pxv::get_user_name_from_dir(pxv_uid) %>
+    <% if user_name.presence %>
+      "<%= user_name %>"(DB未登録。フォルダはあり。)
+      <%= link_to_ex %!☆pxv☆:"#{user_name}"!, artist_pxv_path(pxv_uid) %>
+    <% else %>
+      ※フォルダなし？
+    <% end %>
     <br />
   <% end %>
 <% end %>

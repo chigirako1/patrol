@@ -46,10 +46,12 @@
     <% tweet_id_list = twt_pic_list.first(100).map {|x| x[2][0]} %>
     <h3>
       TWTを開く→
-      <%= link_to_ex(%!@#{@twitter.twtid}!, Twt::twt_user_media_url(@twitter.twtid)) %>
-      (<%= @twitter.datetime_disp @twitter.last_post_datetime %>)
+      <%#= link_to_ex("静止画一覧", Twt::twt_user_media_url(@twitter.twtid)) %>
+      <%= link_to_ex("Home TL", Twt::twt_user_url(@twitter.twtid)) %>
+      <!--(<%= @twitter.datetime_disp @twitter.last_post_datetime %>)-->
 
       <!-- 26/8/14 PCブラウザ版でもメディアタブが画像と動画に分かれたので一律画像タブにする -->
+      <!-- 26/8/23 またグリッド表示になった -->
       <% media_tab = false %>
       <% if media_tab %>
         <% if @twitter.disp_tab_target == Twitter::DISP_TAB::DT_POST %>
@@ -281,9 +283,8 @@
         <% end %>
       <% else %>
         <% if @twitter.pxvid.presence %>
-          <% dirlist = Pxv::stock_dir_list %>
-          <% user_name = Pxv::user_name(dirlist, twitter.pxvid) %>
           <br />
+          <% user_name = Pxv::get_user_name_from_dir(twitter.pxvid) %>
           <% if user_name.presence %>
             "<%= user_name %>"(DB未登録。フォルダはあり。)
             <% dir_exist = true %>
@@ -409,14 +410,15 @@
 
   <hr />
 
+  <% ul_date = nil %>
   <% if twt_pic_list %>
-    <% if twt_pic_list and twt_pic_list[0] != nil %>
-      <% latest_tweet_id, _ = Twt::get_tweet_info_from_filepath(twt_pic_list[0][1]) %>
-      <% oldest_tweet_id, _ = Twt::get_tweet_info_from_filepath(twt_pic_list[-1][1]) %>
-      <% ul_date = Twt::get_time_from_path(twt_pic_list[0][1]).round #in_time_zone("Asia/Tokyo") %>
+    <% if twt_pic_list and twt_pic_list.size > 0 %>
+      <% twt_id_list = twt_pic_list.map {|x| x[2][0]}.select {|x| x != 0} %>
+      <% latest_tweet_id = twt_id_list.first %>
+      <% oldest_tweet_id = twt_id_list.last %>
+      <% ul_date = Twt::get_timestamp(latest_tweet_id).round if latest_tweet_id %>
     <% end %>
   <% else %>
-    <% ul_date = nil %>
   <% end %>
 
   <input type="button" value="最新tweet id/日時設定" onclick="set_latest_info();" />

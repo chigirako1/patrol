@@ -50,7 +50,7 @@ module Twt
 
     #UL_FREQUECNTY_THRESHOLD = 25
     UL_FREQUECNTY_THRESHOLD = 50
-    RATING_THRESHOLD = 83#78#80
+    RATING_THRESHOLD = 83#83#78#80
 
     FILENUM_T = 750
 
@@ -68,7 +68,7 @@ module Twt
     FILESIZE_V_HUGE = FILESIZE_V_HUGE_KB * 1024
 
     ### ###
-    UPLOAD_FREQ_THRE_V = 25
+    UPLOAD_FREQ_THRE_V = 30#25
     UPLOAD_FREQ_THRE_N = 200
 
     ### ###
@@ -381,11 +381,11 @@ module Twt
 
     def self.get_sp_datetime_from_filepath(filepath)
         datetime = get_sp_datetime_from_filename File.basename filepath
-        unless datetime
-            datetime = Util::mtime filepath
-            STDERR.puts %!"#{filepath}" => #{datetime}!
+        if datetime
+            datetime
+        else
+            Util::mtime filepath
         end
-        datetime
     end
 
     def self.get_sp_datetime_from_filename(filename)
@@ -491,6 +491,10 @@ module Twt
     end
 
     def self.twt_user_media_url(screen_name)
+        twt_user_url screen_name
+    end
+
+    def self.twt_user_photo_url(screen_name)
         %!#{TWT_HTTP_URL}/#{screen_name}/media?filter=photo!
     end
 
@@ -959,6 +963,16 @@ module Twt
         tweet_id.to_s.reverse.gsub(/\d{3}/, '\0,').reverse
     end
 
+    def self.get_time_ex(filepath)
+        time = get_time_from_path(filepath)
+        if time
+            time
+        else
+            fullpath = Util::get_public_path(filepath)
+            File::mtime(fullpath)
+        end
+    end
+    
     def self.get_time_from_path(filepath)
         if filepath == nil
             STDERR.puts %!"err:#{filepath}"! #nilがでるだけ...
@@ -966,9 +980,11 @@ module Twt
         end
 
         tweet_id = TweetInfo::get_tweet_id_from_filepath(filepath)
-        time = get_timestamp(tweet_id)
         if tweet_id == 0
             #STDERR.puts %!#{tweet_id}:#{time}\t"#{filepath}"!
+            time = nil
+        else
+            time = get_timestamp(tweet_id)
         end
         time
     end
@@ -996,12 +1012,22 @@ module Twt
         if pic_path_list == nil or pic_path_list.size == 0
             return 0
         end
-        latest_time = get_time_from_path(pic_path_list[0])
+        #latest_time = get_time_from_path(pic_path_list[0])
+        latest_time = nil
+        pic_path_list.each do |path|
+            latest_time = get_time_from_path(path)
+            if latest_time
+                break
+            end
+        end
+
+        return 0 unless latest_time
 
         days = 1
         cnt = 0
         pic_path_list.each do |path|
-            post_time = get_time_from_path(path)
+            #post_time = get_time_from_path(path)
+            post_time = get_time_ex(path)
             
             #puts time.to_date
             tmp_days =  (latest_time.to_date - post_time.to_date).to_i + 1
@@ -1016,9 +1042,20 @@ module Twt
             point = (cnt * CALC_FREQ_UNIT / calc_freq_day_num)
         else
             point = (cnt * CALC_FREQ_UNIT / days)
-            puts %!calc_freq_day_num=#{calc_freq_day_num} : point=#{point} <= cnt=#{cnt}, days=#{days}, 最新：#{latest_time.to_date}!
+            #puts %!calc_freq_day_num=#{calc_freq_day_num} : point=#{point} <= cnt=#{cnt}, days=#{days}, 最新：#{latest_time.to_date}!
         end
         point
+    end
+
+    StructFreq = Struct.new(:d90, :d30, :d15, :avg)
+
+    def self.freq(pl)
+        freq_90d = Twt::calc_freq(pl, 90)
+        freq_30d = Twt::calc_freq(pl, 30)
+        freq_15d = Twt::calc_freq(pl, 15)
+        ary = [freq_90d, freq_30d, freq_15d]
+        avg = ary.sum / ary.size
+        StructFreq.new(freq_90d, freq_30d, freq_15d, avg)
     end
 
     def self.image_num_a_post(tweet_id_list)
@@ -1286,13 +1323,13 @@ module Twt
             end
         end
 
-        if twt.filenum < 200
+        if twt.filenum < 200 and twt.rating >= 85
             if twt.update_frequency >= freq_n
                 return "054.ファイル数少[#{pred_val}](高頻度)"
             else
                 if dayn < 7 and pred < 10
                 else
-                    return "754.ファイル数少[#{month_v}ヶ月|#{pred_val}]"
+                    return "756.ファイル数少[#{month_v}ヶ月|#{pred_val}]"
                 end
             end
         end
@@ -1313,6 +1350,7 @@ module Twt
 
         r_u = 1
         r_s = Util::format_num(twt.rating, r_u)
+=begin
         if twt.update_frequency >= freq_n
             if twt.rating >= 86 and dayn > 6
                 p_s = Util::format_num(pred, 25)
@@ -1324,6 +1362,13 @@ module Twt
             elsif twt.rating >= 84
                 week_n = Util::format_num(dayn / 7, 1)
                 return "013.[#{week_n}w]前日/当日分:#{r_s}"
+            end
+        end
+=end
+        if twt.update_frequency >= freq_n and twt.rating >= 84
+            if twt.update_frequency > 500 or dayn >= 7 or twt.rating >= 86
+                week_n = Util::format_num(dayn / 7, 1)
+                return "013.[#{week_n}週]前日/当日分:【#{r_s}】"
             end
         end
         
@@ -1341,7 +1386,7 @@ module Twt
             end
             week_n = Util::format_num(dayn / 7, 1)
             #%!#{cate_no}.#{p_s}件↑|#{week_n}週|#{r_s}!
-            %!#{cate_no}.#{p_s}件↑|#{r_s}|#{week_n}週!
+            %!#{cate_no}.#{p_s}件↑|#{week_n}週|#{r_s}!
         end
     end
 

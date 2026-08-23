@@ -38,6 +38,7 @@
     <% end %>
 
     <% twt_pic_list = @twt_pic_path_list.map {|x| [Twt::twt_path_str(x), x, Twt::get_tweet_info_from_filepath(x)]}.sort.reverse %>
+    <% twt_img_list = TwtImageList.new(@twt_pic_path_list, true) %>
     <% twt_acnt = twitter %>
 
     <!-- ファイル名リスト -->
@@ -199,12 +200,16 @@
             <b>1投稿あたりの平均画像数:</b>
             <%= pnum %>
             <font color="orange">★複数★</font>
+            <br />
         <% end %>
     <% end %>
 
     <% if twitter.sp? and (twitter.rating and twitter.rating >= Twt::RATING_THRESHOLD) %>
         <h3>SP<%= ApplicationHelper::EMJ_SP %>対象？</h3>
+    <% else %>
+        <br />
     <% end %>
+
     <% tweets = Tweet.get_records(twitter.twtid, Tweet::StatusEnum::TO_BE_OBTAIN) %>
     <% if tweets.size > 0 %>
         <h3>取得対象あり</h3>
@@ -253,15 +258,23 @@
             <% end %>
         <% end %>
     <% else %>
-        <br />
     <% end %>
 
     <% pl = twt_pic_list.map {|x| x[1]} %>
+    <%
+=begin %>
     <% freq_90d = Twt::calc_freq(pl, 90) %>
     <% freq_30d = Twt::calc_freq(pl, 30) %>
     <% freq_15d = Twt::calc_freq(pl, 15) %>
     <% ary = [freq_90d, freq_30d, freq_15d] %>
     <% avg = ary.sum / ary.size %>
+    <%
+=end %>
+    <% freq = Twt::freq(pl) %>
+    <% freq_90d = freq.d90 %>
+    <% freq_30d = freq.d30 %>
+    <% freq_15d = freq.d15 %>
+    <% avg = freq.avg %>
 
     【更新頻度<%= Twt::CALC_FREQ_UNIT %>日あたり(90/30/14)】
     <% if avg > 0 and (twt_acnt != nil and twt_acnt.update_frequency != nil) %>
@@ -277,7 +290,7 @@
     <% else %>
         ※値が設定されていません※
     <% end %>
-    計算結果"<%= avg %>"
+    計算結果:"<%= avg %>"
     <% if freq_90d > freq_30d and freq_30d > freq_15d %>
         <% zougen = "減少傾向" %>
     <% elsif freq_90d < freq_30d and freq_30d < freq_15d %>
@@ -298,28 +311,31 @@
     <hr />
 
     <!-- tweet id -->
+    <% latest_tweet_id = nil %>
     <% twt_pic_list.first(1).each do |elem| %>
-        <% tweet_id = elem[2][0] %><!-- TODO:SPのファイルの場合は使用しないようにする -->
+        <%# latest_tweet_id = elem[2][0] %>
+        <% latest_tweet_id = twt_img_list.latest_tweet_id %>
+        <% STDERR.puts "### latest_tweet_id=#{latest_tweet_id} ###" %>
     <% end %>
 
-    <% if tweet_id and twitter.latest_tweet_id %>
-        <% if tweet_id < twitter.latest_tweet_id %>
-            <% tweet_id = twitter.latest_tweet_id %>
+    <% if latest_tweet_id and twitter.latest_tweet_id %>
+        <% if latest_tweet_id < twitter.latest_tweet_id %>
+            <% latest_tweet_id = twitter.latest_tweet_id %>
         <% end %>
     <% elsif twitter.latest_tweet_id %>
-        <% tweet_id = twitter.latest_tweet_id %>
+        <% latest_tweet_id = twitter.latest_tweet_id %>
     <% end %>
 
     <% show_pic_num_sp = 12 %>
-    <% if tweet_id %>
+    <% if latest_tweet_id %>
+        <% ts = Twt::get_timestamp(latest_tweet_id) %>
+        <%= twitter.datetime_disp ts %>
         <b>
-        <%= Twt::tweet_id_with_comma(tweet_id) %>
+            <%= Twt::tweet_id_with_comma(latest_tweet_id) %>
         </b>
-        <% ts = Twt::get_timestamp(tweet_id) %>
-        (<%= twitter.datetime_disp ts %>)
 
         (id変わったとき用→)
-        <%= link_to_ex tweet_id, Twt::twt_tweet_url_dev(tweet_id) %>
+        <%= link_to_ex latest_tweet_id, Twt::twt_tweet_url_dev(latest_tweet_id) %>
 
         <br />
         【以降の投稿数予測】<b><%= twitter.prediction(ts) %></b>
@@ -337,7 +353,12 @@
         <% latest_file = filelist.last %>
         <% sp_datetime = Twt::get_sp_datetime_from_filepath(latest_file) %>
         <% sp_tweet_id = Twt::time2tweet_id(sp_datetime) %>
-        <b><%= Twt::tweet_id_with_comma(sp_tweet_id) %></b>(<= DL日時からの推測)(<%= time_ago_in_words(sp_datetime) %>)
+        DL日時:
+        <b>
+            <%#= time_ago_in_words(sp_datetime) %>
+            <%= twitter.datetime_disp sp_datetime %>
+        </b>
+        (DL日時からの推測ID => <%= Twt::tweet_id_with_comma(sp_tweet_id) %>)
         [<%= File::basename latest_file %>]
         <br />
 
@@ -354,7 +375,7 @@
         <% end %>
 
         <br />
-        予測:<%= twitter.prediction_h(sp_datetime) %>
+        【予測 => <b><%= twitter.prediction_h(sp_datetime) %></b>】
         <% filesize = fsize_list.sum / fsize_list.size %>
         平均ファイルサイズ：<%= Util::formatFileSize filesize %>
         <% if Twt::filesize_huge? filesize %>

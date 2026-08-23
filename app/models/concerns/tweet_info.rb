@@ -6,6 +6,7 @@ module TweetInfo
     def self.get_tweet_info(filename)
         tweet_id = 0
         pic_no = 0
+        #guess = false
         if filename =~ /(\d+)\s(\d+)\s(\d+\-\d+\-\d+)/
             #puts fn
             tweet_id = $1.to_i
@@ -33,10 +34,10 @@ module TweetInfo
           date = Date.parse $1
           tweet_id = Twt::time2tweet_id(date.to_datetime)
           #STDERR.puts %!"#{filename}" => #{date}, #{tweet_id}/!
-          tweet_id
+          guess = true
         elsif filename =~ /^[\w\-]{15}\./ #????なにこれ
-            STDERR.puts
-            STDERR.puts %![dbg] #{filename}!
+            #STDERR.puts
+            #STDERR.puts %![dbg] #{filename}!
             #Rails.logger.warn(filename)
         elsif filename =~ /^(\d{18,}) \w+/ #18は適当
           tweet_id = $1.to_i

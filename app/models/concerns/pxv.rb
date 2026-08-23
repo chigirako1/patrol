@@ -106,7 +106,12 @@ module Pxv
         end
         username
     end
-    
+
+    def self.get_user_name_from_dir(pxvid)
+        dirlist = Pxv::stock_dir_list
+        return user_name(dirlist, pxvid)
+    end
+
     def self.user_name(pathlist, pxvid)
         pathlist.each do |path|
             if File.basename(path) =~ /(.*?)\(#{pxvid}\)$/

@@ -709,7 +709,12 @@ class TwittersController < ApplicationController
         :min_interval,
         :max_interval,
         :fetch_pred_n,
-        :disp_tab_target
+        :disp_tab_target,
+        :ban_status,
+        :fetch_priority,
+        :hit_rate,
+        :resolution,
+        :sense_point
         )
     end
 
@@ -736,7 +741,10 @@ class TwittersController < ApplicationController
       STDERR.puts %!index_select()0:#{twitters.size}!
 
       if twt_params.param_status.presence
-        if twt_params.param_status == Twitter::TWT_STATUS::STATUS_CHECK
+        case twt_params.param_status
+        when Twitter::TWT_STATUS::STATUS_UNSET
+          twitters = twitters.select {|x| x.status == nil or x.status == ""}
+        when Twitter::TWT_STATUS::STATUS_CHECK
           twitters = twitters.select {|x| x.update_chk?}
         else
           twitters = twitters.select {|x| x.status == twt_params.param_status}
