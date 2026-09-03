@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_08_19_042315) do
+ActiveRecord::Schema[8.1].define(version: 2026_09_01_213612) do
   create_table "artists", force: :cascade do |t|
     t.string "altname"
     t.string "append_info"
@@ -132,6 +132,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_08_19_042315) do
     t.string "new_twtid"
     t.string "old_twtid"
     t.integer "oldest_tweet_id"
+    t.integer "pinned_tweet_id"
     t.string "private_account"
     t.integer "pxvid"
     t.string "r18"

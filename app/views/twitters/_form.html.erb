@@ -46,8 +46,23 @@
     <% tweet_id_list = twt_pic_list.first(100).map {|x| x[2][0]} %>
     <h3>
       TWTを開く→
+
+      <!-- ### -->
+      <% if @twitter.disp_tab_target == Twitter::DISP_TAB::DT_PIC %>
+        <% link_str = "画像タブ(★指定★)" %>
+      <% else %>
+        <% link_str = "画像タブ" %>
+      <% end %>
+
+      <!-- ### -->
+      <%= link_to_ex(link_str, Twt::twt_user_photo_url(@twitter.twtid)) %>
       <%#= link_to_ex("静止画一覧", Twt::twt_user_media_url(@twitter.twtid)) %>
-      <%= link_to_ex("Home TL", Twt::twt_user_url(@twitter.twtid)) %>
+      <% if @twitter.disp_tab_target == Twitter::DISP_TAB::DT_POST %>
+        <% link_str = "Home TL(★指定★)" %>
+      <% else %>
+        <% link_str = "Home TL" %>
+      <% end %>
+      [<%= link_to_ex(link_str, Twt::twt_user_url(@twitter.twtid)) %>]
       <!--(<%= @twitter.datetime_disp @twitter.last_post_datetime %>)-->
 
       <!-- 26/8/14 PCブラウザ版でもメディアタブが画像と動画に分かれたので一律画像タブにする -->
@@ -67,9 +82,15 @@
           <% end %>
         <% end %>
       <% else %>
+        <% if @twitter.disp_tab_target == Twitter::DISP_TAB::DT_PIC %>
+          <% pic_tab = true %>
+        <% else %>
+        <% end %>
       <% end %>
 
-      <% if post_tab %>
+
+      <% if pic_tab %>
+      <% elsif post_tab %>
         (<%= link_to_ex(%!★★★!, Twt::twt_user_url(@twitter.twtid)) %>)
         <% if pnum == 0 %>
           [ポストタブ指定]
@@ -85,6 +106,18 @@
   <% end %>
 
   <div>
+    <%= form.label :固定ツイートのID, style: "display: block" %>
+    <%= form.number_field :pinned_tweet_id %>
+
+    <% if twitter.pinned_tweet_id.presence %>
+      固定
+      <% twt_img_list = TwtImageList.new(@twt_pic_path_list, true) %>
+      <% timg = twt_img_list.search_tweet(twitter.pinned_tweet_id) %>
+      <%= image_link(timg.file_path) %>
+    <% end %>
+  </div>
+
+  <div>
     <%= form.label :twtid, style: "display: block" %>
     <% if params[:twtid].presence %>
       <% param_twtid = params[:twtid] %>
@@ -96,6 +129,8 @@
   </div>
 
   <div>
+    <%= form.label :twtname, style: "display: block" %>
+
     <% if twitter.twtname.presence %>
       <% twtname = twitter.twtname %>
     <% elsif params[:twtname].presence %>
@@ -104,7 +139,6 @@
       <% twtname = "" %>
     <% end %>
 
-    <%= form.label :twtname, style: "display: block" %>
     <% unless twtname.presence %>
       <font color='red'>※未設定※</font>
     <% end %>
@@ -445,22 +479,25 @@
   </div>
 
   <div>
-    <% tweet_id = twitter.oldest_tweet_id %>
+    <% o_tweet_id = twitter.oldest_tweet_id %>
     <% if oldest_tweet_id and oldest_tweet_id != 0 %>
-      <% if tweet_id == nil or tweet_id == 0 %>
-        <% tweet_id = oldest_tweet_id %>
-      <% elsif oldest_tweet_id < tweet_id %>
-        <% tweet_id = oldest_tweet_id %>
+      <% if o_tweet_id == nil or o_tweet_id == 0 %>
+        <% o_tweet_id = oldest_tweet_id %>
+      <% elsif oldest_tweet_id < o_tweet_id %>
+        <% o_tweet_id = oldest_tweet_id %>
       <% end %>        
     <% end %>
 
     <%= form.label :最古tweetId, style: "display: block" %>
 
-    <% if tweet_id != twitter.oldest_tweet_id %>
+    <% if o_tweet_id != twitter.oldest_tweet_id %>
       現在の値:"<%= twitter.oldest_tweet_id %>"↓<font color='red'>更新あり</font><br />
     <% end %>
 
-    <%= form.number_field :oldest_tweet_id, value: tweet_id %>
+    <%= form.number_field :oldest_tweet_id, value: o_tweet_id %>
+    <% if o_tweet_id.presence %>
+      <%= twitter.datetime_disp Twt::get_timestamp(o_tweet_id) %>
+    <% end %>
   </div>
 
   <div>
@@ -563,6 +600,9 @@
 
     <%= form.radio_button :disp_tab_target, Twitter::DISP_TAB::DT_MEDIA %>
     <%= form.label "disp_tab_target_#{Twitter::DISP_TAB::DT_MEDIA}", Twitter::DISP_TAB::DT_MEDIA %>
+
+    <%= form.radio_button :disp_tab_target, Twitter::DISP_TAB::DT_PIC %>
+    <%= form.label "disp_tab_target_#{Twitter::DISP_TAB::DT_PIC}", Twitter::DISP_TAB::DT_PIC %>
 
     <%= form.radio_button :disp_tab_target, Twitter::DISP_TAB::DT_NO_SPEC %>
     <%= form.label "disp_tab_target_#{Twitter::DISP_TAB::DT_NO_SPEC}", Twitter::DISP_TAB::DT_NO_SPEC %>

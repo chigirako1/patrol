@@ -331,8 +331,17 @@
 
   <% if @tweets %>
     <% @tweets.each do |tweet| %>
-      <%= tweet.tweet_id %>="<%= tweet.status %>"(@<%= tweet.screen_name %>)<br />
+      <%= tweet.tweet_id %>="<%= tweet.status %>"(@<%= tweet.screen_name %>)
+      [<%= link_to_ex "tweet", tweet %>]
+      <br />
     <% end %>
+  <% else %>
+    [<%#= link_to_ex "■New tweet■", new_tweet_path(tweet_id: tweet_id, status: Tweet::StatusEnum::SAVED) %>]
+  <% end %>
+
+  <% if @searching_tweet_id %>
+    <% url = new_tweet_path(tweet_id: @searching_tweet_id[1], screen_name: @searching_tweet_id[0]) %>
+    [<%= link_to_ex "■New tweet■", url %>]
   <% end %>
   <hr />
 <% end %>

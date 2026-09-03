@@ -915,7 +915,7 @@ class ArtistsController < ApplicationController
         if true
           twt_url_hash.each do |k,v|
             save = v.size
-            v.delete_if {|x| x.cond_del}
+            #v.delete_if {|x| x.cond_del}
             STDERR.puts %!@#{k}:#{save} => #{v.size}! if save != v.size
           end
 

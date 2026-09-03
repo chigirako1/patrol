@@ -29,7 +29,7 @@ module TwittersHelper
     def twitter_link_tag(twtid)
         tag = ""
         if twtid.presence
-            tag = "▷" + link_to_ex("@#{twtid}", Twt::twt_user_media_url(twtid))
+            tag = "▶" + link_to_ex("@#{twtid}", Twt::twt_user_media_url(twtid))
         end
         tag.html_safe
     end
@@ -203,7 +203,7 @@ module TwittersHelper
         end
 
         if twitter.max_interval.presence or twitter.fetch_pred_n.presence
-            str += %![MAX:#{twitter.max_interval}|#{twitter.fetch_pred_n}]!
+            str += %![MAX:#{twitter.max_interval}日|#{twitter.fetch_pred_n}件]!
         end
 
         str

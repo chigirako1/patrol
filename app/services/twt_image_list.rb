@@ -70,6 +70,16 @@ class TwtImageList
         @list.reverse! if new2old
     end
 
+    def search_tweet(tweet_id)
+        list.each do |timg|
+            if timg.tweet_id == tweet_id
+                #最初に見つかったもの
+                return timg
+            end
+        end
+        nil
+    end
+
     def calc_freq
         # 新しい順になっている必要がある
         freq = (Twt::calc_freq(@list.map {|x| x.file_path})).to_f

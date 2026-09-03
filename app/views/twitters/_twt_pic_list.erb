@@ -38,7 +38,7 @@
     <% end %>
 
     <% twt_pic_list = @twt_pic_path_list.map {|x| [Twt::twt_path_str(x), x, Twt::get_tweet_info_from_filepath(x)]}.sort.reverse %>
-    <% twt_img_list = TwtImageList.new(@twt_pic_path_list, true) %>
+    <% twt_img_list = TwtImageList.new(@twt_pic_path_list, true) %><!-- TODO:無駄。見直し -->
     <% twt_acnt = twitter %>
 
     <!-- ファイル名リスト -->
@@ -329,10 +329,10 @@
     <% show_pic_num_sp = 12 %>
     <% if latest_tweet_id %>
         <% ts = Twt::get_timestamp(latest_tweet_id) %>
-        <%= twitter.datetime_disp ts %>
         <b>
-            <%= Twt::tweet_id_with_comma(latest_tweet_id) %>
+        <%= twitter.datetime_disp ts %>
         </b>
+        <%= Twt::tweet_id_with_comma(latest_tweet_id) %>
 
         (id変わったとき用→)
         <%= link_to_ex latest_tweet_id, Twt::twt_tweet_url_dev(latest_tweet_id) %>
@@ -362,20 +362,24 @@
         [<%= File::basename latest_file %>]
         <br />
 
+        【予測 => <b><%= twitter.prediction_h(sp_datetime) %></b>】
+        <br />
+
+        <!-- ファイルサイズ -->
         <% fsize_list = [] %>
         <% filelist.reverse.first(show_pic_num_sp).each.with_index(1) do |fpath, idx| %>
             <%= idx %>.<%= link_to_ex(image_tag(fpath, class: img_class_str), fpath) %>
             <% fsize_list << Util::get_filesize(fpath) %>
         <% end %>
 
+
         <% if filelist.size > show_pic_num_sp %>
             <% filelist.first(1).each do |fpath| %>
                 最後.<%= link_to_ex(image_tag(fpath, class: img_class_str), fpath) %>
             <% end %>
         <% end %>
-
         <br />
-        【予測 => <b><%= twitter.prediction_h(sp_datetime) %></b>】
+
         <% filesize = fsize_list.sum / fsize_list.size %>
         平均ファイルサイズ：<%= Util::formatFileSize filesize %>
         <% if Twt::filesize_huge? filesize %>
@@ -409,7 +413,7 @@
             <% @twt_pic_path_list.each do |path| %>
                 <% if path.include? tweet_id.to_s %><!-- TODO:これはだめでは？BUG: -->
                     <% hit = true %>
-                    hit!(<%= Twt::timestamp_str(tweet_id) %>)|<%= tweet_id %> 
+                    hit!(<%= smart_date Twt::get_timestamp(tweet_id) %>)|<%= tweet_id %> 
                     <% if params[:show_pic].presence %>
                         <%= link_to_ex image_tag(path, width: '10%', height: '10%', :alt => path), path %>
                     <% end %>
@@ -434,7 +438,7 @@
 
             <% if hit %>
             <% else %>
-                <%= %!#{Twt::timestamp_str tweet_id}(#{tweet_id}))! %> no hit...
+                <%= %!#{smart_date Twt::get_timestamp tweet_id}(#{tweet_id}))! %> no hit...
                 <%= link_to_ex(tweet_id, Twt::twt_tweet_url(@twitter.twtid, tweet_id)) %>
                 <% if tweet.presence %>
                     <% if true %>
@@ -455,6 +459,7 @@
                             <%= link_to("'削除済み'として更新", url, class: 'button') %>
                         <% end %>
                     <% end %>
+                    [<%= link_to_ex "■tweet■", tweet %>]
                 <% else %>
                     <% if params[:tweet_id].to_i == tweet_id and params[:tweet_st] == Tweet::StatusEnum::UNACCESSIBLE %>
                         <!-- -->
@@ -466,6 +471,7 @@
                         (id変わったとき用→)
                         <%= link_to_ex(tweet_id, Twt::twt_tweet_url_dev(tweet_id)) %>
                     <% end %>
+                    [<%= link_to_ex "■New tweet■", new_tweet_path(tweet_id: tweet_id, screen_name: @twitter.twtid, status: Tweet::StatusEnum::SAVED) %>]
                 <% end %>
                 <br />
             <% end %>

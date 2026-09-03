@@ -31,6 +31,7 @@ class TweetUrl
     Cond_del_list = [
         #Tweet::StatusEnum::SAVED,
         Tweet::StatusEnum::DELETED,
+        Tweet::StatusEnum::UNNECESSARY,
         Tweet::StatusEnum::UNACCESSIBLE,
         Tweet::StatusEnum::UNACCESSIBLE_FREEZED,
         Tweet::StatusEnum::UNACCESSIBLE_PRIVATE,

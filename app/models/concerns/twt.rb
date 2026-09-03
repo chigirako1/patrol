@@ -337,7 +337,10 @@ module Twt
 
     def self.result_sp_chk(done_list)
         chk_screen_name_list = Util::checking_screen_names.sort.uniq
-         chk_screen_name_list.delete_if {|x| done_list.include? x}
+        STDERR.puts %!#{chk_screen_name_list}!
+        chk_screen_name_list.delete_if {|x| done_list.include? x}
+        STDERR.puts %!#{chk_screen_name_list}!
+        chk_screen_name_list
     end
 
     def self.get_sp_path(twtid)
@@ -968,14 +971,15 @@ module Twt
         if time
             time
         else
-            fullpath = Util::get_public_path(filepath)
-            File::mtime(fullpath)
+            #fullpath = Util::get_public_path(filepath)
+            #File::mtime(fullpath)
+            nil
         end
     end
     
     def self.get_time_from_path(filepath)
         if filepath == nil
-            STDERR.puts %!"err:#{filepath}"! #nilがでるだけ...
+            STDERR.puts %!"[get_time_from_path]err:#{filepath}"! #nilがでるだけ...TODO:コールスタック取ってくる
             return nil
         end
 
@@ -1028,6 +1032,9 @@ module Twt
         pic_path_list.each do |path|
             #post_time = get_time_from_path(path)
             post_time = get_time_ex(path)
+            unless post_time
+                next
+            end
             
             #puts time.to_date
             tmp_days =  (latest_time.to_date - post_time.to_date).to_i + 1
@@ -1299,7 +1306,7 @@ module Twt
             if twt.update_frequency >= freq_n
                 return "099.名前未設定[#{pred_val}](高頻度)"
             else
-                return "910.名前未設定[#{pred_val}]"
+                return "955.名前未設定[#{pred_val}]"
             end
         end
 
@@ -1318,7 +1325,7 @@ module Twt
             else
                 if dayn < 7 and pred < 10
                 else
-                    return "755.最近登録[#{pred_val}]"
+                    return "953.最近登録[#{pred_val}]"
                 end
             end
         end
@@ -1329,7 +1336,7 @@ module Twt
             else
                 if dayn < 7 and pred < 10
                 else
-                    return "756.ファイル数少[#{month_v}ヶ月|#{pred_val}]"
+                    return "951.ファイル数少[#{month_v}ヶ月|#{pred_val}]"
                 end
             end
         end

@@ -4,6 +4,8 @@ class Twitter < ApplicationRecord
     validates :twtid, uniqueness: true
     belongs_to :artists, :class_name => 'Artist', optional: true
 
+    attr_accessor :url_list
+
     TWT_H_SEPARATOR = "::"
 
     TWT_KEYWORD_SP = "\tSP"
@@ -66,6 +68,7 @@ class Twitter < ApplicationRecord
         DT_POST = "ポスト"
         DT_REPLY = "返信"
         DT_MEDIA = "メディア"
+        DT_PIC = "静止画"
         DT_NO_SPEC = "()"
     end
         
@@ -399,9 +402,9 @@ class Twitter < ApplicationRecord
         #end
 
         #if self.disp_tab_target == Twitter::DISP_TAB::DT_POST and (self.filesize||0) > Twt::FILESIZE_A_THRESHOLD
-        if self.disp_tab_target == Twitter::DISP_TAB::DT_MEDIA and (self.update_frequency||0) > 200 and (self.rating||0) >= 84
-            return true
-        end
+        # if self.disp_tab_target == Twitter::DISP_TAB::DT_MEDIA and (self.update_frequency||0) > 200 and (self.rating||0) >= 84
+        #     return true
+        # end
         
         if Twt::filesize_v_huge?(self.filesize) and (self.update_frequency||0) > Twt::UPLOAD_FREQ_THRE_V
             #STDERR.puts %!sp?: #{self.filesize} bytes, #{self.update_frequency}/100 "#{self.twtname}[@#{self.twtid}]"!
@@ -544,10 +547,6 @@ class Twitter < ApplicationRecord
     end
 
     def sort_priority
-        # [
-        #     self.max_interval || Float::INFINITY,
-        #     self.fetch_pred_n || Float::INFINITY,
-        # ]
         if self.max_interval
             max_interval = self.max_interval
         else
@@ -555,9 +554,12 @@ class Twitter < ApplicationRecord
         end
 
         if self.fetch_pred_n
-            #fetch_pred_n = self.fetch_pred_n * 100 / (self.update_frequency||0)
-            #fetch_pred_n = self.fetch_pred_n
-            fetch_pred_n = Float::INFINITY
+            if true
+                fetch_pred_n = self.fetch_pred_n * 100 / (self.update_frequency||1)
+                #fetch_pred_n = self.fetch_pred_n
+            else
+                fetch_pred_n = Float::INFINITY
+            end
         else
             fetch_pred_n = Float::INFINITY
         end
@@ -928,6 +930,11 @@ class Twitter < ApplicationRecord
         lade_s = nil
         low_rating_t = nil
 
+        if self.status != Twitter::TWT_STATUS::STATUS_PATROL and self.rating.presence
+            number = self.last_access_datetime_days_elapsed / 30
+            return "\t#{self.status}#{TWT_H_SEPARATOR}#{number}ヶ月"
+        end
+
         matches.each do |x|
             if x =~ /([a-zA-Z_]+)(\d*)/
                 start_str = $1
@@ -1022,6 +1029,10 @@ class Twitter < ApplicationRecord
                     w = "-"
                 end
                 gkey_work = gkey_work.gsub(x, w)
+            when "pw"
+                unit = 1 unless unit
+                number = Util::get_date_delta(self.last_post_datetime) / 7
+                gkey_work = group_sub(unit, number, gkey_work, x)
             when "q"
                 unit = 500 unless unit
                 number = self.update_frequency
@@ -1044,6 +1055,15 @@ class Twitter < ApplicationRecord
                 else
                     gkey_work.gsub!(x, "")
                 end
+            when "url_cnt"
+                if self.url_list
+                    unit = 1 unless unit
+                    number = self.url_list.size
+                    gkey_work = group_sub(unit, number, gkey_work, x, append:"件")
+                else
+                    #STDERR.puts "url_cnt"
+                    gkey_work.gsub!(x, "")
+                end
             when "r"
                 unit = 1 unless unit
                 number = self.rating
@@ -1055,10 +1075,6 @@ class Twitter < ApplicationRecord
                 #gkey_work = group_sub(unit, number, gkey_work, x)
                 word = %!#{w}(#{self.r18||""})!
                 gkey_work.gsub!(x, word)
-            when "pw"
-                unit = 1 unless unit
-                number = Util::get_date_delta(self.last_post_datetime) / 7
-                gkey_work = group_sub(unit, number, gkey_work, x)
             when "restrict"
                 gkey_work.gsub!(x, self.r18||"")
             when "interval"
@@ -1154,7 +1170,8 @@ class Twitter < ApplicationRecord
         else
             if unset_disp
                 #"未設定#{TWT_H_SEPARATOR}" + gkey_work
-                w = self.last_access_datetime_days_elapsed / 7
+                #w = self.last_access_datetime_days_elapsed / 7
+                w = Util::get_date_delta(self.last_post_datetime) / 7
                 str = Util::format_num(w, 1, 3)
                 "未設定#{TWT_H_SEPARATOR}#{str}週-" 
             else
@@ -1411,22 +1428,22 @@ class Twitter < ApplicationRecord
         end
     end
 
-    def group_key_hoge(grp_spec)
+    def group_key_hoge(grp_spec, prefix="")
         case self.drawing_method
         when DRAWING_METHOD::DM_AI
             dm = %!980.AI!
         when DRAWING_METHOD::DM_HAND
-            return %!910.#{drawing_method}#{TWT_H_SEPARATOR}.!
+            return %!#{prefix}[910.#{drawing_method}]#{TWT_H_SEPARATOR}.!
         when DRAWING_METHOD::DM_3D, DRAWING_METHOD::DM_REPRINT
-            return %!905.その他#{TWT_H_SEPARATOR}#{drawing_method}!
+            return %!#{prefix}[905.その他]#{TWT_H_SEPARATOR}#{drawing_method}!
         when "", nil
             p = Util::format_num(self.prediction, 15)
             daysn = self.last_access_datetime_days_elapsed
             #return %![998.未設定]#{TWT_H_SEPARATOR}#{daysn/30}ヶ月|#{p}件|#{daysn/7}週!
             if (self.filenum||0) < 10
-                return %![998.未設定] ファイル少ない#{TWT_H_SEPARATOR}#{daysn/7}週|#{p}件~!
+                return %!#{prefix}[998.未設定] ファイル少ない#{TWT_H_SEPARATOR}#{daysn/7}週|#{p}件~!
             else
-                return %![998.未設定] #{daysn/30}ヶ月#{TWT_H_SEPARATOR}#{daysn/7}週|#{p}件~!
+                return %!#{prefix}[998.未設定] #{daysn/30}ヶ月#{TWT_H_SEPARATOR}#{daysn/7}週|#{p}件~!
             end
         else
             dm = %!900.#{drawing_method}!
@@ -1436,7 +1453,7 @@ class Twitter < ApplicationRecord
         when Twitter::TWT_STATUS::STATUS_PATROL
             #key = self.group_spec("{az}#{TWT_H_SEPARATOR}評価{r}")
             key = self.group_spec(grp_spec)
-            %![#{dm}]#{key}!
+            result = %![#{dm}]#{key}!
         else
             if key
             else
@@ -1446,8 +1463,9 @@ class Twitter < ApplicationRecord
                     key = ""
                 end
             end
-            %!#{dm}#{TWT_H_SEPARATOR}#{key}!
+            result = %!#{dm}#{TWT_H_SEPARATOR}#{key}!
         end
+        %!#{prefix}#{result}!
     end
 
     def group_key()

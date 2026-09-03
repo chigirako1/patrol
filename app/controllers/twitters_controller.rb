@@ -535,9 +535,12 @@ class TwittersController < ApplicationController
         @twt_pic_path_list = Twt::search_tweet_ex(screen_name, tweet_id)
 
         tweets = Tweet.where(tweet_id: tweet_id)
-        if tweets
+        if tweets.presence
           @tweets = tweets
+        else
+          @searching_tweet_id = [screen_name, tweet_id]
         end
+        STDERR.puts %!#{tweet_id}@#{screen_name}/#{tweets.size}!
       end
 
       return
@@ -702,6 +705,7 @@ class TwittersController < ApplicationController
         :main_twtid,
         :latest_tweet_id,
         :oldest_tweet_id,
+        :pinned_tweet_id,
         :zipped_at,
         :change_history,
         :filesize,

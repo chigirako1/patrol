@@ -6,8 +6,10 @@ class Tweet < ApplicationRecord
         TO_BE_OBTAIN = "取得予定"
         SAVED = "保存済み"
         TO_BE_REMOVED = "削除予定"
+        UNNECESSARY = "不要"
         DELETED = "削除"
         UNACCESSIBLE = "URLアクセス不可"
+        UNACCESSIBLE_DEL_ACNT = "URLアクセス不可(削除されたアカウント)"
         UNACCESSIBLE_FREEZED = "URLアクセス不可(凍結されたアカウント)"
         UNACCESSIBLE_PRIVATE = "URLアクセス不可(非公開アカウント)"
         DUPLICATE = "重複"
@@ -20,8 +22,10 @@ class Tweet < ApplicationRecord
         [
             [StatusEnum::SAVED],
             [StatusEnum::TO_BE_REMOVED],
+            [StatusEnum::UNNECESSARY],
             [StatusEnum::DELETED],
             [StatusEnum::UNACCESSIBLE],
+            [StatusEnum::UNACCESSIBLE_DEL_ACNT],
             [StatusEnum::UNACCESSIBLE_FREEZED],
             [StatusEnum::UNACCESSIBLE_PRIVATE],
             [StatusEnum::DUPLICATE],
