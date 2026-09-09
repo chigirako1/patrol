@@ -106,16 +106,24 @@
   <% end %>
 
   <div>
+    <% if twitter.pinned_tweet_id.presence %>
+      <% twt_img_list = TwtImageList.new(@twt_pic_path_list, true) %>
+      <% tweets = twt_img_list.search_tweet(twitter.pinned_tweet_id) %>
+      <% tweets.each do |tweet| %>
+        <%= image_link(tweet.file_path) %>
+      <% end %>
+
+      <!-- TODO:ファイルが見つからない場合はDBを検索 -->
+    <% end %>
+
     <%= form.label :固定ツイートのID, style: "display: block" %>
     <%= form.number_field :pinned_tweet_id %>
 
-    <% if twitter.pinned_tweet_id.presence %>
-      固定
-      <% twt_img_list = TwtImageList.new(@twt_pic_path_list, true) %>
-      <% timg = twt_img_list.search_tweet(twitter.pinned_tweet_id) %>
-      <%= image_link(timg.file_path) %>
-    <% end %>
+    <input type="button" value="←固定tweet id設定" onclick="set_pinned_id();" />
+    <input type="text" id="pinned_tweet_id_txt" value="" />
   </div>
+
+  <hr />
 
   <div>
     <%= form.label :twtid, style: "display: block" %>
@@ -284,7 +292,7 @@
 
       ←
       <input type="button" value="取り出し" onclick="get_pxv_user_id();" />
-      <input type=”text” id="pxv_user_id_work" value="" />
+      <input type="text" id="pxv_user_id_work" value="" />
     <% end %>
 
     <% if pxv.presence and twitter.pxvid == "" %>
@@ -606,6 +614,9 @@
 
     <%= form.radio_button :disp_tab_target, Twitter::DISP_TAB::DT_NO_SPEC %>
     <%= form.label "disp_tab_target_#{Twitter::DISP_TAB::DT_NO_SPEC}", Twitter::DISP_TAB::DT_NO_SPEC %>
+
+    <%= form.radio_button :disp_tab_target, Twitter::DISP_TAB::DT_SP %>
+    <%= form.label "disp_tab_target_#{Twitter::DISP_TAB::DT_SP}", Twitter::DISP_TAB::DT_SP %>
   </div>
 
   <hr />
@@ -694,14 +705,15 @@
       let text_box = document.getElementById("pxv_user_id_work");
       let text = text_box.value;
 
-      let datetxt = "";
+      if (text.includes("pixiv.me") || text.endsWith(".")) {
+        alert("警告:不正な文字列の可能性があります。'" + text + "'");
+      }
+
       const regex = /pixiv\.net\/users\/(\d+)/;
       //const regex = new RegExp('pixiv\.net/users/(\d+)');
       console.log(regex);
 
-      //TODO: IDの最後に"."がついていたら警告する
-      //"https://pixiv.me/xxx"警告
-
+      let datetxt = "";
       const match = text.match(regex);
       //if (regex.test(text)) {
       if (match) {
@@ -728,10 +740,7 @@
       return formatted;
   }
 
-  function set_latest_info() {
-      let text_box = document.getElementById("latest_info_work");
-      let text = text_box.value;
-
+  function get_tweet_id_from_string(text) {
       let tw_id = "";
       const regex = /x\.com\/\w+\/status\/(\d+)/;
       console.log(regex);
@@ -746,6 +755,14 @@
           let n = BigInt(r[0]);
           tw_id = n;
       }
+      return tw_id;
+  }
+
+  function set_latest_info() {
+      let text_box = document.getElementById("latest_info_work");
+      let text = text_box.value;
+
+      let tw_id = get_tweet_id_from_string(text);
 
       //id
       const l_tw_id = document.getElementById('twitter_latest_tweet_id');
@@ -759,4 +776,18 @@
 
       l_tw_id.select();
   }
+
+  function set_pinned_id() {
+      let text_box = document.getElementById("pinned_tweet_id_txt");
+      let text = text_box.value;
+
+      let tw_id = get_tweet_id_from_string(text);
+
+      //id
+      const l_tw_id = document.getElementById('twitter_pinned_tweet_id');
+      l_tw_id.value = tw_id;
+
+      l_tw_id.select();
+  }
+  
 </script>

@@ -430,13 +430,13 @@
                         <% tweet = Tweet::create_record(@twitter.twtid, tweet_id) %>
                         |DBレコード新規登録(=>"<%= tweet.status %>")
                     <% end %>
-                    <br />
                     <% break %>
                 <% else %>
                 <% end %>
             <% end %>
 
             <% if hit %>
+                [<%= link_to_ex "■tweet■", tweet %>]
             <% else %>
                 <%= %!#{smart_date Twt::get_timestamp tweet_id}(#{tweet_id}))! %> no hit...
                 <%= link_to_ex(tweet_id, Twt::twt_tweet_url(@twitter.twtid, tweet_id)) %>
@@ -473,8 +473,8 @@
                     <% end %>
                     [<%= link_to_ex "■New tweet■", new_tweet_path(tweet_id: tweet_id, screen_name: @twitter.twtid, status: Tweet::StatusEnum::SAVED) %>]
                 <% end %>
-                <br />
             <% end %>
+            <br />
         <% end %>
     <% end %>
 

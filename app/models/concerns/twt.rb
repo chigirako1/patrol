@@ -26,6 +26,8 @@ module Twt
     TWT_POST_PHOTO_URL_RGX = %r!https?://(?:x|twitter)\.com/(\w+)/status/(\d+)/photo!
     TWT_POST_VIDEO_URL_RGX = %r!https?://(?:x|twitter)\.com/(\w+)/status/(\d+)/video!
 
+    TWT_URL_SCREEN_NAME_RGX2 = %r!(https?://(?:x|twitter)\.com/(\w+))!
+
     TWT_URL_SCREEN_NAME_RGX = %r!(?:x|twitter)\.com/(\w+)!
     TWT_TOP_SCREEN_NAME_RGX = /^(\w+)\s?/
     #TWT_AT_SCREEN_NAME_RGX = /\(@(\w+)\)/
@@ -1298,7 +1300,7 @@ module Twt
 
     def self.get_key_elem_sub(twt, dayn, pred, chk)
 
-        freq_n = 300
+        freq_n = 330
         month_v = [dayn / 30, 9].min
         pred_val = Util::format_num(pred, 15).to_s + "件"
 
@@ -1386,14 +1388,14 @@ module Twt
             cate_no = 890
             %!#{cate_no}.#{month_n}ヵ月|#{r_s}|#{p_s}!
         else
+            week_n = Util::format_num(dayn / 7, 1)
             if twt.rating > 85
                 cate_no = 850
+                %!#{cate_no}.#{p_s}件↑|#{week_n}週|【#{r_s}】!
             else
                 cate_no = 810
+                %!#{cate_no}.【#{r_s}】|#{p_s}件↑!
             end
-            week_n = Util::format_num(dayn / 7, 1)
-            #%!#{cate_no}.#{p_s}件↑|#{week_n}週|#{r_s}!
-            %!#{cate_no}.#{p_s}件↑|#{week_n}週|#{r_s}!
         end
     end
 

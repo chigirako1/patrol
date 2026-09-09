@@ -578,6 +578,10 @@ module UrlTxtReader
         unknown
     end
 
+    PXV_USER_URL_RGX = %r!https?://www\.pixiv\.net/users/(\d+)!
+    PXV_ARTWORK_URL_RGX = %r!https?://www\.pixiv\.net/artworks/(\d+)!
+    MSC_URL_RGX = %r!(https?://.*)!
+
     def self.get_url_txt_info(filepath, pxv=true, twt=true, etc=true, pxv_artwork=false)
         txt_sum = get_url_txt_contents(filepath)
         txts = txt_sum.split(/\R/)
@@ -591,7 +595,8 @@ module UrlTxtReader
             line.chomp!
             next if line =~ /^$/
     
-            if twt and line =~ %r!(https?://(?:x|twitter)\.com/(\w+))!
+            #if twt and line =~ %r!(https?://(?:x|twitter)\.com/(\w+))!
+            if twt and line =~ Twt::TWT_URL_SCREEN_NAME_RGX2
                 url = $1
                 twt_id = $2
 
@@ -604,12 +609,12 @@ module UrlTxtReader
                     twt_url.append_url(line)
                     twt_infos[twt_id] = twt_url
                 end
-            elsif pxv and line =~ %r!https?://www\.pixiv\.net/users/(\d+)!
+            elsif pxv and line =~ PXV_USER_URL_RGX
                 user_id = $1.to_i
                 pxv_id_list.push user_id
-            elsif pxv_artwork and line =~ %r!https?://www\.pixiv\.net/artworks/(\d+)!
+            elsif pxv_artwork and line =~ PXV_ARTWORK_URL_RGX
                 pxv_artwork_id_list << $1.to_i
-            elsif etc and line =~ %r!(https?://.*)!
+            elsif etc and line =~ MSC_URL_RGX
                 url = $1
                 misc_urls.push url
             else
@@ -707,6 +712,8 @@ class TweetList
         end
         @twt_infos = twt_infos.sort_by {|k,v| k.downcase}.to_h
         @tweet_id_hash = tweet_id_hash
+
+        STDERR.puts %!TweetList:#{@twt_infos.size}!
     end
 
     def get

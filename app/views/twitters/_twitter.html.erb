@@ -42,6 +42,9 @@
         <strong>登録日:</strong>
         <%= twitter.datetime_disp(twitter.created_at) %>
 
+        <strong>最古tweet日:</strong>
+        <%= twitter.datetime_disp(Twt::get_timestamp(twitter.oldest_tweet_id)) if twitter.oldest_tweet_id.presence %>
+
         【
         <% if twitter.new_twtid.presence %>
             <strong>新:</strong>

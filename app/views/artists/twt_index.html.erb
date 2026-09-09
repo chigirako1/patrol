@@ -87,7 +87,7 @@
             <%# next %>
         <% end %>
 
-        <% twt_account.url_list = url_list %>
+        <% twt_account.url_list = Tweet::new_summary(twt_account.twtid, url_list) %>
         <% key_twt = twt_account.group_key_hoge(spec) %>
         <%# key_twt = %!#{url_list.size}#{key_twt}! %>
         <% twt_group[key_twt] << [twt_account, url_list] %>
@@ -166,14 +166,14 @@
             <!-- ,  -->
             <% list.first(twt_disp_number).each.with_index(1) do |val, idx| %>
                 <% twt_account = val[0] %>
-                <% url_list = val[1] %>
+                <%# url_list = val[1] %>
                 <tr>
                     <td><%= idx %></td>
                     <td>
                             <%= twt_account.drawing_method %>
                     </td>
                     <td>
-                        [<%= url_list.size %>]
+                        [<%= twt_account.url_list.todo_cnt %>/<%= twt_account.url_list.size %>]
                     </td>
                     <td>
                         【<%= twt_account.rating %>】<%= restr_disp(twt_account.r18) %>
@@ -305,7 +305,7 @@
         <h3><%= key %>(<%= tweets.size %>)</h3>
 
         <% date_bak = nil %>
-        <% if key.start_with?(Tweet::C_YET) and tweets.size > 30 %>
+        <% if key.start_with?(Tweet::C_YET) and tweets.size > 15 %>
             <% header_disp = true %>
         <% else %>
             <% header_disp = false %>
@@ -971,7 +971,7 @@
                     ※未設定※
                 <% end %>
                 </b>
-                [<%= link_to_ex("■twt■", elem.twt) %>]
+                [<%= link_to_ex("■twt■", twitter_path(elem.twt, file_check: 't')) %>]
                 [予測:<%= pred = elem.twt.prediction_h_ex %>=>ファイル:<%= elem.file_cnt %>
                 <% if pred > 0 %>
                     <% gosa = elem.file_cnt - pred %>

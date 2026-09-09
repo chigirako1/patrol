@@ -71,13 +71,13 @@ class TwtImageList
     end
 
     def search_tweet(tweet_id)
+        lists = []
         list.each do |timg|
             if timg.tweet_id == tweet_id
-                #最初に見つかったもの
-                return timg
+                lists << timg
             end
         end
-        nil
+        lists
     end
 
     def calc_freq

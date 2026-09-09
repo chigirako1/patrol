@@ -11,6 +11,8 @@ class Twitter < ApplicationRecord
     TWT_KEYWORD_SP = "\tSP"
     TWT_KEYWORD_SP_S = "#{TWT_KEYWORD_SP}#{TWT_H_SEPARATOR}-"# + gkey_work
 
+    SORT_PRIORITY_RAT = 85
+
     module TWT_STATUS
         STATUS_PATROL = "TWT巡回"
         STATUS_VID_PATROL = "動画チェック"
@@ -70,6 +72,7 @@ class Twitter < ApplicationRecord
         DT_MEDIA = "メディア"
         DT_PIC = "静止画"
         DT_NO_SPEC = "()"
+        DT_SP = "SP対象"
     end
         
     def self.find_by_twtid_ignore_case(twtid, ignore=true)
@@ -405,6 +408,10 @@ class Twitter < ApplicationRecord
         # if self.disp_tab_target == Twitter::DISP_TAB::DT_MEDIA and (self.update_frequency||0) > 200 and (self.rating||0) >= 84
         #     return true
         # end
+
+        if self.disp_tab_target == Twitter::DISP_TAB::DT_SP
+            return true
+         end
         
         if Twt::filesize_v_huge?(self.filesize) and (self.update_frequency||0) > Twt::UPLOAD_FREQ_THRE_V
             #STDERR.puts %!sp?: #{self.filesize} bytes, #{self.update_frequency}/100 "#{self.twtname}[@#{self.twtid}]"!
@@ -546,13 +553,20 @@ class Twitter < ApplicationRecord
         prediction_h(self.last_post_datetime||self.last_access_datetime)
     end
 
-    def sort_priority
+    def get_max_interval
         if self.max_interval
             max_interval = self.max_interval
+        elsif (self.rating||0) > SORT_PRIORITY_RAT
+            tbl = self.class.find_config_by_val(self.rating)
+            daysn = tbl[1][0]
+            max_interval = daysn
         else
             max_interval = Float::INFINITY
         end
+        max_interval
+    end
 
+    def get_fetch_pred_n
         if self.fetch_pred_n
             if true
                 fetch_pred_n = self.fetch_pred_n * 100 / (self.update_frequency||1)
@@ -563,13 +577,22 @@ class Twitter < ApplicationRecord
         else
             fetch_pred_n = Float::INFINITY
         end
+        fetch_pred_n
+    end
+
+    def sort_priority
+        max_interval = get_max_interval
+        fetch_pred_n = get_fetch_pred_n
+
+        fac_x = [max_interval, fetch_pred_n].min
 
         pred = self.prediction_h_ex
         lad = self.last_access_day_num
 
         [
-            max_interval,
-            fetch_pred_n,
+            #max_interval,
+            #fetch_pred_n,
+            fac_x,
             -(self.rating||0 / 5),
             -(lad / 90),
             -(self.rating||0),
@@ -1058,8 +1081,16 @@ class Twitter < ApplicationRecord
             when "url_cnt"
                 if self.url_list
                     unit = 1 unless unit
-                    number = self.url_list.size
-                    gkey_work = group_sub(unit, number, gkey_work, x, append:"件")
+
+                    
+                    if false
+                        number = self.url_list.size
+                        gkey_work = group_sub(unit, number, gkey_work, x)
+                    else
+                        #url_s = Tweet::new_summary(self.twtid, self.url_list)
+                        number = self.url_list.todo_cnt
+                        gkey_work = group_sub(unit, number, gkey_work, x)
+                    end
                 else
                     #STDERR.puts "url_cnt"
                     gkey_work.gsub!(x, "")
@@ -1097,8 +1128,14 @@ class Twitter < ApplicationRecord
                             weekn = self.last_access_datetime_days_elapsed / 7
                             w_s = Util::format_num(weekn, 1, 3)
 
+                            if self.url_list
+                                number = self.url_list.todo_cnt
+                                u = Util::format_num(number, 1, 3)
+                                u_s = %!残#{u}件|!
+                            end
+
                             #gkey_work = "最近登録/少数:#{w_s}週|#{prd_s}件~" + TWT_H_SEPARATOR + "#{r_s}"
-                            gkey_work = "最近登録/少数:#{w_s}週|【#{r_s}】" + TWT_H_SEPARATOR + "#{prd_s}件~"
+                            gkey_work = "#{u_s}最近登録/少数:#{w_s}週|【#{r_s}】" + TWT_H_SEPARATOR + "#{prd_s}件~"
                         elsif true
                             r_s = Util::format_num(self.rating, 1)
                             gkey_work = "最近登録/少数" + TWT_H_SEPARATOR + "#{r_s}"
@@ -1627,10 +1664,10 @@ class Twitter < ApplicationRecord
     C_VAL_TBL = [
         #r    d   n
         [95, [  7, 22,  0]],
-        [90, [ 22, 25,  0]],
-        [89, [ 23, 30,  1]],
-        [88, [ 26, 33,  1]],
-        [87, [ 27, 40,  2]],
+        [90, [ 15, 25,  0]],
+        [89, [ 20, 30,  1]],
+        [88, [ 23, 33,  1]],
+        [87, [ 25, 40,  2]],
         [86, [ 28, 45,  3]],
         [85, [ 35, 50,  7]],
         [84, [ 40, 75, 15]],

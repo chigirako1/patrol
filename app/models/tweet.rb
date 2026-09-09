@@ -266,14 +266,14 @@ class Tweet < ApplicationRecord
 
     Url_List_Summary = Struct.new(:screen_name, :url_cnt, :todo_cnt)
 
-    def self.new_summary(key, url_list)
+    def self.new_summary(screen_name, url_list)
         exist_cnt = check_registered_record(url_list)
         todo_cnt = url_list.size - exist_cnt
         if todo_cnt > 0
-            #STDERR.puts %!"@#{key}":#{todo_cnt}/#{url_list.size}!
+            #STDERR.puts %!"@#{screen_name}":#{todo_cnt}/#{url_list.size}!
         end
 
-        Url_List_Summary.new(key, url_list.size, todo_cnt)
+        Url_List_Summary.new(screen_name, url_list.size, todo_cnt)
     end
 
     def self.url_list_summary(known_twt_url_list)
