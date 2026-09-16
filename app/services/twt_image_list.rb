@@ -120,9 +120,11 @@ class TwtImageList
         list.each do |twt_img|
             if twt_img.tweet_id == 0
                 # TODO:???
-                next
+                #next
+                ts = Util::mtime twt_img.file_path
+            else
+                ts = twt_img.datetime
             end
-            ts = Twt::get_timestamp(twt_img.tweet_id)
             hash[ts.public_send(key_method)] << twt_img
         end
 

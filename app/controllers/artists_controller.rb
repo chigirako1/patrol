@@ -910,29 +910,32 @@ class ArtistsController < ApplicationController
         #@known_twt_url_list = Tweet.distinct.pluck(:screen_name).map {|x| [x, nil]}.to_h
         @known_twt_url_list = Tweet.where.not(screen_name: [nil, ""]).distinct.pluck(:screen_name).map {|x| [x, Twt::twt_user_url(x)]}.to_h
       when DIR_TYPE::DT_MOV_URL
-        twt_url_hash = TweetUrl::mov_tweet_group()
+        twt_vid_url_hash = TweetUrl::mov_tweet_group()
 
         if true
-          twt_url_hash.each do |k,v|
+          twt_vid_url_hash.each do |k,v|
             save = v.size
             #v.delete_if {|x| x.cond_del}
             STDERR.puts %!@#{k}:#{save} => #{v.size}! if save != v.size
           end
 
-          STDERR.puts %!y:#{twt_url_hash.size}!
-          #twt_url_hash.compact! 長さ０の配列だと消えない模様
-          twt_url_hash.delete_if {|k,v| v.size == 0}
-          STDERR.puts %!z:#{twt_url_hash.size}!
+          STDERR.puts %!y:#{twt_vid_url_hash.size}!
+          #twt_vid_url_hash.compact! 長さ０の配列だと消えない模様
+          twt_vid_url_hash.delete_if {|k,v| v.size == 0}
+          STDERR.puts %!z:#{twt_vid_url_hash.size}!
         end
 
         screen_name = params[:from]
         if screen_name
-          twt_url_hash = twt_url_hash.slice(screen_name)
+          twt_vid_url_hash = twt_vid_url_hash.slice(screen_name)
           #extract!
         end
 
-        #@twt_url_hash = twt_url_hash.sort_by {|k,v| k.downcase}.to_h
-        @twt_url_hash = twt_url_hash.sort_by {|k,v| -v.size}.to_h
+        #@twt_vid_url_hash = twt_vid_url_hash.sort_by {|k,v| -v.size}.to_h
+        @twt_vid_url_hash = twt_vid_url_hash.sort_by {|k,v|
+          twt = Twitter.find_by_twtid_ignore_case(k);
+          [twt.private_account||"", -(twt.video_cnt||0), -(twt.rating||0), -v.size]
+        }.to_h
       else
         STDERR.puts "!!ERR:unknown type='#{dir}'!!"
       end

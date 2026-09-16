@@ -63,7 +63,7 @@
 
         <%= form.text_field :screen_name, value: screen_name_val, autofocus: true %>
 
-        <%= twitter_info_tag_ex(tweet.screen_name, true, true) %>
+        <%= twitter_info_tag_ex(tweet.screen_name, br: true, unregist: true) %>
         <% if tweet.screen_name.presence %>
             <h3>
                 <%= link_to_ex("▶@" + tweet.screen_name, Twt::twt_user_media_url(tweet.screen_name)) %>
@@ -132,19 +132,21 @@
     <% if @twt_video_list %>
         <% screen_name = get_val(tweet.screen_name, :screen_name) %>
         <% tweet_id = get_val(tweet.tweet_id, :tweet_id) %>
-        <% videopath = @twt_video_list.get_path(screen_name, tweet_id.to_i) %>
+        <% videopaths = @twt_video_list.vid_path_list(screen_name, tweet_id.to_i) %>
 
-        <% if videopath == nil %>
+        <% if videopaths.size == 0 %>
             <% vlist = TwtVideoList::new(true) %>
-            <% videopath = vlist.get_path(screen_name, tweet_id.to_i) %>
+            <% videopaths = vlist.vid_path_list(screen_name, tweet_id.to_i) %>
         <% end %>
 
-        <% if videopath %>
-            <video controls width="640" height="360">
-                <source src="<%= videopath %>" type="video/mp4">
-                お使いのブラウザは動画再生に対応していません。
-            </video>
-            [<%= link_to_ex "video file", videopath %>]
+        <% if videopaths.size > 0 %>
+            <% videopaths.each do |videopath| %>
+                <video controls width="640" height="360">
+                    <source src="<%= videopath %>" type="video/mp4">
+                    お使いのブラウザは動画再生に対応していません。
+                </video>
+                [<%= link_to_ex "video file", videopath %>]
+            <% end %>
         <% else %>
             <h3>
             <%= Twt::filename_str(screen_name, tweet_id) %>

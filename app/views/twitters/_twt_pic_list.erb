@@ -348,7 +348,10 @@
     
     <% filelist = Twt::get_sp_pic_filelist_by_twtid(@twitter.twtid) %>
     <% if filelist.presence %>
-        <h4>SP(<%= File.dirname filelist.first %>)[<%= filelist.size %>ファイル]</h4>
+        <h4>
+            SP(<%= File.dirname filelist.first %>)[<%= filelist.size %>ファイル]
+            <%= link_to_ex %!☆twt☆:@#{@twitter.twtid}!, artist_twt_path(@twitter.twtid, picn: 33) %>
+        </h4>
 
         <% latest_file = filelist.last %>
         <% sp_datetime = Twt::get_sp_datetime_from_filepath(latest_file) %>

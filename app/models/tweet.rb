@@ -190,6 +190,7 @@ class Tweet < ApplicationRecord
 
     def self.check_registered_record(url_list)
         exist = 0
+        oldest = nil
 
         url_list.each do |x|
             tweet_id = Twt::get_tweet_id_from_url(x)
@@ -197,13 +198,15 @@ class Tweet < ApplicationRecord
                 tweet = Tweet.find_by(tweet_id: tweet_id)
                 if tweet
                     exist += 1
+                else
+                    oldest = tweet_id if oldest == nil
                 end
             else
-                exist += 1
+                exist += 1 #???
                 #STDERR.puts %!\t"#{x}"\t#{exist}!
             end
         end
-        exist
+        [exist, oldest]
     end
 
     def self.get_records(screen_name, status)
@@ -264,16 +267,16 @@ class Tweet < ApplicationRecord
         [tweet_cnt_list, tweet_sum_hash]
     end
 
-    Url_List_Summary = Struct.new(:screen_name, :url_cnt, :todo_cnt)
+    Url_List_Summary = Struct.new(:screen_name, :url_cnt, :todo_cnt, :oldest_tweet_id)
 
     def self.new_summary(screen_name, url_list)
-        exist_cnt = check_registered_record(url_list)
+        exist_cnt, oldest_tweet_id = check_registered_record(url_list)
         todo_cnt = url_list.size - exist_cnt
         if todo_cnt > 0
             #STDERR.puts %!"@#{screen_name}":#{todo_cnt}/#{url_list.size}!
         end
 
-        Url_List_Summary.new(screen_name, url_list.size, todo_cnt)
+        Url_List_Summary.new(screen_name, url_list.size, todo_cnt, oldest_tweet_id)
     end
 
     def self.url_list_summary(known_twt_url_list)

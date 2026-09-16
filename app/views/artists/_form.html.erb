@@ -190,7 +190,7 @@
       <%= link_to_ex "@#{artist.twtid}", artist.twt_user_media_url %>
       <% if twt.presence %>
         (@<%= twt.twtid %>)
-        <%= twitter_info_tag_ex(artist.twtid, true) %>
+        <%= twitter_info_tag_ex(artist.twtid, br: true) %>
       <% elsif artist.twtid != "" %>
         <%#= link_to "New Twt", new_twitter_path(twtid: artist.twtid, pxvid: artist.pxvid, status: Twitter::TWT_STATUS::STATUS_PATROL, twtname: artist.pxvname) %>
         <% search_word = artist.twtid%>

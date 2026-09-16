@@ -49,12 +49,12 @@ class TweetUrl
     end
 
     def self.mov_tweet_group
-        tweet_id_list = []
 
-        STDERR.puts "xxzzxx"
+        STDERR.puts "mov_tweet_group:"
         txts = Util::load_mov_urls()
-        STDERR.puts txts.size
+        STDERR.puts %!n line:#{txts.size}!
 
+        tweet_id_list = []
         mov_url_hash = Hash.new { |h, k| h[k] = [] }
         txts.each do |line|
             #STDERR.puts %!"#{line}"!
@@ -67,11 +67,13 @@ class TweetUrl
             when Twt::TWT_POST_URL_RGX
                 screen_name = $1
                 tweet_id = $2.to_i
+
                 if tweet_id_list.include?(tweet_id)
                     #STDERR.puts "重複:#{tweet_id}(@#{screen_name})"
                     next
                 end
                 tweet_id_list << tweet_id
+                
                 p_no = 0
                 tweet_url = TweetUrl.new(screen_name, tweet_id, p_no)
                 key = screen_name

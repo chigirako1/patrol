@@ -113,7 +113,22 @@
         <%= image_link(tweet.file_path) %>
       <% end %>
 
-      <!-- TODO:ファイルが見つからない場合はDBを検索 -->
+      <% if tweets.size == 0 %>
+        <!-- ファイルが見つからない場合はDBを検索 -->
+        <% tweet_records = Tweet.where(tweet_id: twitter.pinned_tweet_id) %>
+        <% if tweet_records.size > 0 %>
+          <% tweet = tweet_records.first %>
+          <% if tweet.remarks.presence %>
+              <% hit_pic_list = Twt::find_pics(@twt_pic_path_list, tweet.remarks, tweet.screen_name) %>
+              <% hit_pic_list.each do |path| %>
+                  <%= image_link(path) %>
+              <% end %>
+          <% end %>
+        <% end %>
+
+        <%= twitter.datetime_disp(Twt::get_timestamp(twitter.pinned_tweet_id)) %>
+        </b>
+      <% end %>
     <% end %>
 
     <%= form.label :固定ツイートのID, style: "display: block" %>
@@ -132,7 +147,7 @@
       @<%= form.text_field :twtid, value: param_twtid %>
       <h3>TWTを開く→<%= link_to_ex %!@#{param_twtid}!, Twt::twt_user_url(param_twtid) %></h3>
     <% else %>
-      @<%= form.text_field :twtid %>
+      @<%= form.text_field :twtid, readonly: true %>
     <% end %>
   </div>
 
@@ -377,22 +392,22 @@
   <div>
     <%= form.label :主ID, style: "display: block" %>
     @<%= form.text_field :main_twtid %>
-    <%= twitter_link_tag(@twitter.main_twtid) %>
     <%= twitter_info_tag_ex(@twitter.main_twtid) %>
+    <%= twitter_link_tag(@twitter.main_twtid) %>
   </div>
 
   <div>
     <%= form.label :副ID, style: "display: block" %>
     @<%= form.text_field :sub_twtid %>
-    <%= twitter_link_tag(@twitter.sub_twtid) %>
     <%= twitter_info_tag_ex(@twitter.sub_twtid) %>
+    <%= twitter_link_tag(@twitter.sub_twtid) %>
   </div>
 
   <div>
     <%= form.label :別ID, style: "display: block" %>
     @<%= form.text_field :alt_twtid %>
-    <%= twitter_link_tag(@twitter.alt_twtid) %>
     <%= twitter_info_tag_ex(@twitter.alt_twtid) %>
+    <%= twitter_link_tag(@twitter.alt_twtid) %>
   </div>
 
   <hr />
@@ -579,6 +594,8 @@
   <div>
     <%= form.label %!動画🎞️評価!, style: "display: block" %>
     <%= form.number_field :video_cnt %>
+
+    <input type="button" value="80" onclick="set_rate('video_cnt', 80);" class="btn_s" />
   </div>
 
   <hr />
@@ -625,7 +642,9 @@
     <%= form.label "最大アクセス間隔(日)", style: "display: block" %>
     <%= form.number_field :max_interval %>
     <% if @twitter.max_interval %>
-       <%= @twitter.max_interval %> * <%= @twitter.update_frequency %> / 100 => <%= @twitter.max_interval * @twitter.update_frequency / 100 %>件
+      <%= @twitter.max_interval %> * <%= @twitter.update_frequency %> / 100 => <%= @twitter.max_interval * @twitter.update_frequency / 100 %>件
+    <% else %>
+      <%= @twitter.max_daysn %>
     <% end %>
   </div>
 
@@ -675,27 +694,23 @@
   }
 
   function set_rate(elem_id, point) {
-    //let elem = document.getElementById("twitter_" + elem_id);
     let elem = getElemTwt(elem_id);
     elem.value = point;
   }
 
   function plus_rate(elem_id, point) {
-    //let elem = document.getElementById("twitter_" + elem_id);
     let elem = getElemTwt(elem_id);
     let prio_val = parseInt(elem.value);
     elem.value = prio_val + point;
   }
 
   function multiple_val(elem_id, val) {
-    //let elem = document.getElementById("twitter_" + elem_id);
     let elem = getElemTwt(elem_id);
     let prio_val = parseInt(elem.value);
     elem.value = prio_val * val;
   }
 
   function div_val(elem_id, val) {
-    //let elem = document.getElementById("twitter_" + elem_id);
     let elem = getElemTwt(elem_id);
     let prio_val = parseInt(elem.value);
     elem.value = prio_val / val | 0;//整数にしたい
@@ -705,8 +720,9 @@
       let text_box = document.getElementById("pxv_user_id_work");
       let text = text_box.value;
 
-      if (text.includes("pixiv.me") || text.endsWith(".")) {
+      if (text.includes("pixiv.me") || text.endsWith(".") || text.includes("x.com")) {
         alert("警告:不正な文字列の可能性があります。'" + text + "'");
+        return;
       }
 
       const regex = /pixiv\.net\/users\/(\d+)/;
@@ -763,11 +779,15 @@
       let text = text_box.value;
 
       let tw_id = get_tweet_id_from_string(text);
+      if (tw_id == "")
+      {
+        alert("警告:不正な文字列の可能性があります。'" + text + "'");
+        return;
+      }
 
       //id
       const l_tw_id = document.getElementById('twitter_latest_tweet_id');
       l_tw_id.value = tw_id;
-      //alert(tw_id);
 
       //日時
       let date = get_date_from_tweet_id(tw_id);
@@ -781,7 +801,17 @@
       let text_box = document.getElementById("pinned_tweet_id_txt");
       let text = text_box.value;
 
+      if (text.includes("pixiv")) {
+        alert("警告:不正な文字列の可能性があります。'" + text + "'");
+        return;
+      }
+
       let tw_id = get_tweet_id_from_string(text);
+      if (tw_id == "")
+      {
+        alert("警告:不正な文字列の可能性があります。'" + text + "'");
+        return;
+      }
 
       //id
       const l_tw_id = document.getElementById('twitter_pinned_tweet_id');

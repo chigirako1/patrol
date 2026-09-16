@@ -174,7 +174,7 @@
             <% end %>
             <br />
 
-            [<%= link_to_ex "■twt■", twitter %>]
+            [<%= link_to_ex "■twt■", twitter_path(twitter, file_check: 't')%>]
             <br />
             <%= twitter.get_date_info(twitter.last_access_datetime) if twitter.last_access_datetime.presence %>
             <br />

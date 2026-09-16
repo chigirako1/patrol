@@ -975,8 +975,8 @@
                 [予測:<%= pred = elem.twt.prediction_h_ex %>=>ファイル:<%= elem.file_cnt %>
                 <% if pred > 0 %>
                     <% gosa = elem.file_cnt - pred %>
-                    <% percent = gosa.abs * 100 / pred %>
-                    <% if percent > 30 %>
+                    <% percent = elem.file_cnt * 100 / pred %>
+                    <% if (percent - 100).abs >= 30 %>
                         <%= "誤差あり:#{gosa}(#{percent}%)" %>
                     <% end %>
                 <% end %>
@@ -1121,7 +1121,7 @@
                 <%= "【#{dm_icon(twt.drawing_method)}#{twt.rating}】#{twt.twtname}(@#{twt.twtid})" %>
                 |A:<%= twt.last_access_datetime_disp %>
                 (P:<%= twt.prediction_h_ex %>)
-                [<%= link_to_ex("■twt■", twt) %>]
+                [<%= link_to_ex("■twt■", twitter_path(twt, file_check: 't')) %>]
                 <% if bgcolorz %>
                     </span>
                 <% end %>
@@ -1226,17 +1226,17 @@
     <%
 =end %>
 
-<% if @twt_url_hash and @twt_url_hash.to_a.size > 0 %>
+<% if @twt_vid_url_hash and @twt_vid_url_hash.to_a.size > 0 %>
     <% if params[:list].presence and params[:list] == "open" %>
         <% list_open = true %>
     <% else %>
         <% list_open = false %>
     <% end %>
 
-    <h1>@twt_url_hash(<%= @twt_url_hash.size %>)</h1>
+    <h1>@twt_vid_url_hash(<%= @twt_vid_url_hash.size %>)</h1>
     
     <% if list_open %>
-        <% @twt_url_hash.each.with_index(1) do |(k,v), idx| %>
+        <% @twt_vid_url_hash.each.with_index(1) do |(k,v), idx| %>
             <h2><%= idx %>.<%= k %></h2>
             <%= twitter_info_tag_ex(k) %>
             <hr />
@@ -1264,9 +1264,10 @@
         <% end %>
     <% else %>
         <!-- ユーザーリストのみ -->
-        <% @twt_url_hash.each.with_index(1) do |(k,v) ,idx| %>
-            <h2><%= idx %>.【<%= 0 %>】@<%= k %>(<%= link_to_ex("x", Twt::twt_user_media_url(k)) %>)</h2>
-            <%= twitter_info_tag_ex(k) %>
+        <% @twt_vid_url_hash.each.with_index(1) do |(k,v) ,idx| %>
+            <% twt = Twitter.find_by_twtid_ignore_case(k) %>
+            <h2><%= idx %>.【🎞️<%= twt.video_cnt %>|🖼️<%= twt.rating %>】@<%= k %>(<%= link_to_ex("x", Twt::twt_user_media_url(k)) %>)</h2>
+            <%= twitter_info_tag_ex(k, twt_record: twt) %>
             <br />
             [<%= link_to_ex("動画URLリスト(#{v.size})", artists_twt_index_path(dir: ArtistsController::DIR_TYPE::DT_MOV_URL, from: k, list: "open")) %>]
             [<%= link_to_ex("動画ファイルリスト", artists_twt_index_path(dir: ArtistsController::DIR_TYPE::SP_VID, from: k)) %>]

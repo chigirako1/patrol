@@ -516,8 +516,8 @@ class TwittersController < ApplicationController
         twitters = twitters.select {|x| chk_screen_name_list.include?(x.twtid)}
         STDERR.puts %!2:#{twitters.size}!
       when FileEnum::FILE_VID_CHK
-        twt_url_hash = TweetUrl::mov_tweet_group()
-        tweet_ids = twt_url_hash.keys
+        twt_vid_url_hash = TweetUrl::mov_tweet_group()
+        tweet_ids = twt_vid_url_hash.keys
         twitters = twitters.select {|x| tweet_ids.include?(x.twtid)}
       else
       end

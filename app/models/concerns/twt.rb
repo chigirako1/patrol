@@ -464,6 +464,25 @@ module Twt
         pahtlist.flatten#.sort
     end
 
+    def self.find_pics(pic_list, filename, screen_name)
+        results = []
+        (pic_list||[]).each do |path|
+            if path.include? filename
+                results << path
+            else
+            end
+        end
+
+        filelist2 = Twt::get_sp_pic_filelist_both_by_twtid(screen_name)
+        filelist2.each do |path|
+            if path.include? filename
+                results << path
+            else
+            end
+        end
+        results
+    end
+
     def self.twt_user_infos()
         path_list = []
         path_list << Util::glob(TWT_CURRENT_DIR_PATH)
@@ -1298,26 +1317,25 @@ module Twt
 
     LOW_PRIORITY_IGNORE_KEY = "X00.低頻度&優先度低(最近アクセス)"
 
-    def self.get_key_elem_sub(twt, dayn, pred, chk)
+    def self.get_key_elem_sub(twt, dayn, pred, chk, todo_cnt)
 
         freq_n = 330
         month_v = [dayn / 30, 9].min
         pred_val = Util::format_num(pred, 15).to_s + "件"
 
-        if !(twt.twtname.presence) and (twt.rating||0) >= 84
-            if twt.update_frequency >= freq_n
-                return "099.名前未設定[#{pred_val}](高頻度)"
-            else
-                return "955.名前未設定[#{pred_val}]"
-            end
-        end
-
-
-        if (chk or Tweet.has_acquisition_schedule?(twt.twtid)) and dayn > 0
+        if (chk or Tweet.has_acquisition_schedule?(twt.twtid) or todo_cnt > 0) and dayn > 0
             if twt.update_frequency >= freq_n
                 return "020.取得対象物件あり[#{pred_val}](高頻度)"
             else
                 return "99#{month_v}.取得対象物件あり[#{pred_val}]"
+            end
+        end
+
+        if !(twt.twtname.presence) and (twt.rating||0) >= 84
+            if twt.update_frequency >= freq_n
+                return "095.名前未設定[#{pred_val}](高頻度)"
+            else
+                return "955.名前未設定[#{pred_val}]"
             end
         end
 
@@ -1394,7 +1412,8 @@ module Twt
                 %!#{cate_no}.#{p_s}件↑|#{week_n}週|【#{r_s}】!
             else
                 cate_no = 810
-                %!#{cate_no}.【#{r_s}】|#{p_s}件↑!
+                #%!#{cate_no}.【#{r_s}】|#{p_s}件↑!
+                %!#{cate_no}.#{week_n}週|【#{r_s}】!
             end
         end
     end
@@ -1419,14 +1438,16 @@ module Twt
         elem << v.cnt
         elem << pred
         if url_list
-            elem << url_list.todo_cnt
-            elem << url_list.url_cnt
+            todo_cnt = url_list.todo_cnt
+            url_cnt = url_list.url_cnt
         else
-            elem << 0
-            elem << 0
+            todo_cnt = 0
+            url_cnt = 0
         end
+        elem << todo_cnt
+        elem << url_cnt
 
-        key1 = get_key_elem_sub(twt, dayn, pred, chk)
+        key1 = get_key_elem_sub(twt, dayn, pred, chk, todo_cnt)
         #key2 = Util::format_num(twt.rating, 1)
         #key3 = Util::format_num(pred, 10)
         #key = "#{key1}|||#{key2}|||#{key3}"

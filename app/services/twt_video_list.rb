@@ -26,23 +26,24 @@ class TwtVideoList
         @video_path_list.size
     end
 
-    def get_path(screen_name, tweet_id)
+    def vid_path_list(screen_name, tweet_id)
         STDERR.puts %!@#{screen_name}/#{tweet_id}!
 
+        v_path_list = []
         list = @video_path_list[screen_name]
         if list
             list.each do |x|
                 STDERR.puts %!#{x}!
                 if x.tweet_id == tweet_id
                     STDERR.puts %!"#{x.filepath}"!
-                    return x.filepath
+                    v_path_list << x.filepath
                 end
             end
         else
             STDERR.puts %!xxx#{screen_name}!
         end
 
-        nil
+        v_path_list
     end
 
     class TwtVideo

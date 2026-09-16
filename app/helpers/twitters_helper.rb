@@ -37,8 +37,13 @@ module TwittersHelper
     def twitter_info_tag_vid(twt)
     end
 
-    def twitter_info_tag_ex(twtid, br=false, unregist=false)
-        twt = Twitter.find_by_twtid_ignore_case(twtid)
+    def twitter_info_tag_ex(twtid, twt_record: nil, br: false, unregist: false)
+        tag = ""
+        if twt_record
+            twt = twt_record
+        else
+            twt = Twitter.find_by_twtid_ignore_case(twtid)
+        end
         if twt
             tag = twitter_info_tag(twt)
             #if twt.sp?
@@ -49,9 +54,7 @@ module TwittersHelper
             elsif br
                 tag = "<br />" + tag
             end
-            tag.html_safe
         elsif twtid.presence
-            tag = ""
             user_exist = Twt::user_exist?(twtid)
             if user_exist
                 tag += "※フォルダあり※"
@@ -64,13 +67,21 @@ module TwittersHelper
                 tag += "※pxvに登録あり→"
                 tag += %![#{link_to_ex("■pxv■(#{pxv.pxvname})", pxv)}]!
             end
-
-            tag.html_safe
+        else
+            #tag = "(なし)"
         end
+        tag.html_safe
     end
 
     def twitter_info_tag(twt)
         tag = ""
+
+        if twt.status != Twitter::TWT_STATUS::STATUS_PATROL
+            bgcolor = "lightgray"
+        end
+        if bgcolor
+            tag += %!<span style="background-color: #{bgcolor};">!
+        end
 
         tag += %!#{dm_disp(twt.drawing_method)}!
         tag += "【"
@@ -80,8 +91,11 @@ module TwittersHelper
         end
         tag += "】"
         tag += %!"#{twt.twtname}"!
+
+        # status
         tag += "【"
         tag += PRIVATE_ICON if twt.private?
+
         tag += %!#{twt.status}!
         case twt.status
         when Twitter::TWT_STATUS::STATUS_SCREEN_NAME_CHANGED, Twitter::TWT_STATUS::STATUS_ANOTHER
@@ -91,6 +105,8 @@ module TwittersHelper
         else
         end
         tag += "】"
+
+
         tag += %![#{link_to_ex("■twt■", twt)}]!
         tag += %!|A:#{smart_date twt.last_access_datetime}(#{twt.last_access_datetime_disp})!
         tag += %!|予測:<b>#{twt.prediction}</b>!
@@ -98,6 +114,10 @@ module TwittersHelper
         tag += %!|ファイル数:#{twt.filenum}!
         tag += %!(頻度:#{twt.update_frequency})!
         tag += %!|#{PXV_ICON}:#{twt.pxvid}! if twt.pxvid.presence
+
+        if bgcolor
+            tag += %!</span>!
+        end
 
         tag.html_safe
     end
@@ -125,6 +145,8 @@ module TwittersHelper
             r_icon = R18_ICON
         when Twitter::RESTRICT::R15
             r_icon = ApplicationHelper::R15_ICON
+        when Twitter::RESTRICT::R12
+            r_icon = ApplicationHelper::R12_ICON
         else
             r_icon = ""
         end

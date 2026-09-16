@@ -557,7 +557,7 @@ class Twitter < ApplicationRecord
         if self.max_interval
             max_interval = self.max_interval
         elsif (self.rating||0) > SORT_PRIORITY_RAT
-            tbl = self.class.find_config_by_val(self.rating)
+            tbl = cnfg_tbl
             daysn = tbl[1][0]
             max_interval = daysn
         else
@@ -928,7 +928,7 @@ class Twitter < ApplicationRecord
         gkey_work.gsub(x, append_pre + w + append)
     end
 
-    def group_sub_r(unit, number, gkey_work, x, digit=3)
+    def group_sub_r(unit, number, gkey_work, x, digit:3)
 
         max_n = 10 ** digit
         num_w = max_n - number
@@ -944,27 +944,30 @@ class Twitter < ApplicationRecord
     # ""
     #
     def group_spec(grp_sort_spec_arg)
-        unset_disp = true
-        gkey_work = grp_sort_spec_arg.gsub(/#.*/, "")
-
-        regexp_pattern = /\{[a-zA-Z_]+\d*\}/
-        matches = grp_sort_spec_arg.scan(regexp_pattern)
-
-        lade_s = nil
-        low_rating_t = nil
-
         if self.status != Twitter::TWT_STATUS::STATUS_PATROL and self.rating.presence
             number = self.last_access_datetime_days_elapsed / 30
             return "\t#{self.status}#{TWT_H_SEPARATOR}#{number}ヶ月"
         end
 
-        matches.each do |x|
-            if x =~ /([a-zA-Z_]+)(\d*)/
-                start_str = $1
-                unit = $2.to_i if $2 != ""
-            end
+        unset_disp = true
+        gkey_work = grp_sort_spec_arg.gsub(/#.*/, "") #コメント部分を削る
 
-            #STDERR.puts %!"#{x}" => "#{start_str}|#{unit}"!
+        STDERR.puts %!group_spec():\t#{gkey_work}!
+        
+        lade_s = nil
+        low_rating_t = nil
+
+        #regexp_pattern = /\{[a-zA-Z_]+\d*\}/
+        regexp_pattern = /{.+?}/
+        matches = grp_sort_spec_arg.scan(regexp_pattern)
+
+        matches.each do |x|
+            if x =~ /{(.*?)([a-zA-Z_]+)(\d*)(.*)}/
+                prefix_s = $1
+                start_str = $2
+                unit = $3.to_i if $3 != ""
+                postfix_s = $4
+            end
 
             case start_str
             when "ad"
@@ -1078,19 +1081,26 @@ class Twitter < ApplicationRecord
                 else
                     gkey_work.gsub!(x, "")
                 end
+            when "tweet_dt"
+                if self.url_list
+                    unit = 1 unless unit
+                    tweet_id = url_list.oldest_tweet_id
+                    if tweet_id
+                        ts = Twt::get_timestamp(tweet_id)
+                        number = Util::get_date_delta(ts)
+                    else
+                        number = 0
+                    end
+                    gkey_work = group_sub(unit, number, gkey_work, x, append_pre:prefix_s, append:postfix_s)
+                else
+                    gkey_work.gsub!(x, "")
+                end
             when "url_cnt"
                 if self.url_list
                     unit = 1 unless unit
 
-                    
-                    if false
-                        number = self.url_list.size
-                        gkey_work = group_sub(unit, number, gkey_work, x)
-                    else
-                        #url_s = Tweet::new_summary(self.twtid, self.url_list)
-                        number = self.url_list.todo_cnt
-                        gkey_work = group_sub(unit, number, gkey_work, x)
-                    end
+                    number = self.url_list.todo_cnt
+                    gkey_work = group_sub(unit, number, gkey_work, x, append_pre:prefix_s, append:postfix_s)
                 else
                     #STDERR.puts "url_cnt"
                     gkey_work.gsub!(x, "")
@@ -1151,11 +1161,14 @@ class Twitter < ApplicationRecord
                     else
                         gkey_work.gsub!(x, "")
                     end
+                elsif self.url_list and self.url_list.todo_cnt > 0
+                    gkey_work.gsub!(x, "")
                 else
+                    #STDERR.puts "!!! @#{self.twtid} !!!"
                     number = self.last_access_datetime_days_elapsed / 30
                     r_s = Util::format_num(self.rating, 1)
                     gkey_work = "\t後回し:#{number}ヶ月" + TWT_H_SEPARATOR + %!#{r_s}!
-                    break
+                    return gkey_work
                 end
             when "method"
                 gkey_work.gsub!(x, self.drawing_method||"")
@@ -1185,6 +1198,8 @@ class Twitter < ApplicationRecord
                 "\t#{self.status}#{TWT_H_SEPARATOR}-"
             elsif self.sp? and self.rating >= Twt::RATING_THRESHOLD
                 TWT_KEYWORD_SP_S
+            elsif self.url_list and self.url_list.todo_cnt > 0
+                gkey_work
             elsif lade < lade_s
 
                 if false
@@ -1661,17 +1676,19 @@ class Twitter < ApplicationRecord
         hash.sort_by {|k,v| k}.reverse.to_h
     end
 
+    TwtValStruct = Struct.new(:max_dayn, :max_interval, :min_interval)
+
     C_VAL_TBL = [
         #r    d   n
         [95, [  7, 22,  0]],
-        [90, [ 15, 25,  0]],
-        [89, [ 20, 30,  1]],
-        [88, [ 23, 33,  1]],
-        [87, [ 25, 40,  2]],
-        [86, [ 28, 45,  3]],
-        [85, [ 35, 50,  7]],
-        [84, [ 40, 75, 15]],
-        [83, [ 60, 99, 30]],
+        [90, [ 14, 25,  0]],
+        [89, [ 19, 30,  3]],
+        [88, [ 22, 33,  4]],
+        [87, [ 24, 40,  5]],
+        [86, [ 26, 45,  6]],
+        [85, [ 29, 50,  7]],
+        [84, [ 32, 75, 14]],
+        [83, [ 38, 99, 28]],
 =begin
         [82, [ 40, 60,14]],
         [80, [ 60, 66,21]],
@@ -1683,8 +1700,19 @@ class Twitter < ApplicationRecord
         [ 0, [  0,  0, 0]],
     ]
 
+    def cnfg_tbl
+        self.class.find_config_by_val(self.rating)
+    end
+
+    def max_daysn
+        tbl = cnfg_tbl
+        #STDERR.puts %!#{self.rating}:#{tbl}!
+        daysn = tbl[1][0]
+        daysn
+    end
+
     def self.find_config_by_val(val)
-        C_VAL_TBL.find { |row| val||0 >= row[0] }
+        C_VAL_TBL.find {|row| (val||0) >= row[0]}
     end
 
     def interval_exceeded?(use_cnst_tbl = false)
@@ -1703,7 +1731,7 @@ class Twitter < ApplicationRecord
         end
 
         if use_cnst_tbl
-            set = self.class.find_config_by_val(self.rating)
+            set = cnfg_tbl
             daysn = set[1][0]
             if daysn > 0 and self.last_access_day_num >= daysn
                 return true
@@ -1720,7 +1748,7 @@ class Twitter < ApplicationRecord
         
         if use_cnst_tbl
             unless set
-                set = self.class.find_config_by_val(self.rating)
+                set = cnfg_tbl
             end
 
             predn = set[1][1]
@@ -1740,7 +1768,7 @@ class Twitter < ApplicationRecord
                 return false
             end
         else
-            set = self.class.find_config_by_val(self.rating)
+            set = cnfg_tbl
             daysn = set[1][2]
             if self.last_access_day_num < daysn
                 return false
