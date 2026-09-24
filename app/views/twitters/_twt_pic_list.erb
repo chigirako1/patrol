@@ -94,6 +94,14 @@
         <hr />
     <% end %>
 
+    <% if twitter.pinned_tweet_id.presence %>
+        固定.
+        <% img_path_list = Tweet::search_pinned_tweet_image_ex(@twt_pic_path_list, twitter.pinned_tweet_id) %>
+        <% img_path_list.each do |path| %>
+            <%= image_link(path) %>
+        <% end %>
+    <% end %>
+
     <% fsize_list = [] %>
     <!-- サムネイル -->
     <% if true #@twt_ids == nil %>
@@ -261,15 +269,6 @@
     <% end %>
 
     <% pl = twt_pic_list.map {|x| x[1]} %>
-    <%
-=begin %>
-    <% freq_90d = Twt::calc_freq(pl, 90) %>
-    <% freq_30d = Twt::calc_freq(pl, 30) %>
-    <% freq_15d = Twt::calc_freq(pl, 15) %>
-    <% ary = [freq_90d, freq_30d, freq_15d] %>
-    <% avg = ary.sum / ary.size %>
-    <%
-=end %>
     <% freq = Twt::freq(pl) %>
     <% freq_90d = freq.d90 %>
     <% freq_30d = freq.d30 %>
@@ -338,6 +337,11 @@
         <%= link_to_ex latest_tweet_id, Twt::twt_tweet_url_dev(latest_tweet_id) %>
 
         <br />
+        <!-- TODO:アクセス日よりも新しい場合は警告表示 -->
+        <% if @last_access_datetime_bak < ts %>
+            <h3>注意：アクセス日よりも取得日時のほうが新しい</h3>
+        <% end %>
+
         【以降の投稿数予測】<b><%= twitter.prediction(ts) %></b>
 
         <% if params[:picn_sp] =~ /(\d+)/ %>
@@ -378,7 +382,7 @@
 
         <% if filelist.size > show_pic_num_sp %>
             <% filelist.first(1).each do |fpath| %>
-                最後.<%= link_to_ex(image_tag(fpath, class: img_class_str), fpath) %>
+                最後(<%= filelist.size %>).<%= link_to_ex(image_tag(fpath, class: img_class_str), fpath) %>
             <% end %>
         <% end %>
         <br />

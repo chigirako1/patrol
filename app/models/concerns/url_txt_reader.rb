@@ -201,7 +201,7 @@ module UrlTxtReader
         when "latest"
             path = UrlTxtReader::get_latest_txt
         when /latest\s+(\d+)/
-            path = UrlTxtReader::get_latest_txt($1.to_i)
+            path = UrlTxtReader::get_latest_txt($1.to_i + 1)
         # year
         when /target23$/
             path = UrlTxtReader::txt_file_list("\\d{4}")
@@ -568,7 +568,7 @@ module UrlTxtReader
         _, twt_infos, _ = get_url_txt_info(path, false, true, false)
         #puts %!pxv_id_list:#{pxv_id_list.size}!
         _, unknown, _ = Twitter::twt_user_classify(twt_infos, false)
-        unknown.sort_by {|k,v| -v.size}.to_h
+        unknown.sort_by {|k,v| [-v.size, Tweet::get_oldest_timestamp(v)||"3000-01-01"]}.to_h
     end
 
     def self.get_unknown_pxv_id_list(path)

@@ -952,7 +952,7 @@ class Twitter < ApplicationRecord
         unset_disp = true
         gkey_work = grp_sort_spec_arg.gsub(/#.*/, "") #コメント部分を削る
 
-        STDERR.puts %!group_spec():\t#{gkey_work}!
+        #STDERR.puts %!group_spec():\t#{gkey_work}!
         
         lade_s = nil
         low_rating_t = nil
@@ -1087,7 +1087,7 @@ class Twitter < ApplicationRecord
                     tweet_id = url_list.oldest_tweet_id
                     if tweet_id
                         ts = Twt::get_timestamp(tweet_id)
-                        number = Util::get_date_delta(ts)
+                        number = Util::get_date_delta(ts) / 7
                     else
                         number = 0
                     end

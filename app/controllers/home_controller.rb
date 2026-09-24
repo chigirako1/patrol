@@ -973,7 +973,8 @@ class HomeController < ApplicationController
             #show_times: 2,
             #pred: 5,
             target:"twt,twt既知,twt未知,known_pxv,unknown_pxv",
-            grp_sort_spec: "{残url_cnt件}|{tweet_dt日前}|{az}#{Twitter::TWT_H_SEPARATOR}【{r}】",
+            #grp_sort_spec: "{残url_cnt件}|{tweet_dt週前}|{az}|{p50}件#{Twitter::TWT_H_SEPARATOR}【{r}】",
+            grp_sort_spec: "{tweet_dt週前}({残url_cnt件})|{az}#{Twitter::TWT_H_SEPARATOR}【{r}】{p50}件",
           )
       },
       { :label => "最新ファイル 全(アクセス日順)",
@@ -1009,7 +1010,7 @@ class HomeController < ApplicationController
             #pred: 5,
             target:"twt,twt既知,twt未知,known_pxv,unknown_pxv",
             #grp_sort_spec: "{p30}|{r}#{Twitter::TWT_H_SEPARATOR}{az}|{p15}",
-            grp_sort_spec: "{interval7}残{url_cnt}件|{am}ヶ月|【{r}】{p50}#{Twitter::TWT_H_SEPARATOR}{az}|{p15}~",
+            grp_sort_spec: "{interval7}残{url_cnt}件|{am}ヶ月|【{r}】{p50}~#{Twitter::TWT_H_SEPARATOR}{az}|{p15}~",
           )
       },
       { :label => "-", :path => "" },
@@ -1045,7 +1046,9 @@ class HomeController < ApplicationController
             #show_times: 2,
             #pred: 5,
             target:"twt,twt既知,twt未知,known_pxv,unknown_pxv",
-            grp_sort_spec: "{url_cnt件}|{tweet_dt日前}|{az}#{Twitter::TWT_H_SEPARATOR}【{r}】",
+            #grp_sort_spec: "{url_cnt件}|{tweet_dt週前}|{az}|{p50}件#{Twitter::TWT_H_SEPARATOR}【{r}】",
+            #grp_sort_spec: "{tweet_dt週前}({url_cnt件})|{az}|{p50}件#{Twitter::TWT_H_SEPARATOR}【{r}】",
+            grp_sort_spec: "{tweet_dt週前}({url_cnt件})|{az}#{Twitter::TWT_H_SEPARATOR}【{r}】|{p50}件",
           )
       },
       { :label => "今月ファイル+1 アクセス日順",

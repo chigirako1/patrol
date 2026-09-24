@@ -582,6 +582,8 @@ class TwittersController < ApplicationController
 
     @twt_pic_path_list = @twitter.get_pic_filelist(force_read_all)
 
+    @last_access_datetime_bak = @twitter.last_access_datetime
+
     dn = Util::get_date_delta(@twitter.last_access_datetime)
     if dn > 0 or @twitter.last_access_datetime == nil
       twt_params[:last_access_datetime] = Time.now
@@ -1355,9 +1357,9 @@ class TwittersController < ApplicationController
       when SORT_BY::M_R_ACCESS_W_PRED_A
         twitters = twitters.sort_by {|x| [-(x.last_access_day_num / 30), -x.rating_ex, -(x.last_access_day_num / 7), x.filenum||0, x.prediction]}
       when SORT_BY::R_ACCESS_W_PRED_A
-        twitters = twitters.sort_by {|x| [-x.rating, -(x.last_access_day_num / 7), x.prediction]}
+        twitters = twitters.sort_by {|x| [-(x.rating||0), -(x.last_access_day_num / 7), x.prediction]}
       when SORT_BY::R_ACCESS_W_PRED_D
-        twitters = twitters.sort_by {|x| [-x.rating, -(x.last_access_day_num / 7), -x.prediction]}
+        twitters = twitters.sort_by {|x| [-(x.rating||0), -(x.last_access_day_num / 7), -x.prediction]}
       when SORT_BY::ACCESS_W
         twitters = twitters.sort_by {|x| [-(x.last_access_day_num / 7), -x.rating, -x.prediction]}
       when SORT_BY::ACCESS_W_PRED_A
@@ -1382,9 +1384,9 @@ class TwittersController < ApplicationController
         #twitters = twitters.sort_by {|x| [-x.prediction, x.last_access_datetime]}
         twitters = twitters.sort_by {|x| [-x.prediction_h_ex, x.last_access_datetime]}
       when SORT_BY::R_PRED_ASC
-        twitters = twitters.sort_by {|x| [-x.rating, x.prediction]}
+        twitters = twitters.sort_by {|x| [-(x.rating||0), x.prediction, x.last_access_datetime]}
       when SORT_BY::R_PRED_DESC
-        twitters = twitters.sort_by {|x| [-x.rating, -x.prediction]}
+        twitters = twitters.sort_by {|x| [-(x.rating||0), -x.prediction, x.last_access_datetime]}
       when SORT_BY::SORT_CREATE
         twitters = twitters.sort_by {|x| x.created_at}
       when SORT_BY::SORT_REGISTERED_DESC

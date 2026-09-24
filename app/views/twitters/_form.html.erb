@@ -106,36 +106,15 @@
   <% end %>
 
   <div>
-    <% if twitter.pinned_tweet_id.presence %>
-      <% twt_img_list = TwtImageList.new(@twt_pic_path_list, true) %>
-      <% tweets = twt_img_list.search_tweet(twitter.pinned_tweet_id) %>
-      <% tweets.each do |tweet| %>
-        <%= image_link(tweet.file_path) %>
-      <% end %>
-
-      <% if tweets.size == 0 %>
-        <!-- ファイルが見つからない場合はDBを検索 -->
-        <% tweet_records = Tweet.where(tweet_id: twitter.pinned_tweet_id) %>
-        <% if tweet_records.size > 0 %>
-          <% tweet = tweet_records.first %>
-          <% if tweet.remarks.presence %>
-              <% hit_pic_list = Twt::find_pics(@twt_pic_path_list, tweet.remarks, tweet.screen_name) %>
-              <% hit_pic_list.each do |path| %>
-                  <%= image_link(path) %>
-              <% end %>
-          <% end %>
-        <% end %>
-
-        <%= twitter.datetime_disp(Twt::get_timestamp(twitter.pinned_tweet_id)) %>
-        </b>
-      <% end %>
-    <% end %>
-
     <%= form.label :固定ツイートのID, style: "display: block" %>
     <%= form.number_field :pinned_tweet_id %>
 
     <input type="button" value="←固定tweet id設定" onclick="set_pinned_id();" />
     <input type="text" id="pinned_tweet_id_txt" value="" />
+    
+    <% if twitter.pinned_tweet_id.presence %>
+      <%= twitter.datetime_disp(Twt::get_timestamp(twitter.pinned_tweet_id)) %>
+    <% end %>
   </div>
 
   <hr />
@@ -457,12 +436,7 @@
 
   <div>
     <%= form.label :警告, style: "display: block" %>
-    <%= form.select :warning,
-      [
-        ["パクリ", "パクリ"],
-        ["重複投稿", "重複投稿"],
-      ],
-      include_blank: "選択して下さい" %>
+    <%= form.text_field :warning %>
   </div>
 
   <hr />
@@ -698,9 +672,22 @@
     elem.value = point;
   }
 
+  function get_int_value(value)
+  {
+    let prio_val = parseInt(value);
+    if (prio_val)
+    {
+      return prio_val;
+    }
+    else
+    {
+      return 0;
+    }
+  }
+
   function plus_rate(elem_id, point) {
     let elem = getElemTwt(elem_id);
-    let prio_val = parseInt(elem.value);
+    let prio_val = get_int_value(elem.value);
     elem.value = prio_val + point;
   }
 

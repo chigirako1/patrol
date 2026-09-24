@@ -38,7 +38,7 @@
 <% pic_mag_twt_a = '5%' %>
 <% pic_mag_twt_b = '10%' %>
 
-<% twt_disp_number = 10 %>
+<% twt_disp_number = 13 %>
 <% pxv_disp_number = 5 %>
 <% if params[:target] == ArtistsController::FileTarget::TWT_UNKNOWN_ONLY %>
     <% pxv_disp_number = 6 %>
@@ -417,8 +417,9 @@
         <% end %>
 
         <%#= link_to_ex "@" + key, Twt::twt_user_media_url(key) %>
-        (<%= link_to_ex "☆twt☆@#{key}", key %>)
-
+        <%= link_to_ex "☆twt☆@#{key}", key %>
+        <% ts = Tweet::get_oldest_timestamp(url_list) %>
+        (<%= smart_date ts %>)
         <br />
     <% end %>
 
@@ -976,8 +977,11 @@
                 <% if pred > 0 %>
                     <% gosa = elem.file_cnt - pred %>
                     <% percent = elem.file_cnt * 100 / pred %>
-                    <% if (percent - 100).abs >= 30 %>
-                        <%= "誤差あり:#{gosa}(#{percent}%)" %>
+                    <% delta_pcnt = (percent - 100) %>
+                    <% if delta_pcnt >= 30 %>
+                        <%= "#{gosa}(🔼#{percent}%)" %>
+                    <% elsif delta_pcnt <= -30 %>
+                        <%= "#{gosa}(🔻#{percent}%)" %>
                     <% end %>
                 <% end %>
                 ]

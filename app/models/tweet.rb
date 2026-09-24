@@ -213,6 +213,27 @@ class Tweet < ApplicationRecord
         Tweet.where(screen_name: screen_name, status: status)
     end
 
+    def self.search_pinned_tweet_image_ex(twt_pic_path_list, pinned_tweet_id)
+      img_path_list = TwtImageList::search_pinned_tweet_img_path(twt_pic_path_list, pinned_tweet_id)
+      if img_path_list.size == 0
+        # ファイルが見つからない場合はDBを検索
+        img_path_list = Tweet::search_pinned_tweet_image(twt_pic_path_list, pinned_tweet_id)
+      end
+      img_path_list
+    end
+
+    def self.search_pinned_tweet_image(twt_pic_path_list, pinned_tweet_id)
+        tweet_records = Tweet.where(tweet_id: pinned_tweet_id)
+        if tweet_records.size > 0
+            tweet = tweet_records.first
+            if tweet.remarks.presence
+                hit_pic_list = Twt::find_pics(twt_pic_path_list, tweet.remarks, tweet.screen_name)
+                return hit_pic_list
+            end
+        end
+        []
+    end
+
     def self.has_acquisition_schedule?(screen_name)
         #tweets = Tweet.where(screen_name: screen_name, status: StatusEnum::TO_BE_OBTAIN)
         tweets = Tweet.get_records(screen_name, StatusEnum::TO_BE_OBTAIN)
@@ -277,6 +298,25 @@ class Tweet < ApplicationRecord
         end
 
         Url_List_Summary.new(screen_name, url_list.size, todo_cnt, oldest_tweet_id)
+    end
+
+    def self.get_oldest_timestamp(url_list)
+        url_list = url_list.sort
+
+        oldest_tweet_id = nil
+        url_list.each do |x|
+            tweet_id = Twt::get_tweet_id_from_url(x)
+            if tweet_id
+                oldest_tweet_id = tweet_id
+                break
+            end
+        end
+
+        if oldest_tweet_id
+            Twt::get_timestamp(oldest_tweet_id)
+        else
+            nil
+        end
     end
 
     def self.url_list_summary(known_twt_url_list)

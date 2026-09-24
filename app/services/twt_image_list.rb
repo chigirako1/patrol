@@ -94,6 +94,12 @@ class TwtImageList
         TwtImageList.filter_hash_by_date_range(hash, target_date)
     end
 
+    def self.search_pinned_tweet_img_path(twt_pic_path_list, pinned_tweet_id)
+        twt_img_list = TwtImageList.new(twt_pic_path_list, true)
+        tweets = twt_img_list.search_tweet(pinned_tweet_id)
+        tweets.map {|x| x.file_path}
+    end
+
     def self.filter_hash_by_date_range(hash, target_date)
         result = {}
 

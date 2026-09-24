@@ -107,7 +107,8 @@ module TwittersHelper
         tag += "】"
 
 
-        tag += %![#{link_to_ex("■twt■", twt)}]!
+        #tag += %![#{link_to_ex("■twt■", twt)}]!
+        tag += %![#{link_to_ex("■twt■", twitter_path(twt, file_check: 't'))}]!
         tag += %!|A:#{smart_date twt.last_access_datetime}(#{twt.last_access_datetime_disp})!
         tag += %!|予測:<b>#{twt.prediction}</b>!
         tag += %!|U:#{Util.get_date_info twt.last_post_datetime}!

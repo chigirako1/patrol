@@ -986,7 +986,7 @@ class ArtistsController < ApplicationController
           end
 
           if @target.include?("twt未知")
-            @unknown_twt_url_list = unknown_twt_url_list.sort_by {|k,v| -v.size}.to_h
+            @unknown_twt_url_list = unknown_twt_url_list.sort_by {|k,v| [-v.size, Tweet::get_oldest_timestamp(v)||"2000-01-01"]}.to_h
             STDERR.puts %!unknown_twt_url_list=#{@unknown_twt_url_list.size}!
           end
         end
