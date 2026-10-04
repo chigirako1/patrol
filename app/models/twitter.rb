@@ -389,6 +389,10 @@ class Twitter < ApplicationRecord
         self.private_account == Twitter::TWT_VISIBILITY::TV_PRIVATE
     end
 
+    def sp2?
+        self.sp? and ((self.rating||0) >= Twt::RATING_THRESHOLD)
+    end
+
     def sp?
         #STDERR.puts %!sp?:#{0}!
         
@@ -989,7 +993,7 @@ class Twitter < ApplicationRecord
                 else
                     unit = 3
                 end
-                if self.last_access_datetime_days_elapsed < unit
+                if false#self.last_access_datetime_days_elapsed < unit
                     gkey_work = group_sub(unit, number, gkey_work, x)
                 elsif self.last_access_datetime_days_elapsed < 31
                     unit = 1
@@ -1145,7 +1149,7 @@ class Twitter < ApplicationRecord
                             end
 
                             #gkey_work = "最近登録/少数:#{w_s}週|#{prd_s}件~" + TWT_H_SEPARATOR + "#{r_s}"
-                            gkey_work = "#{u_s}最近登録/少数:#{w_s}週|【#{r_s}】" + TWT_H_SEPARATOR + "#{prd_s}件~"
+                            gkey_work = "最近登録/少数:#{u_s}|#{w_s}週|【#{r_s}】" + TWT_H_SEPARATOR + "#{prd_s}件~"
                         elsif true
                             r_s = Util::format_num(self.rating, 1)
                             gkey_work = "最近登録/少数" + TWT_H_SEPARATOR + "#{r_s}"
@@ -1183,7 +1187,8 @@ class Twitter < ApplicationRecord
                 gkey_work.gsub!(x, self.status||"")
             else
                 msg = %!wrong opt:"#{start_str}"!
-                Rails.logger.error(msg)
+                #Rails.logger.error(msg)
+                STDERR.puts msg
             end
         end
 
@@ -1196,7 +1201,7 @@ class Twitter < ApplicationRecord
 
             if self.status != Twitter::TWT_STATUS::STATUS_PATROL
                 "\t#{self.status}#{TWT_H_SEPARATOR}-"
-            elsif self.sp? and self.rating >= Twt::RATING_THRESHOLD
+            elsif self.sp2?
                 TWT_KEYWORD_SP_S
             elsif self.url_list and self.url_list.todo_cnt > 0
                 gkey_work
@@ -1487,7 +1492,12 @@ class Twitter < ApplicationRecord
         when DRAWING_METHOD::DM_HAND
             return %!#{prefix}[910.#{drawing_method}]#{TWT_H_SEPARATOR}.!
         when DRAWING_METHOD::DM_3D, DRAWING_METHOD::DM_REPRINT
-            return %!#{prefix}[905.その他]#{TWT_H_SEPARATOR}#{drawing_method}!
+            if self.url_list
+                unit = 1
+                number = self.url_list.todo_cnt
+                w = Util::format_num(number, unit, 2)
+            end
+            return %!#{prefix}[905.その他]残#{w}件|#{TWT_H_SEPARATOR}#{drawing_method}!
         when "", nil
             p = Util::format_num(self.prediction, 15)
             daysn = self.last_access_datetime_days_elapsed
@@ -1495,7 +1505,12 @@ class Twitter < ApplicationRecord
             if (self.filenum||0) < 10
                 return %!#{prefix}[998.未設定] ファイル少ない#{TWT_H_SEPARATOR}#{daysn/7}週|#{p}件~!
             else
-                return %!#{prefix}[998.未設定] #{daysn/30}ヶ月#{TWT_H_SEPARATOR}#{daysn/7}週|#{p}件~!
+                if self.url_list
+                    unit = 1
+                    number = self.url_list.todo_cnt
+                    w = Util::format_num(number, unit, 2)
+                end
+                return %!#{prefix}[998.未設定] #{w}件|#{daysn/30}ヶ月#{TWT_H_SEPARATOR}#{daysn/7}週|#{p}件~!
             end
         else
             dm = %!900.#{drawing_method}!

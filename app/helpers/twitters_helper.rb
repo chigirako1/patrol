@@ -37,17 +37,18 @@ module TwittersHelper
     def twitter_info_tag_vid(twt)
     end
 
-    def twitter_info_tag_ex(twtid, twt_record: nil, br: false, unregist: false)
+    def twitter_info_tag_ex(twtid, twt_record: nil, br: false, unregist: false, twt_link: true)
         tag = ""
+
         if twt_record
             twt = twt_record
         else
             twt = Twitter.find_by_twtid_ignore_case(twtid)
         end
+
         if twt
             tag = twitter_info_tag(twt)
-            #if twt.sp?
-            if twt.sp? and (twt.rating and twt.rating >= Twt::RATING_THRESHOLD)
+            if twt.sp2?
                 tag = %!<h3>SP#{ApplicationHelper::EMJ_SP}対象？</h3>! + tag
             elsif twt.filesize_huge?
                 tag = %!<b>ファイルサイズ大</b>! + tag
@@ -59,7 +60,7 @@ module TwittersHelper
             if user_exist
                 tag += "※フォルダあり※"
             end
-            tag += %![#{link_to_ex("☆twt☆:@#{twtid}", artist_twt_path(twtid))}]!
+            tag += %![#{link_to_ex("☆twt☆:@#{twtid}", artist_twt_path(twtid))}]! if twt_link
             tag += "<br />★★★DB未登録★★" if unregist
 
             pxv = Artist.find_by(twtid: twtid)
@@ -71,6 +72,14 @@ module TwittersHelper
             #tag = "(なし)"
         end
         tag.html_safe
+    end
+
+    def twitter_private_icon(twt)
+        if twt.private?
+            PRIVATE_ICON
+        else
+            ""
+        end
     end
 
     def twitter_info_tag(twt)
@@ -94,7 +103,8 @@ module TwittersHelper
 
         # status
         tag += "【"
-        tag += PRIVATE_ICON if twt.private?
+        #tag += PRIVATE_ICON if twt.private?
+        tag += twitter_private_icon(twt)
 
         tag += %!#{twt.status}!
         case twt.status
@@ -195,9 +205,10 @@ module TwittersHelper
     def twitter_show_page_title(twitter, r18=false)
         title = ""
 
-        if twitter.private?#_account == Twitter::TWT_VISIBILITY::TV_PRIVATE
-            title += PRIVATE_ICON
-        end
+        # if twitter.private?#_account == Twitter::TWT_VISIBILITY::TV_PRIVATE
+        #     title += PRIVATE_ICON
+        # end
+        title += twitter_private_icon(twitter)
 
         title += dm_icon(twitter.drawing_method)
         title += %!【#{twitter.rating}!

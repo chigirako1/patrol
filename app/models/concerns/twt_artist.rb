@@ -16,6 +16,10 @@ class TwtArtist
         @num_of_files = nil
     end
 
+    def to_s #inspect
+        %!<"#{twt_name}(@#{twt_id})", #{@path_list} ##{@num_of_files}>!
+    end
+
     def ctime
         if @ctime == nil
             wpath = twt_pic_path_list[0]
@@ -96,15 +100,23 @@ class TwtArtist
 =end
 
     def last_post_datetime(pic_path_list)
-        Twt::get_time_from_path(pic_path_list[0])
+        tweet_id = get_last_post_tweet_id(pic_path_list)
+        Twt::get_timestamp(tweet_id)
     end
 
     def get_last_post_tweet_id(pic_path_list)
-        get_tweet_id(pic_path_list[0])
+        tweet_id = 0
+        pic_path_list.each do |path|
+            tweet_id = get_tweet_id(path)
+            if tweet_id != 0
+                break
+            end
+        end
+        tweet_id
     end
 
     def get_oldest_post_tweet_id(pic_path_list)
-        get_tweet_id(pic_path_list[-1])
+        get_last_post_tweet_id(pic_path_list.reverse)
     end
 
     private

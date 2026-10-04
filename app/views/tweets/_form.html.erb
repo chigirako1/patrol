@@ -152,6 +152,9 @@
             <%= Twt::filename_str(screen_name, tweet_id) %>
             </h3>
             not find.
+
+            [<%#= link_to_ex("動画URLリスト(#{v.size})", artists_twt_index_path(dir: ArtistsController::DIR_TYPE::DT_MOV_URL, from: k, list: "open")) %>]
+            [<%= link_to_ex("動画ファイルリスト", artists_twt_index_path(dir: ArtistsController::DIR_TYPE::SP_VID, from: tweet.screen_name)) %>]
         <% end %>
         <br />
     <% end %>

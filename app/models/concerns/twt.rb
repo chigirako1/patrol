@@ -201,11 +201,17 @@ module Twt
 
         STDERR.puts %!path_list=#{path_list.size}!
         artist_hash = {}
+        i = 0
         path_list.flatten.each do |path|
+            i += 1
             STDERR.print "."
+            if i % 100 == 0
+                STDERR.puts "[#{i}] #{path}"
+            end
+
             set_twt_user(artist_hash, path)
         end
-        STDERR.puts
+        STDERR.puts %!#{i}!
 
         #artist_hash.sort_by{|s| [s[0].downcase, s[0]]}.to_h
         artist_hash.sort_by{|_, v| v.ctime}.to_h
@@ -449,7 +455,8 @@ module Twt
         end
 
         if path_list.presence
-            path_list.sort_by {|path| Twt::get_sp_datetime_from_filepath(path)}
+            #path_list.sort_by {|path| Twt::get_sp_datetime_from_filepath(path)}
+            path_list.sort_by {|path| path}
         else
             nil
         end
@@ -564,6 +571,9 @@ module Twt
 
     def self.search_tweet_ex(screen_name, search_tweet_id)
         twt_pic_path_list = Twt::get_pic_filelist(screen_name)
+        if twt_pic_path_list.size > 10
+            twt_pic_path_list = twt_pic_path_list.first(10)
+        end
         search_tweet(twt_pic_path_list, search_tweet_id)
     end
 
@@ -647,7 +657,10 @@ module Twt
         pic_path_list = val.twt_pic_path_list
         twt_params = {}
 
-        last_post_datetime = Time.at(val.last_post_datetime(pic_path_list).to_i)
+        latest_post_dt = val.last_post_datetime(pic_path_list)
+        last_post_datetime = Time.at(latest_post_dt.to_i)
+        #STDERR.puts %!#{latest_post_dt}\t#{last_post_datetime}!
+
         if twt.last_post_datetime.presence
             #p twt.last_post_datetime
             #p last_post_datetime
@@ -666,7 +679,7 @@ module Twt
                 return
             end
         else
-            puts %!update(new):"#{pic_path_list[0]}"\t=>"#{last_post_datetime}"!
+            STDERR.puts %!update(new):"#{pic_path_list[0]}"\t=>"#{last_post_datetime}"!
             twt_params[:last_post_datetime] = last_post_datetime
         end
 
@@ -732,8 +745,13 @@ module Twt
     def self.db_update_by_newdir()
         twt_id_list = twt_user_list("new")
 
-        STDERR.puts %!db_update_by_newdir():\t#{twt_id_list.size}!
+        STDERR.puts %!db_update_by_newdir():\tsize=#{twt_id_list.size}!
         twt_id_list.each do |key, val|
+            # if  #key == "" #keyは小文字
+            #     STDERR.puts %!#{key}\t#{val}!
+            # else
+            #     next
+            # end
             twt = Twitter.find_by_twtid_ignore_case(key)
             if twt == nil
                 # 新規追加
@@ -1829,7 +1847,7 @@ module Twt
                     today_s = ""
                 end
 
-                if self.twt.sp? and (twt.rating and twt.rating >= Twt::RATING_THRESHOLD)
+                if self.twt.sp2?
                     target_s = ""
                 else
                     target_s = "対象外"

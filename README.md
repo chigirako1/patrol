@@ -31,7 +31,10 @@ const collectUrls = () => {
         const cleanUrl = link.href.split('?')[0];
         
         // Twitterの個別投稿URLの形式（/user/status/123...）に一致するか確認
-        if (cleanUrl.match(/\/status\/\d+/)) {
+        if (cleanUrl.match(/\/status\/\d+\/analytics/)) {
+            //artworkUrls.add(cleanUrl);
+            //無視
+        } else if (cleanUrl.match(/\/status\/\d+/)) {
             artworkUrls.add(cleanUrl);
         } else {
             console.log('マッチせず${cleanUrl}' + cleanUrl);

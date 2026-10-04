@@ -884,7 +884,13 @@
         <% url_p_k = artists_twt_index_path(filename: file, hide_day: hide_day, pred: 5, rating: rating_thre, target:"known_pxv", force_disp_day: 90) %>
         <% url_t_e = artists_twt_index_path(filename: file, hide_day: hide_day, pred: 5, target: ArtistsController::FileTarget::TWT_EXPERIMENT, force_disp_day: 90) %>
         <% url_p_e = artists_twt_index_path(filename: file, hide_day: hide_day, pred: 5, target: ArtistsController::FileTarget::PXV_EXPERIMENT, force_disp_day: 90) %>
-        <% url_i   = artists_twt_index_path(filename: file, grp_sort_spec: TwittersController::GRP_SPC_T_DM + TwittersController::GRP_SPC_T_RR_S_AZ, target: ArtistsController::FileTarget::FT_TWT_I) %> 
+        <% url_i   = artists_twt_index_path(filename: file, grp_sort_spec: TwittersController::GRP_SPC_T_DM + TwittersController::GRP_SPC_T_RR_S_AZ, target: ArtistsController::FileTarget::FT_TWT_I) %>
+        <%# grp_str = "[{残url_cnt件}]{p50}件~|{tweet_dt週前}#{Twitter::TWT_H_SEPARATOR}【{r}】|{az}" %>
+        <%# grp_str = "[{残url_cnt件}]{p15}件~#{Twitter::TWT_H_SEPARATOR}{aw}週|【{r}】" %>
+        <% grp_str = "[{残url_cnt件}]{am}ヶ月#{Twitter::TWT_H_SEPARATOR}{p25}件~|{az}" %>
+        <% url_cnt = artists_twt_index_path(filename: file, grp_sort_spec: grp_str, target: ArtistsController::FileTarget::TWT_PXV_ALL) %> 
+        <% grp_str2 = "[{残url_cnt件}]{p50}件~#{Twitter::TWT_H_SEPARATOR}{az}" %>
+        <% url_cnt2 = artists_twt_index_path(filename: file, grp_sort_spec: grp_str2, target: ArtistsController::FileTarget::TWT_PXV_ALL) %> 
 
         <%= file %>
         | <%= link_to_ex("all", url_all) %>
@@ -896,6 +902,8 @@
         | <%= link_to_ex("実験twt", url_t_e) %>
         | <%= link_to_ex("実験pxv", url_p_e) %>
         | <%= link_to_ex(file + "[i]", url_i) %>
+        | <%= link_to_ex("urlcnt", url_cnt) %>
+        | <%= link_to_ex("urlcnt2", url_cnt2) %>
         <br />
     <% end %>
 
@@ -973,15 +981,17 @@
                 <% end %>
                 </b>
                 [<%= link_to_ex("■twt■", twitter_path(elem.twt, file_check: 't')) %>]
-                [予測:<%= pred = elem.twt.prediction_h_ex %>=>ファイル:<%= elem.file_cnt %>
+                [予測/ファイル数:<%= pred = elem.twt.prediction_h_ex %>/<%= elem.file_cnt %>
                 <% if pred > 0 %>
                     <% gosa = elem.file_cnt - pred %>
                     <% percent = elem.file_cnt * 100 / pred %>
                     <% delta_pcnt = (percent - 100) %>
-                    <% if delta_pcnt >= 30 %>
-                        <%= "#{gosa}(🔼#{percent}%)" %>
+                    <% if delta_pcnt >= 40 %>
+                        =>
+                        <%= "#{gosa}(🔼#{delta_pcnt}%)" %>
                     <% elsif delta_pcnt <= -30 %>
-                        <%= "#{gosa}(🔻#{percent}%)" %>
+                        =>
+                        <%= "#{gosa}(🔻#{delta_pcnt}%)" %>
                     <% end %>
                 <% end %>
                 ]
@@ -1244,18 +1254,18 @@
             <h2><%= idx %>.<%= k %></h2>
             <%= twitter_info_tag_ex(k) %>
             <hr />
-            <% v.sort.uniq.reverse.each do |x| %>
+            <% v.sort.uniq.reverse.each.with_index(1) do |x, idx2| %>
+                <%= idx2 %>.
                 <% tweet = x.record %>
                 <% if tweet %>
                     ■"<%= tweet.status %>"
-                    <%= x %>
+                    <%= x %>(<%= smart_date x.timestamp %>)
                     <% if x.screen_name == Twt::TWT_USER_I %>
                         <%= tweet.screen_name %>
                     <% else %>
                     <% end %>
                     [<%= link_to_ex "■tweet■", tweet %>]
                 <% else %>
-
                     <% url = new_tweet_path(tweet_id: x.tweet_id, screen_name: x.screen_name, status: Tweet::StatusEnum::VIDEO_SAVED) %>
                     [<%= link_to_ex "■New tweet■", url %>]
 
@@ -1268,12 +1278,24 @@
         <% end %>
     <% else %>
         <!-- ユーザーリストのみ -->
-        <% @twt_vid_url_hash.each.with_index(1) do |(k,v) ,idx| %>
+        <% @twt_vid_url_hash.each.with_index(1) do |(k,v), idx| %>
             <% twt = Twitter.find_by_twtid_ignore_case(k) %>
-            <h2><%= idx %>.【🎞️<%= twt.video_cnt %>|🖼️<%= twt.rating %>】@<%= k %>(<%= link_to_ex("x", Twt::twt_user_media_url(k)) %>)</h2>
+            <h2>
+                <%= idx %>.<%= twitter_private_icon(twt) %>【🎞️<%= twt.video_cnt %>|🖼️<%= twt.rating %>】
+                <%= twt.twtname %>
+                @<%= k %>(<%= link_to_ex("x", Twt::twt_user_media_url(k)) %>)
+            </h2>
             <%= twitter_info_tag_ex(k, twt_record: twt) %>
             <br />
-            [<%= link_to_ex("動画URLリスト(#{v.size})", artists_twt_index_path(dir: ArtistsController::DIR_TYPE::DT_MOV_URL, from: k, list: "open")) %>]
+            <% list_size = v.size %>
+            <% list_size2 = TweetUrl::todo_count(v) %>
+            <% if list_size2 == 0 %>
+                <span style="background-color: lightgray;">
+            <% end %>
+            [<%= link_to_ex("動画URLリスト(#{list_size2}/#{list_size})", artists_twt_index_path(dir: ArtistsController::DIR_TYPE::DT_MOV_URL, from: k, list: "open")) %>]
+            <% if list_size2 == 0 %>
+                </span>
+            <% end %>
             [<%= link_to_ex("動画ファイルリスト", artists_twt_index_path(dir: ArtistsController::DIR_TYPE::SP_VID, from: k)) %>]
         <% end %>
     <% end %>
@@ -1287,8 +1309,8 @@
         <%= twitter_info_tag_ex(k) %>
         [<%= link_to_ex("動画URLリスト", artists_twt_index_path(dir: ArtistsController::DIR_TYPE::DT_MOV_URL, from: k, list: "open")) %>]
         <hr />
-        <% v.each do |x| %>
-            ■
+        <% v.each.with_index(1) do |x, idx| %>
+            <%= idx %>■
             <% tweet = Tweet.find_by(tweet_id: x.tweet_id) %>
             <% if tweet %>
                 【<%= tweet.status %>】

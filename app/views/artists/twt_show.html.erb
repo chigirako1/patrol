@@ -5,7 +5,7 @@
 <h3 id="twt_pic_list">Twt::twt_path_str(<%= "@#{@twtid}" %>)</h3>
 
 <%= twitter_link_tag(@twtid) %>
-<%= twitter_info_tag_ex(@twtid) %>
+<%= twitter_info_tag_ex(@twtid, twt_link: false) %>
 
 <br />
 
@@ -17,7 +17,7 @@
 
 <% pxv_artist = Artist.find_by_twtid_ignore_case(@twtid) %>
 <% if pxv_artist %>
-    pxv:<%= pxv_artist.pxvname %> [<%= link_to "show", pxv_artist, target: :_blank, rel: "noopener noreferrer" %>]
+    pxv:<%= pxv_artist.pxvname %> [<%= link_to_ex "show", pxv_artist %>]
         <%= pxv_artist.get_datetime_string(pxv_artist.last_ul_datetime) %>
         <%= pxv_artist.status %>
     <br />
@@ -69,6 +69,7 @@
 <% end %>
 
 <h4>twt_img_list(<%= show_pic_num %>/<%= twt_img_list.list.size %>)</h4>
+
 <% twt_img_list.list.first(show_pic_num).each.with_index(1) do |elem, idx| %>
     <% if nl and elem.first_pic? %>
         <hr />
@@ -76,7 +77,6 @@
     <% path = elem.file_path %>
     <%= idx %>.
     <%= image_link(path, get_image_class(elem.first_pic?)) %>
-
 <% end %>
 <br />
 
@@ -91,7 +91,7 @@
 <% end %>
 <br />
 
-<% if twt_img_list.list.presence %>
+<% if twt_img_list.list.presence and twt_img_list.list.size > 1 %>
     <% since_dt = twt_img_list.list.last.datetime %>
     <%# until_dt = twt_img_list.list.first.datetime %>
     <% until_dt = twt_img_list.list[-2].datetime %>
@@ -138,9 +138,9 @@
     なし
 <% end %>
 <% tweet_ids.each do |x| %>
+    [<%= Twt::timestamp_str(x) %>]
     <% url = Twt::twt_tweet_url(@twtid, x) %>
     <%= link_to_ex(url, url) %>
-    [<%= Twt::timestamp_str(x) %>]
 
     <% paths = Twt::search_tweet(@twt_pic_path_list, x) %>
     <% if paths.size > 0 %>

@@ -12,13 +12,18 @@
     <h2>twt_pic_list(<%= twt_pic_list.list.size %>)</h2>
 
     <% if p_unit == :beginning_of_month %>
-        <% time_fmt_str = "%Y/%m" %>
+        <% time_fmt_str = "%Y_%m" %>
     <% else %>
-        <% time_fmt_str = "%Y/%m/%d" %>
+        <% time_fmt_str = "%Y_%m_%d" %>
     <% end %>
 
     <% group_hash.each do |k, v| %>
-        <%= k.strftime(time_fmt_str) %>(<%= v.size %>)<br />
+        <% datetime_str = k.strftime(time_fmt_str) %>
+        <a href="#<%= datetime_str %>">
+            <%= datetime_str %>
+            (<%= v.size %>)
+        </a>
+        <br />
     <% end %>
 
     <% k_bak = group_hash.to_a[1][0] %>
@@ -41,7 +46,10 @@
         <% end %>
         <% k_bak = k %>
 
-        <h3><%= k.strftime(time_fmt_str) %>(<%= v.size %>)</h3>
+        <% datetime_str = k.strftime(time_fmt_str) %>
+        <div id="<%= datetime_str %>">
+            <h3><%= datetime_str %>(<%= v.size %>)</h3>
+        </div>
 
         <%= h.keys %><br />
         <% h.each do |k, e| %>

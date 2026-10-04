@@ -28,12 +28,15 @@
 =end %>
 
   <div>
-    <% summary_str = @twitter.get_summary_str() %>
-    <% if summary_str.presence %>
-      <%= summary_str %>
-      [<%= link_to_ex("tweets", tweets_path(screen_name: @twitter.twtid)) %>]
-      <hr />
+    <% if false %>
+      <% summary_str = @twitter.get_summary_str() %>
+      <% if summary_str.presence %>
+        <%= summary_str %>
+      <% end %>
     <% end %>
+    
+    [<%= link_to_ex("tweets", tweets_path(screen_name: @twitter.twtid)) %>]
+    <hr />
   </div>
 
   <% if @twt_pic_path_list %>
@@ -107,14 +110,21 @@
 
   <div>
     <%= form.label :固定ツイートのID, style: "display: block" %>
+    
+    <% if twitter.pinned_tweet_id.presence %>
+      <%= twitter.datetime_disp(Twt::get_timestamp(twitter.pinned_tweet_id)) %>
+      
+      <% tweet = Tweet.find_by(tweet_id: twitter.pinned_tweet_id) %>
+      <% unless tweet %>
+        [<%= link_to_ex("■New tweet■", new_tweet_path(tweet_id: twitter.pinned_tweet_id, status: Tweet::StatusEnum::SAVED)) %>]
+      <% end %>
+    <% end %>
+
     <%= form.number_field :pinned_tweet_id %>
 
     <input type="button" value="←固定tweet id設定" onclick="set_pinned_id();" />
     <input type="text" id="pinned_tweet_id_txt" value="" />
-    
-    <% if twitter.pinned_tweet_id.presence %>
-      <%= twitter.datetime_disp(Twt::get_timestamp(twitter.pinned_tweet_id)) %>
-    <% end %>
+
   </div>
 
   <hr />

@@ -370,8 +370,8 @@ class TwittersController < ApplicationController
       elsif mode == TwittersController::ModeEnum::MODE_STATS
       else
         twitters = twitters.select {|x|
-          x.status == "長期更新なし" or
-          x.status == "最近更新してない？" #or
+          x.status == Twitter::TWT_STATUS::STATUS_NO_UPDATE_LT or #"長期更新なし" or
+          x.status == Twitter::TWT_STATUS::STATUS_NO_UPDATE_IM #"最近更新してない？" #or
           #x.status == "削除" or
           #x.status == "存在しない" or
           #x.status == "凍結" or

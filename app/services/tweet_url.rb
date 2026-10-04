@@ -17,7 +17,7 @@ class TweetUrl
     end
 
     def to_s
-        %!@#{@screen_name} #{@tweet_id}/#{p_number}!
+        %!@#{@screen_name} #{@tweet_id}/#{@p_number}!
     end
 
     def gen_name
@@ -46,6 +46,10 @@ class TweetUrl
         else
         end
         false
+    end
+
+    def self.todo_count(tweet_url_list)
+        tweet_url_list.count {|x| x.record == nil}
     end
 
     def self.mov_tweet_group

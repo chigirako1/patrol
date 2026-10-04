@@ -299,6 +299,7 @@ class ArtistsController < ApplicationController
     TWT_UNKNOWN_ONLY = "unknown_twt_only"
     PXV_UNKNOWN_ONLY = "unknown_pxv_only"
     TWT_KNOWN_ONLY = "twt,twt既知"
+    TWT_PXV_ALL = "twt,twt既知,twt未知,known_pxv,unknown_pxv"
     TWT_EXPERIMENT = "twt_experiment"
     PXV_EXPERIMENT = "pxv_experiment"
     PXV_ARTWORK_LIST = "pxv_artwork_list"
@@ -332,7 +333,7 @@ class ArtistsController < ApplicationController
   end
 
   module DIR_TYPE
-    UPDATE = "update"
+    DT_UPDATE = "update"
     REG_DUP_FILES = "register_dup_files"
     NEW_LIST = "new-list"
     ARCHIVE_CHECK = "archive-check"
@@ -880,7 +881,7 @@ class ArtistsController < ApplicationController
         dir = ""
         @known_twt_url_list = Twt::twt_user_list(dir)
         puts %!@known_twt_url_list.size=#{@known_twt_url_list.size}!
-      when DIR_TYPE::UPDATE
+      when DIR_TYPE::DT_UPDATE
         Twt::db_update_by_newdir()
       when DIR_TYPE::REG_DUP_FILES
         Twt::db_update_dup_files_current_all()
@@ -934,7 +935,7 @@ class ArtistsController < ApplicationController
         #@twt_vid_url_hash = twt_vid_url_hash.sort_by {|k,v| -v.size}.to_h
         @twt_vid_url_hash = twt_vid_url_hash.sort_by {|k,v|
           twt = Twitter.find_by_twtid_ignore_case(k);
-          [twt.private_account||"", -(twt.video_cnt||0), -(twt.rating||0), -v.size]
+          [twt.private_account||"", twt.status||"", -(twt.video_cnt||0), -(twt.rating||0), -v.size]
         }.to_h
       else
         STDERR.puts "!!ERR:unknown type='#{dir}'!!"
