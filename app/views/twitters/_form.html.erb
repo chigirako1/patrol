@@ -112,11 +112,21 @@
     <%= form.label :固定ツイートのID, style: "display: block" %>
     
     <% if twitter.pinned_tweet_id.presence %>
+    
+      <% tweets = Tweet.where(tweet_id: twitter.pinned_tweet_id) %>
+      <% if tweets %>
+        <% tweets.each do |tweet| %>
+        <%= tweet.tweet_id %>="<%= tweet.status %>"(@<%= tweet.screen_name %>)
+        [<%= link_to_ex "tweet", tweet %>]
+        <br />
+        <% end %>
+      <% end %>
+
       <%= twitter.datetime_disp(Twt::get_timestamp(twitter.pinned_tweet_id)) %>
       
       <% tweet = Tweet.find_by(tweet_id: twitter.pinned_tweet_id) %>
       <% unless tweet %>
-        [<%= link_to_ex("■New tweet■", new_tweet_path(tweet_id: twitter.pinned_tweet_id, status: Tweet::StatusEnum::SAVED)) %>]
+        [<%= link_to_ex("■New tweet■", new_tweet_path(tweet_id: twitter.pinned_tweet_id, screen_name: @twitter.twtid, status: Tweet::StatusEnum::SAVED)) %>]
       <% end %>
     <% end %>
 
@@ -124,7 +134,6 @@
 
     <input type="button" value="←固定tweet id設定" onclick="set_pinned_id();" />
     <input type="text" id="pinned_tweet_id_txt" value="" />
-
   </div>
 
   <hr />
@@ -160,17 +169,17 @@
   <div>
     <%= form.label :評価, style: "display: block" %>
     <%= form.number_field :rating, in: 0..150 %>
-    <input type="button" value="90" onclick="set_rate('rating', 90);" class="btn_s" />
-    <input type="button" value="85" onclick="set_rate('rating', 85);" class="btn_s" />
-    <input type="button" value="84" onclick="set_rate('rating', 84);" class="btn_s" />
-    <input type="button" value="80" onclick="set_rate('rating', 80);" class="btn_s" />
-    <input type="button" value="75" onclick="set_rate('rating', 75);" class="btn_s" />
+    <input type="button" value="90" onclick="set_value_twt('rating', 90);" class="btn_s" />
+    <input type="button" value="85" onclick="set_value_twt('rating', 85);" class="btn_s" />
+    <input type="button" value="84" onclick="set_value_twt('rating', 84);" class="btn_s" />
+    <input type="button" value="80" onclick="set_value_twt('rating', 80);" class="btn_s" />
+    <input type="button" value="75" onclick="set_value_twt('rating', 75);" class="btn_s" />
     <br />
-    <input type="button" value="+5↑" onclick="plus_rate('rating', 5);" class="btn_s btn_s_plus" />
-    <input type="button" value="-5↓" onclick="plus_rate('rating', -5);" class="btn_s" />
+    <input type="button" value="+5↑" onclick="plus_value('rating', 5);" class="btn_s btn_s_plus" />
+    <input type="button" value="-5↓" onclick="plus_value('rating', -5);" class="btn_s" />
     |
-    <input type="button" value="+1↑" onclick="plus_rate('rating', 1);" class="btn_s btn_s_plus" />
-    <input type="button" value="-1↓" onclick="plus_rate('rating', -1);" class="btn_s" />
+    <input type="button" value="+1↑" onclick="plus_value('rating', 1);" class="btn_s btn_s_plus" />
+    <input type="button" value="-1↓" onclick="plus_value('rating', -1);" class="btn_s" />
   </div>
 
   <div>
@@ -178,11 +187,11 @@
     <%= form.number_field :update_frequency %>
     <input type="button" value="*2↑" onclick="multiple_val('update_frequency', 2);" class="btn_s btn_s_plus" />
     <input type="button" value="/2↓" onclick="div_val('update_frequency', 2);" class="btn_s " />
-    <input type="button" value="+100↑" onclick="plus_rate('update_frequency', 100);" class="btn_s btn_s_plus" />
-    <input type="button" value="+10↑" onclick="plus_rate('update_frequency', 10);" class="btn_s btn_s_plus" />
-    <input type="button" value="-100↓" onclick="plus_rate('update_frequency', -100);" class="btn_s " />
-    <input type="button" value="-10↓" onclick="plus_rate('update_frequency', -10);" class="btn_s " />
-    <input type="button" value="0" onclick="set_rate('update_frequency', 0);" class="btn_s btn_s_abs" />
+    <input type="button" value="+100↑" onclick="plus_value('update_frequency', 100);" class="btn_s btn_s_plus" />
+    <input type="button" value="+10↑" onclick="plus_value('update_frequency', 10);" class="btn_s btn_s_plus" />
+    <input type="button" value="-100↓" onclick="plus_value('update_frequency', -100);" class="btn_s " />
+    <input type="button" value="-10↓" onclick="plus_value('update_frequency', -10);" class="btn_s " />
+    <input type="button" value="0" onclick="set_value_twt('update_frequency', 0);" class="btn_s btn_s_abs" />
   </div>
 
   <div>
@@ -217,11 +226,11 @@
     
     <br />
     <input type="button" value="TWT巡回に変更" onclick="set_noupdate(0);" />
-    <input type="button" value="最近更新してない？" onclick="set_noupdate(4); set_rate('update_frequency', 1);" />
-    <input type="button" value="長期更新なしに変更" onclick="set_noupdate(2); set_rate('update_frequency', 0);" />
+    <input type="button" value="最近更新してない？" onclick="set_noupdate(4); set_value_twt('update_frequency', 1);" />
+    <input type="button" value="長期更新なしに変更" onclick="set_noupdate(2); set_value_twt('update_frequency', 0);" />
     <script>
       function set_noupdate(idx) {
-        let status_sel_box = document.getElementById("twitter_status");
+        let status_sel_box = getElemTwt('status');
         let options = status_sel_box.options;
         options[idx].selected = true;
       }
@@ -242,7 +251,7 @@
     <input type="button" value="手描き" onclick="set_draw_method(1);" />
     <script>
       function set_draw_method(idx) {
-        let status_sel_box = document.getElementById("twitter_drawing_method");
+        let status_sel_box = getElemTwt('drawing_method');
         let options = status_sel_box.options;
         options[idx].selected = true;
       }
@@ -264,8 +273,8 @@
     <%= form.label :r18_r12, Twitter::RESTRICT::R12 %>
     <br />
 
-    <%= form.radio_button :r18, :全年齢 %>
-    <%= form.label :r18_全年齢, Twitter::RESTRICT::NOTHING %>
+    <%= form.radio_button :r18, :R0 %>
+    <%= form.label :r18_r0, Twitter::RESTRICT::R0 %>
     <br />
   </div>
 
@@ -295,7 +304,7 @@
       <% end %>
 
       ←
-      <input type="button" value="取り出し" onclick="get_pxv_user_id();" />
+      <input type="button" value="取り出し" onclick="set_pxv_user_id();" />
       <input type="text" id="pxv_user_id_work" value="" />
     <% end %>
 
@@ -572,14 +581,14 @@
       <br />
     <% end %>
 
-    <input type="button" value="+100k" onclick="plus_rate('filesize', 100*1024);" class="btn_s" />
+    <input type="button" value="+100k" onclick="plus_value('filesize', 100*1024);" class="btn_s" />
   </div>
 
   <div>
     <%= form.label %!動画🎞️評価!, style: "display: block" %>
     <%= form.number_field :video_cnt %>
 
-    <input type="button" value="80" onclick="set_rate('video_cnt', 80);" class="btn_s" />
+    <input type="button" value="80" onclick="set_value_twt('video_cnt', 80);" class="btn_s" />
   </div>
 
   <hr />
@@ -652,7 +661,7 @@
 <script>
   /*const e = document.getElementById('pxv_user_id_work');
   e.addEventListener('change', (event) => {
-      get_pxv_user_id();
+      set_pxv_user_id();
   });*/
 
   function set_time(elem_id) {
@@ -673,13 +682,15 @@
 
   function getElemTwt(elem_id)
   {
-    let elem = document.getElementById("twitter_" + elem_id);
+    let elem = document.getElementById('twitter_' + elem_id);
     return elem;
   }
 
-  function set_rate(elem_id, point) {
+  function set_value_twt(elem_id, point) {
     let elem = getElemTwt(elem_id);
     elem.value = point;
+
+    elem.select();
   }
 
   function get_int_value(value)
@@ -695,25 +706,27 @@
     }
   }
 
-  function plus_rate(elem_id, point) {
+  function set_int_val(elem_id, val, operationFn) {
     let elem = getElemTwt(elem_id);
     let prio_val = get_int_value(elem.value);
-    elem.value = prio_val + point;
+
+    elem.value = operationFn(prio_val, val);
+    elem.select();
+  }
+
+  function plus_value(elem_id, val) {
+    set_int_val(elem_id, val, (a, b) => a + b);
   }
 
   function multiple_val(elem_id, val) {
-    let elem = getElemTwt(elem_id);
-    let prio_val = parseInt(elem.value);
-    elem.value = prio_val * val;
+    set_int_val(elem_id, val, (a, b) => a * b);
   }
 
   function div_val(elem_id, val) {
-    let elem = getElemTwt(elem_id);
-    let prio_val = parseInt(elem.value);
-    elem.value = prio_val / val | 0;//整数にしたい
+    set_int_val(elem_id, val, (a, b) => a / b | 0);//整数にする
   }
 
-  function get_pxv_user_id() {
+  function set_pxv_user_id() {
       let text_box = document.getElementById("pxv_user_id_work");
       let text = text_box.value;
 
@@ -738,8 +751,10 @@
           datetxt = n;
       }
       
-      const result = document.getElementById('twitter_pxvid');
+      const result = getElemTwt('pxvid');
       result.value = datetxt;
+
+      result.select();
   }
 
   function get_date_from_tweet_id(tweet_id) {
@@ -772,7 +787,7 @@
   }
 
   function set_latest_info() {
-      let text_box = document.getElementById("latest_info_work");
+      let text_box = document.getElementById('latest_info_work');
       let text = text_box.value;
 
       let tw_id = get_tweet_id_from_string(text);
@@ -783,12 +798,12 @@
       }
 
       //id
-      const l_tw_id = document.getElementById('twitter_latest_tweet_id');
+      const l_tw_id = getElemTwt('latest_tweet_id');
       l_tw_id.value = tw_id;
 
       //日時
       let date = get_date_from_tweet_id(tw_id);
-      const l_tw_date = document.getElementById('twitter_last_post_datetime');
+      const l_tw_date = getElemTwt('last_post_datetime');
       l_tw_date.value = date;
 
       l_tw_id.select();
@@ -811,7 +826,7 @@
       }
 
       //id
-      const l_tw_id = document.getElementById('twitter_pinned_tweet_id');
+      const l_tw_id = getElemTwt('pinned_tweet_id');
       l_tw_id.value = tw_id;
 
       l_tw_id.select();

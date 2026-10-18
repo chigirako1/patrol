@@ -401,6 +401,7 @@ module Util
         File.open(txtpath) { |file|
             while line = file.gets
                 str = line.chomp
+                next if str == ""
                 list << str
                 #STDERR.puts %!ワード:"#{str}"!
             end

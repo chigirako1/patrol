@@ -16,6 +16,7 @@ class TwittersController < ApplicationController
     MODE_STATS = 'stats'
     MODE_SEARCH = "search"
     MODE_FILESIZE = "filesize"
+    MODE_NEW_UL_NO_ACCESS = "ファイル更新のみあり"
   end
 
   module FileEnum
@@ -110,6 +111,7 @@ class TwittersController < ApplicationController
       :force_disp_day,
       :filename,
       :created_at,
+      :last_post_dt,
       :rating_gt,
       :rating_lt,
       :sort_by,
@@ -149,6 +151,7 @@ class TwittersController < ApplicationController
       @hide_within_days = Util::get_param_num(params, :hide_within_days)
       @force_disp_day = Util::get_param_num(params, :force_disp_day)
       @created_at = Util::get_param_num(params, :created_at)
+      @last_post_dt = Util::get_param_num(params, :last_post_dt)
       @rating_gt = Util::get_param_num(params, :rating)
       @rating_lt = Util::get_param_num(params, :rating_lt)
       @step = Util::get_param_num(params, :step, 3)
@@ -248,8 +251,13 @@ class TwittersController < ApplicationController
       }
     end
 
-    STDERR.puts mode
+    STDERR.puts %!mode=#{mode}!
     case mode
+    when TwittersController::ModeEnum::MODE_NEW_UL_NO_ACCESS
+      twitters = index_mode_new_file_no_acces(twitters, twt_params)
+      @twitters_group = twt_group_by(twitters, twt_params.param_grp_sort_by, twt_params.param_grp_sort_spec)
+      @twitters_total_count = @twitters_group.sum {|k,v| v.count}
+      return
     when TwittersController::ModeEnum::MODE_FILESIZE
       twitters = index_mode_filesize(twitters, twt_params)
       @twitters_group = twt_group_by(twitters, twt_params.param_grp_sort_by, twt_params.param_grp_sort_spec)
@@ -540,7 +548,9 @@ class TwittersController < ApplicationController
         else
           @searching_tweet_id = [screen_name, tweet_id]
         end
-        STDERR.puts %!#{tweet_id}@#{screen_name}/#{tweets.size}!
+        STDERR.puts %![search] @#{screen_name}/#{tweet_id}\t#{tweets.size}|#{@twt_pic_path_list.size}\t#{@searching_tweet_id}!
+      else
+        STDERR.puts %![#{params[:search_word]}]!
       end
 
       return
@@ -835,6 +845,14 @@ class TwittersController < ApplicationController
       @twitters_group = twt_group_by(twitters, twt_params.param_grp_sort_by, twt_params.param_grp_sort_spec)
       @twitters_group = @twitters_group.sort_by {|k, v| k || 0}.reverse.to_h
       #@twitters_total_count = @twitters_group.sum {|k,v| v.count}
+    end
+
+    def index_mode_new_file_no_acces(twitters, twt_params)
+      #twitters = twitters.select {|x| x.status == Twitter::TWT_STATUS::STATUS_PATROL}
+      twitters = twitters.select {|x| x.drawing_method == twt_params.param_target}
+      twitters = twitters.select {|x| x.last_access_datetime and x.last_post_datetime and x.last_access_datetime < x.last_post_datetime}
+      twitters = index_sort(twitters, twt_params)
+      twitters
     end
 
     def index_mode_filesize(twitters, twt_params)

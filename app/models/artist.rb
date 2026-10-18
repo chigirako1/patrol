@@ -33,7 +33,8 @@ class Artist < ApplicationRecord
     C_ARTIST_MATCH_BEGIN = "begin_match"
     C_ARTIST_MATCH_END = "end_match"
 
-    PXV_USER_URL_REGEX = %r!pixiv\.net/users/(\d+)!
+    #PXV_USER_URL_REGEX = %r!pixiv\.net/users/(\d+)!
+    PXV_USER_URL_REGEX  = %r!pixiv\.net/(?:en/)?users/(\d+)!
 
     PXV_H_SEPARATOR = "||"
 

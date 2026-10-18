@@ -63,6 +63,7 @@ class Twitter < ApplicationRecord
         R18 = "R18"
         R15 = "R15"
         R12 = "R12"
+        R0 = "R0"
         NOTHING = "全年齢"
     end
 
@@ -1102,8 +1103,14 @@ class Twitter < ApplicationRecord
             when "url_cnt"
                 if self.url_list
                     unit = 1 unless unit
-
                     number = self.url_list.todo_cnt
+                    if unit == 0
+                        unit = 1
+                        if number > 0
+                            number = 1
+                        else
+                        end
+                    end
                     gkey_work = group_sub(unit, number, gkey_work, x, append_pre:prefix_s, append:postfix_s)
                 else
                     #STDERR.puts "url_cnt"
@@ -1145,11 +1152,11 @@ class Twitter < ApplicationRecord
                             if self.url_list
                                 number = self.url_list.todo_cnt
                                 u = Util::format_num(number, 1, 3)
-                                u_s = %!残#{u}件|!
+                                u_s = %![残#{u}件]!
                             end
 
                             #gkey_work = "最近登録/少数:#{w_s}週|#{prd_s}件~" + TWT_H_SEPARATOR + "#{r_s}"
-                            gkey_work = "最近登録/少数:#{u_s}|#{w_s}週|【#{r_s}】" + TWT_H_SEPARATOR + "#{prd_s}件~"
+                            gkey_work = "#{u_s}最近登録/少数#{w_s}週|【#{r_s}】" + TWT_H_SEPARATOR + "#{prd_s}件~"
                         elsif true
                             r_s = Util::format_num(self.rating, 1)
                             gkey_work = "最近登録/少数" + TWT_H_SEPARATOR + "#{r_s}"
@@ -1202,7 +1209,15 @@ class Twitter < ApplicationRecord
             if self.status != Twitter::TWT_STATUS::STATUS_PATROL
                 "\t#{self.status}#{TWT_H_SEPARATOR}-"
             elsif self.sp2?
-                TWT_KEYWORD_SP_S
+                if self.url_list
+                    number = self.url_list.todo_cnt
+                    u = Util::format_num(number, 1, 3)
+                    u_s = %![残#{u}件]!
+                else
+                    u_s = ""
+                end
+
+                TWT_KEYWORD_SP_S + u_s
             elsif self.url_list and self.url_list.todo_cnt > 0
                 gkey_work
             elsif lade < lade_s
@@ -1485,19 +1500,27 @@ class Twitter < ApplicationRecord
         end
     end
 
+    def url_cnt_str()
+        if self.url_list
+            unit = 1
+            number = self.url_list.todo_cnt
+            w = Util::format_num(number, unit, 2)
+            %![残#{w}件]!
+        else
+            ""
+        end
+    end
+
     def group_key_hoge(grp_spec, prefix="")
         case self.drawing_method
         when DRAWING_METHOD::DM_AI
             dm = %!980.AI!
         when DRAWING_METHOD::DM_HAND
-            return %!#{prefix}[910.#{drawing_method}]#{TWT_H_SEPARATOR}.!
+            u_str = url_cnt_str
+            return %!#{prefix}[910.#{drawing_method}]#{u_str}#{TWT_H_SEPARATOR}.!
         when DRAWING_METHOD::DM_3D, DRAWING_METHOD::DM_REPRINT
-            if self.url_list
-                unit = 1
-                number = self.url_list.todo_cnt
-                w = Util::format_num(number, unit, 2)
-            end
-            return %!#{prefix}[905.その他]残#{w}件|#{TWT_H_SEPARATOR}#{drawing_method}!
+            u_str = url_cnt_str
+            return %!#{prefix}[905.その他]#{u_str}#{TWT_H_SEPARATOR}#{drawing_method}!
         when "", nil
             p = Util::format_num(self.prediction, 15)
             daysn = self.last_access_datetime_days_elapsed
@@ -1505,12 +1528,8 @@ class Twitter < ApplicationRecord
             if (self.filenum||0) < 10
                 return %!#{prefix}[998.未設定] ファイル少ない#{TWT_H_SEPARATOR}#{daysn/7}週|#{p}件~!
             else
-                if self.url_list
-                    unit = 1
-                    number = self.url_list.todo_cnt
-                    w = Util::format_num(number, unit, 2)
-                end
-                return %!#{prefix}[998.未設定] #{w}件|#{daysn/30}ヶ月#{TWT_H_SEPARATOR}#{daysn/7}週|#{p}件~!
+                u_str = url_cnt_str
+                return %!#{prefix}[998.未設定]#{u_str}#{daysn/30}ヶ月#{TWT_H_SEPARATOR}#{daysn/7}週|#{p}件~!
             end
         else
             dm = %!900.#{drawing_method}!

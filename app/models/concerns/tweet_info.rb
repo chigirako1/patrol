@@ -1,7 +1,24 @@
 # coding: utf-8
 
+require 'base64'
+
 module TweetInfo
     extend ActiveSupport::Concern
+
+    # url safe
+    #/[A-Za-z0-9\-_=]/
+    #/^[A-Za-z0-9\-_]+={0,2}$/
+
+    # 標準
+    #[A-Za-z0-9+/=]
+    #^[A-Za-z0-9+/]+={0,2}$
+
+    def self.base64str_info(base64str)
+        ts = extract_twitter_image_timestamp(base64str)
+        tweet_id = Twt::time2tweet_id(ts)
+        #STDERR.puts %!"#{base64str}" => #{ts}, #{tweet_id}!
+        [ts, tweet_id]
+    end
 
     def self.get_tweet_info(filename)
         tweet_id = 0
@@ -28,17 +45,19 @@ module TweetInfo
         elsif filename =~ /(\d\d\d+)-(\d+)/
             tweet_id = $1.to_i
             pic_no = $2.to_i
-        elsif filename =~ /TID\-unknown\-/
         #elsif filename =~ /^\d{8}_\d{6}\./
         elsif filename =~ /(\d{8})_\d{6}/
           date = Date.parse $1
           tweet_id = Twt::time2tweet_id(date.to_datetime)
           #STDERR.puts %!"#{filename}" => #{date}, #{tweet_id}/!
           guess = true
-        elsif filename =~ /^[\w\-]{15}\./ #????なにこれ
-            #STDERR.puts
-            #STDERR.puts %![dbg] #{filename}!
-            #Rails.logger.warn(filename)
+        #elsif filename =~ /^[\w\-]{15}\./ #base64???
+        elsif filename =~ /TID\-unknown\-([A-Za-z0-9\-_=]{15})/
+            base64str = $1
+            ts, tweet_id = base64str_info(base64str)
+        elsif filename =~ /^([A-Za-z0-9\-_=]{15})/
+            base64str = $1
+            ts, tweet_id = base64str_info(base64str)
         elsif filename =~ /^(\d{18,}) \w+/ #18は適当
           tweet_id = $1.to_i
         else
@@ -58,13 +77,63 @@ module TweetInfo
         tweet_id
     end
 
+    def self.extract_twitter_image_timestamp(filename_or_url)
+        # 1. URLや拡張子を除いたファイル名本体を取得
+        basename = File.basename(filename_or_url, '.*')
+        
+        # 2. URLセーフ文字（'-' -> '+', '_' -> '/'）を置換し、パディングを調整
+        # Base64としてデコード可能な形式にクレンジングする
+        cleaned = basename.tr('-_', '+/')
+        padding_len = (4 - (cleaned.length % 4)) % 4
+        cleaned += '=' * padding_len
+        
+        # 3. Base64デコードしてバイナリを取得（失敗時は例外の代わりにnilを返すなどの耐障害性も持たせられます）
+        binary_data = Base64.decode64(cleaned)
+        
+        # 4. 8バイト（64ビット）の整数に変換
+        # バイナリの先頭から8バイトをビッグエンディアンとして数値化
+        id_int = binary_data.bytes[0...8].inject(0) { |acc, byte| (acc << 8) + byte }
+        
+        # 5. Snowflake IDの仕様に基づいてタイムスタンプ（ミリ秒）を計算
+        twitter_epoch = 1288834974657
+        timestamp_ms = (id_int >> 22) + twitter_epoch
+        
+        # 6. Timeオブジェクト（UTC）に変換して返却
+        Time.at(timestamp_ms / 1000.0).utc
+    end
+
+    # こっちはうまく動かない時がある
+    def self.extract_twitter_image_timestamp_obsolete(filename_or_url)
+        # 1. URLや拡張子（.jpg, .png等）が含まれている場合はファイル名（ベース名）のみを抽出する
+        basename = File.basename(filename_or_url, '.*')
+
+        # 2. Base64のパディング（=）を調整し、URLセーフなデコードを行う
+        # パスや拡張子を除いた文字列を対象にする
+        padding = '=' * ((4 - (basename.length % 4)) % 4)
+
+        STDERR.puts %!#{basename}\t#{padding}!
+
+        binary_data = Base64.urlsafe_decode64(basename + padding)
+        
+        # 3. バイナリデータを64ビット整数（BigEndian）に変換する
+        # 先頭の8バイト（64ビット）を使用
+        id_int = binary_data.bytes[0...8].inject(0) { |acc, byte| (acc << 8) + byte }
+        
+        # 4. Snowflake IDの仕組みに従ってタイムスタンプ（ミリ秒）を抽出
+        # 右に22ビットシフトし、TwitterのEpoch（1288834974657）を足す
+        twitter_epoch = 1288834974657
+        timestamp_ms = (id_int >> 22) + twitter_epoch
+        
+        # 5. ミリ秒を秒に変換してRubyのTimeオブジェクト（UTC）を生成する
+        Time.at(timestamp_ms / 1000.0).utc
+    end
+
 end
 
 class TweetPicInfo
     attr_accessor :tweet_id, :hash_val, :filesize
     
 end
-
 
 
 =begin

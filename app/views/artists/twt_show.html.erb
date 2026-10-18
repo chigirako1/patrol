@@ -33,6 +33,12 @@
 <% else %>
 <% end %>
 
+<% if params[:disp_target] == "" %>
+<% elsif params[:disp_target] == "sp" %>
+    <% std_dsip = false %>
+<% else %>
+<% end %>
+
 <% if params[:picn] == "" %>
     <% show_pic_num = 15 %>
 <% elsif params[:picn] == "all" %>
@@ -42,7 +48,6 @@
 <% else %>
     <% show_pic_num = 15 %>
 <% end %>
-
 
 <% if params[:nl] and params[:nl] == "true" %>
     <% nl = true %>
@@ -69,38 +74,42 @@
 <% end %>
 
 <h4>twt_img_list(<%= show_pic_num %>/<%= twt_img_list.list.size %>)</h4>
+<% if std_dsip and std_dsip == false %>
+    非表示設定
+<% else %>
 
-<% twt_img_list.list.first(show_pic_num).each.with_index(1) do |elem, idx| %>
-    <% if nl and elem.first_pic? %>
-        <hr />
-    <% end %>
-    <% path = elem.file_path %>
-    <%= idx %>.
-    <%= image_link(path, get_image_class(elem.first_pic?)) %>
-<% end %>
-<br />
-
-<% twt_img_list.list.first(show_pic_num).each.with_index(1) do |elem, idx| %>
-    <%= idx %>:<%= elem.file_path_str %>
-    <% url = Twt::twt_tweet_url(@twtid, elem.tweet_id) %>
-    <% if false %>
-        [<%= link_to_ex("▶", url) %>]
+    <% twt_img_list.list.first(show_pic_num).each.with_index(1) do |elem, idx| %>
+        <% if nl and elem.first_pic? %>
+            <hr />
+        <% end %>
+        <% path = elem.file_path %>
+        <%= idx %>.
+        <%= image_link(path, get_image_class(elem.first_pic?)) %>
     <% end %>
     <br />
 
-<% end %>
-<br />
+    <% twt_img_list.list.first(show_pic_num).each.with_index(1) do |elem, idx| %>
+        <%= idx %>:<%= elem.file_path_str %>
+        <% url = Twt::twt_tweet_url(@twtid, elem.tweet_id) %>
+        <% if false %>
+            [<%= link_to_ex("▶", url) %>]
+        <% end %>
+        <br />
 
-<% if twt_img_list.list.presence and twt_img_list.list.size > 1 %>
-    <% since_dt = twt_img_list.list.last.datetime %>
-    <%# until_dt = twt_img_list.list.first.datetime %>
-    <% until_dt = twt_img_list.list[-2].datetime %>
-    <b><%= Twt::twt_img_search_str(@twtid, since_dt, until_dt) %></b>
+    <% end %>
+    <br />
+
+    <% if twt_img_list.list.presence and twt_img_list.list.size > 1 %>
+        <% since_dt = twt_img_list.list.last.datetime %>
+        <%# until_dt = twt_img_list.list.first.datetime %>
+        <% until_dt = twt_img_list.list[-2].datetime %>
+        <b><%= Twt::twt_img_search_str(@twtid, since_dt, until_dt) %></b>
+        <br />
+    <% end %>
+
+    <%= link_to("...全て表示", artist_twt_path(@twtid, picn: 33, nl: true)) %>
     <br />
 <% end %>
-
-<%= link_to("...全て表示", artist_twt_path(@twtid, picn: 33, nl: true)) %>
-<br />
 
 
 <!-- ########################## --
@@ -111,6 +120,7 @@
     <h4>SP(<%= File.dirname filelist.first %>)[<%= filelist.size %>ファイル]</h4>
     <% filelist.reverse.first(show_pic_num).each.with_index(1) do |fpath, idx| %>
         <%= idx %>.<%= link_to_ex(image_tag(fpath, class: "fixed-height-img"), fpath) %>
+        <%# STDERR.puts %!#{idx}\t#{File.basename fpath}\t#{Util::mtime fpath}\t#{TweetInfo::extract_twitter_image_timestamp fpath}! %>
     <% end %>
     <br />
 <% else %>
@@ -138,7 +148,7 @@
     なし
 <% end %>
 <% tweet_ids.each do |x| %>
-    [<%= Twt::timestamp_str(x) %>]
+    [<%= smart_date Twt::get_timestamp(x) %>]
     <% url = Twt::twt_tweet_url(@twtid, x) %>
     <%= link_to_ex(url, url) %>
 
@@ -153,6 +163,8 @@
             DBにも登録無し
             <% url2 = Twt::twt_tweet_url_dev(x) %>
             <%= link_to_ex(url2, url2) %>
+
+            [<%= link_to_ex "☆New tweet☆", new_tweet_path(tweet_id: x, screen_name: @twtid, status: Tweet::StatusEnum::SAVED) %>]
         <% end %>
     <% end %>
     <br>

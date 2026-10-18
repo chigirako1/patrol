@@ -457,6 +457,9 @@
     <%= f.check_box :cond_or, {checked: params[:cond_or] == "true"}, true, false %>
     <%= f.label :OR条件 %>
     <br />
+    <%= f.label :最新公開日 %>
+    <%= f.number_field :last_post_datetime, :value => params[:last_post_dt] %>日以内にDB登録されたレコード
+    <br />
     <%= f.label :DB登録日 %>
     <%= f.number_field :created_at, :value => params[:created_at] %>日以内にDB登録されたレコード
     <br />

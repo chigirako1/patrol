@@ -296,8 +296,17 @@ class ArtistsController < ApplicationController
 
   module FileTarget
     FT_TWT_I = "twt_i"
+    FT_ALL = "all"
+
     TWT_UNKNOWN_ONLY = "unknown_twt_only"
     PXV_UNKNOWN_ONLY = "unknown_pxv_only"
+
+    TWT_KNOWN = "twt既知"
+    TWT_UNKNOWN = "twt未知"
+
+    PXV_KNOWN = "known_pxv"
+    PXV_UNKNOWN = "unknown_pxv"
+    
     TWT_KNOWN_ONLY = "twt,twt既知"
     TWT_PXV_ALL = "twt,twt既知,twt未知,known_pxv,unknown_pxv"
     TWT_EXPERIMENT = "twt_experiment"
@@ -865,6 +874,9 @@ class ArtistsController < ApplicationController
     @pred = get_int(params[:pred], 0)
     STDERR.puts %![twt_index] pred="#{@pred}"!
 
+    @prm_dm = params[:dm]
+    STDERR.puts %![twt_index] dm="#{@prm_dm}"!
+
     target = params[:target]
     if target.presence
       @target = target.split(",").map {|x| x.strip}
@@ -893,9 +905,7 @@ class ArtistsController < ApplicationController
         @sp_dirs = Twt::sp_dirs()
 
         filename = "thisyear 2"
-        path = UrlTxtReader::get_path(filename)
-        @unknown_twt_screen_name_list = UrlTxtReader::get_unknown_twt_url_list(path).keys
-
+        @unknown_twt_screen_name_list = UrlTxtReader::unknown_twt_screen_name_list(filename)
       when DIR_TYPE::SP_VID
         @twt_video_list = TwtVideoList::new()
 
@@ -946,7 +956,7 @@ class ArtistsController < ApplicationController
     else
       path = UrlTxtReader::get_path(filename)
 
-      if @target.size == 1 and @target[0] != "known_pxv"#適当すぎる。。。
+      if @target.size == 1 and @target[0] != FileTarget::PXV_KNOWN#適当すぎる。。。
         pxvid_list2 = []
         case @target[0]
         when ArtistsController::FileTarget::FT_TWT_I
@@ -975,33 +985,33 @@ class ArtistsController < ApplicationController
         pxv_id_list, twt_url_infos, @misc_urls = UrlTxtReader::get_url_txt_info(path)
 
         # twt
-        if @target.include?("twt既知") or @target.include?("twt未知")
+        if @target.include?(FileTarget::TWT_KNOWN) or @target.include?(FileTarget::TWT_UNKNOWN)
           pxv_chk = true
           pxv_chk = false
           known_twt_url_list, unknown_twt_url_list, pxvid_list2 = Twitter::twt_user_classify(twt_url_infos, pxv_chk)
 
-          if @target.include?("twt既知")
+          if @target.include?(FileTarget::TWT_KNOWN)
             @known_twt_url_list = known_twt_url_list
             #@twt_urls = known_twt_url_list
             STDERR.puts %!known_twt_url_list=#{@known_twt_url_list.size}!
           end
 
-          if @target.include?("twt未知")
+          if @target.include?(FileTarget::TWT_UNKNOWN)
             @unknown_twt_url_list = unknown_twt_url_list.sort_by {|k,v| [-v.size, Tweet::get_oldest_timestamp(v)||"2000-01-01"]}.to_h
             STDERR.puts %!unknown_twt_url_list=#{@unknown_twt_url_list.size}!
           end
         end
   
         # pxv
-        if @target.include?("known_pxv") or @target.include?("unknown_pxv")
+        if @target.include?(FileTarget::PXV_KNOWN) or @target.include?(FileTarget::PXV_UNKNOWN)
           known_pxv_user_id_list, unknown_pxv_user_id_list = Artist::pxv_user_id_classify([pxv_id_list, pxvid_list2].flatten)
 
-          if @target.include?("known_pxv")
+          if @target.include?(FileTarget::PXV_KNOWN)
             @known_pxv_user_id_list = known_pxv_user_id_list
             STDERR.puts %!known_pxv_user_id_list=#{@known_pxv_user_id_list.size}!
           end
 
-          if @target.include?("unknown_pxv")
+          if @target.include?(FileTarget::PXV_UNKNOWN)
             @unknown_pxv_user_id_list = unknown_pxv_user_id_list
             STDERR.puts %!unknown_pxv_user_id_list=#{@unknown_pxv_user_id_list.size}!
           end

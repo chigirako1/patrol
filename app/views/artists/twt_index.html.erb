@@ -78,6 +78,10 @@
             <% next %>
         <% end %>
 
+        <% if @prm_dm and @prm_dm != twt_account.drawing_method %>
+            <% next %>
+        <% end %>
+
         <% if @pred %>
             <% pred = @pred %>
         <% else %>
@@ -104,7 +108,17 @@
     <h2>登録済みtwt (<%= known_twt_url_list_size %>)</h2>
 <% end %>
 
+<% sp_list = [] %>
+
 <% if twt_group.presence %>
+    <% twt_group.each do |k, ary| %>
+        <% if k.include?(Twitter::TWT_KEYWORD_SP_S) %>
+            <% ary.each do |v| %>
+                <% sp_list << v[0].twtid %>
+            <% end %>
+        <% end %>
+    <% end %>
+
     <% h_grp1_bak = "" %>
     <% twt_group = twt_group.sort.reverse.to_h %>
     <% twt_group.each do |key, val| %>
@@ -889,7 +903,7 @@
         <%# grp_str = "[{残url_cnt件}]{p15}件~#{Twitter::TWT_H_SEPARATOR}{aw}週|【{r}】" %>
         <% grp_str = "[{残url_cnt件}]{am}ヶ月#{Twitter::TWT_H_SEPARATOR}{p25}件~|{az}" %>
         <% url_cnt = artists_twt_index_path(filename: file, grp_sort_spec: grp_str, target: ArtistsController::FileTarget::TWT_PXV_ALL) %> 
-        <% grp_str2 = "[{残url_cnt件}]{p50}件~#{Twitter::TWT_H_SEPARATOR}{az}" %>
+        <% grp_str2 = "[{残url_cnt件}]【{r5}】~|{p50}件~#{Twitter::TWT_H_SEPARATOR}{az}" %>
         <% url_cnt2 = artists_twt_index_path(filename: file, grp_sort_spec: grp_str2, target: ArtistsController::FileTarget::TWT_PXV_ALL) %> 
 
         <%= file %>
@@ -920,13 +934,13 @@
 
         <%= file %>
         (<%= Util::formatFileSize(FileTest.size(filename)) %>)
-        | <%= link_to_ex("all", url_a) %>
+        | <%= link_to_ex(ArtistsController::FileTarget::FT_ALL, url_a) %>
         |■
-        | <%= link_to_ex("twt未知", url_tu) %>
+        | <%= link_to_ex(ArtistsController::FileTarget::TWT_UNKNOWN, url_tu) %>
         | <%= link_to_ex("未登録pxv", url_p_u) %>
         |■
         | <%= link_to_ex("twt", url_t) %>
-        | <%= link_to_ex("twt既知", url_tk) %>
+        | <%= link_to_ex(ArtistsController::FileTarget::TWT_KNOWN, url_tk) %>
         | <%= link_to_ex("既知pxv", url_p_k) %>
         <br />
     <% end %>
@@ -1048,7 +1062,10 @@
         <% end %>
     <% end %>
 
-    <h2>sp_chk削除対象？</h2>
+    <% chk_screen_name_list = Util::checking_screen_names.sort.uniq %>
+
+    <h2>(<%= chk_screen_name_list.size %>)</h2>
+    <h3>チェック済み（sp_chk削除対象？）</h3>
     <% done_list = [] %>
     <% @sp_dirs.each do |elem| %>
         <% if elem.screen_name.presence and elem.sp_chk %>
@@ -1056,9 +1073,11 @@
             <% done_list << elem.screen_name %>
         <% end %>
     <% end %>
+    (【計】：<%= done_list.size %>)
 
-    <h2>sp_chk削除後リスト</h2>
-    <% Twt::result_sp_chk(done_list).each do |x| %>
+    <% a_list = Twt::result_sp_chk(chk_screen_name_list, done_list) %>
+    <h3>削除後リスト(<%= a_list.size %>)</h3>
+    <% a_list.each do |x| %>
         <%= x %><br />
     <% end %>
 <% end %>
@@ -1159,12 +1178,11 @@
 <% end %>
 
 <% if twt_grp2 and twt_grp2.size > 0 %>
-    <h1>twt_grp2(<%= twt_grp2.size %>)[<%= spec %>]</h1>
-
-    <h2><%= Twitter::TWT_KEYWORD_SP_S %></h2>
     <% (twt_grp2[Twitter::TWT_KEYWORD_SP_S]||[]).each do |twt| %>
-        <%= twt.twtid %><br />
+        <% sp_list << twt.twtid %>
     <% end %>
+
+    <h1>twt_grp2(<%= twt_grp2.size %>)[<%= spec %>]</h1>
 
     <% header_a_save = "" %>
     <% twt_grp2.sort_by {|k,v| k}.reverse.to_h.each do |key_header, value| %>
@@ -1327,5 +1345,12 @@
             [<%= link_to_ex rest, x.filepath %>]
             <br />
         <% end %>
+    <% end %>
+<% end %>
+
+<% if sp_list.size > 0 %>
+    <h2><%= Twitter::TWT_KEYWORD_SP_S %></h2>
+    <% sp_list.sort.uniq.each do |screen_name| %>
+        <%= screen_name %><br />
     <% end %>
 <% end %>

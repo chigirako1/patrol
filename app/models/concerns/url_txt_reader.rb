@@ -564,6 +564,11 @@ module UrlTxtReader
         [id_list, twt_urls, misc_urls]
     end
 
+    def self.unknown_twt_screen_name_list(filename)
+        path = UrlTxtReader::get_path(filename)
+        UrlTxtReader::get_unknown_twt_url_list(path).keys
+    end
+
     def self.get_unknown_twt_url_list(path)
         _, twt_infos, _ = get_url_txt_info(path, false, true, false)
         #puts %!pxv_id_list:#{pxv_id_list.size}!

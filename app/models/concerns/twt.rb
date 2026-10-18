@@ -187,7 +187,7 @@ module Twt
         path
     end
 
-    def self.twt_user_list(target_dir)
+    def self.user_path_list(target_dir)
         path_list = []
 
         if target_dir == "new"
@@ -200,24 +200,34 @@ module Twt
         end
 
         STDERR.puts %!path_list=#{path_list.size}!
+
+        path_list
+    end
+
+    def self.twt_user_list(target_dir)
+        total_file_num = 0
+        path_list = user_path_list(target_dir)
         artist_hash = {}
         i = 0
         path_list.flatten.each do |path|
             i += 1
-            STDERR.print "."
             if i % 100 == 0
-                STDERR.puts "[#{i}] #{path}"
+                STDERR.puts "[#{i}] #{path}\t#{total_file_num}"
+            elsif i % 5 == 0
+                STDERR.print "."
             end
 
-            set_twt_user(artist_hash, path)
+            fnum = set_twt_user(artist_hash, path)
+            total_file_num += fnum
         end
-        STDERR.puts %!#{i}!
+        STDERR.puts %![#{i}] \t#{total_file_num}!
 
         #artist_hash.sort_by{|s| [s[0].downcase, s[0]]}.to_h
         artist_hash.sort_by{|_, v| v.ctime}.to_h
     end
 
     def self.set_twt_user(artist_hash, path)
+        num_files = 0
         dirname = File.basename path
         if dirname =~ /(\w+)\s*(.*)/
             twtid = $1
@@ -232,11 +242,14 @@ module Twt
                 #artist_hash[id] = TwtArtist.new(id, name, path)
                 artist_hash[id] = TwtArtist.new(twtid, name, path)
                 artist_hash[id].set_filenum
+
+                num_files = artist_hash[id].num_of_files
             end
         else
             msg = %!invalid format:"#{path}" (#{__FILE__}:#{__LINE__})!
             Rails.logger.warning(msg)
         end
+        num_files
     end
 
     def self.get_twtid_list(path_list)
@@ -343,11 +356,12 @@ module Twt
         }
     end
 
-    def self.result_sp_chk(done_list)
-        chk_screen_name_list = Util::checking_screen_names.sort.uniq
-        STDERR.puts %!#{chk_screen_name_list}!
+    def self.result_sp_chk(chk_screen_name_list, done_list)
+        STDERR.puts %![#{chk_screen_name_list}.size] #{chk_screen_name_list}!
+
         chk_screen_name_list.delete_if {|x| done_list.include? x}
-        STDERR.puts %!#{chk_screen_name_list}!
+        STDERR.puts %![#{chk_screen_name_list}.size] #{chk_screen_name_list}!
+        
         chk_screen_name_list
     end
 
@@ -456,7 +470,8 @@ module Twt
 
         if path_list.presence
             #path_list.sort_by {|path| Twt::get_sp_datetime_from_filepath(path)}
-            path_list.sort_by {|path| path}
+            #path_list.sort_by {|path| path}
+            path_list.sort_by {|path| Twt::get_timestamp_from_filepath path}
         else
             nil
         end
@@ -468,7 +483,8 @@ module Twt
         dirpaths.each do |dirpath|
             pahtlist << UrlTxtReader::get_path_list(dirpath)
         end
-        pahtlist.flatten#.sort
+
+        pahtlist.flatten.sort_by {|path| Twt::get_timestamp_from_filepath path}
     end
 
     def self.find_pics(pic_list, filename, screen_name)
@@ -571,9 +587,9 @@ module Twt
 
     def self.search_tweet_ex(screen_name, search_tweet_id)
         twt_pic_path_list = Twt::get_pic_filelist(screen_name)
-        if twt_pic_path_list.size > 10
-            twt_pic_path_list = twt_pic_path_list.first(10)
-        end
+        # if twt_pic_path_list.size > 10
+        #     twt_pic_path_list = twt_pic_path_list.first(10)
+        # end
         search_tweet(twt_pic_path_list, search_tweet_id)
     end
 
@@ -644,7 +660,7 @@ module Twt
             twt_params[:old_twtid] = old_twt.twtid
         end
 
-        msg = %!新規登録アカウント => "@#{key}"!
+        msg = %!新規登録アカウント => "@#{key} => #{twt_params}"!
         Rails.logger.info(msg)
 
         twt = Twitter.new(twt_params)
@@ -676,7 +692,7 @@ module Twt
                 #######################
                 ##### 
                 ######################
-                return
+                #?????return
             end
         else
             STDERR.puts %!update(new):"#{pic_path_list[0]}"\t=>"#{last_post_datetime}"!
@@ -732,7 +748,9 @@ module Twt
             Rails.logger.info(msg)
         end
 
-        if twt_params.size > 0
+        if twt_params.size == 1 and twt_params[:last_dl_datetime]
+            #log吐かない
+        elsif twt_params.size > 0
             msg = %!更新内容 => #{twt_params} @#{key}(#{twt.twtname})!
             Rails.logger.info(msg)
 
@@ -955,6 +973,11 @@ module Twt
         TweetInfo::get_tweet_info(filename)
     end
 
+    def self.get_timestamp_from_filepath(filepath)
+        tweet_id, _ = TweetInfo::get_tweet_info_from_filepath(filepath)
+        get_timestamp(tweet_id)
+    end
+
     TW_EPOCH = 1288834974657  # 単位：ミリ秒
     def self.get_timestamp(tweet_id)
         timestamp = Time.at(((tweet_id >> 22) + TW_EPOCH) / 1000.0)
@@ -975,6 +998,20 @@ module Twt
         %!#{Util::get_date_info(ts)}[#{}]!
     end
 
+    def self.mtime_string(path)
+        fullpath = Util::get_public_path(path)
+        mtime = File::mtime(fullpath)
+        #mtime = mtime.change(hour: 0, min: 0, sec: 0)
+        mtime = mtime.change(hour: 0)
+
+        tweet_id2 = time2tweet_id(mtime)
+        twt_id_str = tweet_id_with_comma(tweet_id2)
+
+        date_str = %![#{mtime.strftime("%Y-%m-%d %H:%M")}]!
+
+        [date_str, twt_id_str]
+    end
+
     def self.twt_path_str(path)
         fn = File.basename path
         tweet_id, pic_no = TweetInfo::get_tweet_info(fn)
@@ -982,17 +1019,13 @@ module Twt
         if tweet_id == 0
             if fn =~ TWT_SP_FILENAME_RGX
                 datetime = sp_datetime_str_to_datetime($1)
-                date_str = %![#{datetime.strftime("%Y-%m-%d")}]!
                 tweet_id2 = time2tweet_id(datetime)
                 twt_id_str = tweet_id_with_comma(tweet_id2)
+                date_str = %![#{datetime.strftime("%Y-%m-%d %H:%M")}]!
             else
-                #fullpath = Rails.root.join("public/" + path)
-                fullpath = Util::get_public_path(path)
-                mtime = File::mtime(fullpath)
-                date_str = %![#{mtime.strftime("%Y-%m-%d")}]!
-                tweet_id2 = time2tweet_id(mtime)
-                twt_id_str = tweet_id_with_comma(tweet_id2)
+                date_str, twt_id_str = mtime_string path
             end
+            STDERR.puts %!"#{path}"\t#{twt_id_str}!
         else
             twt_id_str = tweet_id_with_comma(tweet_id)
             ul_datestr = timestamp_str(tweet_id)

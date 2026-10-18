@@ -241,6 +241,7 @@
       <%= link_to_ex %!☆pxv☆:"#{user_name}"!, artist_pxv_path(pxv_uid) %>
     <% else %>
       ※フォルダなし？
+      [<%= link_to_ex "New Artist(#{pxv_uid})", new_artist_path(pxvid: pxv_uid) %>]
     <% end %>
     <br />
   <% end %>

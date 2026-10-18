@@ -101,6 +101,9 @@
             <% _, pic_no = TweetInfo::get_tweet_info_from_filepath(path)%>
             .<%= image_link(path, get_image_class(pic_no == 0)) %>
         <% end %>
+        <% if img_path_list.size >= 2 %>
+            ！！複数あり！！
+        <% end %>
     <% end %>
 
     <% fsize_list = [] %>
@@ -356,7 +359,8 @@
     <% if filelist.presence %>
         <h4>
             SP(<%= File.dirname filelist.first %>)[<%= filelist.size %>ファイル]
-            <%= link_to_ex %!☆twt☆:@#{@twitter.twtid}!, artist_twt_path(@twitter.twtid, picn: 33) %>
+            <% picn = 33 %>
+            <%= link_to_ex %!☆twt☆:@#{@twitter.twtid}!, artist_twt_path(@twitter.twtid, picn: picn, disp_target: "sp") %>
         </h4>
 
         <% latest_file = filelist.last %>
