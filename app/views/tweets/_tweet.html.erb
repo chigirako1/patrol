@@ -24,23 +24,5 @@
     [<%= link_to_ex("tweets db", tweets_path(screen_name: tweet.screen_name)) %>]
     <br />
 
-    <% if @pic_list %>
-        <%= @pic_list.size %>枚<br />
-
-        <% (@pic_list||[]).each do |path| %>
-            <% if path.include? tweet.tweet_id.to_s %>
-                <%= image_link(path) %>
-            <% else %>
-            <% end %>
-        <% end %>
-
-        <% if tweet.remarks.presence %>
-            <% hit_pic_list = Twt::find_pics(@pic_list, tweet.remarks, tweet.screen_name) %>
-            <% hit_pic_list.each do |path| %>
-                <%= image_link(path) %>
-            <% end %>
-        <% end %>
-    <% end %>
-
     <%= link_to_ex("▶x", Twt::twt_tweet_url_i(tweet.tweet_id)) %><br />
 </div>

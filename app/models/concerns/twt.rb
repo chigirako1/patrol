@@ -98,8 +98,13 @@ module Twt
         txts.each do |line|
             line.chomp!
             if line =~ rgx
-                tweet_id = $1.to_i
-                twt_ids << tweet_id
+                tweet_id = $1
+                if tweet_id.size < 19
+                    msg = %![#{__FILE__}:#{__LINE__}) #{__method__}()] ★不正tweet id？★"#{tweet_id}@#{twtid}"!
+                    Rails.logger.warn(msg)
+                    next #危険なので処理対象外とする
+                end
+                twt_ids << tweet_id.to_i
             else
                 #puts line
             end
@@ -247,7 +252,7 @@ module Twt
             end
         else
             msg = %!invalid format:"#{path}" (#{__FILE__}:#{__LINE__})!
-            Rails.logger.warning(msg)
+            Rails.logger.warn(msg)
         end
         num_files
     end
@@ -485,6 +490,22 @@ module Twt
         end
 
         pahtlist.flatten.sort_by {|path| Twt::get_timestamp_from_filepath path}
+    end
+
+    def self.find_pics_by_datetime(pic_list, tweet_id)
+        results = []
+        datetime_t = get_timestamp tweet_id
+        (pic_list||[]).each do |path|
+            #if TweetInfo::datetime_match?(path, datetime_t)
+            datetime_m = Twt::get_timestamp_from_filepath path
+            seconds = 24 * 60 * 60
+            #STDERR.puts %!#{seconds}s #{datetime_t.to_f - datetime_m.to_f}\t"#{path}"\t#{datetime_t} <=> #{datetime_m}!
+            if Util::within_last_n_seconds?(datetime_t, datetime_m, seconds)
+                twt_pic_file = TwtPicFile.new(path: path, timestamp: datetime_m)
+                results << twt_pic_file
+            end
+        end
+        results.sort.reverse
     end
 
     def self.find_pics(pic_list, filename, screen_name)
@@ -1031,7 +1052,8 @@ module Twt
             ul_datestr = timestamp_str(tweet_id)
             date_str = %!【#{ul_datestr}】!
         end
-        %!<#{twt_id_str}>#{4 - pic_no}#{date_str}[#{fn})(#{File.dirname path}]!
+        #%!<#{twt_id_str}>#{4 - pic_no}#{date_str}[#{fn})(#{File.dirname path}]!
+        %!#{date_str}<#{twt_id_str}>#{4 - pic_no}[#{fn})(#{File.dirname path}]!
     end
 
     def self.tweet_id_with_comma(tweet_id)
@@ -1825,6 +1847,25 @@ module Twt
             #STDERR.puts %![dbg y]#{twtid}!
             return @twt_user_list.include? twtid.downcase
         end
+    end
+
+    # =========================================================================
+    # 
+    # =========================================================================
+    class TwtPicFile
+        attr_accessor :path, :timestamp
+
+        def initialize(path:, timestamp:)
+            @path = path
+            @timestamp = timestamp
+        end
+
+        def <=>(other)
+            return nil unless other.is_a?(TwtPicFile)
+            [timestamp, path] <=> [other.timestamp, other.path]
+        end
+
+        def filename = File.basename @path
     end
 
     # =========================================================================

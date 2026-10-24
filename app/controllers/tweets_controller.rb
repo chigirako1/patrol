@@ -88,6 +88,10 @@ class TweetsController < ApplicationController
     if params[:status] == Tweet::StatusEnum::VIDEO_SAVED
       @twt_video_list = TwtVideoList::new()
     end
+
+    if params[:screen_name].presence
+      @pic_list = Twt::get_pic_filelist(params[:screen_name])
+    end
     
     @tweet = Tweet.new
   end

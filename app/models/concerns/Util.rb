@@ -181,6 +181,23 @@ module Util
         sprintf("%#{digit}d", w)
     end
 
+    def self.get_threshold(x, unit)
+        return 0 if x < unit
+        
+        threshold = unit
+        # 閾値を2倍していき、xを超える直前の値を維持する
+        while threshold * 2 <= x
+            threshold *= 2
+        end
+            
+        threshold
+    end
+
+    def self.format_num2(number, unit, digit=3)
+        w = get_threshold(number, unit)
+        sprintf("%#{digit}d", w)
+    end
+
     #============================================================
     # ファイル関連
     #============================================================
@@ -376,6 +393,15 @@ module Util
                 head = head.next_year
             end
         end
+    end
+
+    def self.within_n_seconds?(datetime_a, datetime_b, n)
+        (datetime_a.to_f - datetime_b.to_f).abs <= n
+    end
+
+    def self.within_last_n_seconds?(datetime_a, datetime_b, n)
+        delta = (datetime_a.to_f - datetime_b.to_f)
+        delta >= 0 and delta <= n
     end
 
     #============================================================

@@ -17,7 +17,7 @@
         <% if tweet.tweet_id.presence %>
             <% tweet_id_val = tweet.tweet_id %>
         <% elsif params[:tweet_id].presence %>
-            <% tweet_id_val = params[:tweet_id] %>
+            <% tweet_id_val = params[:tweet_id].to_i %>
         <% else %>
             <% tweet_id_val = "" %>
         <% end %>
@@ -106,17 +106,63 @@
         <%= form.submit("更新", class: 'submit-btn') %>
     </div>
 
-    <% if tweet.screen_name.presence and tweet.screen_name != Twt::TWT_USER_I %>
-        <% tweet_ids = Twt::get_twt_tweet_ids_from_txts(tweet.screen_name) %>
+    <% if @pic_list %>
+        <h3>画像(<%= @pic_list.size %>件)</h3>
+        全<%= @pic_list.size %>ファイル<br />
+        <b>[<%= datetime_t = Twt::get_timestamp(tweet_id_val) %>]</b>(<%= tweet_id_val %>)
+        <br />
+
+        <% miss = true %>
+        <% (@pic_list||[]).each do |path| %>
+            <% if tweet_id_val.presence and path.include? tweet_id_val.to_s %><!-- BUG:部分一致じゃだめ -->
+                <%= image_link(path) %>
+                <% miss = false %>
+            <% else %>
+            <% end %>
+        <% end %>
+
+        <% if tweet.remarks.presence %>
+            <% hit_pic_list = Twt::find_pics(@pic_list, tweet.remarks, tweet.screen_name) %>
+            <% hit_pic_list.each do |path| %>
+                <%= image_link(path) %>
+                <% tweet_id = TweetInfo::get_tweet_id_from_filepath path %>
+                [<%= Twt::get_timestamp tweet_id %>]
+                <%= File.basename path %>
+                <% miss = false %>
+            <% end %>
+        <% end %>
+
+        <% if miss %>
+            <% match_pic_infos = Twt::find_pics_by_datetime(@pic_list, tweet_id_val) %>
+            <h3>tweet idと日時が近いファイル(<%= match_pic_infos.size %>件)</h3>
+            日時が近い順
+            <br />
+            <% limit = 20 %>
+            <% match_pic_infos.first(limit).each do |match_i| %>
+                [<%= match_i.timestamp %>]
+                <%= image_link(match_i.path) %>
+                <%= match_i.filename %>
+                <br />
+                <% if Util::within_last_n_seconds?(datetime_t, match_i.timestamp, 60) %>
+                    ⬆️1分以内
+                    <input type="button" value="ファイル名設定" onclick="setFilename('<%= match_i.filename %>');" />
+                    <br />
+                <% end %>
+            <% end %>
+        <% end %>
+    <% end %>
+
+    <% if screen_name_val.presence and screen_name_val != Twt::TWT_USER_I %>
+        <% tweet_ids = Twt::get_twt_tweet_ids_from_txts(screen_name_val) %>
         <% ids = Tweet::get_unregistered_tweet_ids(tweet_ids) %>
         <% if ids.size > 0 %>
             <h2>url txt</h2>
             <% ids.each do |x| %>
-                <% url = Twt::twt_tweet_url(tweet.screen_name, x) %>
+                <% url = Twt::twt_tweet_url(screen_name_val, x) %>
                 <%= link_to_ex(url, url) %>
                 [<%= Twt::timestamp_str(x) %>]
 
-                <% twt_pic_path_list = Twt::get_pic_filelist(tweet.screen_name) %>
+                <% twt_pic_path_list = Twt::get_pic_filelist(screen_name_val) %>
                 <% paths = Twt::search_tweet(twt_pic_path_list, x) %>
                 <% if paths.size > 0 %>
                     ファイルあり
@@ -187,6 +233,12 @@
         selectOptionByText(status_e, statusi);
     }
 
+    function setFilename(filename)
+    {
+        const remarks_e = document.getElementById('tweet_remarks');
+        remarks_e.value = filename;
+    }
+
     function get_filename() {
         let text_box = document.getElementById("url_filepath");
         let text = text_box.value;
@@ -203,8 +255,9 @@
             filename = text;
         }
         
-        const remarks_e = document.getElementById('tweet_remarks');
-        remarks_e.value = filename;
+        //const remarks_e = document.getElementById('tweet_remarks');
+        //remarks_e.value = filename;
+        setFilename(filename);
 
         set_status("<%= Tweet::StatusEnum::SAVED %>");
     }

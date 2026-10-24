@@ -95,7 +95,6 @@
     <% end %>
 
     <% if twitter.pinned_tweet_id.presence %>
-        固定
         <% img_path_list = Tweet::search_pinned_tweet_image_ex(@twt_pic_path_list, twitter.pinned_tweet_id) %>
         <% img_path_list.each do |path| %>
             <% _, pic_no = TweetInfo::get_tweet_info_from_filepath(path)%>
@@ -104,6 +103,7 @@
         <% if img_path_list.size >= 2 %>
             ！！複数あり！！
         <% end %>
+        ←固定
     <% end %>
 
     <% fsize_list = [] %>
@@ -318,7 +318,7 @@
     <% twt_pic_list.first(1).each do |elem| %>
         <%# latest_tweet_id = elem[2][0] %>
         <% latest_tweet_id = twt_img_list.latest_tweet_id %>
-        <% STDERR.puts "### latest_tweet_id=#{latest_tweet_id} ###" %>
+        <%# STDERR.puts "### latest_tweet_id=#{latest_tweet_id} ###" %>
     <% end %>
 
     <% if latest_tweet_id and twitter.latest_tweet_id %>
@@ -332,10 +332,11 @@
     <% show_pic_num_sp = 12 %>
     <% if latest_tweet_id %>
         <% ts = Twt::get_timestamp(latest_tweet_id) %>
+        <% STDERR.puts %!*latest*:#{twitter.latest_tweet_id}\t#{latest_tweet_id}\t#{ts}! %>
         <b>
         <%= twitter.datetime_disp ts %>
-        </b>
         <%= Twt::tweet_id_with_comma(latest_tweet_id) %>
+        </b>
 
         (id変わったとき用→)
         <%= link_to_ex latest_tweet_id, Twt::twt_tweet_url_dev(latest_tweet_id) %>
@@ -435,7 +436,7 @@
             <% tweet = Tweet.find_by(tweet_id: tweet_id) %>
             <% hit = false %>
             <% @twt_pic_path_list.each do |path| %>
-                <% if path.include? tweet_id.to_s %><!-- TODO:これはだめでは？BUG: -->
+                <% if TweetInfo::tweeet_id_eq?(path, tweet_id) %><!-- TODO:これはだめでは？BUG: -->
                     <% hit = true %>
                     hit(<%= smart_date Twt::get_timestamp(tweet_id) %>)|<%= tweet_id %> 
                     <% if params[:show_pic].presence %>

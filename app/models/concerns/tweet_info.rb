@@ -5,32 +5,30 @@ require 'base64'
 module TweetInfo
     extend ActiveSupport::Concern
 
-    # url safe
-    #/[A-Za-z0-9\-_=]/
-    #/^[A-Za-z0-9\-_]+={0,2}$/
-
-    # 標準
-    #[A-Za-z0-9+/=]
-    #^[A-Za-z0-9+/]+={0,2}$
-
-    def self.base64str_info(base64str)
-        ts = extract_twitter_image_timestamp(base64str)
-        tweet_id = Twt::time2tweet_id(ts)
-        #STDERR.puts %!"#{base64str}" => #{ts}, #{tweet_id}!
-        [ts, tweet_id]
+    def self.dbgputs(filename, tweet_id, pic_no, lineno)
+        STDERR.puts %!#{lineno}:\t#{tweet_id}\t#{pic_no}\t"#{filename}"!
     end
-
+    
     def self.get_tweet_info(filename)
+        dbg = true
         tweet_id = 0
         pic_no = 0
         #guess = false
+
+        # 2090398080554418999 0 2026-08-21.jpg
         if filename =~ /(\d+)\s(\d+)\s(\d+\-\d+\-\d+)/
-            #puts fn
             tweet_id = $1.to_i
             pic_no = $2.to_i
+            #$3 dl日時
+            #dbgputs(filename, tweet_id, pic_no, __LINE__) if dbg
         elsif filename =~ /(\d+)\s\w+\s(\d+\-\d+\-\d+)/
             tweet_id = $1.to_i
             pic_no = -1
+            #dbgputs(filename, tweet_id, pic_no, __LINE__) if dbg
+        elsif filename =~ /^(\d{19})\s(\d+).*/
+            tweet_id = $1.to_i
+            pic_no = $2.to_i
+            dbgputs(filename, tweet_id, pic_no, __LINE__) if dbg
         elsif filename =~ /(\d+)\s(\d+)\s(\d+)/
             dl_date_str = $1
             begin
@@ -40,26 +38,35 @@ module TweetInfo
             end
             tweet_id = $2.to_i
             pic_no = $3.to_i
+            dbgputs(filename, tweet_id, pic_no, __LINE__) if dbg
         elsif filename =~ /\d+-\d+-\d+\s+\((\d+)\)/
             tweet_id = $1.to_i
+            dbgputs(filename, tweet_id, pic_no, __LINE__) if dbg
         elsif filename =~ /(\d\d\d+)-(\d+)/
             tweet_id = $1.to_i
             pic_no = $2.to_i
+            dbgputs(filename, tweet_id, pic_no, __LINE__) if dbg
         #elsif filename =~ /^\d{8}_\d{6}\./
         elsif filename =~ /(\d{8})_\d{6}/
-          date = Date.parse $1
-          tweet_id = Twt::time2tweet_id(date.to_datetime)
-          #STDERR.puts %!"#{filename}" => #{date}, #{tweet_id}/!
-          guess = true
+            date = Date.parse $1
+            tweet_id = Twt::time2tweet_id(date.to_datetime)
+            #STDERR.puts %!"#{filename}" => #{date}, #{tweet_id}/!
+            guess = true
+            #dbgputs(filename, tweet_id, pic_no, __LINE__) if dbg
         #elsif filename =~ /^[\w\-]{15}\./ #base64???
         elsif filename =~ /TID\-unknown\-([A-Za-z0-9\-_=]{15})/
             base64str = $1
-            ts, tweet_id = base64str_info(base64str)
+            ts, tweet_id = base64str_info(base64str) #BUG:tweet idとして扱うのはだめ
+            guess = true
+            #dbgputs(filename, tweet_id, pic_no, __LINE__) if dbg
         elsif filename =~ /^([A-Za-z0-9\-_=]{15})/
             base64str = $1
-            ts, tweet_id = base64str_info(base64str)
+            ts, tweet_id = base64str_info(base64str) #BUG:tweet idとして扱うのはだめ
+            guess = true
+            #dbgputs(filename, tweet_id, pic_no, __LINE__) if dbg
         elsif filename =~ /^(\d{18,}) \w+/ #18は適当
-          tweet_id = $1.to_i
+            tweet_id = $1.to_i
+            dbgputs(filename, tweet_id, pic_no, __LINE__) if dbg
         else
             #STDERR.puts
             #STDERR.puts %!regex no hit:#{filename}!
@@ -77,7 +84,22 @@ module TweetInfo
         tweet_id
     end
 
-    def self.extract_twitter_image_timestamp(filename_or_url)
+    # url safe
+    #/[A-Za-z0-9\-_=]/
+    #/^[A-Za-z0-9\-_]+={0,2}$/
+
+    # 標準
+    #[A-Za-z0-9+/=]
+    #^[A-Za-z0-9+/]+={0,2}$
+
+    def self.base64str_info(base64str)
+        ts = extract_twitter_image_timestamp(base64str)
+        tweet_id = Twt::time2tweet_id(ts)
+        #STDERR.puts %!"#{base64str}" => #{ts}, #{tweet_id}!
+        [ts, tweet_id]
+    end
+
+    def self.extract_twitter_image_media_id(filename_or_url)
         # 1. URLや拡張子を除いたファイル名本体を取得
         basename = File.basename(filename_or_url, '.*')
         
@@ -93,7 +115,12 @@ module TweetInfo
         # 4. 8バイト（64ビット）の整数に変換
         # バイナリの先頭から8バイトをビッグエンディアンとして数値化
         id_int = binary_data.bytes[0...8].inject(0) { |acc, byte| (acc << 8) + byte }
-        
+        id_int
+    end
+
+    def self.extract_twitter_image_timestamp(filename_or_url)
+        id_int = extract_twitter_image_media_id(filename_or_url)
+
         # 5. Snowflake IDの仕様に基づいてタイムスタンプ（ミリ秒）を計算
         twitter_epoch = 1288834974657
         timestamp_ms = (id_int >> 22) + twitter_epoch
@@ -103,6 +130,7 @@ module TweetInfo
     end
 
     # こっちはうまく動かない時がある
+=begin
     def self.extract_twitter_image_timestamp_obsolete(filename_or_url)
         # 1. URLや拡張子（.jpg, .png等）が含まれている場合はファイル名（ベース名）のみを抽出する
         basename = File.basename(filename_or_url, '.*')
@@ -127,7 +155,28 @@ module TweetInfo
         # 5. ミリ秒を秒に変換してRubyのTimeオブジェクト（UTC）を生成する
         Time.at(timestamp_ms / 1000.0).utc
     end
+=end
 
+    def self.tweeet_id_eq?(path, tweet_id)
+        #path.include? tweet_id.to_s and get_tweet_id_from_filepath(path) == tweet_id
+        path.include? tweet_id.to_s
+        #get_tweet_id_from_filepath(path) == tweet_id
+    end
+
+    # tweet idとmedia idに格納されている日時は少しズレが発生する。予約投稿の場合は全く別の時間になる？
+    def self.datetime_match?(path, datetime_t)
+        #tweet_id = get_tweet_id_from_filepath(path)
+        #datetime_t = Twt::get_timestamp target_tweet_id
+        datetime_m = Twt::get_timestamp_from_filepath path
+        #STDERR.puts %!#{datetime_t} <=> #{datetime_m}\t[#{target_tweet_id}\t"#{path}"!
+        seconds = 24 * 60 * 60
+        if Util::within_last_n_seconds?(datetime_t, datetime_m, seconds)
+            #STDERR.puts %!#{seconds}s #{datetime_t.to_f - datetime_m.to_f}\t"#{path}"\t#{datetime_t} <=> #{datetime_m}!
+            true
+        else
+            false
+        end
+    end
 end
 
 class TweetPicInfo

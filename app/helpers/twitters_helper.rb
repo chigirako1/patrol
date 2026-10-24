@@ -3,6 +3,7 @@ module TwittersHelper
     DM_AI_ICON = ApplicationHelper::DM_AI_ICON
     DM_HAND_ICON = "✍️"
     DM_THIEF_ICON = "😎"
+    DM_UNKNOWN_ICON = "❓️"
 
     R18_ICON = ApplicationHelper::R18_ICON #"🔞"
     PXV_ICON = ApplicationHelper::PXV_ICON #"🅿️"
@@ -146,7 +147,7 @@ module TwittersHelper
         when Twitter::DRAWING_METHOD::DM_REPRINT
             icon = DM_THIEF_ICON
         else
-            icon = ""
+            icon = DM_UNKNOWN_ICON
         end
     end
 

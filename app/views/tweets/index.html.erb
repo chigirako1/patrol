@@ -317,7 +317,8 @@
             <% hit = false %>
             <% (@pic_list||[]).each do |path| %>
                 <% if path.include? x.to_s %>
-                    <%= link_to_ex image_tag(path, width: '10%', height: '10%', :alt => path), path %>
+                    <%#= link_to_ex image_tag(path, width: '10%', height: '10%', :alt => path), path %>
+                    <%= image_link(path) %>
                     <% hit = true %>
                 <% else %>
                 <% end %>

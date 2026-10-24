@@ -1047,9 +1047,14 @@ class Twitter < ApplicationRecord
                 gkey_work = group_sub_r(unit, number, gkey_work, x, digit:4)
             when "p"
                 unit = 10 unless unit
-                #number = self.prediction
                 number = self.prediction_h_ex
                 gkey_work = group_sub(unit, number, gkey_work, x, digit:4)
+            when "px"
+                unit = 10 unless unit
+                number = self.prediction_h_ex
+                #gkey_work = group_sub(unit, number, gkey_work, x, digit:4)
+                w = Util::format_num2(number, unit, 4)
+                gkey_work = gkey_work.gsub(x, w)
             when "_p"
                 unit = 10 unless unit
                 #number = self.prediction
@@ -1156,7 +1161,7 @@ class Twitter < ApplicationRecord
                             end
 
                             #gkey_work = "最近登録/少数:#{w_s}週|#{prd_s}件~" + TWT_H_SEPARATOR + "#{r_s}"
-                            gkey_work = "#{u_s}最近登録/少数#{w_s}週|【#{r_s}】" + TWT_H_SEPARATOR + "#{prd_s}件~"
+                            gkey_work = "最近登録/少数#{w_s}週|【#{r_s}】#{u_s}" + TWT_H_SEPARATOR + "#{prd_s}件~"
                         elsif true
                             r_s = Util::format_num(self.rating, 1)
                             gkey_work = "最近登録/少数" + TWT_H_SEPARATOR + "#{r_s}"
@@ -1525,10 +1530,10 @@ class Twitter < ApplicationRecord
             p = Util::format_num(self.prediction, 15)
             daysn = self.last_access_datetime_days_elapsed
             #return %![998.未設定]#{TWT_H_SEPARATOR}#{daysn/30}ヶ月|#{p}件|#{daysn/7}週!
+            u_str = url_cnt_str
             if (self.filenum||0) < 10
-                return %!#{prefix}[998.未設定] ファイル少ない#{TWT_H_SEPARATOR}#{daysn/7}週|#{p}件~!
+                return %!#{prefix}[998.未設定] ファイル少ない#{u_str}#{TWT_H_SEPARATOR}#{daysn/7}週|#{p}件~!
             else
-                u_str = url_cnt_str
                 return %!#{prefix}[998.未設定]#{u_str}#{daysn/30}ヶ月#{TWT_H_SEPARATOR}#{daysn/7}週|#{p}件~!
             end
         else

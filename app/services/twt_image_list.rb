@@ -86,7 +86,9 @@ class TwtImageList
     end
 
     def latest_tweet_id()
-        list.first.tweet_id
+        twtimg = list.first
+        STDERR.puts %!# latest_tweet_id=#{twtimg.tweet_id} path="#{twtimg.file_path}"### #{TweetInfo::get_tweet_info_from_filepath(twtimg.file_path)}!
+        twtimg.tweet_id
     end
 
     def sub_list_by_date(target_date)
