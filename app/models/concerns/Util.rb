@@ -138,7 +138,7 @@ module Util
             else
                 "#{years}年#{months}ヶ月以上前"
             end
-        elsif days >= 30
+        elsif days >= 7 * 5 #30
             months = days / 30
             "#{months}ヶ月以上前"
         elsif days >= 14

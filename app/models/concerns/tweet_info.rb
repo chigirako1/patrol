@@ -8,14 +8,22 @@ module TweetInfo
     def self.dbgputs(filename, tweet_id, pic_no, lineno)
         STDERR.puts %!#{lineno}:\t#{tweet_id}\t#{pic_no}\t"#{filename}"!
     end
-    
+
     def self.get_tweet_info(filename)
+        tweet_id, pic_no, media_id = get_tweet_info_ex(filename)
+        if tweet_id == 0
+            tweet_id = media_id
+        end
+        [tweet_id, pic_no]
+    end
+
+    def self.get_tweet_info_ex(filename)
         dbg = true
         tweet_id = 0
+        media_id = 0
         pic_no = 0
         #guess = false
 
-        # 2090398080554418999 0 2026-08-21.jpg
         if filename =~ /(\d+)\s(\d+)\s(\d+\-\d+\-\d+)/
             tweet_id = $1.to_i
             pic_no = $2.to_i
@@ -25,9 +33,13 @@ module TweetInfo
             tweet_id = $1.to_i
             pic_no = -1
             #dbgputs(filename, tweet_id, pic_no, __LINE__) if dbg
-        elsif filename =~ /^(\d{19})\s(\d+).*/
+        #elsif filename =~ /^(\d{19})\s(\d+).*/
+        elsif filename =~ /^(\d{19})\s([0-3])\s*.*/
             tweet_id = $1.to_i
             pic_no = $2.to_i
+            dbgputs(filename, tweet_id, pic_no, __LINE__) if dbg
+        elsif filename =~ /^(\d{19})\s.*/
+            tweet_id = $1.to_i
             dbgputs(filename, tweet_id, pic_no, __LINE__) if dbg
         elsif filename =~ /(\d+)\s(\d+)\s(\d+)/
             dl_date_str = $1
@@ -39,12 +51,7 @@ module TweetInfo
             tweet_id = $2.to_i
             pic_no = $3.to_i
             dbgputs(filename, tweet_id, pic_no, __LINE__) if dbg
-        elsif filename =~ /\d+-\d+-\d+\s+\((\d+)\)/
-            tweet_id = $1.to_i
-            dbgputs(filename, tweet_id, pic_no, __LINE__) if dbg
-        elsif filename =~ /(\d\d\d+)-(\d+)/
-            tweet_id = $1.to_i
-            pic_no = $2.to_i
+        elsif filename =~ /^\d{14}_\w+-/
             dbgputs(filename, tweet_id, pic_no, __LINE__) if dbg
         #elsif filename =~ /^\d{8}_\d{6}\./
         elsif filename =~ /(\d{8})_\d{6}/
@@ -56,14 +63,23 @@ module TweetInfo
         #elsif filename =~ /^[\w\-]{15}\./ #base64???
         elsif filename =~ /TID\-unknown\-([A-Za-z0-9\-_=]{15})/
             base64str = $1
-            ts, tweet_id = base64str_info(base64str) #BUG:tweet idとして扱うのはだめ
+            #ts, tweet_id = base64str_info(base64str) #BUG:tweet idとして扱うのはだめ
+            media_id = extract_twitter_image_media_id(base64str)
             guess = true
             #dbgputs(filename, tweet_id, pic_no, __LINE__) if dbg
         elsif filename =~ /^([A-Za-z0-9\-_=]{15})/
             base64str = $1
-            ts, tweet_id = base64str_info(base64str) #BUG:tweet idとして扱うのはだめ
+            #ts, tweet_id = base64str_info(base64str) #BUG:tweet idとして扱うのはだめ
+            media_id = extract_twitter_image_media_id(base64str)
             guess = true
             #dbgputs(filename, tweet_id, pic_no, __LINE__) if dbg
+        elsif filename =~ /\d+-\d+-\d+\s+\((\d+)\)/
+            tweet_id = $1.to_i
+            dbgputs(filename, tweet_id, pic_no, __LINE__) if dbg
+        elsif filename =~ /(\d\d\d+)-(\d+)/
+            tweet_id = $1.to_i
+            pic_no = $2.to_i
+            dbgputs(filename, tweet_id, pic_no, __LINE__) if dbg
         elsif filename =~ /^(\d{18,}) \w+/ #18は適当
             tweet_id = $1.to_i
             dbgputs(filename, tweet_id, pic_no, __LINE__) if dbg
@@ -71,7 +87,7 @@ module TweetInfo
             #STDERR.puts
             #STDERR.puts %!regex no hit:#{filename}!
         end
-        [tweet_id, pic_no]
+        [tweet_id, pic_no, media_id]
     end
 
     def self.get_tweet_info_from_filepath(filepath)
@@ -159,8 +175,9 @@ module TweetInfo
 
     def self.tweeet_id_eq?(path, tweet_id)
         #path.include? tweet_id.to_s and get_tweet_id_from_filepath(path) == tweet_id
-        path.include? tweet_id.to_s
+        #path.include? tweet_id.to_s
         #get_tweet_id_from_filepath(path) == tweet_id
+        Twt::include_tweet_id?(tweet_id, path)
     end
 
     # tweet idとmedia idに格納されている日時は少しズレが発生する。予約投稿の場合は全く別の時間になる？

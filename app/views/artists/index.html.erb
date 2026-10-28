@@ -1,7 +1,7 @@
 
-<% search_word = params[:search_word] %>
+<% search_word = params[:search_word].strip %>
 <% if @artists_group.size == 0 and params[:file] == ArtistsController::MethodEnum::METHOD_SEARCH %>
-  <% if search_word =~ Artist::PXV_USER_URL_REGEX %>
+  <% if search_word =~ Artist::PXV_USER_URL_REGEX or search_word =~ /^(\d+)$/%>
     <% pxv_user_id = $1 %>
   <% end %>
 <% end %>

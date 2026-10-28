@@ -67,6 +67,7 @@
         <% if tweet.screen_name.presence %>
             <h3>
                 <%= link_to_ex("▶@" + tweet.screen_name, Twt::twt_user_media_url(tweet.screen_name)) %>
+                [<%= link_to_ex("画像タブ", Twt::twt_user_photo_url(tweet.screen_name)) %>]
             </h3>
         <% end %>
     </div>
@@ -109,12 +110,12 @@
     <% if @pic_list %>
         <h3>画像(<%= @pic_list.size %>件)</h3>
         全<%= @pic_list.size %>ファイル<br />
-        <b>[<%= datetime_t = Twt::get_timestamp(tweet_id_val) %>]</b>(<%= tweet_id_val %>)
+        <b>[<%= datetime_t = Twt::get_timestamp(tweet_id_val) %>]</b>
         <br />
 
         <% miss = true %>
         <% (@pic_list||[]).each do |path| %>
-            <% if tweet_id_val.presence and path.include? tweet_id_val.to_s %><!-- BUG:部分一致じゃだめ -->
+            <% if Twt::include_tweet_id?(tweet_id_val, path) %>
                 <%= image_link(path) %>
                 <% miss = false %>
             <% else %>
@@ -133,19 +134,24 @@
         <% end %>
 
         <% if miss %>
-            <% match_pic_infos = Twt::find_pics_by_datetime(@pic_list, tweet_id_val) %>
+            <h4>
+                <%= link_to_ex(Twt::tweet_id_with_comma(tweet_id_val), Twt::twt_tweet_url(screen_name_val, tweet_id_val)) %>
+            </h4>
+
+            <% seconds = 7 * 24 * 60 * 60 %>
+            <% match_pic_infos = Twt::find_pics_by_datetime(@pic_list, tweet_id_val, screen_name_val, seconds) %>
             <h3>tweet idと日時が近いファイル(<%= match_pic_infos.size %>件)</h3>
-            日時が近い順
             <br />
             <% limit = 20 %>
             <% match_pic_infos.first(limit).each do |match_i| %>
+                <input type="button" value="ファイル名設定" onclick="setFilename('<%= match_i.filename %>');" />
                 [<%= match_i.timestamp %>]
                 <%= image_link(match_i.path) %>
                 <%= match_i.filename %>
+                [<%= Twt::tweet_id_with_comma Twt::time2tweet_id(match_i.timestamp) %>]
                 <br />
                 <% if Util::within_last_n_seconds?(datetime_t, match_i.timestamp, 60) %>
                     ⬆️1分以内
-                    <input type="button" value="ファイル名設定" onclick="setFilename('<%= match_i.filename %>');" />
                     <br />
                 <% end %>
             <% end %>
@@ -237,7 +243,9 @@
     {
         const remarks_e = document.getElementById('tweet_remarks');
         remarks_e.value = filename;
-    }
+
+        remarks_e.select();
+}
 
     function get_filename() {
         let text_box = document.getElementById("url_filepath");

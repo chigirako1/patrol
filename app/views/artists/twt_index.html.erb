@@ -92,6 +92,13 @@
         <% end %>
 
         <% twt_account.url_list = Tweet::new_summary(twt_account.twtid, url_list) %>
+
+        <%# STDERR.puts %!#{twt_account.url_list.todo_cnt}@#{key}! %>
+        <% if show_times.presence and twt_account.url_list.todo_cnt < show_times %>
+            <!-- 飛ばす -->
+            <% next %>
+        <% end %>
+
         <% key_twt = twt_account.group_key_hoge(spec) %>
         <%# key_twt = %!#{url_list.size}#{key_twt}! %>
         <% twt_group[key_twt] << [twt_account, url_list] %>
@@ -187,7 +194,8 @@
                             <%= twt_account.drawing_method %>
                     </td>
                     <td>
-                        [<%= twt_account.url_list.todo_cnt %>/<%= twt_account.url_list.size %>]
+                        <%# STDERR.puts %!#{twt_account.url_list}@#{key}! %>
+                        [<%= twt_account.url_list.todo_cnt %>/<%= twt_account.url_list.url_cnt %>]
                     </td>
                     <td>
                         【<%= twt_account.rating %>】<%= restr_disp(twt_account.r18) %>
@@ -966,6 +974,7 @@
     <% to_be_obtain_list = Tweet.to_be_obtain_list %>
     <% idx = 0 %>
 
+    <% zanken = false %>
     <% sp_dirs_hash = Twt::sp_dirs_group(@sp_dirs, to_be_obtain_list) %>
     <% sp_dirs_hash.each do |k,v| %>
         <h3><%= %!#{k}(#{v.size})! %></h3>
@@ -994,7 +1003,19 @@
                     ※未設定※
                 <% end %>
                 </b>
-                [<%= link_to_ex("■twt■", twitter_path(elem.twt, file_check: 't')) %>]
+                [
+                <%= link_to_ex("■twt■", twitter_path(elem.twt, file_check: 't')) %>
+
+                <% if @twt_url_list.presence and @twt_url_list[elem.twt.twtid] %>
+                    <% url_list = Tweet::new_summary(elem.twt.twtid, @twt_url_list[elem.twt.twtid]) %>
+                    <% if url_list.todo_cnt > 0 %>
+                        (❗️❗️❗️<%= url_list.todo_cnt %>件❗️❗️❗️)
+                        <% zanken = true %>
+                    <% end %>
+                <% end %>
+                ]
+
+
                 [予測/ファイル数:<%= pred = elem.twt.prediction_h_ex %>/<%= elem.file_cnt %>
                 <% if pred > 0 %>
                     <% gosa = elem.file_cnt - pred %>
@@ -1030,7 +1051,9 @@
             <% else %>
                 "<%= elem.dirname %>"
                 <% search_word = elem.search_word %>
-                <% url = twitters_path(mode: TwittersController::ModeEnum::MODE_SEARCH, search_word: search_word, grp_sort_by: TwittersController::GRP_SORT::GRP_SORT_SPEC, grp_sort_spec: "{dm}::{r}") %>
+                <% grp_sort = TwittersController::GRP_SORT::GRP_SORT_SPEC %>
+                <% grp_sort_sp = "{dm}::{r}" %>
+                <% url = twitters_path(mode: TwittersController::ModeEnum::MODE_SEARCH, search_word: search_word, grp_sort_by: grp_sort, grp_sort_spec: grp_sort_sp) %>
                 [<%= link_to_ex("■検索■", url) %>]
                 <%= link_to_ex(%!☆twt☆!, artist_twt_path(elem.dirname)) %>
 
@@ -1046,12 +1069,13 @@
                         <%= twitter_info_tag_ex(twt.twtid) %>
                     <% end %>
                 <% else %>
-                    <% results = Twt::search_new_screen_name_from_txt(@unknown_twt_screen_name_list, elem.search_word2) %>
+                    <% results = Twt::search_new_screen_name_from_txt(@unknown_screen_name_list, elem.search_word2) %>
                     <% if results.presence %>
                         <br />
                         <% results.each do |x| %>
                             "<%= x %> "
                             <%= link_to_ex("▶@" + x, Twt::twt_user_media_url(x)) %>
+                            <%= link_to_ex(%!☆twt☆!, artist_twt_path(x)) %>
                             <br />
                         <% end %>
                     <% end %>
@@ -1060,6 +1084,10 @@
 
             <hr />
         <% end %>
+    <% end %>
+
+    <% if zanken %>
+        ❗️残件あり❗️<br />
     <% end %>
 
     <% chk_screen_name_list = Util::checking_screen_names.sort.uniq %>

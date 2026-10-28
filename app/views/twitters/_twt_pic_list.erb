@@ -150,6 +150,7 @@
     <%= link_to_ex(%!viewer!, twitter_path(twitter, refresh: "y", viewer: true)) if twitter.twtid %>
     [<%= link_to_ex("動画URLリスト", artists_twt_index_path(dir: ArtistsController::DIR_TYPE::DT_MOV_URL, from: @twitter.twtid, list: "open")) %>]
     [<%= link_to_ex("動画ファイルリスト", artists_twt_index_path(dir: ArtistsController::DIR_TYPE::SP_VID, from: @twitter.twtid)) %>]
+    [<%= link_to_ex("tweets", tweets_path(screen_name: @twitter.twtid)) %>]
 
     <% if params[:seq_chk] == "true" %>
         <h2>期間チェック</h2>
@@ -316,9 +317,8 @@
     <!-- tweet id -->
     <% latest_tweet_id = nil %>
     <% twt_pic_list.first(1).each do |elem| %>
-        <%# latest_tweet_id = elem[2][0] %>
+        <%# STDERR.puts "### #{twt_img_list.latest_tweet_id} ###" %>
         <% latest_tweet_id = twt_img_list.latest_tweet_id %>
-        <%# STDERR.puts "### latest_tweet_id=#{latest_tweet_id} ###" %>
     <% end %>
 
     <% if latest_tweet_id and twitter.latest_tweet_id %>
@@ -358,11 +358,18 @@
     <!-- sp1 -->
     <% filelist = Twt::get_sp_pic_filelist_by_twtid(@twitter.twtid) %>
     <% if filelist.presence %>
+        <h3>
+            TWTを開く→
+            <% link_str_i = "画像タブ" %>
+            [<%= link_to_ex(link_str_i, Twt::twt_user_photo_url(@twitter.twtid)) %>]
+        </h3>
+            
         <h4>
-            SP(<%= File.dirname filelist.first %>)[<%= filelist.size %>ファイル]
+            SP(<%= File.dirname filelist.first %>)
             <% picn = 33 %>
             <%= link_to_ex %!☆twt☆:@#{@twitter.twtid}!, artist_twt_path(@twitter.twtid, picn: picn, disp_target: "sp") %>
         </h4>
+        [<%= filelist.size %>ファイル]
 
         <% latest_file = filelist.last %>
         <% sp_datetime = Twt::get_sp_datetime_from_filepath(latest_file) %>
@@ -385,12 +392,16 @@
             <% fsize_list << Util::get_filesize(fpath) %>
         <% end %>
 
-
+        <% last_fpath = "" %>
         <% if filelist.size > show_pic_num_sp %>
             <% filelist.first(1).each do |fpath| %>
                 最後(<%= filelist.size %>).<%= link_to_ex(image_tag(fpath, class: img_class_str), fpath) %>
+                <% last_fpath = fpath %>
             <% end %>
+        <% else %>
+            <% last_fpath = filelist.last %>
         <% end %>
+        <%= Twt::get_timestamp_from_filepath last_fpath %>
         <br />
 
         <% filesize = fsize_list.sum / fsize_list.size %>
@@ -406,9 +417,10 @@
     <% filelist2 = Twt::get_sp_pic_filelist2_by_twtid(@twitter.twtid) %>
     <% if filelist2.size > 0 %>
         <h4>
-            SP2(<%= File.dirname filelist2.first %>)[<%= filelist2.size %>ファイル]
+            SP2(<%= File.dirname filelist2.first %>)
             <%= link_to_ex %!☆twt☆:@#{@twitter.twtid}!, artist_twt_path(@twitter.twtid, picn: 33) %>
         </h4>
+        [<%= filelist2.size %>ファイル]
 
         <% latest_file = filelist2.last %>
         <% sp_datetime = Twt::get_sp_datetime_from_filepath(latest_file) %>
@@ -431,12 +443,12 @@
             対象なし
         <% end %>
 
-        <% @twt_ids.each.with_index(1) do |tweet_id, idx| %>
+        <% @twt_ids.reverse.each.with_index(1) do |tweet_id, idx| %>
             #<%= idx %>.
             <% tweet = Tweet.find_by(tweet_id: tweet_id) %>
             <% hit = false %>
             <% @twt_pic_path_list.each do |path| %>
-                <% if TweetInfo::tweeet_id_eq?(path, tweet_id) %><!-- TODO:これはだめでは？BUG: -->
+                <% if TweetInfo::tweeet_id_eq?(path, tweet_id) %>
                     <% hit = true %>
                     hit(<%= smart_date Twt::get_timestamp(tweet_id) %>)|<%= tweet_id %> 
                     <% if params[:show_pic].presence %>
@@ -497,6 +509,7 @@
                     <% end %>
                     [<%= link_to_ex "■tweet■", tweet %>]
                 <% else %>
+                    [<%= link_to_ex "☆New tweet☆", new_tweet_path(tweet_id: tweet_id, screen_name: @twitter.twtid, status: Tweet::StatusEnum::SAVED) %>]
                     miss...
                     <b><%= %!#{smart_date Twt::get_timestamp tweet_id}! %></b>
                     <%= link_to_ex(tweet_id, Twt::twt_tweet_url(@twitter.twtid, tweet_id)) %>
@@ -511,7 +524,6 @@
                         (id変わったとき用→)
                         <%= link_to_ex(tweet_id, Twt::twt_tweet_url_dev(tweet_id)) %>
                     <% end %>
-                    [<%= link_to_ex "☆New tweet☆", new_tweet_path(tweet_id: tweet_id, screen_name: @twitter.twtid, status: Tweet::StatusEnum::SAVED) %>]
                 <% end %>
             <% end %>
             <br />

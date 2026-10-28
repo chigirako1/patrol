@@ -33,10 +33,10 @@
       <% if summary_str.presence %>
         <%= summary_str %>
       <% end %>
+
+      [<%= link_to_ex("tweets", tweets_path(screen_name: @twitter.twtid)) %>]
+      <hr />
     <% end %>
-    
-    [<%= link_to_ex("tweets", tweets_path(screen_name: @twitter.twtid)) %>]
-    <hr />
   </div>
 
   <% if @twt_pic_path_list %>
@@ -51,22 +51,24 @@
       TWTを開く→
 
       <!-- ### -->
-      <% if @twitter.disp_tab_target == Twitter::DISP_TAB::DT_PIC %>
-        <% link_str = "画像タブ(★指定★)" %>
+      <% link_str_h = "Home TL" %>
+      <% link_str_i = "画像タブ" %>
+
+      <% case @twitter.disp_tab_target %>
+      <% when Twitter::DISP_TAB::DT_POST %>
+        <% link_str_h += "(★指定★)" %>
+      <% when Twitter::DISP_TAB::DT_PIC %>
+        <% link_str_i += "(★指定★)" %>
       <% else %>
-        <% link_str = "画像タブ" %>
+        <% pnum = Twt::image_num_a_post(tweet_id_list) %>
+        <% pnum_n = 1 %>
+        <% if pnum > pnum_n %>
+          <% link_str_h += "(★複数枚投稿が多い★)" %>
+        <% end %>
       <% end %>
 
-      <!-- ### -->
-      <%= link_to_ex(link_str, Twt::twt_user_photo_url(@twitter.twtid)) %>
-      <%#= link_to_ex("静止画一覧", Twt::twt_user_media_url(@twitter.twtid)) %>
-      <% if @twitter.disp_tab_target == Twitter::DISP_TAB::DT_POST %>
-        <% link_str = "Home TL(★指定★)" %>
-      <% else %>
-        <% link_str = "Home TL" %>
-      <% end %>
-      [<%= link_to_ex(link_str, Twt::twt_user_url(@twitter.twtid)) %>]
-      <!--(<%= @twitter.datetime_disp @twitter.last_post_datetime %>)-->
+      [<%= link_to_ex(link_str_h, Twt::twt_user_url(@twitter.twtid)) %>]
+      [<%= link_to_ex(link_str_i, Twt::twt_user_photo_url(@twitter.twtid)) %>]
 
       <!-- 26/8/14 PCブラウザ版でもメディアタブが画像と動画に分かれたので一律画像タブにする -->
       <!-- 26/8/23 またグリッド表示になった -->
@@ -360,8 +362,8 @@
 
         <% if ruiji %>
           <br />
-          類似名あり：<br />
-          <% pxv3.each do |pxv_n| %>
+          類似名あり(<%= pxv3.size %>件)：<br />
+          <% pxv3.first(10).each do |pxv_n| %>
             <%= feature_disp pxv_n.feature %>【<%= pxv_n.pxvname %>(<%= pxv_n.pxvid %>)|<%= pxv_n.rating %>|<%= pxv_n.last_access_datetime_disp %>】
             (@<%= pxv_n.twtid %>)
             <%= link_to_ex("■pxv■", artist_path(pxv_n.id, access_dt_update: "yes")) %>

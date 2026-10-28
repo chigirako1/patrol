@@ -905,7 +905,7 @@ class ArtistsController < ApplicationController
         @sp_dirs = Twt::sp_dirs()
 
         filename = "thisyear 2"
-        @unknown_twt_screen_name_list = UrlTxtReader::unknown_twt_screen_name_list(filename)
+        @twt_url_list, @unknown_screen_name_list = UrlTxtReader::get_twt_url_list(filename)
       when DIR_TYPE::SP_VID
         @twt_video_list = TwtVideoList::new()
 

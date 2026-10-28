@@ -4,12 +4,12 @@
 
 <h3 id="twt_pic_list">Twt::twt_path_str(<%= "@#{@twtid}" %>)</h3>
 
-<%= twitter_link_tag(@twtid) %>
-<%= twitter_info_tag_ex(@twtid, twt_link: false) %>
+<% twt_acnt = Twitter.find_by_twtid_ignore_case(@twtid) %>
 
+<%= twitter_link_tag(@twtid) %>
+<%= twitter_info_tag_ex(@twtid, twt_record: twt_acnt, twt_link: false) %>
 <br />
 
-<% twt_acnt = Twitter.find_by_twtid_ignore_case(@twtid) %>
 <% if twt_acnt == nil %>
     <%= link_to "New Twt", new_twitter_path(twtid: @twtid, status: "TWT巡回") %>
     <br />
@@ -117,7 +117,14 @@
  !-- ########################## -->
 <% filelist = Twt::get_sp_pic_filelist_by_twtid(@twtid) %>
 <% if filelist and filelist.size > 0 %>
-    <h4>SP(<%= File.dirname filelist.first %>)[<%= filelist.size %>ファイル]</h4>
+    <h3>
+        TWTを開く→
+        <% link_str_i = "画像タブ" %>
+        [<%= link_to_ex(link_str_i, Twt::twt_user_photo_url(@twtid)) %>]
+    </h3>
+
+    [<%= filelist.size %>ファイル]
+    <h4>SP(<%= File.dirname filelist.first %>)</h4>
     <% filelist.reverse.first(show_pic_num).each.with_index(1) do |fpath, idx| %>
         <%= idx %>.<%= link_to_ex(image_tag(fpath, class: "fixed-height-img"), fpath) %>
         <%# STDERR.puts %!#{idx}\t#{File.basename fpath}\t#{Util::mtime fpath}\t#{TweetInfo::extract_twitter_image_timestamp fpath}! %>
@@ -147,7 +154,7 @@
 <% if tweet_ids.size == 0 %>
     なし
 <% end %>
-<% tweet_ids.each do |x| %>
+<% tweet_ids.reverse.each do |x| %>
     [<%= smart_date Twt::get_timestamp(x) %>]
     <% url = Twt::twt_tweet_url(@twtid, x) %>
     <%= link_to_ex(url, url) %>

@@ -100,7 +100,9 @@ class TwittersController < ApplicationController
 
   GRP_SPC_T_DM = "[{dm}]"
   GRP_SPC_T_RR_S_AZ = "{interval}{rr}#{Twitter::TWT_H_SEPARATOR}{az}"
-
+  #GRP_SPC_T_U_R_AZ_S_R = "{interval7}{[残url_cnt件]}【{r5}~】{az}#{Twitter::TWT_H_SEPARATOR}【{r}】"
+  GRP_SPC_T_U_R_AZ_S_R = "{interval7}{[残url_cnt0件]}【{r5}~】{az}#{Twitter::TWT_H_SEPARATOR}{px15}~"
+  GRP_SPC_T_U_R_PX_AZ = "{interval7}{[残url_cnt件0]}【{r5}~】{px15}件~#{Twitter::TWT_H_SEPARATOR}{az}"
 
   class TwtParams
     attr_accessor :mode,

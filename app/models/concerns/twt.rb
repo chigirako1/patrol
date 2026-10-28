@@ -76,6 +76,11 @@ module Twt
     ### ###
     FILESIZE_SAMPLE_N = 100
 
+    def self.include_tweet_id?(tweet_id, path)
+        n_list = File.basename(path).scan(/\d+/)
+        tweet_id.presence and n_list.include? tweet_id.to_s
+    end
+
     def self.get_twt_tweet_ids_from_txts(twtid)
         txts = UrlTxtReader::get_url_txt_contents_uniq_ary([])
         twt_ids = get_tweet_ids(txts, twtid)
@@ -292,7 +297,7 @@ module Twt
         end
     end
 
-    def self.search_new_screen_name_from_txt(unknown_twt_screen_name_list, dirname)
+    def self.search_new_screen_name_from_txt(unknown_screen_names, dirname)
         if dirname =~ /^(\w+)/
             sname = $1.downcase
         end
@@ -302,7 +307,7 @@ module Twt
         end
 
         results = []
-        unknown_twt_screen_name_list.each do |screen_name|
+        unknown_screen_names.each do |screen_name|
             if screen_name.downcase.include? sname
                 results << screen_name
             end
@@ -492,19 +497,30 @@ module Twt
         pahtlist.flatten.sort_by {|path| Twt::get_timestamp_from_filepath path}
     end
 
-    def self.find_pics_by_datetime(pic_list, tweet_id)
+    def self.find_pics_by_datetime(pic_list, tweet_id, screen_name, seconds)
         results = []
         datetime_t = get_timestamp tweet_id
+
         (pic_list||[]).each do |path|
-            #if TweetInfo::datetime_match?(path, datetime_t)
             datetime_m = Twt::get_timestamp_from_filepath path
-            seconds = 24 * 60 * 60
             #STDERR.puts %!#{seconds}s #{datetime_t.to_f - datetime_m.to_f}\t"#{path}"\t#{datetime_t} <=> #{datetime_m}!
             if Util::within_last_n_seconds?(datetime_t, datetime_m, seconds)
                 twt_pic_file = TwtPicFile.new(path: path, timestamp: datetime_m)
                 results << twt_pic_file
             end
         end
+
+        if screen_name.presence
+            filelist2 = Twt::get_sp_pic_filelist_both_by_twtid(screen_name)
+            filelist2.each do |path|
+                datetime_m = Twt::get_timestamp_from_filepath path
+                if Util::within_last_n_seconds?(datetime_t, datetime_m, seconds)
+                    twt_pic_file = TwtPicFile.new(path: path, timestamp: datetime_m)
+                    results << twt_pic_file
+                end
+            end
+        end
+
         results.sort.reverse
     end
 
@@ -1914,7 +1930,7 @@ module Twt
                     todo_s = "!取得対象あり:"
                 end
 
-                dayn = 1
+                dayn = 2
                 if self.twt.last_access_datetime and self.twt.last_access_datetime_days_elapsed < dayn
                     today_s = "本日アクセス"
                 else

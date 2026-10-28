@@ -996,7 +996,7 @@ class Twitter < ApplicationRecord
                 end
                 if false#self.last_access_datetime_days_elapsed < unit
                     gkey_work = group_sub(unit, number, gkey_work, x)
-                elsif self.last_access_datetime_days_elapsed < 31
+                elsif self.last_access_datetime_days_elapsed < 7 * 5
                     unit = 1
                     number = self.last_access_datetime_days_elapsed / 7
                     gkey_work = group_sub(unit, number, gkey_work, x, append_pre: "", append:"週")
@@ -1183,7 +1183,12 @@ class Twitter < ApplicationRecord
                     #STDERR.puts "!!! @#{self.twtid} !!!"
                     number = self.last_access_datetime_days_elapsed / 30
                     r_s = Util::format_num(self.rating, 1)
-                    gkey_work = "\t後回し:#{number}ヶ月" + TWT_H_SEPARATOR + %!#{r_s}!
+                    m_s = "#{number}ヶ月"
+                    if number == 0
+                        w = self.last_access_datetime_days_elapsed / 7
+                        m_s += "(#{w}週)"
+                    end
+                    gkey_work = %!\t後回し:#{m_s}#{TWT_H_SEPARATOR}#{r_s}!
                     return gkey_work
                 end
             when "method"

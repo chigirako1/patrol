@@ -564,15 +564,29 @@ module UrlTxtReader
         [id_list, twt_urls, misc_urls]
     end
 
-    def self.unknown_twt_screen_name_list(filename)
+    def self.get_twt_url_list(filename)
         path = UrlTxtReader::get_path(filename)
-        UrlTxtReader::get_unknown_twt_url_list(path).keys
+        
+        #UrlTxtReader::get_unknown_twt_url_list(path).keys
+        known_urls, unknown = get_twt_url_classified_list(path)
+        unknown_keys = unknown.sort_by {|k,v| [-v.size, Tweet::get_oldest_timestamp(v)||"3000-01-01"]}.to_h.keys
+        [known_urls, unknown_keys]
+    end
+
+    # def self.unknown_twt_screen_name_list(filename)
+    #     path = UrlTxtReader::get_path(filename)
+    #     UrlTxtReader::get_unknown_twt_url_list(path).keys
+    # end
+
+    def self.get_twt_url_classified_list(path)
+        _, twt_infos, _ = get_url_txt_info(path, false, true, false)
+        #puts %!pxv_id_list:#{pxv_id_list.size}!
+        known, unknown, _ = Twitter::twt_user_classify(twt_infos, false)
+        [known, unknown]
     end
 
     def self.get_unknown_twt_url_list(path)
-        _, twt_infos, _ = get_url_txt_info(path, false, true, false)
-        #puts %!pxv_id_list:#{pxv_id_list.size}!
-        _, unknown, _ = Twitter::twt_user_classify(twt_infos, false)
+        _, unknown = get_twt_url_classified_list(path)
         unknown.sort_by {|k,v| [-v.size, Tweet::get_oldest_timestamp(v)||"3000-01-01"]}.to_h
     end
 
