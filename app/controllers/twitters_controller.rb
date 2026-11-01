@@ -129,6 +129,7 @@ class TwittersController < ApplicationController
       :prm_todo_cnt,
       :no_pxv,
       :ex_sp,
+      :disp_tab_target,
       :thumbnail
 
     def initialize(params)
@@ -139,6 +140,7 @@ class TwittersController < ApplicationController
       @param_grp_sort_by = Util::get_param_str(params, :grp_sort_by)
       @param_grp_sort_spec = Util::get_param_str(params, :grp_sort_spec)
       @filename = Util::get_param_str(params, :filename)
+      @disp_tab_target = Util::get_param_str(params, :disp_tab_target)
 
       @prm_filenum = Util::get_param_num(params, :pfilenum)
       @prm_filesize = Util::get_param_num(params, :pfilesize) * 1024
@@ -182,7 +184,7 @@ class TwittersController < ApplicationController
     ul_freq = twt_params.ul_freq
     param_target = twt_params.param_target
     param_grp_sort_by = twt_params.param_grp_sort_by
-    param_grp_sort_spec = twt_params.param_grp_sort_spec
+    #param_grp_sort_spec = twt_params.param_grp_sort_spec
     prm_todo_cnt = twt_params.prm_todo_cnt
     #no_pxv = twt_params.no_pxv
     @thumbnail = twt_params.thumbnail
@@ -507,7 +509,7 @@ class TwittersController < ApplicationController
           x.a1o_auto_group_key_xx(url_list_summary_h[x.twtid], twt_params.hide_within_days, rating_gt, sort_by)
         }.sort_by {|k, v| k}.reverse.to_h
       else
-        @twitters_group = twt_group_by(twitters, param_grp_sort_by, param_grp_sort_spec)
+        @twitters_group = twt_group_by(twitters, param_grp_sort_by, twt_params.param_grp_sort_spec)
       end
       @twitters_total_count = @twitters_group.sum {|k,v| v.count}
       return
@@ -536,7 +538,7 @@ class TwittersController < ApplicationController
       return
     when ModeEnum::MODE_SEARCH
       twitters = index_select_search(twitters, twt_params)
-      @twitters_group = twt_group_by(twitters, param_grp_sort_by, param_grp_sort_spec)
+      @twitters_group = twt_group_by(twitters, param_grp_sort_by, twt_params.param_grp_sort_spec)
       @twitters_total_count = @twitters_group.sum {|k,v| v.count}
 
       if params[:search_word] =~ Twt::TWT_POST_URL_RGX
@@ -561,7 +563,7 @@ class TwittersController < ApplicationController
       #twitters = twitters.select {|x| x.last_dl_datetime.month >= 11}
     end
 
-    @twitters_group = twt_group_by(twitters, param_grp_sort_by, param_grp_sort_spec)
+    @twitters_group = twt_group_by(twitters, param_grp_sort_by, twt_params.param_grp_sort_spec)
     @twitters_group = @twitters_group.sort_by {|k, v| k || 0}.reverse.to_h
     @twitters_total_count = @twitters_group.sum {|k,v| v.count}
   end
@@ -606,13 +608,13 @@ class TwittersController < ApplicationController
     end
 
     if twt_params.size > 0
-        if @twitter.update(twt_params)
-          msg = %!更新 => #{twt_params} @#{@twitter.twtid}(#{@twitter.twtname})!
-          Rails.logger.info(msg)
-        else
-          msg = %!更新失敗 => #{twt_params} @#{@twitter.twtid}(#{@twitter.twtname})!
-          Rails.logger.error(msg)
-        end
+      if @twitter.update(twt_params)
+        msg = %!更新 => #{twt_params} @#{@twitter.twtid}(#{@twitter.twtname})!
+        Rails.logger.info(msg)
+      else
+        msg = %!更新失敗 => #{twt_params} @#{@twitter.twtid}(#{@twitter.twtname})!
+        Rails.logger.error(msg)
+      end
     end
   end
 
@@ -824,6 +826,12 @@ class TwittersController < ApplicationController
         twitters = twitters.select {|x| (x.update_frequency||0) <= -(twt_params.ul_freq)}
       else
         twitters = twitters.select {|x| (x.update_frequency||0) >= (twt_params.ul_freq)}
+      end
+
+      if twt_params.disp_tab_target.presence
+        STDERR.puts %!index_select()tab:#{twitters.size}\t'#{twt_params.disp_tab_target}'!
+        twitters = twitters.select {|x| x.disp_tab_target == twt_params.disp_tab_target}
+        STDERR.puts %!index_select()tab:#{twitters.size}!
       end
 
       twitters
@@ -1085,6 +1093,12 @@ class TwittersController < ApplicationController
 
       if twt_params.hide_within_days > 0
         twitters = twitters.select {|x| !x.last_access_datetime_p(twt_params.hide_within_days)}
+      end
+      
+      if twt_params.disp_tab_target.presence
+        STDERR.puts %!index_select()tab:#{twitters.size}\t'#{twt_params.disp_tab_target}'!
+        twitters = twitters.select {|x| x.disp_tab_target == twt_params.disp_tab_target}
+        STDERR.puts %!index_select()tab:#{twitters.size}!
       end
       
       STDERR.puts %!|zzz|#{twitters.size}|xxx!

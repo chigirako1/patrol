@@ -130,6 +130,11 @@
         <%# STDERR.puts %!#{idx}\t#{File.basename fpath}\t#{Util::mtime fpath}\t#{TweetInfo::extract_twitter_image_timestamp fpath}! %>
     <% end %>
     <br />
+    <% filelist.reverse.first(show_pic_num).each.with_index(1) do |fpath, idx| %>
+        <%= idx %>.<%= %!"#{File.basename fpath}" #{TweetInfo::extract_twitter_image_timestamp fpath}! %>
+        <br />
+        <%# STDERR.puts %!#{idx}\t#{File.basename fpath}\t#{Util::mtime fpath}\t#{TweetInfo::extract_twitter_image_timestamp fpath}! %>
+    <% end %>
 <% else %>
     spなし<br />
 <% end %>

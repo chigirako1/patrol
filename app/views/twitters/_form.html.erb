@@ -57,18 +57,30 @@
       <% case @twitter.disp_tab_target %>
       <% when Twitter::DISP_TAB::DT_POST %>
         <% link_str_h += "(★指定★)" %>
+        <% right_home = true %>
       <% when Twitter::DISP_TAB::DT_PIC %>
         <% link_str_i += "(★指定★)" %>
+        <% right_home = false %>
       <% else %>
         <% pnum = Twt::image_num_a_post(tweet_id_list) %>
         <% pnum_n = 1 %>
         <% if pnum > pnum_n %>
           <% link_str_h += "(★複数枚投稿が多い★)" %>
+          <% right_home = true %>
+        <% else %>
+          <% right_home = false %>
         <% end %>
       <% end %>
 
-      [<%= link_to_ex(link_str_h, Twt::twt_user_url(@twitter.twtid)) %>]
-      [<%= link_to_ex(link_str_i, Twt::twt_user_photo_url(@twitter.twtid)) %>]
+      [
+      <% if right_home %>
+        <%= link_to_ex(link_str_i, Twt::twt_user_photo_url(@twitter.twtid)) %>
+        |<%= link_to_ex(link_str_h, Twt::twt_user_url(@twitter.twtid)) %>
+      <% else %>
+        <%= link_to_ex(link_str_h, Twt::twt_user_url(@twitter.twtid)) %>
+        |<%= link_to_ex(link_str_i, Twt::twt_user_photo_url(@twitter.twtid)) %>
+      <% end %>
+      ]
 
       <!-- 26/8/14 PCブラウザ版でもメディアタブが画像と動画に分かれたので一律画像タブにする -->
       <!-- 26/8/23 またグリッド表示になった -->
@@ -176,6 +188,7 @@
     <input type="button" value="84" onclick="set_value_twt('rating', 84);" class="btn_s" />
     <input type="button" value="80" onclick="set_value_twt('rating', 80);" class="btn_s" />
     <input type="button" value="75" onclick="set_value_twt('rating', 75);" class="btn_s" />
+    <input type="button" value="70" onclick="set_value_twt('rating', 70);" class="btn_s" />
     <br />
     <input type="button" value="+5↑" onclick="plus_value('rating', 5);" class="btn_s btn_s_plus" />
     <input type="button" value="-5↓" onclick="plus_value('rating', -5);" class="btn_s" />
@@ -497,28 +510,6 @@
   </div>
 
   <div>
-    <% o_tweet_id = twitter.oldest_tweet_id %>
-    <% if oldest_tweet_id and oldest_tweet_id != 0 %>
-      <% if o_tweet_id == nil or o_tweet_id == 0 %>
-        <% o_tweet_id = oldest_tweet_id %>
-      <% elsif oldest_tweet_id < o_tweet_id %>
-        <% o_tweet_id = oldest_tweet_id %>
-      <% end %>        
-    <% end %>
-
-    <%= form.label :最古tweetId, style: "display: block" %>
-
-    <% if o_tweet_id != twitter.oldest_tweet_id %>
-      現在の値:"<%= twitter.oldest_tweet_id %>"↓<font color='red'>更新あり</font><br />
-    <% end %>
-
-    <%= form.number_field :oldest_tweet_id, value: o_tweet_id %>
-    <% if o_tweet_id.presence %>
-      <%= twitter.datetime_disp Twt::get_timestamp(o_tweet_id) %>
-    <% end %>
-  </div>
-
-  <div>
     <%= form.label :最新投稿日時, style: "display: block" %>
     <% if ul_date and (@twitter.last_post_datetime and ul_date > @twitter.last_post_datetime) %>
       <!-- 
@@ -548,6 +539,28 @@
     <% end %>
   </div>
   
+  <div>
+    <% o_tweet_id = twitter.oldest_tweet_id %>
+    <% if oldest_tweet_id and oldest_tweet_id != 0 %>
+      <% if o_tweet_id == nil or o_tweet_id == 0 %>
+        <% o_tweet_id = oldest_tweet_id %>
+      <% elsif oldest_tweet_id < o_tweet_id %>
+        <% o_tweet_id = oldest_tweet_id %>
+      <% end %>        
+    <% end %>
+
+    <%= form.label :最古tweetId, style: "display: block" %>
+
+    <% if o_tweet_id != twitter.oldest_tweet_id %>
+      現在の値:"<%= twitter.oldest_tweet_id %>"↓<font color='red'>更新あり</font><br />
+    <% end %>
+
+    <%= form.number_field :oldest_tweet_id, value: o_tweet_id %>
+    <% if o_tweet_id.presence %>
+      <%= twitter.datetime_disp Twt::get_timestamp(o_tweet_id) %>
+    <% end %>
+  </div>
+
   <div>
     <%= form.label :総ファイル数, style: "display: block" %>
     <% if @twitter.filenum %>

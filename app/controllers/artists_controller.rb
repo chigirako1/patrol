@@ -462,117 +462,7 @@ class ArtistsController < ApplicationController
       @artists_total_count = @artists_group.sum {|k,v| v.count}
       return
     when MethodEnum::MODE_ALL_IN_ONE
-      if params[:aio].presence
-        keys = params[:aio].split("|")
-
-        target_hash = {}
-        keys.each do |key|
-          target_hash[key] = true
-        end
-      else
-      end
-
-      group_list = []
-      interval = prms.last_access_datetime
-
-      prms.num_of_times.times do |i|
-        interval_wk = interval * (i + 1)
-        #puts %!#{prms.rating}/#{prms.rating_upper_limit}!
-        group_list << index_all_in_one(prms, %!#{prms.rating}:!, interval_wk, target_hash)
-        #puts "#{i}/#{interval}(#{interval_wk})/#{prms.last_access_datetime}"
-
-        ### 
-        #prms.rating_upper_limit = prms.rating
-        
-        #prms.rating = prms.rating_upper_limit - prms.step
-        prms.rating -= prms.step
-
-        #puts "prms.last_access_datetime=#{prms.last_access_datetime}"
-      end
-
-      if false
-        # 
-        artists = Artist.all
-        artists = artists.select {|x| x.rating == nil or x.rating == 0}
-        artists = artists.select {|x| x.filenum == x.recent_filenum}
-        artists = index_select_status_exclude(artists)
-        artists = artists.sort_by {|x| [-x.prediction_up_cnt(true)]}
-        group = {}
-        group["ファイル数同じ"] = artists
-        group_list << group
-      end
-
-      # 未設定gr
-      if true
-        artists = Artist.all
-        artists = artists.select {|x| x.rating == nil or x.rating == 0}
-        d_thre = 365
-        artists = artists.select {|x| x.filenum != x.recent_filenum}
-        artists = artists.select {|x| x.last_access_datetime_num < d_thre}
-        artists = artists.sort_by {|x| [-x.prediction_up_cnt(true)]}
-        group = {}
-        group["未設定 予測順 #{d_thre}"] = artists
-        group_list << group
-      end
-
-      if true
-        artists = Artist.all
-        artists = artists.select {|x| x.rating == nil or x.rating == 0}
-        d_thre = 90
-        artists = artists.select {|x| x.last_access_datetime_num < d_thre}
-        #artists = artists.sort_by {|x| [-x.prediction_up_cnt(true), x.last_access_datetime]}
-        artists = artists.sort_by {|x| [-x.prediction_up_cnt(true)]}
-        group = {}
-        group["未設定 予測順 #{d_thre}"] = artists
-        group_list << group
-      end
-        
-
-      if true
-        artists = Artist.all
-        artists = artists.select {|x| x.rating == nil or x.rating == 0}
-        #artists = artists.select {|x| x.last_access_datetime_num > 90}
-        artists = artists.select {|x| x.days_elapsed_since_created < 90}
-        
-        artists = artists.sort_by {|x| [-x.filenum]}
-        group = {}
-        group["未設定 総ファイル数順 最近?"] = artists
-        group_list << group
-      end
-
-      if true
-        artists = Artist.all
-        artists = artists.select {|x| x.rating == nil or x.rating == 0}
-        artists = artists.select {|x| x.last_access_datetime_num > 90}
-        artists = artists.sort_by {|x| [-x.filenum]}
-        group = {}
-        group["未設定 総ファイル数順 全期間"] = artists
-        group_list << group
-      end
-
-      # 
-      if false
-        artists = Artist.all
-        if false
-          artists = artists.select {|x| x.days_elapsed_since_created < 60}
-          artists = artists.select {|x| x.last_access_datetime_num > 30 and x.last_access_datetime_num < 360}
-          artists = artists.select {|x| x.last_ul_datetime != nil}
-          #artists = artists.sort_by {|x| [-((x.created_at.to_date - x.last_ul_datetime.to_date).to_i)]}
-          artists = artists.sort_by {|x| [-(x.days_elapsed(x.last_ul_datetime, x.created_at))]}
-          artists = index_select_status_exclude(artists)
-        else
-          artists = artists.select {|x| x.last_access_datetime_num > 30 and x.last_access_datetime_num < 90}
-          artists = artists.select {|x| x.last_ul_datetime != nil}
-          artists = artists.select {|x| x.days_elapsed(x.last_ul_datetime, x.created_at) > 180}
-          artists = artists.sort_by {|x| x.last_access_datetime}
-          artists = index_select_status_exclude(artists)
-        end
-        group = {}
-        group["レコード登録日と最新公開日が離れている"] = artists
-        group_list << group
-      end
-      
-      @artists_group = group_list[0].merge(*group_list)
+      @artists_group = index_all_in_one_core(prms)
       return
     when MethodEnum::TABLE_UPDATE_NEW_USER
       Pxv::db_update_by_newdir()
@@ -769,13 +659,6 @@ class ArtistsController < ApplicationController
 
   # GET /artists/1 or /artists/1.json
   def show
-    @last_access_datetime = @artist.last_access_datetime
-    if @artist.last_access_datetime.presence and Util::get_date_delta(@artist.last_access_datetime) == 0
-      STDERR.puts %!更新不要:"#{@artist.last_access_datetime}"!
-    else
-      @artist.update(last_access_datetime: Time.now)
-    end
-
     @show_mode = params[:mode]
 
     if params[:number_of_display].presence
@@ -799,6 +682,29 @@ class ArtistsController < ApplicationController
       #@path_list = []
     end
     @path_list = Pxv::get_pathlist(@artist[:pxvid], archive_dir)
+
+    update_params = {}
+
+    @last_access_datetime = @artist.last_access_datetime
+    if @artist.last_access_datetime.presence and Util::get_date_delta(@artist.last_access_datetime) == 0
+      #STDERR.puts %!更新不要:"#{@artist.last_access_datetime}"!
+    else
+      update_params[:last_access_datetime] = Time.now
+
+      if @artist.filenum == nil or @artist.filenum < @path_list.size
+        twt_params[:filenum] = @path_list.size
+      end
+    end
+
+    if update_params.size > 0
+      if @artist.update(update_params)
+        msg = %!更新 => #{update_params} "#{@artist.pxvname}(#{@artist.pxvid})"!
+        Rails.logger.info(msg)
+      else
+        msg = %!更新失敗 => #{update_params} "#{@artist.pxvname}(#{@artist.pxvid})"!
+        Rails.logger.error(msg)
+      end
+    end
 
     if @show_mode == ArtistsController::ShowMode::TWT_PIC_LIST #"twt_pic_list"
       @twt_pic_path_list = Twt::get_pic_filelist(@artist[:twtid])
@@ -1525,6 +1431,120 @@ class ArtistsController < ApplicationController
       end
       #artists_group["all"] = artists_select.sort_by {|x| [-x.priority, x[:last_access_datetime]]}
 
+      artists_group
+    end
+
+    def index_all_in_one_core(prms)
+      if params[:aio].presence
+        keys = params[:aio].split("|")
+
+        target_hash = {}
+        keys.each do |key|
+          target_hash[key] = true
+        end
+      else
+      end
+
+      group_list = []
+      interval = prms.last_access_datetime
+
+      prms.num_of_times.times do |i|
+        interval_wk = interval * (i + 1)
+        #puts %!#{prms.rating}/#{prms.rating_upper_limit}!
+        group_list << index_all_in_one(prms, %!#{prms.rating}:!, interval_wk, target_hash)
+        #puts "#{i}/#{interval}(#{interval_wk})/#{prms.last_access_datetime}"
+
+        ### 
+        #prms.rating_upper_limit = prms.rating
+        
+        #prms.rating = prms.rating_upper_limit - prms.step
+        prms.rating -= prms.step
+
+        #puts "prms.last_access_datetime=#{prms.last_access_datetime}"
+      end
+
+      if false
+        # 
+        artists = Artist.all
+        artists = artists.select {|x| x.rating == nil or x.rating == 0}
+        artists = artists.select {|x| x.filenum == x.recent_filenum}
+        artists = index_select_status_exclude(artists)
+        artists = artists.sort_by {|x| [-x.prediction_up_cnt(true)]}
+        group = {}
+        group["ファイル数同じ"] = artists
+        group_list << group
+      end
+
+      # 未設定gr
+      if true
+        artists = Artist.all
+        artists = artists.select {|x| x.rating == nil or x.rating == 0}
+        d_thre = 365
+        artists = artists.select {|x| x.filenum != x.recent_filenum}
+        artists = artists.select {|x| x.last_access_datetime_num < d_thre}
+        artists = artists.sort_by {|x| [-x.prediction_up_cnt(true)]}
+        group = {}
+        group["未設定 予測順 #{d_thre}"] = artists
+        group_list << group
+      end
+
+      if true
+        artists = Artist.all
+        artists = artists.select {|x| x.rating == nil or x.rating == 0}
+        d_thre = 90
+        artists = artists.select {|x| x.last_access_datetime_num < d_thre}
+        #artists = artists.sort_by {|x| [-x.prediction_up_cnt(true), x.last_access_datetime]}
+        artists = artists.sort_by {|x| [-x.prediction_up_cnt(true)]}
+        group = {}
+        group["未設定 予測順 #{d_thre}"] = artists
+        group_list << group
+      end
+        
+
+      if true
+        artists = Artist.all
+        artists = artists.select {|x| x.rating == nil or x.rating == 0}
+        #artists = artists.select {|x| x.last_access_datetime_num > 90}
+        artists = artists.select {|x| x.days_elapsed_since_created < 90}
+        
+        artists = artists.sort_by {|x| [-x.filenum]}
+        group = {}
+        group["未設定 総ファイル数順 最近?"] = artists
+        group_list << group
+      end
+
+      if true
+        artists = Artist.all
+        artists = artists.select {|x| x.rating == nil or x.rating == 0}
+        artists = artists.select {|x| x.last_access_datetime_num > 90}
+        artists = artists.sort_by {|x| [-x.filenum]}
+        group = {}
+        group["未設定 総ファイル数順 全期間"] = artists
+        group_list << group
+      end
+
+      # 
+      if false
+        artists = Artist.all
+        if false
+          artists = artists.select {|x| x.days_elapsed_since_created < 60}
+          artists = artists.select {|x| x.last_access_datetime_num > 30 and x.last_access_datetime_num < 360}
+          artists = artists.select {|x| x.last_ul_datetime != nil}
+          #artists = artists.sort_by {|x| [-((x.created_at.to_date - x.last_ul_datetime.to_date).to_i)]}
+          artists = artists.sort_by {|x| [-(x.days_elapsed(x.last_ul_datetime, x.created_at))]}
+          artists = index_select_status_exclude(artists)
+        else
+          artists = artists.select {|x| x.last_access_datetime_num > 30 and x.last_access_datetime_num < 90}
+          artists = artists.select {|x| x.last_ul_datetime != nil}
+          artists = artists.select {|x| x.days_elapsed(x.last_ul_datetime, x.created_at) > 180}
+          artists = artists.sort_by {|x| x.last_access_datetime}
+          artists = index_select_status_exclude(artists)
+        end
+        group = {}
+        group["レコード登録日と最新公開日が離れている"] = artists
+        group_list << group
+      end
+      artists_group = group_list[0].merge(*group_list)
       artists_group
     end
 

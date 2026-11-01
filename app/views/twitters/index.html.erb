@@ -472,6 +472,9 @@
     <%= f.label :更新頻度 %>
     <%= f.number_field :ul_freq, :value => params[:ul_freq] %>以上
     <br />
+    <%= f.label :指定タブ %>
+    <%= f.text_field :disp_tab_target, :value => params[:disp_tab_target] %>
+    <br />
     <%= f.label :todo_cnt %>
     <%= f.number_field :todo_cnt, :value => params[:todo_cnt] %>
     <br />

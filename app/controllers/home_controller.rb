@@ -118,7 +118,7 @@ class HomeController < ApplicationController
           num_of_disp: 3,
           #force_disp_day: 10,
           grp_sort_by: TwittersController::GRP_SORT::GRP_SORT_SPEC,
-          grp_sort_spec: "{rr}::{am}",
+          grp_sort_spec: "{rr}::{am}ヶ月",
           sort_by: TwittersController::SORT_BY::SORT_ACCESS_O2N,
           ex_sp: true,
           #step: -3,

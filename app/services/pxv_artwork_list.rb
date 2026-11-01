@@ -69,7 +69,15 @@ class PxvArtworkList
             end
         end
 
-        @artwork_list = artwork_hash.values
+        #@artwork_list = artwork_hash.values
+        @artwork_hash = artwork_hash
     end
 
+    def artwork_list
+        @artwork_hash.values
+    end
+
+    def get_artwork_file_list(artwork_id)
+        @artwork_hash[artwork_id]
+    end
 end

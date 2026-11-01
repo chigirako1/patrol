@@ -1,0 +1,30 @@
+<div id="<%= dom_id artist %>">
+    <h1 id="search">検索</h1>
+
+    <%= form_with(url: artist_path, local: true, method: :get) do |f| %>
+        art id/url:<%= f.text_field :search_id, :value => params[:search_id] %>
+        <%= f.submit("検索", name: nil, class: 'submit-btn') %>
+        <br />
+    <% end %>
+
+    <% search_id = params[:search_id] %>
+    <% case search_id %>
+    <% when UrlTxtReader::PXV_ARTWORK_URL_RGX, /^\s*(\d+)\s*$/ %>
+        <% artwork_id = $1.to_i %>
+        <% artworks = PxvArtworkList.new(@path_list) %>
+        <% artwork = artworks.get_artwork_file_list(artwork_id) %>
+        <% if artwork %>
+            <h3>
+                <%= artwork.publication_date %>
+                <%= artwork.title %>
+                (<%= artwork.artwork_id %>)
+                <%= artwork.path_list.size %>ファイル
+            </h3>
+            <% artwork.path_list.each do |path| %>
+                <%= image_link(path) %>
+            <% end %>
+        <% else %>
+            ファイル見つからず
+        <% end %>
+    <% end %>
+</div>

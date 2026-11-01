@@ -150,8 +150,9 @@
                 <%= match_i.filename %>
                 [<%= Twt::tweet_id_with_comma Twt::time2tweet_id(match_i.timestamp) %>]
                 <br />
-                <% if Util::within_last_n_seconds?(datetime_t, match_i.timestamp, 60) %>
-                    ⬆️1分以内
+                <% delta = Util::time_delta(datetime_t, match_i.timestamp) %>
+                <% if delta <= 60 * 6 %>
+                    ⬆️<%= delta.to_i + 1 %>秒以内
                     <br />
                 <% end %>
             <% end %>

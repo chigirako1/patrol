@@ -395,12 +395,16 @@ module Util
         end
     end
 
+    def self.time_delta(datetime_a, datetime_b)
+        (datetime_a.to_f - datetime_b.to_f)
+    end
+
     def self.within_n_seconds?(datetime_a, datetime_b, n)
-        (datetime_a.to_f - datetime_b.to_f).abs <= n
+        time_delta(datetime_a, datetime_b).abs <= n
     end
 
     def self.within_last_n_seconds?(datetime_a, datetime_b, n)
-        delta = (datetime_a.to_f - datetime_b.to_f)
+        delta = time_delta(datetime_a, datetime_b)
         delta >= 0 and delta <= n
     end
 

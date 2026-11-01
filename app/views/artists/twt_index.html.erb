@@ -974,7 +974,7 @@
     <% to_be_obtain_list = Tweet.to_be_obtain_list %>
     <% idx = 0 %>
 
-    <% zanken = false %>
+    <% zanken = 0 %>
     <% sp_dirs_hash = Twt::sp_dirs_group(@sp_dirs, to_be_obtain_list) %>
     <% sp_dirs_hash.each do |k,v| %>
         <h3><%= %!#{k}(#{v.size})! %></h3>
@@ -1010,7 +1010,7 @@
                     <% url_list = Tweet::new_summary(elem.twt.twtid, @twt_url_list[elem.twt.twtid]) %>
                     <% if url_list.todo_cnt > 0 %>
                         (❗️❗️❗️<%= url_list.todo_cnt %>件❗️❗️❗️)
-                        <% zanken = true %>
+                        <% zanken += url_list.todo_cnt %>
                     <% end %>
                 <% end %>
                 ]
@@ -1086,8 +1086,8 @@
         <% end %>
     <% end %>
 
-    <% if zanken %>
-        ❗️残件あり❗️<br />
+    <% if zanken > 0 %>
+        ❗️残件あり(<%= zanken %>件)❗️<br />
     <% end %>
 
     <% chk_screen_name_list = Util::checking_screen_names.sort.uniq %>
