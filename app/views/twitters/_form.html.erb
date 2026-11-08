@@ -243,6 +243,7 @@
     <input type="button" value="TWT巡回に変更" onclick="set_noupdate(0);" />
     <input type="button" value="最近更新してない？" onclick="set_noupdate(4); set_value_twt('update_frequency', 1);" />
     <input type="button" value="長期更新なしに変更" onclick="set_noupdate(2); set_value_twt('update_frequency', 0);" />
+    <input type="button" value="凍結に変更" onclick="set_noupdate(7); set_value_twt('update_frequency', 0);" />
     <script>
       function set_noupdate(idx) {
         let status_sel_box = getElemTwt('status');

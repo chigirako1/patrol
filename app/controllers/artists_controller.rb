@@ -692,7 +692,7 @@ class ArtistsController < ApplicationController
       update_params[:last_access_datetime] = Time.now
 
       if @artist.filenum == nil or @artist.filenum < @path_list.size
-        twt_params[:filenum] = @path_list.size
+        update_params[:filenum] = @path_list.size
       end
     end
 

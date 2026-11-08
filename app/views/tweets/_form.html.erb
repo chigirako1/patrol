@@ -110,13 +110,15 @@
     <% if @pic_list %>
         <h3>画像(<%= @pic_list.size %>件)</h3>
         全<%= @pic_list.size %>ファイル<br />
-        <b>[<%= datetime_t = Twt::get_timestamp(tweet_id_val) %>]</b>
+        <% datetime_t = Twt::get_timestamp(tweet_id_val) %>
+        <b>[<%= l datetime_t %>]</b>
         <br />
 
         <% miss = true %>
         <% (@pic_list||[]).each do |path| %>
             <% if Twt::include_tweet_id?(tweet_id_val, path) %>
                 <%= image_link(path) %>
+                "<%= File.basename path %>"
                 <% miss = false %>
             <% else %>
             <% end %>
@@ -127,34 +129,41 @@
             <% hit_pic_list.each do |path| %>
                 <%= image_link(path) %>
                 <% tweet_id = TweetInfo::get_tweet_id_from_filepath path %>
-                [<%= Twt::get_timestamp tweet_id %>]
-                <%= File.basename path %>
+                <% file_ts = Twt::get_timestamp tweet_id %>
+                [<%= l file_ts %>]
+                <% delta = Util::time_delta(datetime_t, file_ts) %>
+                <% STDERR.puts delta %>
+                <%= format_seconds delta.to_i %>以上
+                "<%= File.basename path %>"
                 <% miss = false %>
             <% end %>
         <% end %>
 
         <% if miss %>
-            <h4>
+            <h3>
                 <%= link_to_ex(Twt::tweet_id_with_comma(tweet_id_val), Twt::twt_tweet_url(screen_name_val, tweet_id_val)) %>
-            </h4>
+            </h3>
 
-            <% seconds = 7 * 24 * 60 * 60 %>
+            <% seconds = 10 * 24 * 60 * 60 %>
             <% match_pic_infos = Twt::find_pics_by_datetime(@pic_list, tweet_id_val, screen_name_val, seconds) %>
-            <h3>tweet idと日時が近いファイル(<%= match_pic_infos.size %>件)</h3>
-            <br />
-            <% limit = 20 %>
+            <h4>tweet idと日時が近いファイル(<%= match_pic_infos.size %>件)</h4>
+
+            <% limit = 30 %>
+            <% s_seconds = 60 * 6 %>
             <% match_pic_infos.first(limit).each do |match_i| %>
                 <input type="button" value="ファイル名設定" onclick="setFilename('<%= match_i.filename %>');" />
+                <% delta = Util::time_delta(datetime_t, match_i.timestamp) %>
+                <% if delta <= s_seconds %>
+                    ⬆️<%= format_seconds delta.to_i + 1 %>以内
+                <% else %>
+                    <%= format_seconds delta.to_i %>以上
+                <% end %>
+                <br />
                 [<%= match_i.timestamp %>]
                 <%= image_link(match_i.path) %>
                 <%= match_i.filename %>
                 [<%= Twt::tweet_id_with_comma Twt::time2tweet_id(match_i.timestamp) %>]
-                <br />
-                <% delta = Util::time_delta(datetime_t, match_i.timestamp) %>
-                <% if delta <= 60 * 6 %>
-                    ⬆️<%= delta.to_i + 1 %>秒以内
-                    <br />
-                <% end %>
+                <hr />
             <% end %>
         <% end %>
     <% end %>
@@ -246,7 +255,15 @@
         remarks_e.value = filename;
 
         remarks_e.select();
-}
+    }
+
+    function extractBase64str(str) {
+        // "TID-unknown-" と "-iv.jpg" の部分を取り除く
+        //const match = str.match(/TID-unknown-(.*?)\.jpg/);
+        /* 非貪欲でキャプチャするときは後ろがないと0文字で終わってしまう。。。*/
+        const match = str.match(/TID-unknown-(.+)/);
+        return match ? match[1] : str;
+    }
 
     function get_filename() {
         let text_box = document.getElementById("url_filepath");
@@ -255,6 +272,8 @@
         let filename = "";
         const regex = /.*\/(.+)$/;
         //console.log(regex);
+
+        // TODO:"TID-unknown-HV5PpYLa4AA8kKm-iv.jpg" => "HV5PpYLa4AA8kKm"
 
         const match = text.match(regex);
         //if (regex.test(text)) {
@@ -266,7 +285,7 @@
         
         //const remarks_e = document.getElementById('tweet_remarks');
         //remarks_e.value = filename;
-        setFilename(filename);
+        setFilename(extractBase64str(filename));
 
         set_status("<%= Tweet::StatusEnum::SAVED %>");
     }

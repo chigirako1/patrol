@@ -12,6 +12,7 @@ class Tweet < ApplicationRecord
         UNACCESSIBLE_DEL_ACNT = "URLアクセス不可(削除されたアカウント)"
         UNACCESSIBLE_FREEZED = "URLアクセス不可(凍結されたアカウント)"
         UNACCESSIBLE_PRIVATE = "URLアクセス不可(非公開アカウント)"
+        UNACCESSIBLE_VIOLATION = "URLアクセス不可(ルール違反)"
         DUPLICATE = "重複"
 
         VIDEO = "動画"
@@ -28,6 +29,7 @@ class Tweet < ApplicationRecord
             [StatusEnum::UNACCESSIBLE_DEL_ACNT],
             [StatusEnum::UNACCESSIBLE_FREEZED],
             [StatusEnum::UNACCESSIBLE_PRIVATE],
+            [StatusEnum::UNACCESSIBLE_VIOLATION],
             [StatusEnum::DUPLICATE],
             [StatusEnum::TO_BE_OBTAIN],
 

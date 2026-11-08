@@ -33,6 +33,9 @@ module Twt
     #TWT_AT_SCREEN_NAME_RGX = /\(@(\w+)\)/
     TWT_AT_SCREEN_NAME_RGX = /^(\w+)/
 
+    TWT_MEDIA_URL_FULL_RGX = %r!https://pbs.twimg.com/media/(\w+)?format=jpg&name=medium!
+    TWT_MEDIA_URL_PART_RGX = %r!/media/(\w+)!
+
     TWT_SP_FILENAME_RGX = /(\d{8}_\d{6})/
 
     TMP_DIR_PATH = "public/d_dl/"
@@ -298,6 +301,7 @@ module Twt
     end
 
     def self.search_new_screen_name_from_txt(unknown_screen_names, dirname)
+
         if dirname =~ /^(\w+)/
             sname = $1.downcase
         end
@@ -312,6 +316,8 @@ module Twt
                 results << screen_name
             end
         end
+
+        STDERR.puts %!"#{dirname}"\t"#{sname}"\t#{results.size}!
 
         results
     end
@@ -525,9 +531,11 @@ module Twt
     end
 
     def self.find_pics(pic_list, filename, screen_name)
+        filenames = filename.split("/").map {|x| Util::basename_without_extname(x)}
         results = []
         (pic_list||[]).each do |path|
-            if path.include? filename
+            #if File.basename(path).include? filename
+            if Util::str_contains_any? File.basename(path), filenames
                 results << path
             else
             end
@@ -535,11 +543,15 @@ module Twt
 
         filelist2 = Twt::get_sp_pic_filelist_both_by_twtid(screen_name)
         filelist2.each do |path|
-            if path.include? filename
+            #if File.basename(path).include? filename
+            if Util::str_contains_any? File.basename(path), filenames
                 results << path
             else
             end
         end
+
+        STDERR.puts %!#{__LINE__}:#{pic_list.size}\t"#{filenames}"\t"#{screen_name}"!
+
         results
     end
 
@@ -1170,7 +1182,8 @@ module Twt
         freq_90d = Twt::calc_freq(pl, 90)
         freq_30d = Twt::calc_freq(pl, 30)
         freq_15d = Twt::calc_freq(pl, 15)
-        ary = [freq_90d, freq_30d, freq_15d]
+        #ary = [freq_90d, freq_30d, freq_15d]
+        ary = [freq_90d] + [freq_30d] * 2 + [freq_15d] * 3
         avg = ary.sum / ary.size
         StructFreq.new(freq_90d, freq_30d, freq_15d, avg)
     end

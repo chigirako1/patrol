@@ -107,7 +107,7 @@ class Twitter < ApplicationRecord
         twitters = twitters.select {|x| x.search_target?}.sort_by {|x| [x.drawing_method||"", -(x.rating||0)]}
 
         if drawing_method
-            twitters = twitters.select {|x| x.drawing_method == drawing_method}
+            twitters = twitters.select {|x| !(x.drawing_method.presence) || x.drawing_method == drawing_method}
         end
 
         twitters
@@ -1161,7 +1161,8 @@ class Twitter < ApplicationRecord
                             end
 
                             #gkey_work = "最近登録/少数:#{w_s}週|#{prd_s}件~" + TWT_H_SEPARATOR + "#{r_s}"
-                            gkey_work = "最近登録/少数#{w_s}週|【#{r_s}】#{u_s}" + TWT_H_SEPARATOR + "#{prd_s}件~"
+                            #gkey_work = "最近登録/少数#{w_s}週|【#{r_s}】#{u_s}" + TWT_H_SEPARATOR + "#{prd_s}件~"
+                            gkey_work = "最近登録/少数#{w_s}週#{u_s}" + TWT_H_SEPARATOR + "#{prd_s}件~"
                         elsif true
                             r_s = Util::format_num(self.rating, 1)
                             gkey_work = "最近登録/少数" + TWT_H_SEPARATOR + "#{r_s}"

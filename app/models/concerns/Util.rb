@@ -198,6 +198,10 @@ module Util
         sprintf("%#{digit}d", w)
     end
 
+    def self.str_contains_any?(str, substrings)
+        substrings.any? { |sub| str.include?(sub) }
+    end
+
     #============================================================
     # ファイル関連
     #============================================================
@@ -219,6 +223,10 @@ module Util
 
     def self.convert_path(base_path, path)
         Util::escape_path(path.gsub(base_path, ""))
+    end
+
+    def self.basename_without_extname(filename)
+        File.basename(filename, ".*")
     end
 
     def self.glob(ipath, glob_param="*/")

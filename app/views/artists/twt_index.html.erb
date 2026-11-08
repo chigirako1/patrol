@@ -1057,6 +1057,17 @@
                 [<%= link_to_ex("■検索■", url) %>]
                 <%= link_to_ex(%!☆twt☆!, artist_twt_path(elem.dirname)) %>
 
+                <% results = Twt::search_new_screen_name_from_txt(@unknown_screen_name_list, elem.search_word2) %>
+                <% if results.presence %>
+                    <br />
+                    <% results.each do |x| %>
+                        未登録ユーザー："<%= x %> "
+                        <%= link_to_ex("▶@" + x, Twt::twt_user_media_url(x)) %>
+                        <%= link_to_ex(%!☆twt☆!, artist_twt_path(x)) %>
+                        <br />
+                    <% end %>
+                <% end %>
+
                 <% result = Twitter.search_records(search_word, Twitter::DRAWING_METHOD::DM_AI) %>
                 <% hhh = 3 %>
                 <%= %!(#{result.size})! if result.size > hhh %>
@@ -1069,16 +1080,6 @@
                         <%= twitter_info_tag_ex(twt.twtid) %>
                     <% end %>
                 <% else %>
-                    <% results = Twt::search_new_screen_name_from_txt(@unknown_screen_name_list, elem.search_word2) %>
-                    <% if results.presence %>
-                        <br />
-                        <% results.each do |x| %>
-                            "<%= x %> "
-                            <%= link_to_ex("▶@" + x, Twt::twt_user_media_url(x)) %>
-                            <%= link_to_ex(%!☆twt☆!, artist_twt_path(x)) %>
-                            <br />
-                        <% end %>
-                    <% end %>
                 <% end %>
             <% end %>
 

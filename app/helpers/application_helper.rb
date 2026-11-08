@@ -123,4 +123,37 @@ module ApplicationHelper
             date.strftime("%Y年%-m月%-d日")
         end
     end
+
+    def format_seconds(seconds)
+        #duration = seconds.to_i.seconds
+        #parts = duration.parts
+        parts = ActiveSupport::Duration.build(seconds).parts
+
+        #STDERR.puts %!#{parts}!
+
+        days    = parts[:days].to_i + parts[:weeks].to_i * 7
+        hours   = parts[:hours].to_i
+        minutes = parts[:minutes].to_i
+        secs    = parts[:seconds].to_i
+
+        #p duration
+        #p parts
+
+        result = []
+        result << "#{days}日" if days > 0
+        result << "#{hours}時間" if hours > 0 || days > 0
+        result << "#{minutes}分" if minutes > 0 || hours > 0 || days > 0
+        result << "#{secs}秒"
+
+        result.join
+    end
+
+    def format_seconds2(seconds)
+        hours   = seconds / 3600
+        minutes = (seconds % 3600) / 60
+        secs    = seconds % 60
+
+        # ゼロ埋め表示（00:00:00）にしたい場合
+        format("%02d:%02d:%02d", hours, minutes, secs)
+    end
 end
