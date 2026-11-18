@@ -92,6 +92,7 @@
         <% end %>
 
         <% twt_account.url_list = Tweet::new_summary(twt_account.twtid, url_list) %>
+        <% twt_account.unaccessible_url_cnt = Tweet::unaccessible_twt_count(twt_account.twtid) %>
 
         <%# STDERR.puts %!#{twt_account.url_list.todo_cnt}@#{key}! %>
         <% if show_times.presence and twt_account.url_list.todo_cnt < show_times %>
@@ -196,6 +197,12 @@
                     <td>
                         <%# STDERR.puts %!#{twt_account.url_list}@#{key}! %>
                         [<%= twt_account.url_list.todo_cnt %>/<%= twt_account.url_list.url_cnt %>]
+                        <%# ua_cnt = Tweet::unaccessible_twt_count(twt_account.twtid) %>
+                        <% ua_cnt = twt_account.unaccessible_url_cnt %>
+                        <% if ua_cnt >= 1 %>
+                            <br />
+                            アクセス不可twtあり(<%= ua_cnt %>件)
+                        <% end %>
                     </td>
                     <td>
                         【<%= twt_account.rating %>】<%= restr_disp(twt_account.r18) %>
@@ -977,9 +984,12 @@
     <% zanken = 0 %>
     <% sp_dirs_hash = Twt::sp_dirs_group(@sp_dirs, to_be_obtain_list) %>
     <% sp_dirs_hash.each do |k,v| %>
-        <h3><%= %!#{k}(#{v.size})! %></h3>
+        <h3><%= %!#{k}(#{v.size}件)! %></h3>
         <% v.each do |elem| %>
-            <%= idx += 1 %>.
+            <h4>
+                <%= idx += 1 %>.
+                "<%= elem.dirname %>"
+            </h4>
             
             <% if elem.twt %>
                 <% if elem.twt.sp? %>
@@ -1049,7 +1059,6 @@
                     <% end %>
                 <% end %>
             <% else %>
-                "<%= elem.dirname %>"
                 <% search_word = elem.search_word %>
                 <% grp_sort = TwittersController::GRP_SORT::GRP_SORT_SPEC %>
                 <% grp_sort_sp = "{dm}::{r}" %>
@@ -1059,9 +1068,10 @@
 
                 <% results = Twt::search_new_screen_name_from_txt(@unknown_screen_name_list, elem.search_word2) %>
                 <% if results.presence %>
+                    未登録ユーザー：<%= results.size %>件
                     <br />
                     <% results.each do |x| %>
-                        未登録ユーザー："<%= x %> "
+                        - "<%= x %> "
                         <%= link_to_ex("▶@" + x, Twt::twt_user_media_url(x)) %>
                         <%= link_to_ex(%!☆twt☆!, artist_twt_path(x)) %>
                         <br />
@@ -1073,6 +1083,7 @@
                 <%= %!(#{result.size})! if result.size > hhh %>
 
                 <% if result.size > 0 and result.size <= hhh %>
+                    <%= results.size %>件
                     <% result.each do |twt| %>
                         <br />
                         ■<%= "【#{dm_icon(twt.drawing_method)}#{twt.rating}】#{twt.twtname}" %><b><%= "(@#{twt.twtid} )" %></b>

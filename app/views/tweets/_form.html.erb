@@ -151,7 +151,7 @@
             <% limit = 30 %>
             <% s_seconds = 60 * 6 %>
             <% match_pic_infos.first(limit).each do |match_i| %>
-                <input type="button" value="ファイル名設定" onclick="setFilename('<%= match_i.filename %>');" />
+                <input type="button" value="ファイル名設定" onclick="setFilename2('<%= match_i.filename %>');" />
                 <% delta = Util::time_delta(datetime_t, match_i.timestamp) %>
                 <% if delta <= s_seconds %>
                     ⬆️<%= format_seconds delta.to_i + 1 %>以内
@@ -249,6 +249,11 @@
         selectOptionByText(status_e, statusi);
     }
 
+    function setFilename2(filename)
+    {
+        setFilename(extractBase64str(filename))
+    }
+
     function setFilename(filename)
     {
         const remarks_e = document.getElementById('tweet_remarks');
@@ -271,21 +276,15 @@
 
         let filename = "";
         const regex = /.*\/(.+)$/;
-        //console.log(regex);
-
-        // TODO:"TID-unknown-HV5PpYLa4AA8kKm-iv.jpg" => "HV5PpYLa4AA8kKm"
 
         const match = text.match(regex);
-        //if (regex.test(text)) {
         if (match) {
             filename = match[1];
         } else {
             filename = text;
         }
         
-        //const remarks_e = document.getElementById('tweet_remarks');
-        //remarks_e.value = filename;
-        setFilename(extractBase64str(filename));
+        setFilename2(filename);
 
         set_status("<%= Tweet::StatusEnum::SAVED %>");
     }

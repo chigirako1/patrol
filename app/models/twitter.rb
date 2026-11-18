@@ -4,7 +4,7 @@ class Twitter < ApplicationRecord
     validates :twtid, uniqueness: true
     belongs_to :artists, :class_name => 'Artist', optional: true
 
-    attr_accessor :url_list
+    attr_accessor :url_list, :unaccessible_url_cnt
 
     TWT_H_SEPARATOR = "::"
 
@@ -1139,7 +1139,11 @@ class Twitter < ApplicationRecord
                     lade_s = unit
                 end
 
-                if self.interval_exceeded? true
+                if self.unaccessible_url_cnt and self.unaccessible_url_cnt > 0
+                    r_s = Util::format_num(self.rating, 1)
+                    gkey_work = "アクセス不可あり" + TWT_H_SEPARATOR + "#{r_s}"
+                    break
+                elsif self.interval_exceeded? true
                     if (self.rating||0) >= 84 and
                         (self.created_at_day_num <= 21 or (self.filenum||0) < 50) and
                         self.last_access_datetime_days_elapsed < 30 and
@@ -1533,7 +1537,7 @@ class Twitter < ApplicationRecord
             u_str = url_cnt_str
             return %!#{prefix}[905.その他]#{u_str}#{TWT_H_SEPARATOR}#{drawing_method}!
         when "", nil
-            p = Util::format_num(self.prediction, 15)
+            p = Util::format_num2(self.prediction, 15)
             daysn = self.last_access_datetime_days_elapsed
             #return %![998.未設定]#{TWT_H_SEPARATOR}#{daysn/30}ヶ月|#{p}件|#{daysn/7}週!
             u_str = url_cnt_str

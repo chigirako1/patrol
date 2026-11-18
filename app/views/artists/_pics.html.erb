@@ -66,7 +66,9 @@
     <% url = artist.pxv_artwork_url(artwork_id) %>
     <%= idx %>.
     (<%= link_to_ex artwork_id, url %>)
-    <%= path.gsub("%23", "#") %><br />
+    <%= path.gsub("%23", "#") %>
+    [<%= link_to_ex("show", artist_artwork_path(@artist, artwork_id)) %>]
+    <br />
   <% end %> 
   ---
   <%= artist.reverse_status %>

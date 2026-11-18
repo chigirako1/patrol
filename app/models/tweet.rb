@@ -369,14 +369,35 @@ class Tweet < ApplicationRecord
         tweet_sum_hash[screen_name][status]
     end
 
+    def self.unaccessible_twt_count(screen_name)
+        records = Tweet.select {|x| x.screen_name == screen_name}
+        sts_list = %W[#{StatusEnum::UNACCESSIBLE}
+                    #{StatusEnum::UNACCESSIBLE_DEL_ACNT}
+                    #{StatusEnum::UNACCESSIBLE_FREEZED}
+                    #{StatusEnum::UNACCESSIBLE_PRIVATE}
+                    #{StatusEnum::UNACCESSIBLE_VIOLATION}]
+        #STDERR.puts %!#{screen_name} => #{count}!
+        records = records.select {|x| sts_list.include? x.status }
+        count = records.size
+        #STDERR.puts %!#{screen_name} => #{count}\t#{sts_list}!
+        count
+    end
+
+    def self.select_tweets(status_list)
+        #Tweet.select {|x| x.status == status}
+        Tweet.select {|x| status_list.include? x.status }
+    end
+
     def self.to_be_obtain_list()
-        t = Tweet.select {|x| x.status == StatusEnum::TO_BE_OBTAIN}
+        #t = Tweet.select {|x| x.status == StatusEnum::TO_BE_OBTAIN}
+        t = select_tweets([StatusEnum::TO_BE_OBTAIN])
         grp = t.group_by {|x| x.screen_name}
         grp
     end
 
     def self.get_unaccessible_twt_account_list()
-        t = Tweet.select {|x| x.status == StatusEnum::UNACCESSIBLE}
+        #t = Tweet.select {|x| x.status == StatusEnum::UNACCESSIBLE}
+        t = select_tweets([StatusEnum::UNACCESSIBLE])
         grp = t.group_by {|x| x.screen_name}.delete_if {|k,v| v.size < 2}
         grp
     end
@@ -387,6 +408,7 @@ class Tweet < ApplicationRecord
         unaccessible_tweet_summary = grp
     end
 
+    #??なぜここに？
     def self.unaccessible_twt_list(grp)
         id_list = grp.keys
         twitters = Twitter.select {|x| id_list.include?(x.twtid)}

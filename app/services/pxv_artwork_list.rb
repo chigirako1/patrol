@@ -28,16 +28,17 @@ class PxvArtworkFileList
 
     def <=>(other)
         return nil unless other.is_a?(PxvArtworkFileList)
-        [artwork_id] <=> [other.artwork_id]
+        [self.artwork_id] <=> [other.artwork_id]
     end
 end
-
 
 # Artist#artwork_list
 # =============================================================================
 # 
 # =============================================================================
 class PxvArtworkList
+    include Enumerable
+    
     attr_accessor :artwork_list
 
     def initialize(img_path_list)
@@ -70,7 +71,11 @@ class PxvArtworkList
         end
 
         #@artwork_list = artwork_hash.values
-        @artwork_hash = artwork_hash
+        @artwork_hash = artwork_hash.sort.to_h
+    end
+
+    def each(&block)
+        @artwork_hash.each(&block)
     end
 
     def artwork_list

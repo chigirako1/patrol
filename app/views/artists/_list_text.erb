@@ -1,0 +1,33 @@
+
+<!-- ######################## -->
+<script type="text/javascript">
+    document.body.style.backgroundColor = 'beige';
+    document.body.style.color = 'black';
+</script>
+
+<!-- ######################## -->
+<div id="<%= dom_id artist %>">
+    <h2>
+        <%= artist.pxvname %>
+        (<%= artist.pxvid %>)
+    </h2>
+
+    <% artworks = PxvArtworkList.new(@path_list) %>
+    <% artworks.each.with_index(1) do |(artwork_id, data), idx| %>
+        <% art_title = data.title %>
+        <% date = data.publication_date %>
+        <% pic_cnt = data.path_list.size %>
+        <% pic_path_list = data.path_list %>
+
+        <% url = data.pxv_artwork_url() %>
+        <%= idx %>.
+        (<%= link_to_ex artwork_id, url %>)
+        <%= l date %>
+        「<%= art_title %>」
+        <%= %!(#{pic_cnt} pics)! if pic_cnt > 1 %>
+        [<%= link_to_ex("New pxv artwork", new_pxv_artwork_path(artwork_id: artwork_id, user_id: artist.pxvid)) %>]
+        [<%= link_to_ex("show", artist_artwork_path(@artist, artwork_id)) %>]
+        <br />
+
+    <% end %>
+</div>

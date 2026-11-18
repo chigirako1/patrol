@@ -79,6 +79,8 @@ module Twt
     ### ###
     FILESIZE_SAMPLE_N = 100
 
+    TWT_PIC_N_MAX = 20
+
     def self.include_tweet_id?(tweet_id, path)
         n_list = File.basename(path).scan(/\d+/)
         tweet_id.presence and n_list.include? tweet_id.to_s
@@ -1080,8 +1082,7 @@ module Twt
             ul_datestr = timestamp_str(tweet_id)
             date_str = %!【#{ul_datestr}】!
         end
-        #%!<#{twt_id_str}>#{4 - pic_no}#{date_str}[#{fn})(#{File.dirname path}]!
-        %!#{date_str}<#{twt_id_str}>#{4 - pic_no}[#{fn})(#{File.dirname path}]!
+        %!#{date_str}<#{twt_id_str}>#{sprintf("%3d" ,TWT_PIC_N_MAX - pic_no)}[#{fn})(#{File.dirname path}]!
     end
 
     def self.tweet_id_with_comma(tweet_id)
@@ -1210,7 +1211,7 @@ module Twt
 
         #v = hash.values.map {|n| n > 4 ? 4 : n}
         # 1投稿にn枚以上は異常なので無視する
-        n = 4
+        n = TWT_PIC_N_MAX
         v = hash.values.select {|x| x <= n}
 
         if v.size > 0

@@ -1,0 +1,14 @@
+<% title = %!#{0}/#{0}! %>
+<% provide(:title, title) %>
+
+<p style="color: green"><%= notice %></p>
+
+<h1><%= @artist.pxvid %></h1>
+<h2>
+    <%= @artwork.publication_date %>「<%= @artwork.title %>」(<%= @artwork.artwork_id %>)(<%= @artwork.path_list.size %>枚)
+</h2>
+
+<% @artwork.path_list.each.with_index(1) do |path, idx| %>
+    <%= idx%>.<%= image_link(path) %><br />
+<% end %>
+

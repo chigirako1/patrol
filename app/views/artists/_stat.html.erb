@@ -57,8 +57,7 @@
 
                 <% urllist = [] %>
                 <% month = date.month %>
-                【<%= date.year %>年<%= date.month %>月】
-                <br />
+                <h3>【<%= date.year %>年<%= date.month %>月】</h3>
             <% end %>
             <% txt = %!#{title}! %>
             <% url = artist.pxv_artwork_url(artwork_id) %>
@@ -67,14 +66,14 @@
                 <% tmp_str += "[#{fcnt} files]" %>
             <% end %>
             <% urllist << [date, txt, url, tmp_str, artwork_id] %>
-            <%= idx %>.<%= link_to_ex image_tag(path, width: '10%', height: '10%', :alt => txt), url %>
+            <%= idx %>.<%= image_link(path) %>
             <% if fcnt > 1 %>
-                *<%= fcnt %>)
+                <%= fcnt %>枚
             <% end %>
         <% end %>
         <br />
-        <% urllist.each.with_index(1) do |u, idx| %>
-            <%= idx %>:(<%= link_to_ex u[4], u[2] %>) <%= u[3].gsub("%23", "#") %><br />
+        <% urllist.each.with_index(1) do |u| %>
+            <%= "-" %>:(<%= link_to_ex u[4], u[2] %>) <%= u[3].gsub("%23", "#") %><br />
         <% end %>
     <% elsif @show_mode == ArtistsController::ShowMode::INTERVAL_CHECK %>
         <% ratio = '10%' %>

@@ -262,7 +262,7 @@ class ArtistsController < ApplicationController
   extend UrlTxtReader
   #extend Nje
   
-  before_action :set_artist, only: %i[show edit update destroy edit_no_update]
+  before_action :set_artist, only: %i[show edit update destroy edit_no_update artwork_show]
 
   module MethodEnum
     SAME_FILENUM = '全ファイル数と最近のファイル数が同じレコード'
@@ -357,6 +357,7 @@ class ArtistsController < ApplicationController
     SHOW_NORAML = "normal"
     SHOW_VIEWER = "viewer"
     SHOW_LIST_VIEW = "list_view"
+    SHOW_LIST_TEXT = "list_text"
     INTERVAL_CHECK = "interval_chk"
     STAT = "stat"
     TWT_PIC_LIST = "twt_pic_list"
@@ -709,6 +710,31 @@ class ArtistsController < ApplicationController
     if @show_mode == ArtistsController::ShowMode::TWT_PIC_LIST #"twt_pic_list"
       @twt_pic_path_list = Twt::get_pic_filelist(@artist[:twtid])
     end
+  end
+
+  def artwork
+    artist_id = params[:id]       # xx
+    artwork_id = params[:artworkid] # yy
+
+    # public ディレクトリ内の画像パスを組み立てる
+    # 例: public/artworks_data/xx/yy/zz1.jpg にある場合
+    file_path = Rails.public_path.join('artworks_data', artist_id, artwork_id, 'zz1.jpg')
+
+    if File.exist?(file_path)
+      # 画像をブラウザに直接表示する（inline）
+      send_file file_path, disposition: 'inline', type: 'image/jpeg'
+    else
+      head :not_found
+    end
+  end
+
+  def artwork_show
+    artwork_id = params[:artworkid].to_i
+
+    path_list = Pxv::get_pathlist(@artist[:pxvid], true)
+    artworks = PxvArtworkList.new(path_list)
+    @artwork = artworks.get_artwork_file_list(artwork_id)
+    STDERR.puts %!#{@artist[:pxvid]}/#{artwork_id}\t#{path_list.size}!
   end
 
   def stats

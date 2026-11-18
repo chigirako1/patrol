@@ -5,7 +5,6 @@
     document.body.style.color = 'black';
 </script>
 
-
 <!-- ######################## -->
 <div id="<%= dom_id artist %>">
     <h2>
@@ -56,7 +55,6 @@
     <% end %>
     <hr />
 
-    <% ratio = '5%' %>
     <% list = Artist.artwork_list(@path_list) %>
     <% #STDERR.puts %!"#{@path_list[0]}"/#{@path_list.size}/sidx=#{start_idx}/num=#{num_elem}/#{list[0]}/#{list.size}! %>
     <% if start_idx >= list.size %>
@@ -98,12 +96,12 @@
             <%= %!(#{pic_cnt} pics)! if pic_cnt > 1 %>
             [<%= link_to_ex("New pxv artwork", new_pxv_artwork_path(artwork_id: artwork_id, user_id: artist.pxvid)) %>]
             <br />
-            <%= link_to_ex(image_tag(path, width: ratio, height: ratio), path) %>
+            <%= image_link(path) %>
 
             <% if no_pics %>
             <% else %>
                 <% pic_path_list.each do |x| %>
-                    <%= link_to_ex(image_tag(x, width: ratio, height: ratio), x) %>
+                    <%= image_link(x) %>
                 <% end %>
             <% end %>
             <br />

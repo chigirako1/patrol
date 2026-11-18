@@ -34,7 +34,9 @@
         <% delta = (k_bak - k).to_i %>
         <% if delta > 1 %>
             <br />
-            <%= delta %>
+            <h4>
+            <%= delta %>日
+            </h4>
             
             <% if tweet_id_bak %>
                 <% since_date = Twt::get_timestamp(h.keys.first) %>
