@@ -1,7 +1,8 @@
 source "https://rubygems.org"
 git_source(:github) { |repo| "https://github.com/#{repo}.git" }
 
-ruby "3.4.1"
+#ruby "3.4.1"
+ruby "4.0.10" #26/11/27
 
 gem "mutex_m"
 gem "base64"
@@ -13,7 +14,8 @@ gem "fiddle"
 # Bundle edge Rails instead: gem "rails", github: "rails/rails", branch: "main"
 #gem "rails", "~> 7.0.4", ">= 7.0.4.3"
 #gem "rails", "~> 8.0.1" 26/2/1
-gem "rails", "~> 8.1.1"
+#gem "rails", "~> 8.1.1" 
+gem "rails", "~> 8.1.3" #26/11/27
 
 # The original asset pipeline for Rails [https://github.com/rails/sprockets-rails]
 gem "sprockets-rails"

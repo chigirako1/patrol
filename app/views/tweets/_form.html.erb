@@ -86,21 +86,26 @@
     </div>
 
     <div>
-        <%= form.label :rating, style: "display: block" %>
+        <%= form.label :評価, style: "display: block" %>
         <%= form.number_field :rating %>
     </div>
 
     <div>
-        <%= form.label :num, style: "display: block" %>
+        <%= form.label :番号, style: "display: block" %>
         <%= form.number_field :num %>
     </div>
     
     <div>
-        <%= form.label :remarks, style: "display: block" %>
-        <%= form.text_field :remarks %>
+        <%= form.label :メディアID, style: "display: block" %>
+        <%= form.text_field :media_id %>
         ←
         <input type="button" value="ファイル名取り出し" onclick="get_filename();" />
         <input type=”text” id="url_filepath" value="" />
+    </div>
+
+    <div>
+        <%= form.label :備考, style: "display: block" %>
+        <%= form.text_field :remarks %>
     </div>
 
     <div>
@@ -124,8 +129,8 @@
             <% end %>
         <% end %>
 
-        <% if tweet.remarks.presence %>
-            <% hit_pic_list = Twt::find_pics(@pic_list, tweet.remarks, tweet.screen_name) %>
+        <% if tweet.media_id.presence %>
+            <% hit_pic_list = Twt::find_pics(@pic_list, tweet.media_id, tweet.screen_name) %>
             <% hit_pic_list.each do |path| %>
                 <%= image_link(path) %>
                 <% tweet_id = TweetInfo::get_tweet_id_from_filepath path %>
@@ -256,10 +261,10 @@
 
     function setFilename(filename)
     {
-        const remarks_e = document.getElementById('tweet_remarks');
-        remarks_e.value = filename;
+        const elem = document.getElementById('tweet_media_id');
+        elem.value = filename;
 
-        remarks_e.select();
+        elem.select();
     }
 
     function extractBase64str(str) {

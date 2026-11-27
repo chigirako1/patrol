@@ -228,8 +228,8 @@ class Tweet < ApplicationRecord
         tweet_records = Tweet.where(tweet_id: pinned_tweet_id)
         if tweet_records.size > 0
             tweet = tweet_records.first
-            if tweet.remarks.presence
-                hit_pic_list = Twt::find_pics(twt_pic_path_list, tweet.remarks, tweet.screen_name)
+            if tweet.media_id.presence
+                hit_pic_list = Twt::find_pics(twt_pic_path_list, tweet.media_id, tweet.screen_name)
                 return hit_pic_list
             end
         end
@@ -369,15 +369,28 @@ class Tweet < ApplicationRecord
         tweet_sum_hash[screen_name][status]
     end
 
-    def self.unaccessible_twt_count(screen_name)
-        records = Tweet.select {|x| x.screen_name == screen_name}
+    def self.unaccessible_tweet()
+=begin
         sts_list = %W[#{StatusEnum::UNACCESSIBLE}
                     #{StatusEnum::UNACCESSIBLE_DEL_ACNT}
                     #{StatusEnum::UNACCESSIBLE_FREEZED}
                     #{StatusEnum::UNACCESSIBLE_PRIVATE}
                     #{StatusEnum::UNACCESSIBLE_VIOLATION}]
+        records = Tweet.select {|x| sts_list.include? x.status }
+=end
+        records = Tweet.select {|x| x.status.start_with?(StatusEnum::UNACCESSIBLE) }
+        records
+    end
+
+    def self.unaccessible_twt_count(unaccessible_tweet_records, screen_name)
+        records = unaccessible_tweet_records.select {|x| x.screen_name == screen_name}
+        records.size
+    end
+
+    def self.unaccessible_twt_count_hoge(screen_name)
+        records = Tweet.select {|x| x.screen_name == screen_name}
         #STDERR.puts %!#{screen_name} => #{count}!
-        records = records.select {|x| sts_list.include? x.status }
+        records = records.select {|x| x.status.start_with?(StatusEnum::UNACCESSIBLE) }
         count = records.size
         #STDERR.puts %!#{screen_name} => #{count}\t#{sts_list}!
         count

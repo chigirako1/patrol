@@ -595,10 +595,11 @@ class Twitter < ApplicationRecord
         lad = self.last_access_day_num
 
         [
+            -(self.rating||0),
             #max_interval,
             #fetch_pred_n,
             fac_x,
-            -(self.rating||0 / 5),
+            #-(self.rating||0 / 5),
             -(lad / 90),
             -(self.rating||0),
             -(pred / 100),
@@ -1139,9 +1140,15 @@ class Twitter < ApplicationRecord
                     lade_s = unit
                 end
 
-                if self.unaccessible_url_cnt and self.unaccessible_url_cnt > 0
-                    r_s = Util::format_num(self.rating, 1)
-                    gkey_work = "アクセス不可あり" + TWT_H_SEPARATOR + "#{r_s}"
+                #if self.unaccessible_url_cnt and self.unaccessible_url_cnt > 0
+                if false
+                    if self.url_list and self.url_list.todo_cnt > 0
+                        r_s = Util::format_num(self.rating, 1)
+                        gkey_work = "アクセス不可あり:残件#{self.url_list.todo_cnt}件" + TWT_H_SEPARATOR + "#{r_s}"
+                    else
+                        r_s = Util::format_num(self.rating, 1)
+                        gkey_work = "アクセス不可あり" + TWT_H_SEPARATOR + "#{r_s}"
+                    end
                     break
                 elsif self.interval_exceeded? true
                     if (self.rating||0) >= 84 and
@@ -1529,7 +1536,20 @@ class Twitter < ApplicationRecord
     def group_key_hoge(grp_spec, prefix="")
         case self.drawing_method
         when DRAWING_METHOD::DM_AI
-            dm = %!980.AI!
+            if self.unaccessible_url_cnt and self.unaccessible_url_cnt > 0
+                if self.url_list and self.url_list.todo_cnt > 0 and self.sp? == false
+                    r_s = Util::format_num(self.rating, 1)
+                    #gkey_work = "アクセス不可あり:残件#{self.url_list.todo_cnt}件" + TWT_H_SEPARATOR + "#{r_s}"
+                    dm = %!995.AI(アクセス不可あり)!
+                    return %!#{prefix}[#{dm}]#{TWT_H_SEPARATOR}【#{r_s}】!
+                else
+                    #r_s = Util::format_num(self.rating, 1)
+                    #gkey_work = "アクセス不可あり" + TWT_H_SEPARATOR + "#{r_s}"
+                    dm = %!980.AI!
+                end
+            else
+                dm = %!980.AI!
+            end
         when DRAWING_METHOD::DM_HAND
             u_str = url_cnt_str
             return %!#{prefix}[910.#{drawing_method}]#{u_str}#{TWT_H_SEPARATOR}.!

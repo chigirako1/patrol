@@ -31,8 +31,9 @@ module TwittersHelper
         tag = ""
         if twtid.presence
             tag += "▶"
-            tag += "(" + link_to_ex("画像タブ", Twt::twt_user_photo_url(twtid)) + ")|"
             tag += link_to_ex("@#{twtid}", Twt::twt_user_media_url(twtid))
+            #tag += "|"
+            tag += "[" + link_to_ex("画像タブ", Twt::twt_user_photo_url(twtid)) + "]"
         end
         tag.html_safe
     end

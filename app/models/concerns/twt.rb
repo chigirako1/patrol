@@ -1420,7 +1420,7 @@ module Twt
 
     LOW_PRIORITY_IGNORE_KEY = "X00.低頻度&優先度低(最近アクセス)"
 
-    def self.get_key_elem_sub(twt, dayn, pred, chk, todo_cnt)
+    def self.get_key_elem_sub(twt, dayn, pred, chk, todo_cnt, unaccessible_twt_count)
 
         freq_n = 330
         month_v = [dayn / 30, 9].min
@@ -1432,6 +1432,10 @@ module Twt
             else
                 return "99#{month_v}.取得対象物件あり[#{pred_val}]"
             end
+        end
+
+        if unaccessible_twt_count > 0
+            return "988.取得不可物件あり"
         end
 
         if !(twt.twtname.presence) and (twt.rating||0) >= 84
@@ -1521,13 +1525,15 @@ module Twt
         end
     end
 
-    def self.get_key_elem(twt, k, v, url_list, chk)
+    def self.get_key_elem(twt, k, v, url_list, chk, unaccessible_tweet_records)
         postdate = twt.last_post_datetime.in_time_zone('Tokyo').strftime("%y/%m/%d %H:%M")
         dayn = Util::get_date_delta(twt.last_post_datetime)
         avg = v.avg / 1024
         #pred = twt.prediction
         pred = twt.prediction_h_ex
         lad_n = twt.last_access_datetime_days_elapsed
+
+        unaccessible_twt_count = Tweet::unaccessible_twt_count(unaccessible_tweet_records, k)
 
         elem = []
         elem << k
@@ -1549,8 +1555,10 @@ module Twt
         end
         elem << todo_cnt
         elem << url_cnt
+        elem << unaccessible_twt_count
 
-        key1 = get_key_elem_sub(twt, dayn, pred, chk, todo_cnt)
+
+        key1 = get_key_elem_sub(twt, dayn, pred, chk, todo_cnt, unaccessible_twt_count)
         #key2 = Util::format_num(twt.rating, 1)
         #key3 = Util::format_num(pred, 10)
         #key = "#{key1}|||#{key2}|||#{key3}"
@@ -1568,10 +1576,10 @@ module Twt
         STDERR.puts %!build_pic_info_list >>>!
         known_twt_url_list, _ = Twitter::url_list("all")
         STDERR.puts %!build_pic_info_list yyy!
-        #url_list_summary = Tweet::url_list_summary(known_twt_url_list)
-        #url_list_summary_h = url_list_summary.map {|x| [x.screen_name, x]}.to_h
         url_list_summary_h = Tweet::url_list_summary_hash(known_twt_url_list)
         STDERR.puts %!build_pic_info_list xxx!
+
+        unaccessible_tweet_records = Tweet::unaccessible_tweet
 
         chk_screen_name_list = Util::checking_screen_names
         chk_hash = {}
@@ -1601,7 +1609,7 @@ module Twt
             #     next
             # end
 
-            key, elem = get_key_elem(twt, k, v, url_list_summary_h[k], chk_hash[k])
+            key, elem = get_key_elem(twt, k, v, url_list_summary_h[k], chk_hash[k], unaccessible_tweet_records)
 
             if key.start_with?(LOW_PRIORITY_IGNORE_KEY)
                 next

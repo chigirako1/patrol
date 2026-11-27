@@ -67,6 +67,8 @@
 <% end %>
 
 <% if @known_twt_url_list.presence %>
+    <% unaccessible_tweet_records = Tweet::unaccessible_tweet %>
+    <% STDERR.puts %!#{__FILE__}(#{__LINE__})! %>
     <% @known_twt_url_list.each do |key, url_list| %>
         <% if show_times.presence and url_list.size < show_times %>
             <!-- 飛ばす -->
@@ -92,7 +94,8 @@
         <% end %>
 
         <% twt_account.url_list = Tweet::new_summary(twt_account.twtid, url_list) %>
-        <% twt_account.unaccessible_url_cnt = Tweet::unaccessible_twt_count(twt_account.twtid) %>
+        <%# twt_account.unaccessible_url_cnt = Tweet::unaccessible_twt_count(twt_account.twtid) %>
+        <% twt_account.unaccessible_url_cnt = Tweet::unaccessible_twt_count(unaccessible_tweet_records, twt_account.twtid) %>
 
         <%# STDERR.puts %!#{twt_account.url_list.todo_cnt}@#{key}! %>
         <% if show_times.presence and twt_account.url_list.todo_cnt < show_times %>
@@ -104,6 +107,7 @@
         <%# key_twt = %!#{url_list.size}#{key_twt}! %>
         <% twt_group[key_twt] << [twt_account, url_list] %>
     <% end %>
+    <% STDERR.puts %!#{__FILE__}(#{__LINE__})! %>
 <% end %>
 
 <% if @known_twt_url_list.presence %>
@@ -129,6 +133,7 @@
 
     <% h_grp1_bak = "" %>
     <% twt_group = twt_group.sort.reverse.to_h %>
+    <% STDERR.puts %!#{__FILE__}(#{__LINE__})! %>
     <% twt_group.each do |key, val| %>
         <% list = val %>
         <% unless list.presence %>
@@ -197,9 +202,8 @@
                     <td>
                         <%# STDERR.puts %!#{twt_account.url_list}@#{key}! %>
                         [<%= twt_account.url_list.todo_cnt %>/<%= twt_account.url_list.url_cnt %>]
-                        <%# ua_cnt = Tweet::unaccessible_twt_count(twt_account.twtid) %>
                         <% ua_cnt = twt_account.unaccessible_url_cnt %>
-                        <% if ua_cnt >= 1 %>
+                        <% if ua_cnt and ua_cnt >= 1 %>
                             <br />
                             アクセス不可twtあり(<%= ua_cnt %>件)
                         <% end %>
@@ -314,6 +318,7 @@
             残り：<%= list.size - twt_disp_number %>
         <% end %>
     <% end %>
+    <% STDERR.puts %!#{__FILE__}(#{__LINE__})! %>
 <% end %>
 
 <% known_twt_account_list = {} %>

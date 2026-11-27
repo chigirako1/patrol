@@ -103,6 +103,7 @@ class TwittersController < ApplicationController
   #GRP_SPC_T_U_R_AZ_S_R = "{interval7}{[残url_cnt件]}【{r5}~】{az}#{Twitter::TWT_H_SEPARATOR}【{r}】"
   GRP_SPC_T_U_R_AZ_S_R = "{interval7}{[残url_cnt件]}【{r4}~】{az}#{Twitter::TWT_H_SEPARATOR}{px15}~"
   GRP_SPC_T_U_R_PX_AZ = "{interval7}{[残url_cnt件]}【{r4}~】{px15}件~#{Twitter::TWT_H_SEPARATOR}{az}"
+  GRP_SPC_T_U_R_PX_R = "{interval7}{[残url_cnt件]}【{r4}~】{px15}件~#{Twitter::TWT_H_SEPARATOR}【{r}】"
   GRP_SPC_T_URL_RA_PX = "{interval7}{[残url_cnt件]}【{r}】#{Twitter::TWT_H_SEPARATOR}{px15}件~"
 
   class TwtParams

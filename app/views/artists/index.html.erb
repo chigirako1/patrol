@@ -111,7 +111,19 @@
           <% end%>
         </td>
 
-        <td><%= artist.warnings %><br /><%= artist.comment %></td>
+        <!-- コメント/特徴 -->
+        <td>
+          <% if artist.warnings.presence %>
+            <font color="red">
+              ❗️❗️❗️
+              <%= artist.warnings %>
+              ❗️❗️❗️
+            </font>
+            <br />
+          <% end %>
+          <%= artist.comment %>
+        </td>
+
         <% ul_delta = artist.get_date_delta(artist.last_ul_datetime) %>
         <% ul_bg_color = date_bg_color(ul_delta) %>
         <td bgcolor="<%= ul_bg_color %>">

@@ -345,7 +345,8 @@ module Pxv
         new_list = []
         dir_list = stock_dir_list()
 
-        if false
+        dup_chk = true
+        if dup_chk
             # pxv user id重複チェック
             hash = {}
             dir_list.each do |path|
